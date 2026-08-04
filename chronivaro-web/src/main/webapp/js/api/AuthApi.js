@@ -5,7 +5,7 @@ export default class AuthApi {
 
 	static async login(username, password) {
 		password = btoa(password);
-		const result = await Rest.post('api/strolch/authentication', {
+		const result = await Rest.post('rest/strolch/authentication', {
 			username,
 			password
 		});
