@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<StrolchModel>
+	<Resource Id="loc1" Name="Zurich" Type="Location">
+		<ParameterBag Id="parameters" Name="Parameters" Type="Parameters">
+			<Parameter Id="timezone" Name="Timezone" Type="String" Value="Europe/Zurich"/>
+		</ParameterBag>
+		<ParameterBag Id="relations" Name="Relations" Type="Relations">
+			<Parameter Id="HolidayCalendar" Name="Holiday Calendar" Type="String" Value="cal1"/>
+		</ParameterBag>
+	</Resource>
+
+	<Resource Id="team1" Name="Engineering" Type="Team"/>
+
+	<Resource Id="admin_emp" Name="Admin User" Type="Employee">
+		<ParameterBag Id="parameters" Name="Parameters" Type="Parameters">
+			<Parameter Id="active" Name="Active" Type="Boolean" Value="true"/>
+			<Parameter Id="joinDate" Name="Join Date" Type="Date" Value="2025-01-01T00:00:00.000+01:00"/>
+			<Parameter Id="timezone" Name="Timezone" Type="String" Value="Europe/Zurich"/>
+		</ParameterBag>
+		<ParameterBag Id="relations" Name="Relations" Type="Relations">
+			<Parameter Id="user" Name="User" Type="String" Value="admin"/>
+			<Parameter Id="location" Name="Location" Type="String" Value="loc1"/>
+			<Parameter Id="primaryTeam" Name="Primary Team" Type="String" Value="team1"/>
+		</ParameterBag>
+	</Resource>
+
+	<Resource Id="cal1" Name="Standard Calendar" Type="HolidayCalendar"/>
+</StrolchModel>

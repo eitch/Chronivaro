@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>ch.atexxi.chronivaro</groupId>
+        <artifactId>chronivaro-parent</artifactId>
+        <version>0.1.0-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>chronivaro-web</artifactId>
+    <packaging>war</packaging>
+    <name>chronivaro-ui</name>
+
+    <properties>
+        <customer>NOT-SET</customer>
+        <environment>NOT-SET</environment>
+        <strolch.env>${environment}.${customer}</strolch.env>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>ch.atexxi.chronivaro</groupId>
+            <artifactId>chronivaro-rest</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>li.strolch</groupId>
+            <artifactId>strolch-persistence-postgresql</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>li.strolch</groupId>
+            <artifactId>strolch-persistence-xml</artifactId>
+        </dependency>
+    </dependencies>
+
+    <build>
+
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+                <includes>
+                    <include>**/*.properties</include>
+                </includes>
+            </resource>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>false</filtering>
+                <excludes>
+                    <exclude>**/*.properties</exclude>
+                </excludes>
+            </resource>
+        </resources>
+
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-war-plugin</artifactId>
+                <version>${maven-war-plugin.version}</version>
+                <configuration>
+                    <failOnMissingWebXml>false</failOnMissingWebXml>
+                    <webResources>
+                        <resource>
+                            <directory>src/env/${customer}/${environment}</directory>
+                            <filtering>true</filtering>
+                        </resource>
+                    </webResources>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+    <profiles>
+
+        <!-- for dev: always enable strolch environment "dev" -->
+        <profile>
+            <id>dev.local</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <properties>
+                <customer>local</customer>
+                <environment>dev</environment>
+            </properties>
+        </profile>
+    </profiles>
+
+</project>

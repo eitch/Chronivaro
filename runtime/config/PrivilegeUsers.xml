@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Users>
+    <User userId="1" username="admin" password="$PBKDF2WithHmacSHA512,10000,256$61646d696e$cb69962946617da006a2f95776d78b49e5ec7941d2bdb2d25cdb05f957f64344">
+        <Firstname>Admin</Firstname>
+        <Lastname>Admin</Lastname>
+        <State>ENABLED</State>
+        <Locale>en_CH</Locale>
+        <Roles>
+            <Role>Administrator</Role>
+        </Roles>
+        <Properties>
+            <Property name="realm" value="defaultRealm"/>
+        </Properties>
+    </User>
+    <User userId="agent" username="agent">
+        <Firstname>Strolch Agent</Firstname>
+        <Lastname>System User</Lastname>
+        <State>SYSTEM</State>
+        <Locale>en_CH</Locale>
+        <Roles>
+            <Role>agent</Role>
+        </Roles>
+        <Properties>
+            <Property name="realm" value="defaultRealm"/>
+        </Properties>
+    </User>
+</Users>

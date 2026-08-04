@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<StrolchConfiguration>
+	<env id="dev">
+		<Runtime>
+			<Properties>
+				<prop name="strolch.environment" value="dev" />
+			</Properties>
+		</Runtime>
+
+		<Component>
+			<name>PrivilegeHandler</name>
+			<api>li.strolch.runtime.privilege.PrivilegeHandler</api>
+			<impl>li.strolch.runtime.privilege.DefaultStrolchPrivilegeHandler</impl>
+			<Properties>
+				<privilege.config.file>PrivilegeConfig.xml</privilege.config.file>
+			</Properties>
+		</Component>
+
+		<Component>
+			<name>RealmHandler</name>
+			<api>li.strolch.agent.api.RealmHandler</api>
+			<impl>li.strolch.agent.impl.DefaultRealmHandler</impl>
+			<Properties>
+				<realms>strolch</realms>
+				<dataStoreMode.strolch>TRANSIENT</dataStoreMode.strolch>
+				<dataStoreFile.strolch>Model.xml</dataStoreFile.strolch>
+			</Properties>
+		</Component>
+
+		<Component>
+			<name>ServiceHandler</name>
+			<api>li.strolch.service.api.ServiceHandler</api>
+			<impl>li.strolch.service.api.DefaultServiceHandler</impl>
+		</Component>
+		
+		<Component>
+			<name>SessionHandler</name>
+			<api>li.strolch.runtime.sessions.StrolchSessionHandler</api>
+			<impl>li.strolch.runtime.sessions.DefaultStrolchSessionHandler</impl>
+		</Component>
+
+		<Component>
+			<name>RestfulStrolchComponent</name>
+			<api>li.strolch.rest.RestfulStrolchComponent</api>
+			<impl>li.strolch.rest.RestfulStrolchComponent</impl>
+		</Component>
+
+	</env>
+</StrolchConfiguration>

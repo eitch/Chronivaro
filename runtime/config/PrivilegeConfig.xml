@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Privilege>
+    <Container>
+        <Parameters>
+            <Parameter name="secretKey" value="secretKey"/>
+            <Parameter name="secretSalt" value="secretSalt"/>
+            <Parameter name="persistSessions" value="true"/>
+            <Parameter name="autoPersistOnUserChangesData" value="false"/>
+            <Parameter name="allowSessionRefresh" value="true"/>
+            <Parameter name="allowPasswordReset" value="true"/>
+        </Parameters>
+        <EncryptionHandler class="li.strolch.privilege.handler.DefaultEncryptionHandler">
+            <Parameters>
+                <Parameter name="hashAlgorithm" value="PBKDF2WithHmacSHA512"/>
+                <Parameter name="hashIterations" value="10000"/>
+                <Parameter name="hashKeyLength" value="256"/>
+            </Parameters>
+        </EncryptionHandler>
+        <PersistenceHandler class="li.strolch.privilege.handler.XmlPersistenceHandler"/>
+        <UserChallengeHandler class="li.strolch.privilege.handler.ConsoleUserChallengeHandler"/>
+    </Container>
+    <Policies>
+        <Policy name="DefaultPrivilege" class="li.strolch.privilege.policy.DefaultPrivilege"/>
+        <Policy name="ModelPrivilege" class="li.strolch.runtime.privilege.ModelPrivilege"/>
+    </Policies>
+</Privilege>

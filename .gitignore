@@ -1,0 +1,9 @@
+.DS_Store
+.settings
+.project
+.idea/
+target/
+dependencies/
+*.iml
+.ai/
+runtime/temp/sessions.dat

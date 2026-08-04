@@ -82,7 +82,7 @@ Der Core darf keine REST-DTOs, HTTP-Abhängigkeiten oder Browserkonzepte kennen.
 
 REST-Ressourcen dürfen keine fachliche Berechnungslogik enthalten. Sie validieren das Transportformat, prüfen die Berechtigung und delegieren an Core-Services.
 
-### `chronivaro-ui`
+### `chronivaro-web`
 
 - HTML
 - CSS
