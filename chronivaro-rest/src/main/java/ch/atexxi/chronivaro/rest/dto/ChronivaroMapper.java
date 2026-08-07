@@ -62,4 +62,47 @@ public class ChronivaroMapper {
 				summary.daySummaries().stream().map(ChronivaroMapper::toDto).toList()
 		);
 	}
+
+	public static TeamDto teamToDto(Resource team) {
+		return new TeamDto(team.getId(), team.getString(PARAM_NAME));
+	}
+
+	public static LocationDto locationToDto(Resource location) {
+		return new LocationDto(
+				location.getId(),
+				location.getString(PARAM_NAME),
+				location.getString(PARAM_TIMEZONE),
+				location.getString(BAG_RELATIONS, TYPE_HOLIDAY_CALENDAR)
+		);
+	}
+
+	public static AbsenceTypeDto absenceTypeToDto(Resource type) {
+		return new AbsenceTypeDto(
+				type.getId(),
+				type.getString(PARAM_CODE),
+				type.getString(PARAM_NAME),
+				type.getBoolean(PARAM_COUNT_AS_TARGET_TIME),
+				type.getBoolean(PARAM_REDUCE_VACATION_CREDIT),
+				type.getBoolean(PARAM_PAID),
+				type.getBoolean(PARAM_APPROVAL_REQUIRED),
+				type.getStringList(PARAM_DURATION_TYPES),
+				type.getBoolean(PARAM_ACTIVE)
+		);
+	}
+
+	public static EmployeeDto employeeToDto(Resource employee) {
+		return new EmployeeDto(
+				employee.getId(),
+				employee.getString(PARAM_PERSONAL_NUMBER),
+				employee.getString(PARAM_DISPLAY_NAME),
+				employee.getString(BAG_RELATIONS, TYPE_TEAM),
+				employee.getString(BAG_RELATIONS, TYPE_LOCATION),
+				employee.getString(PARAM_TIMEZONE),
+				employee.getDate(PARAM_JOIN_DATE).toLocalDate(),
+				employee.hasParameter(PARAM_EXIT_DATE) && employee.getDate(PARAM_EXIT_DATE) != null ?
+						employee.getDate(PARAM_EXIT_DATE).toLocalDate() : null,
+				employee.getBoolean(PARAM_ACTIVE),
+				employee.getString(BAG_RELATIONS, PARAM_USER)
+		);
+	}
 }

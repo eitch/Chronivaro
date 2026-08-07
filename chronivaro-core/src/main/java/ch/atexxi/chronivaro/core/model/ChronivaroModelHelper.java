@@ -15,6 +15,18 @@ public class ChronivaroModelHelper {
 		return tx.getResourceBy(TYPE_EMPLOYEE, employeeId, true);
 	}
 
+	public static Resource getTeam(StrolchTransaction tx, String teamId) {
+		return tx.getResourceBy(TYPE_TEAM, teamId, true);
+	}
+
+	public static Resource getLocation(StrolchTransaction tx, String locationId) {
+		return tx.getResourceBy(TYPE_LOCATION, locationId, true);
+	}
+
+	public static Resource getAbsenceType(StrolchTransaction tx, String absenceTypeId) {
+		return tx.getResourceBy(TYPE_ABSENCE_TYPE, absenceTypeId, true);
+	}
+
 	public static Optional<Resource> findEmployeeByUser(StrolchTransaction tx, String userId) {
 		return tx.streamResources(TYPE_EMPLOYEE)
 				.filter(e -> e.getString(BAG_RELATIONS, PARAM_USER).equals(userId))

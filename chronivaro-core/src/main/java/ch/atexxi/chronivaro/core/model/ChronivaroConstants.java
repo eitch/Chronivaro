@@ -32,6 +32,13 @@ public class ChronivaroConstants {
 	public static final String PARAM_EMPLOYMENT_RATE = "employmentRate";
 	public static final String PARAM_WEEKLY_TARGET_MINUTES = "weeklyTargetMinutes";
 	public static final String PARAM_DAILY_TARGET_MINUTES = "dailyTargetMinutes";
+	public static final String PARAM_DAILY_TARGET_MINUTES_MONDAY = "dailyTargetMinutesMonday";
+	public static final String PARAM_DAILY_TARGET_MINUTES_TUESDAY = "dailyTargetMinutesTuesday";
+	public static final String PARAM_DAILY_TARGET_MINUTES_WEDNESDAY = "dailyTargetMinutesWednesday";
+	public static final String PARAM_DAILY_TARGET_MINUTES_THURSDAY = "dailyTargetMinutesThursday";
+	public static final String PARAM_DAILY_TARGET_MINUTES_FRIDAY = "dailyTargetMinutesFriday";
+	public static final String PARAM_DAILY_TARGET_MINUTES_SATURDAY = "dailyTargetMinutesSaturday";
+	public static final String PARAM_DAILY_TARGET_MINUTES_SUNDAY = "dailyTargetMinutesSunday";
 
 	public static final String PARAM_START = "start";
 	public static final String PARAM_END = "end";
