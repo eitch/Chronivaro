@@ -15,6 +15,7 @@ public class ChronivaroConstants {
 	public static final String TYPE_HOLIDAY_CALENDAR = "HolidayCalendar";
 	public static final String TYPE_HOLIDAY = "Holiday";
 	public static final String TYPE_TIME_PERIOD = "TimePeriod";
+	public static final String TYPE_AUDIT_EVENT = "ChronivaroAuditEvent";
 	public static final String TYPE_EMPLOYMENT_SCHEDULE_VERSION = "EmploymentScheduleVersion";
 
 	public static final String PARAM_PERSONAL_NUMBER = "personalNumber";
@@ -68,19 +69,22 @@ public class ChronivaroConstants {
 	public static final String PARAM_CREDIT_FACTOR = "creditFactor";
 
 	public static final String PARAM_YEAR_MONTH = "yearMonth";
+	public static final String PARAM_ELEMENT_TYPE = "elementType";
+	public static final String PARAM_ELEMENT_ID = "elementId";
+	public static final String PARAM_OLD_VALUE = "oldValue";
+	public static final String PARAM_NEW_VALUE = "newValue";
 
 	public static final String SOURCE_TIMER = "TIMER";
 	public static final String SOURCE_MANUAL = "MANUAL";
 	public static final String SOURCE_IMPORT = "IMPORT";
 	public static final String SOURCE_ADMIN = "ADMIN";
 
-	public static final String STATE_DRAFT = "DRAFT";
+	public static final String STATE_OPEN = "OPEN";
 	public static final String STATE_SUBMITTED = "SUBMITTED";
 	public static final String STATE_APPROVED = "APPROVED";
+	public static final String STATE_LOCKED = "LOCKED";
 	public static final String STATE_REJECTED = "REJECTED";
 	public static final String STATE_CANCELLED = "CANCELLED";
-	public static final String STATE_OPEN = "OPEN";
-	public static final String STATE_LOCKED = "LOCKED";
 
 	public static final String DURATION_HOURS = "HOURS";
 	public static final String DURATION_HALF_DAY = "HALF_DAY";
