@@ -1,8 +1,7 @@
 package ch.atexxi.chronivaro.core;
 
 import ch.atexxi.chronivaro.core.model.MonthSummary;
-import ch.atexxi.chronivaro.core.service.CreateEmployeeService;
-import ch.atexxi.chronivaro.core.service.MonthSummaryService;
+import ch.atexxi.chronivaro.core.service.*;
 import li.strolch.model.ParameterBag;
 import li.strolch.model.Resource;
 import li.strolch.persistence.api.StrolchTransaction;
@@ -16,6 +15,7 @@ import org.junit.Test;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.ZonedDateTime;
+import java.util.List;
 import java.util.UUID;
 
 import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
@@ -51,28 +51,30 @@ public class ExtensiveIntegrationTest {
 		String teamId = "extensive-team";
 
 		// 1. Create Infrastructure
-		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
-			// Location
-			Resource location = new Resource(locationId, "Extensive Location", TYPE_LOCATION);
-			location.addParameterBag(new ParameterBag(BAG_RELATIONS, "Relations", "Relations"));
-			location.setString(BAG_RELATIONS, TYPE_HOLIDAY_CALENDAR, holidayCalendarId);
-			tx.add(location);
+		CreateHolidayCalendarService.HolidayCalendarArgument calArg = new CreateHolidayCalendarService.HolidayCalendarArgument();
+		calArg.id = holidayCalendarId;
+		calArg.name = "Extensive Calendar";
+		assertTrue(serviceHandler.doService(certificate, new CreateHolidayCalendarService(), calArg).isOk());
 
-			// Team
-			Resource team = new Resource(teamId, "Extensive Team", TYPE_TEAM);
-			tx.add(team);
+		CreateLocationService.LocationArgument locArg = new CreateLocationService.LocationArgument();
+		locArg.id = locationId;
+		locArg.name = "Extensive Location";
+		locArg.timezone = "Europe/Zurich";
+		locArg.holidayCalendarId = holidayCalendarId;
+		assertTrue(serviceHandler.doService(certificate, new CreateLocationService(), locArg).isOk());
 
-			// Holiday
-			Resource holiday = new Resource("may-day", "May Day", TYPE_HOLIDAY);
-			holiday.addParameterBag(new ParameterBag(BAG_RELATIONS, "Relations", "Relations"));
-			holiday.addParameterBag(new ParameterBag(BAG_PARAMETERS, "Parameters", "Parameters"));
-			holiday.setString(BAG_RELATIONS, TYPE_HOLIDAY_CALENDAR, holidayCalendarId);
-			holiday.setDate(PARAM_DATE, ZonedDateTime.parse("2026-05-01T00:00:00+02:00[Europe/Zurich]"));
-			holiday.setDouble(PARAM_CREDIT_FACTOR, 1.0);
-			tx.add(holiday);
+		CreateTeamService.TeamArgument teamArg = new CreateTeamService.TeamArgument();
+		teamArg.id = teamId;
+		teamArg.name = "Extensive Team";
+		assertTrue(serviceHandler.doService(certificate, new CreateTeamService(), teamArg).isOk());
 
-			tx.commitOnClose();
-		}
+		CreateHolidayService.HolidayArgument holidayArg = new CreateHolidayService.HolidayArgument();
+		holidayArg.id = "may-day";
+		holidayArg.name = "May Day";
+		holidayArg.holidayCalendarId = holidayCalendarId;
+		holidayArg.date = LocalDate.of(2026, 5, 1);
+		holidayArg.creditFactor = 1.0;
+		assertTrue(serviceHandler.doService(certificate, new CreateHolidayService(), holidayArg).isOk());
 
 		// 2. Add Employee
 		CreateEmployeeService.EmployeeArgument createArg = new CreateEmployeeService.EmployeeArgument();
@@ -89,58 +91,55 @@ public class ExtensiveIntegrationTest {
 		assertTrue(serviceHandler.doService(certificate, new CreateEmployeeService(), createArg).isOk());
 
 		// 3. Configure Schedule
-		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
-			Resource schedule = new Resource(UUID.randomUUID().toString(), "Extensive Schedule",
-					TYPE_EMPLOYMENT_SCHEDULE_VERSION);
-			schedule.addParameterBag(new ParameterBag(BAG_PARAMETERS, "Parameters", "Parameters"));
-			schedule.addParameterBag(new ParameterBag(BAG_RELATIONS, "Relations", "Relations"));
-			schedule.setString(BAG_RELATIONS, TYPE_EMPLOYEE, employeeId);
-			schedule.setDate(PARAM_VALID_FROM, ZonedDateTime.parse("2026-01-01T00:00:00+01:00[Europe/Zurich]"));
-			schedule.setInteger(PARAM_DAILY_TARGET_MINUTES_MONDAY, 480);
-			schedule.setInteger(PARAM_DAILY_TARGET_MINUTES_TUESDAY, 480);
-			schedule.setInteger(PARAM_DAILY_TARGET_MINUTES_WEDNESDAY, 480);
-			schedule.setInteger(PARAM_DAILY_TARGET_MINUTES_THURSDAY, 480);
-			schedule.setInteger(PARAM_DAILY_TARGET_MINUTES_FRIDAY, 480);
-			schedule.setInteger(PARAM_DAILY_TARGET_MINUTES_SATURDAY, 0);
-			schedule.setInteger(PARAM_DAILY_TARGET_MINUTES_SUNDAY, 0);
-			tx.add(schedule);
-			tx.commitOnClose();
-		}
+		CreateScheduleService.CreateScheduleArgument scheduleArg = new CreateScheduleService.CreateScheduleArgument();
+		scheduleArg.employeeId = employeeId;
+		scheduleArg.validFrom = ZonedDateTime.parse("2026-01-01T00:00:00+01:00[Europe/Zurich]");
+		scheduleArg.monday = 480;
+		scheduleArg.tuesday = 480;
+		scheduleArg.wednesday = 480;
+		scheduleArg.thursday = 480;
+		scheduleArg.friday = 480;
+		scheduleArg.saturday = 0;
+		scheduleArg.sunday = 0;
+		assertTrue(serviceHandler.doService(certificate, new CreateScheduleService(), scheduleArg).isOk());
 
 		// 4. Add Work Items (WorkEntries)
 		// 2026-05-01: Holiday (Friday) - should not have work entries for normal test, but we can add some to see it works
 		// 2026-05-04: Monday, 08:00 - 12:00, 13:00 - 17:00 (8h)
 		// 2026-05-05: Tuesday, 08:30 - 12:30, 13:30 - 17:30 (8h)
 		// 2026-05-06: Wednesday, 08:00 - 12:00 (4h) + Absence in afternoon
-		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
-			// Monday
-			addWorkEntry(tx, employeeId, "2026-05-04T08:00:00+02:00[Europe/Zurich]", "2026-05-04T12:00:00+02:00[Europe/Zurich]");
-			addWorkEntry(tx, employeeId, "2026-05-04T13:00:00+02:00[Europe/Zurich]", "2026-05-04T17:00:00+02:00[Europe/Zurich]");
-
-			// Tuesday
-			addWorkEntry(tx, employeeId, "2026-05-05T08:30:00+02:00[Europe/Zurich]", "2026-05-05T12:30:00+02:00[Europe/Zurich]");
-			addWorkEntry(tx, employeeId, "2026-05-05T13:30:00+02:00[Europe/Zurich]", "2026-05-05T17:30:00+02:00[Europe/Zurich]");
-
-			// Wednesday
-			addWorkEntry(tx, employeeId, "2026-05-06T08:00:00+02:00[Europe/Zurich]", "2026-05-06T12:00:00+02:00[Europe/Zurich]");
-
-			tx.commitOnClose();
-		}
+		addWorkEntry(serviceHandler, employeeId, "2026-05-04T08:00:00+02:00[Europe/Zurich]", "2026-05-04T12:00:00+02:00[Europe/Zurich]");
+		addWorkEntry(serviceHandler, employeeId, "2026-05-04T13:00:00+02:00[Europe/Zurich]", "2026-05-04T17:00:00+02:00[Europe/Zurich]");
+		addWorkEntry(serviceHandler, employeeId, "2026-05-05T08:30:00+02:00[Europe/Zurich]", "2026-05-05T12:30:00+02:00[Europe/Zurich]");
+		addWorkEntry(serviceHandler, employeeId, "2026-05-05T13:30:00+02:00[Europe/Zurich]", "2026-05-05T17:30:00+02:00[Europe/Zurich]");
+		addWorkEntry(serviceHandler, employeeId, "2026-05-06T08:00:00+02:00[Europe/Zurich]", "2026-05-06T12:00:00+02:00[Europe/Zurich]");
 
 		// 5. Add Absence
-		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
-			Resource absence = new Resource(UUID.randomUUID().toString(), "Vacation", TYPE_ABSENCE);
-			absence.addParameterBag(new ParameterBag(BAG_PARAMETERS, "Parameters", "Parameters"));
-			absence.addParameterBag(new ParameterBag(BAG_RELATIONS, "Relations", "Relations"));
-			absence.setString(BAG_RELATIONS, TYPE_EMPLOYEE, employeeId);
-			absence.setDate(PARAM_START, ZonedDateTime.parse("2026-05-06T00:00:00+02:00[Europe/Zurich]"));
-			absence.setDate(PARAM_END, ZonedDateTime.parse("2026-05-06T23:59:59+02:00[Europe/Zurich]"));
-			absence.setString(PARAM_DURATION_TYPE, DURATION_HOURS);
-			absence.setInteger(PARAM_MINUTES, 240);
-			absence.setString(PARAM_STATE, STATE_APPROVED);
-			tx.add(absence);
-			tx.commitOnClose();
+		CreateAbsenceTypeService.AbsenceTypeArgument typeArg = new CreateAbsenceTypeService.AbsenceTypeArgument();
+		typeArg.id = "vacation";
+		typeArg.code = "vacation";
+		typeArg.name = "Vacation";
+		typeArg.active = true;
+		typeArg.durationTypes = List.of(DURATION_HOURS, DURATION_HALF_DAY, DURATION_FULL_DAY);
+		assertTrue(serviceHandler.doService(certificate, new CreateAbsenceTypeService(), typeArg).isOk());
+
+		RequestAbsenceService.RequestAbsenceArgument absenceArg = new RequestAbsenceService.RequestAbsenceArgument();
+		absenceArg.employeeId = employeeId;
+		absenceArg.absenceTypeCode = "vacation";
+		absenceArg.start = ZonedDateTime.parse("2026-05-06T00:00:00+02:00[Europe/Zurich]");
+		absenceArg.end = ZonedDateTime.parse("2026-05-06T23:59:59+02:00[Europe/Zurich]");
+		absenceArg.durationType = DURATION_HOURS;
+		absenceArg.minutes = 240;
+		li.strolch.service.api.ServiceResult absenceResult = serviceHandler.doService(certificate, new RequestAbsenceService(), absenceArg);
+		assertTrue(absenceResult.isOk());
+
+		String id;
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
+			id = tx.streamResources(TYPE_ABSENCE)
+					.filter(a -> a.getString(BAG_RELATIONS, TYPE_EMPLOYEE).equals(employeeId))
+					.findFirst().orElseThrow().getId();
 		}
+		assertTrue(serviceHandler.doService(certificate, new ApproveAbsenceService(), new li.strolch.service.StringArgument(id)).isOk());
 
 		// 6. Verify Month Summary
 		MonthSummaryService.MonthSummaryArgument arg = new MonthSummaryService.MonthSummaryArgument();
@@ -179,13 +178,11 @@ public class ExtensiveIntegrationTest {
 		assertEquals(-8160, summary.getPeriodBalance());
 	}
 
-	private void addWorkEntry(StrolchTransaction tx, String employeeId, String start, String end) {
-		Resource e = new Resource(UUID.randomUUID().toString(), "WorkEntry", TYPE_WORK_ENTRY);
-		e.addParameterBag(new ParameterBag(BAG_PARAMETERS, "Parameters", "Parameters"));
-		e.addParameterBag(new ParameterBag(BAG_RELATIONS, "Relations", "Relations"));
-		e.setString(BAG_RELATIONS, TYPE_EMPLOYEE, employeeId);
-		e.setDate(PARAM_START, ZonedDateTime.parse(start));
-		e.setDate(PARAM_END, ZonedDateTime.parse(end));
-		tx.add(e);
+	private void addWorkEntry(ServiceHandler serviceHandler, String employeeId, String start, String end) {
+		AddWorkEntryService.AddWorkEntryArgument arg = new AddWorkEntryService.AddWorkEntryArgument();
+		arg.employeeId = employeeId;
+		arg.start = ZonedDateTime.parse(start);
+		arg.end = ZonedDateTime.parse(end);
+		assertTrue(serviceHandler.doService(certificate, new AddWorkEntryService(), arg).isOk());
 	}
 }

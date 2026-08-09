@@ -19,6 +19,8 @@ public class CreateHolidayService extends AbstractService<CreateHolidayService.H
 			ZoneId zoneId = ZoneId.of("Europe/Zurich"); // Default for now
 
 			Resource holiday = new Resource(arg.id, arg.name, TYPE_HOLIDAY);
+			holiday.addParameterBag(new li.strolch.model.ParameterBag(BAG_PARAMETERS, "Parameters", "Parameters"));
+			holiday.addParameterBag(new li.strolch.model.ParameterBag(BAG_RELATIONS, "Relations", "Relations"));
 			holiday.setString(BAG_RELATIONS, TYPE_HOLIDAY_CALENDAR, arg.holidayCalendarId);
 			holiday.setDate(PARAM_DATE, arg.date.atStartOfDay(zoneId));
 			holiday.setString(PARAM_NAME, arg.name);
