@@ -93,4 +93,44 @@ public class EmployeeResourceTest extends AbstractChronivaroRestfulTest {
 			assertEquals(Response.Status.NOT_FOUND.getStatusCode(), response.getStatus());
 		}
 	}
+
+	@Test
+	public void shouldCreateSchedule() {
+		String authToken = authenticate();
+
+		String json = """
+				{
+				  "validFrom": "2025-01-01T00:00:00+01:00",
+				  "monday": 480,
+				  "tuesday": 480,
+				  "wednesday": 480,
+				  "thursday": 480,
+				  "friday": 480
+				}
+				""";
+		try (Response response = target().path("chronivaro/v1/admin/employees/admin_emp/schedules")
+				.request(MediaType.APPLICATION_JSON)
+				.header("Authorization", authToken)
+				.post(Entity.json(json))) {
+			assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+		}
+	}
+
+	@Test
+	public void shouldAddVacationCorrection() {
+		String authToken = authenticate();
+
+		String json = """
+				{
+				  "value": 480,
+				  "comment": "Bonus vacation"
+				}
+				""";
+		try (Response response = target().path("chronivaro/v1/admin/employees/admin_emp/vacation-corrections")
+				.request(MediaType.APPLICATION_JSON)
+				.header("Authorization", authToken)
+				.post(Entity.json(json))) {
+			assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+		}
+	}
 }
