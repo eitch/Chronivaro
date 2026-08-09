@@ -1,10 +1,6 @@
 package ch.atexxi.chronivaro.rest;
 
-import ch.atexxi.chronivaro.rest.resource.AbsenceTypeResource;
-import ch.atexxi.chronivaro.rest.resource.ChronivaroResource;
-import ch.atexxi.chronivaro.rest.resource.EmployeeResource;
-import ch.atexxi.chronivaro.rest.resource.LocationResource;
-import ch.atexxi.chronivaro.rest.resource.TeamResource;
+import ch.atexxi.chronivaro.rest.resource.*;
 import li.strolch.rest.StrolchRestfulClasses;
 
 import java.util.HashSet;

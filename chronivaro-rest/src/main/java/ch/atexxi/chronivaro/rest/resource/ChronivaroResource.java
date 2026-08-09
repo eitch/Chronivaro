@@ -2,12 +2,8 @@ package ch.atexxi.chronivaro.rest.resource;
 
 import ch.atexxi.chronivaro.core.model.ChronivaroModelHelper;
 import ch.atexxi.chronivaro.core.model.WorkEntryHelper;
-import ch.atexxi.chronivaro.core.service.DaySummaryService;
-import ch.atexxi.chronivaro.core.service.MonthSummaryService;
-import ch.atexxi.chronivaro.core.service.StartTimerService;
-import ch.atexxi.chronivaro.core.service.StopTimerService;
-import ch.atexxi.chronivaro.rest.dto.ChronivaroMapper;
-import ch.atexxi.chronivaro.rest.dto.WorkEntryDto;
+import ch.atexxi.chronivaro.core.service.*;
+import ch.atexxi.chronivaro.rest.dto.*;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.Context;
@@ -30,6 +26,27 @@ import java.util.Optional;
 
 @Path("chronivaro/v1")
 public class ChronivaroResource {
+
+	@GET
+	@Path("presence")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response getPresence(@Context HttpServletRequest request,
+			@QueryParam("teamId") String teamId,
+			@QueryParam("locationId") String locationId) {
+		Certificate cert = (Certificate) request.getAttribute(StrolchRestfulConstants.STROLCH_CERTIFICATE);
+		ServiceHandler serviceHandler = ChronivaroRestHelper.getServiceHandler();
+
+		PresenceService.PresenceArgument arg = new PresenceService.PresenceArgument();
+		arg.teamId = teamId;
+		arg.locationId = locationId;
+
+		PresenceService.PresenceResult result = serviceHandler.doService(cert, new PresenceService(), arg);
+		if (result.isOk()) {
+			return Response.ok(ChronivaroRestHelper.createGson().toJson(result.presenceInfos.stream().map(ChronivaroMapper::toDto).toList()),
+					MediaType.APPLICATION_JSON).build();
+		}
+		return ResponseUtil.toResponse(result);
+	}
 
 	@GET
 	@Path("me/work-entries")
@@ -55,6 +72,83 @@ public class ChronivaroResource {
 			List<WorkEntryDto> dtos = entries.stream().map(ChronivaroMapper::toDto).toList();
 			return Response.ok(ChronivaroRestHelper.createGson().toJson(dtos), MediaType.APPLICATION_JSON).build();
 		}
+	}
+
+	@POST
+	@Path("me/work-entries")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response createWorkEntry(@Context HttpServletRequest request, String data) {
+		Certificate cert = (Certificate) request.getAttribute(StrolchRestfulConstants.STROLCH_CERTIFICATE);
+		ServiceHandler serviceHandler = ChronivaroRestHelper.getServiceHandler();
+		WorkEntryDto dto = ChronivaroRestHelper.createGson().fromJson(data, WorkEntryDto.class);
+
+		String employeeId;
+		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
+			Optional<Resource> employee = ChronivaroModelHelper.findEmployeeByUser(tx, cert.getUserId());
+			if (employee.isEmpty())
+				return Response.status(Response.Status.NOT_FOUND).build();
+			employeeId = employee.get().getId();
+		}
+
+		AddWorkEntryService.AddWorkEntryArgument arg = new AddWorkEntryService.AddWorkEntryArgument();
+		arg.employeeId = employeeId;
+		arg.start = dto.start();
+		arg.end = dto.end();
+		arg.comment = dto.comment();
+
+		ServiceResult result = serviceHandler.doService(cert, new AddWorkEntryService(), arg);
+		return ResponseUtil.toResponse(result);
+	}
+
+	@PUT
+	@Path("me/work-entries/{id}")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response updateWorkEntry(@Context HttpServletRequest request, @PathParam("id") String id, String data) {
+		Certificate cert = (Certificate) request.getAttribute(StrolchRestfulConstants.STROLCH_CERTIFICATE);
+		ServiceHandler serviceHandler = ChronivaroRestHelper.getServiceHandler();
+		WorkEntryDto dto = ChronivaroRestHelper.createGson().fromJson(data, WorkEntryDto.class);
+
+		CorrectWorkEntryService.CorrectWorkEntryArgument arg = new CorrectWorkEntryService.CorrectWorkEntryArgument();
+		arg.workEntryId = id;
+		arg.start = dto.start();
+		arg.end = dto.end();
+		arg.comment = dto.comment();
+
+		ServiceResult result = serviceHandler.doService(cert, new CorrectWorkEntryService(), arg);
+		return ResponseUtil.toResponse(result);
+	}
+
+	@POST
+	@Path("me/absences")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response requestAbsence(@Context HttpServletRequest request, String data) {
+		Certificate cert = (Certificate) request.getAttribute(StrolchRestfulConstants.STROLCH_CERTIFICATE);
+		ServiceHandler serviceHandler = ChronivaroRestHelper.getServiceHandler();
+		AbsenceDto dto = ChronivaroRestHelper.createGson().fromJson(data, AbsenceDto.class);
+
+		String employeeId;
+		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
+			Optional<Resource> employee = ChronivaroModelHelper.findEmployeeByUser(tx, cert.getUserId());
+			if (employee.isEmpty())
+				return Response.status(Response.Status.NOT_FOUND).build();
+			employeeId = employee.get().getId();
+		}
+
+		RequestAbsenceService.RequestAbsenceArgument arg = new RequestAbsenceService.RequestAbsenceArgument();
+		arg.employeeId = employeeId;
+		arg.absenceTypeCode = dto.absenceTypeCode();
+		arg.start = dto.start();
+		arg.end = dto.end();
+		arg.durationType = dto.durationType();
+		arg.dayPart = dto.dayPart();
+		arg.minutes = dto.minutes() == null ? 0 : dto.minutes();
+		arg.comment = dto.comment();
+
+		ServiceResult result = serviceHandler.doService(cert, new RequestAbsenceService(), arg);
+		return ResponseUtil.toResponse(result);
 	}
 
 	@POST
@@ -94,6 +188,16 @@ public class ChronivaroResource {
 
 		StringArgument arg = new StringArgument(employeeId);
 		ServiceResult result = serviceHandler.doService(cert, new StopTimerService(), arg);
+		return ResponseUtil.toResponse(result);
+	}
+
+	@POST
+	@Path("me/periods/{id}/submit")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response submitPeriod(@Context HttpServletRequest request, @PathParam("id") String id) {
+		Certificate cert = (Certificate) request.getAttribute(StrolchRestfulConstants.STROLCH_CERTIFICATE);
+		ServiceHandler serviceHandler = ChronivaroRestHelper.getServiceHandler();
+		ServiceResult result = serviceHandler.doService(cert, new SubmitPeriodService(), new StringArgument(id));
 		return ResponseUtil.toResponse(result);
 	}
 

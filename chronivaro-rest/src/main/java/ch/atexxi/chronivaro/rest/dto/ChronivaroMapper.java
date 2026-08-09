@@ -2,11 +2,16 @@ package ch.atexxi.chronivaro.rest.dto;
 
 import ch.atexxi.chronivaro.core.model.DaySummary;
 import ch.atexxi.chronivaro.core.model.MonthSummary;
+import ch.atexxi.chronivaro.core.service.PresenceService;
 import li.strolch.model.Resource;
 
 import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
 
 public class ChronivaroMapper {
+
+	public static PresenceDto toDto(PresenceService.PresenceInfo info) {
+		return new PresenceDto(info.employeeId(), info.displayName(), info.status());
+	}
 
 	public static WorkEntryDto toDto(Resource workEntry) {
 		return new WorkEntryDto(
