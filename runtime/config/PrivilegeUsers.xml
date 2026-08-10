@@ -7,9 +7,10 @@
         <Locale>en_CH</Locale>
         <Roles>
             <Role>Administrator</Role>
+            <Role>PrivilegeAdmin</Role>
         </Roles>
         <Properties>
-            <Property name="realm" value="defaultRealm"/>
+            <Property name="organisation" value="MyCompany"/>
         </Properties>
     </User>
     <User userId="agent" username="agent">
@@ -21,7 +22,7 @@
             <Role>agent</Role>
         </Roles>
         <Properties>
-            <Property name="realm" value="defaultRealm"/>
+            <Property name="organisation" value="MyCompany"/>
         </Properties>
     </User>
 </Users>
