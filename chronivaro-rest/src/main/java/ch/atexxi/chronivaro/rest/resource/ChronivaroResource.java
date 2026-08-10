@@ -14,7 +14,6 @@ import jakarta.ws.rs.core.Response;
 import li.strolch.model.Resource;
 import li.strolch.persistence.api.StrolchTransaction;
 import li.strolch.privilege.model.Certificate;
-import li.strolch.rest.StrolchRestfulConstants;
 import li.strolch.rest.helper.ResponseUtil;
 import li.strolch.service.StringArgument;
 import li.strolch.service.api.ServiceHandler;
@@ -26,6 +25,8 @@ import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import static li.strolch.rest.StrolchRestfulConstants.STROLCH_CERTIFICATE;
+
 @Path("chronivaro/v1")
 public class ChronivaroResource {
 
@@ -34,7 +35,7 @@ public class ChronivaroResource {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getPresence(@Context HttpServletRequest request, @QueryParam("teamId") String teamId,
 			@QueryParam("locationId") String locationId) {
-		Certificate cert = (Certificate) request.getAttribute(StrolchRestfulConstants.STROLCH_CERTIFICATE);
+		Certificate cert = (Certificate) request.getAttribute(STROLCH_CERTIFICATE);
 		ServiceHandler serviceHandler = ChronivaroRestHelper.getServiceHandler();
 
 		PresenceService.PresenceArgument arg = new PresenceService.PresenceArgument();
@@ -59,7 +60,7 @@ public class ChronivaroResource {
 	public Response getMyWorkEntries(@Context HttpServletRequest request, @QueryParam("from") String fromStr,
 			@QueryParam("to") String toStr) {
 
-		Certificate cert = (Certificate) request.getAttribute(StrolchRestfulConstants.STROLCH_CERTIFICATE);
+		Certificate cert = (Certificate) request.getAttribute(STROLCH_CERTIFICATE);
 		String employeeId;
 		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
 			Optional<Resource> employee = ChronivaroModelHelper.findEmployeeByUser(tx, cert.getUserId());
@@ -83,7 +84,7 @@ public class ChronivaroResource {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response createWorkEntry(@Context HttpServletRequest request, String data) {
-		Certificate cert = (Certificate) request.getAttribute(StrolchRestfulConstants.STROLCH_CERTIFICATE);
+		Certificate cert = (Certificate) request.getAttribute(STROLCH_CERTIFICATE);
 		ServiceHandler serviceHandler = ChronivaroRestHelper.getServiceHandler();
 		WorkEntryDto dto = ChronivaroRestHelper.createGson().fromJson(data, WorkEntryDto.class);
 
@@ -110,7 +111,7 @@ public class ChronivaroResource {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response updateWorkEntry(@Context HttpServletRequest request, @PathParam("id") String id, String data) {
-		Certificate cert = (Certificate) request.getAttribute(StrolchRestfulConstants.STROLCH_CERTIFICATE);
+		Certificate cert = (Certificate) request.getAttribute(STROLCH_CERTIFICATE);
 		ServiceHandler serviceHandler = ChronivaroRestHelper.getServiceHandler();
 		WorkEntryDto dto = ChronivaroRestHelper.createGson().fromJson(data, WorkEntryDto.class);
 
@@ -129,7 +130,7 @@ public class ChronivaroResource {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response requestAbsence(@Context HttpServletRequest request, String data) {
-		Certificate cert = (Certificate) request.getAttribute(StrolchRestfulConstants.STROLCH_CERTIFICATE);
+		Certificate cert = (Certificate) request.getAttribute(STROLCH_CERTIFICATE);
 		ServiceHandler serviceHandler = ChronivaroRestHelper.getServiceHandler();
 		AbsenceDto dto = ChronivaroRestHelper.createGson().fromJson(data, AbsenceDto.class);
 
@@ -159,7 +160,7 @@ public class ChronivaroResource {
 	@Path("me/timer/start")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response startTimer(@Context HttpServletRequest request) {
-		Certificate cert = (Certificate) request.getAttribute(StrolchRestfulConstants.STROLCH_CERTIFICATE);
+		Certificate cert = (Certificate) request.getAttribute(STROLCH_CERTIFICATE);
 		ServiceHandler serviceHandler = ChronivaroRestHelper.getServiceHandler();
 
 		String employeeId;
@@ -179,7 +180,7 @@ public class ChronivaroResource {
 	@Path("me/timer/stop")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response stopTimer(@Context HttpServletRequest request) {
-		Certificate cert = (Certificate) request.getAttribute(StrolchRestfulConstants.STROLCH_CERTIFICATE);
+		Certificate cert = (Certificate) request.getAttribute(STROLCH_CERTIFICATE);
 		ServiceHandler serviceHandler = ChronivaroRestHelper.getServiceHandler();
 
 		String employeeId;
@@ -199,7 +200,7 @@ public class ChronivaroResource {
 	@Path("me/periods/{id}/submit")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response submitPeriod(@Context HttpServletRequest request, @PathParam("id") String id) {
-		Certificate cert = (Certificate) request.getAttribute(StrolchRestfulConstants.STROLCH_CERTIFICATE);
+		Certificate cert = (Certificate) request.getAttribute(STROLCH_CERTIFICATE);
 		ServiceHandler serviceHandler = ChronivaroRestHelper.getServiceHandler();
 		ServiceResult result = serviceHandler.doService(cert, new SubmitPeriodService(), new StringArgument(id));
 		return ResponseUtil.toResponse(result);
@@ -209,7 +210,7 @@ public class ChronivaroResource {
 	@Path("me/day-summary/{date}")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getDaySummary(@Context HttpServletRequest request, @PathParam("date") String dateStr) {
-		Certificate cert = (Certificate) request.getAttribute(StrolchRestfulConstants.STROLCH_CERTIFICATE);
+		Certificate cert = (Certificate) request.getAttribute(STROLCH_CERTIFICATE);
 		ServiceHandler serviceHandler = ChronivaroRestHelper.getServiceHandler();
 
 		String employeeId;
@@ -238,7 +239,7 @@ public class ChronivaroResource {
 	@Path("me/month-summary/{yearMonth}")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getMonthSummary(@Context HttpServletRequest request, @PathParam("yearMonth") String yearMonthStr) {
-		Certificate cert = (Certificate) request.getAttribute(StrolchRestfulConstants.STROLCH_CERTIFICATE);
+		Certificate cert = (Certificate) request.getAttribute(STROLCH_CERTIFICATE);
 		ServiceHandler serviceHandler = ChronivaroRestHelper.getServiceHandler();
 
 		String employeeId;
