@@ -7,12 +7,27 @@ import li.strolch.service.StringArgument;
 import li.strolch.service.api.AbstractService;
 import li.strolch.service.api.ServiceResult;
 
+import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.TYPE_ABSENCE;
+import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.TYPE_ABSENCE_TYPE;
+import static li.strolch.model.StrolchModelConstants.BAG_RELATIONS;
+
 public class RemoveAbsenceTypeService extends AbstractService<StringArgument, ServiceResult> {
 
 	@Override
 	protected ServiceResult internalDoService(StringArgument arg) throws Exception {
 		try (StrolchTransaction tx = openArgOrUserTx(arg)) {
 			Resource type = ChronivaroModelHelper.getAbsenceType(tx, arg.value);
+
+			boolean absenceReferencing = tx
+					.streamResources(TYPE_ABSENCE)
+					.anyMatch(a -> a.hasParameter(BAG_RELATIONS, TYPE_ABSENCE_TYPE) && a
+							.getString(BAG_RELATIONS, TYPE_ABSENCE_TYPE)
+							.equals(arg.value));
+
+			if (absenceReferencing) {
+				return ServiceResult.error("Absence type is still referenced by an absence!");
+			}
+
 			tx.remove(type);
 			tx.commitOnClose();
 		}

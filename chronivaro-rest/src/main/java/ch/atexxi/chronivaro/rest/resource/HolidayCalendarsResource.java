@@ -2,6 +2,8 @@ package ch.atexxi.chronivaro.rest.resource;
 
 import ch.atexxi.chronivaro.core.service.CreateHolidayCalendarService;
 import ch.atexxi.chronivaro.core.service.CreateHolidayService;
+import ch.atexxi.chronivaro.core.service.RemoveHolidayCalendarService;
+import ch.atexxi.chronivaro.core.service.RemoveHolidayService;
 import ch.atexxi.chronivaro.rest.dto.ChronivaroMapper;
 import ch.atexxi.chronivaro.rest.dto.HolidayCalendarDto;
 import ch.atexxi.chronivaro.rest.dto.HolidayDto;
@@ -15,6 +17,7 @@ import li.strolch.persistence.api.StrolchTransaction;
 import li.strolch.privilege.model.Certificate;
 import li.strolch.rest.StrolchRestfulConstants;
 import li.strolch.rest.helper.ResponseUtil;
+import li.strolch.service.StringArgument;
 import li.strolch.service.StringResult;
 import li.strolch.service.api.ServiceHandler;
 import li.strolch.service.api.ServiceResult;
@@ -114,12 +117,9 @@ public class HolidayCalendarsResource {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response removeHolidayCalendar(@Context HttpServletRequest request, @PathParam("id") String id) {
 		Certificate cert = (Certificate) request.getAttribute(StrolchRestfulConstants.STROLCH_CERTIFICATE);
-		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
-			Resource calendar = tx.getResourceBy(TYPE_HOLIDAY_CALENDAR, id, true);
-			tx.remove(calendar);
-			tx.commitOnClose();
-		}
-		return ResponseUtil.toResponse(ServiceResult.success());
+		ServiceHandler serviceHandler = ChronivaroRestHelper.getServiceHandler();
+		ServiceResult result = serviceHandler.doService(cert, new RemoveHolidayCalendarService(), new StringArgument(id));
+		return ResponseUtil.toResponse(result);
 	}
 
 	@DELETE
@@ -128,15 +128,8 @@ public class HolidayCalendarsResource {
 	public Response removeHoliday(@Context HttpServletRequest request, @PathParam("calendarId") String calendarId,
 			@PathParam("holidayId") String holidayId) {
 		Certificate cert = (Certificate) request.getAttribute(StrolchRestfulConstants.STROLCH_CERTIFICATE);
-		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
-			Resource holiday = tx.getResourceBy(TYPE_HOLIDAY, holidayId, true);
-			if (!holiday.getString(li.strolch.model.StrolchModelConstants.BAG_RELATIONS, TYPE_HOLIDAY_CALENDAR)
-					.equals(calendarId)) {
-				throw new BadRequestException("Holiday " + holidayId + " does not belong to calendar " + calendarId);
-			}
-			tx.remove(holiday);
-			tx.commitOnClose();
-		}
-		return ResponseUtil.toResponse(ServiceResult.success());
+		ServiceHandler serviceHandler = ChronivaroRestHelper.getServiceHandler();
+		ServiceResult result = serviceHandler.doService(cert, new RemoveHolidayService(), new StringArgument(holidayId));
+		return ResponseUtil.toResponse(result);
 	}
 }

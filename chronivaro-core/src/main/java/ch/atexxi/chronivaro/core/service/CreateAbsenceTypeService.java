@@ -25,7 +25,8 @@ public class CreateAbsenceTypeService
 			type.setBoolean(PARAM_REDUCE_VACATION_CREDIT, arg.reduceVacationCredit);
 			type.setBoolean(PARAM_PAID, arg.paid);
 			type.setBoolean(PARAM_APPROVAL_REQUIRED, arg.approvalRequired);
-			type.setStringList(PARAM_DURATION_TYPES, arg.durationTypes);
+			if (arg.durationTypes != null)
+				type.setStringList(PARAM_DURATION_TYPES, arg.durationTypes);
 			type.setBoolean(PARAM_ACTIVE, arg.active);
 			tx.add(type);
 			tx.commitOnClose();

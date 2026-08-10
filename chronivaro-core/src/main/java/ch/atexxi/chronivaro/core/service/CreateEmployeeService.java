@@ -17,9 +17,10 @@ public class CreateEmployeeService extends AbstractService<CreateEmployeeService
 
 	@Override
 	protected ServiceResult internalDoService(EmployeeArgument arg) throws Exception {
+		String timeZone = arg.timezone == null || arg.timezone.isEmpty() ? getAgent().getTimezone() : arg.timezone;
+		ZoneId zoneId = ZoneId.of(timeZone);
+
 		try (StrolchTransaction tx = openArgOrUserTx(arg)) {
-			ZoneId zoneId = arg.timezone == null || arg.timezone.isEmpty() ? ZoneId.of("Europe/Zurich") :
-					ZoneId.of(arg.timezone);
 
 			Resource employee = new Resource(getUniqueId(), arg.displayName, TYPE_EMPLOYEE);
 			employee.addParameterBag(new ParameterBag(BAG_PARAMETERS, "Parameters", "Parameters"));
@@ -28,12 +29,13 @@ public class CreateEmployeeService extends AbstractService<CreateEmployeeService
 			employee.setString(PARAM_DISPLAY_NAME, arg.displayName);
 			employee.setString(BAG_RELATIONS, TYPE_TEAM, arg.teamId);
 			employee.setString(BAG_RELATIONS, TYPE_LOCATION, arg.locationId);
-			employee.setString(PARAM_TIMEZONE, arg.timezone);
+			employee.setString(PARAM_TIMEZONE, timeZone);
 			employee.setDate(PARAM_JOIN_DATE, arg.joinDate.atStartOfDay(zoneId));
 			if (arg.exitDate != null)
 				employee.setDate(PARAM_EXIT_DATE, arg.exitDate.atStartOfDay(zoneId));
 			employee.setBoolean(PARAM_ACTIVE, arg.active);
-			employee.setString(BAG_RELATIONS, PARAM_USER, arg.userId);
+			if (arg.userId != null)
+				employee.setString(BAG_RELATIONS, PARAM_USER, arg.userId);
 			tx.add(employee);
 			tx.commitOnClose();
 		}
