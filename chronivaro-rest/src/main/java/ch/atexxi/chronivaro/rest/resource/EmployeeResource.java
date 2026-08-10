@@ -57,7 +57,6 @@ public class EmployeeResource {
 		EmployeeDto dto = ChronivaroRestHelper.createGson().fromJson(data, EmployeeDto.class);
 
 		CreateEmployeeService.EmployeeArgument arg = new CreateEmployeeService.EmployeeArgument();
-		arg.id = dto.id();
 		arg.personalNumber = dto.personalNumber();
 		arg.displayName = dto.displayName();
 		arg.teamId = dto.teamId();
@@ -81,7 +80,7 @@ public class EmployeeResource {
 		ServiceHandler serviceHandler = ChronivaroRestHelper.getServiceHandler();
 		EmployeeDto dto = ChronivaroRestHelper.createGson().fromJson(data, EmployeeDto.class);
 
-		CreateEmployeeService.EmployeeArgument arg = new CreateEmployeeService.EmployeeArgument();
+		CreateEmployeeService.UpdateEmployeeArgument arg = new CreateEmployeeService.UpdateEmployeeArgument();
 		arg.id = id;
 		arg.personalNumber = dto.personalNumber();
 		arg.displayName = dto.displayName();

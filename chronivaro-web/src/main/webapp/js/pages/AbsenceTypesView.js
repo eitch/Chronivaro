@@ -33,7 +33,7 @@ export default class AbsenceTypesView {
 				<div style="background-color:#fefefe; margin:5% auto; padding:20px; border:1px solid #888; width:80%; max-width:500px;">
 					<h3 id="modal-title">Add Absence Type</h3>
 					<form id="absence-type-form">
-						<div class="form-group">
+						<div class="form-group" id="at-id-group">
 							<label for="at-id">ID:</label>
 							<input type="text" id="at-id" required>
 						</div>
@@ -117,6 +117,7 @@ export default class AbsenceTypesView {
 				if (type) {
 					editingId = id;
 					modalTitle.innerText = 'Edit Absence Type';
+					container.querySelector('#at-id-group').style.display = 'block';
 					container.querySelector('#at-id').value = type.id;
 					container.querySelector('#at-id').disabled = true;
 					container.querySelector('#at-code').value = type.code;
@@ -148,7 +149,8 @@ export default class AbsenceTypesView {
 			editingId = null;
 			modalTitle.innerText = 'Add Absence Type';
 			form.reset();
-			container.querySelector('#at-id').disabled = false;
+			container.querySelector('#at-id-group').style.display = 'none';
+			container.querySelector('#at-id').required = false;
 			container.querySelector('#at-active').checked = true;
 			modal.style.display = 'block';
 		});
@@ -160,7 +162,6 @@ export default class AbsenceTypesView {
 		form.addEventListener('submit', async (e) => {
 			e.preventDefault();
 			const type = {
-				id: container.querySelector('#at-id').value,
 				code: container.querySelector('#at-code').value,
 				name: container.querySelector('#at-name').value,
 				paid: container.querySelector('#at-paid').checked,
@@ -173,6 +174,7 @@ export default class AbsenceTypesView {
 
 			try {
 				if (editingId) {
+					type.id = editingId;
 					await AbsenceTypeApi.update(type);
 				} else {
 					await AbsenceTypeApi.create(type);

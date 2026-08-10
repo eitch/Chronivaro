@@ -32,7 +32,7 @@ export default class LocationsView {
 				<div style="background-color:#fefefe; margin:15% auto; padding:20px; border:1px solid #888; width:80%; max-width:500px;">
 					<h3 id="modal-title">Add Location</h3>
 					<form id="location-form">
-						<div class="form-group">
+						<div class="form-group" id="loc-id-group">
 							<label for="loc-id">ID:</label>
 							<input type="text" id="loc-id" required>
 						</div>
@@ -104,6 +104,7 @@ export default class LocationsView {
 				if (loc) {
 					editingId = id;
 					modalTitle.innerText = 'Edit Location';
+					container.querySelector('#loc-id-group').style.display = 'block';
 					container.querySelector('#loc-id').value = loc.id;
 					container.querySelector('#loc-id').disabled = true;
 					container.querySelector('#loc-name').value = loc.name;
@@ -131,7 +132,8 @@ export default class LocationsView {
 			editingId = null;
 			modalTitle.innerText = 'Add Location';
 			form.reset();
-			container.querySelector('#loc-id').disabled = false;
+			container.querySelector('#loc-id-group').style.display = 'none';
+			container.querySelector('#loc-id').required = false;
 			modal.style.display = 'block';
 		});
 
@@ -142,7 +144,6 @@ export default class LocationsView {
 		form.addEventListener('submit', async (e) => {
 			e.preventDefault();
 			const loc = {
-				id: container.querySelector('#loc-id').value,
 				name: container.querySelector('#loc-name').value,
 				timezone: container.querySelector('#loc-timezone').value,
 				holidayCalendarId: container.querySelector('#loc-holiday-calendar').value || null
@@ -150,6 +151,7 @@ export default class LocationsView {
 
 			try {
 				if (editingId) {
+					loc.id = editingId;
 					await LocationApi.update(loc);
 				} else {
 					await LocationApi.create(loc);

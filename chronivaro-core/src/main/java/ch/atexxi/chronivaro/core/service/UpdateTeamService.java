@@ -8,10 +8,10 @@ import li.strolch.service.api.AbstractService;
 
 import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.PARAM_NAME;
 
-public class UpdateTeamService extends AbstractService<CreateTeamService.TeamArgument, ServiceResult> {
+public class UpdateTeamService extends AbstractService<CreateTeamService.UpdateTeamArgument, ServiceResult> {
 
 	@Override
-	protected ServiceResult internalDoService(CreateTeamService.TeamArgument arg) throws Exception {
+	protected ServiceResult internalDoService(CreateTeamService.UpdateTeamArgument arg) throws Exception {
 		try (StrolchTransaction tx = openArgOrUserTx(arg)) {
 			Resource team = ChronivaroModelHelper.getTeam(tx, arg.id);
 			team.setName(arg.name);
@@ -23,8 +23,8 @@ public class UpdateTeamService extends AbstractService<CreateTeamService.TeamArg
 	}
 
 	@Override
-	public CreateTeamService.TeamArgument getArgumentInstance() {
-		return new CreateTeamService.TeamArgument();
+	public CreateTeamService.UpdateTeamArgument getArgumentInstance() {
+		return new CreateTeamService.UpdateTeamArgument();
 	}
 
 	@Override

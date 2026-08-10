@@ -8,16 +8,17 @@ import li.strolch.service.api.ServiceArgument;
 import li.strolch.service.api.ServiceResult;
 
 import java.time.ZonedDateTime;
-import java.util.UUID;
 
 import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
+import static li.strolch.agent.api.StrolchAgent.getUniqueId;
 
-public class CreateScheduleService extends AbstractService<CreateScheduleService.CreateScheduleArgument, ServiceResult> {
+public class CreateScheduleService
+		extends AbstractService<CreateScheduleService.CreateScheduleArgument, ServiceResult> {
 
 	@Override
 	protected ServiceResult internalDoService(CreateScheduleArgument arg) throws Exception {
 		try (StrolchTransaction tx = openArgOrUserTx(arg)) {
-			Resource schedule = new Resource(UUID.randomUUID().toString(), "Schedule for " + arg.employeeId,
+			Resource schedule = new Resource(getUniqueId(), "Schedule for " + arg.employeeId,
 					TYPE_EMPLOYMENT_SCHEDULE_VERSION);
 			schedule.addParameterBag(new ParameterBag(BAG_PARAMETERS, "Parameters", "Parameters"));
 			schedule.addParameterBag(new ParameterBag(BAG_RELATIONS, "Relations", "Relations"));

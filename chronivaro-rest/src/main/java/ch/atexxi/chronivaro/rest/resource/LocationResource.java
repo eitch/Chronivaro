@@ -46,7 +46,6 @@ public class LocationResource {
 		LocationDto dto = ChronivaroRestHelper.createGson().fromJson(data, LocationDto.class);
 
 		CreateLocationService.LocationArgument arg = new CreateLocationService.LocationArgument();
-		arg.id = dto.id();
 		arg.name = dto.name();
 		arg.timezone = dto.timezone();
 		arg.holidayCalendarId = dto.holidayCalendarId();
@@ -64,7 +63,7 @@ public class LocationResource {
 		ServiceHandler serviceHandler = ChronivaroRestHelper.getServiceHandler();
 		LocationDto dto = ChronivaroRestHelper.createGson().fromJson(data, LocationDto.class);
 
-		CreateLocationService.LocationArgument arg = new CreateLocationService.LocationArgument();
+		CreateLocationService.UpdateLocationArgument arg = new CreateLocationService.UpdateLocationArgument();
 		arg.id = id;
 		arg.name = dto.name();
 		arg.timezone = dto.timezone();

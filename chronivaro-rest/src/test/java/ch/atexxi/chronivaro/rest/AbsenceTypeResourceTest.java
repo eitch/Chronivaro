@@ -21,7 +21,7 @@ public class AbsenceTypeResourceTest extends AbstractChronivaroRestfulTest {
 		String authToken = authenticate();
 
 		// Create
-		AbsenceTypeDto newType = new AbsenceTypeDto("test-absence", "TEST", "Test Absence", true, false, true, true,
+		AbsenceTypeDto newType = new AbsenceTypeDto(null, "TEST", "Test Absence", true, false, true, true,
 				List.of("FULL_DAY"), true);
 		String json = ChronivaroRestHelper.createGson().toJson(newType);
 
@@ -32,6 +32,7 @@ public class AbsenceTypeResourceTest extends AbstractChronivaroRestfulTest {
 			assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
 		}
 
+		String absenceTypeId;
 		// Get all
 		try (Response response = target().path("chronivaro/v1/admin/absence-types")
 				.request(MediaType.APPLICATION_JSON)
@@ -41,15 +42,15 @@ public class AbsenceTypeResourceTest extends AbstractChronivaroRestfulTest {
 			List<AbsenceTypeDto> types = ChronivaroRestHelper.createGson()
 					.fromJson(response.readEntity(String.class), new TypeToken<List<AbsenceTypeDto>>() {
 					}.getType());
-			assertTrue(types.stream().anyMatch(t -> t.id().equals("test-absence")));
+			absenceTypeId = types.stream().filter(t -> t.name().equals("Test Absence")).findFirst().orElseThrow().id();
 		}
 
 		// Update
-		AbsenceTypeDto updatedType = new AbsenceTypeDto("test-absence", "TEST", "Updated Test Absence", true, false, true,
+		AbsenceTypeDto updatedType = new AbsenceTypeDto(absenceTypeId, "TEST", "Updated Test Absence", true, false, true,
 				true, List.of("FULL_DAY"), false);
 		String updatedJson = ChronivaroRestHelper.createGson().toJson(updatedType);
 
-		try (Response response = target().path("chronivaro/v1/admin/absence-types/test-absence")
+		try (Response response = target().path("chronivaro/v1/admin/absence-types/" + absenceTypeId)
 				.request(MediaType.APPLICATION_JSON)
 				.header("Authorization", authToken)
 				.put(Entity.json(updatedJson))) {
@@ -64,13 +65,13 @@ public class AbsenceTypeResourceTest extends AbstractChronivaroRestfulTest {
 			List<AbsenceTypeDto> types = ChronivaroRestHelper.createGson()
 					.fromJson(response.readEntity(String.class), new TypeToken<List<AbsenceTypeDto>>() {
 					}.getType());
-			AbsenceTypeDto found = types.stream().filter(t -> t.id().equals("test-absence")).findFirst().orElseThrow();
+			AbsenceTypeDto found = types.stream().filter(t -> t.id().equals(absenceTypeId)).findFirst().orElseThrow();
 			assertEquals("Updated Test Absence", found.name());
 			assertFalse(found.active());
 		}
 
 		// Delete
-		try (Response response = target().path("chronivaro/v1/admin/absence-types/test-absence")
+		try (Response response = target().path("chronivaro/v1/admin/absence-types/" + absenceTypeId)
 				.request(MediaType.APPLICATION_JSON)
 				.header("Authorization", authToken)
 				.delete()) {
@@ -85,7 +86,7 @@ public class AbsenceTypeResourceTest extends AbstractChronivaroRestfulTest {
 			List<AbsenceTypeDto> types = ChronivaroRestHelper.createGson()
 					.fromJson(response.readEntity(String.class), new TypeToken<List<AbsenceTypeDto>>() {
 					}.getType());
-			assertFalse(types.stream().anyMatch(t -> t.id().equals("test-absence")));
+			assertFalse(types.stream().anyMatch(t -> t.id().equals(absenceTypeId)));
 		}
 	}
 }

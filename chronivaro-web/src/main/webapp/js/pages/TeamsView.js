@@ -30,7 +30,7 @@ export default class TeamsView {
 				<div style="background-color:#fefefe; margin:15% auto; padding:20px; border:1px solid #888; width:80%; max-width:500px;">
 					<h3 id="modal-title">Add Team</h3>
 					<form id="team-form">
-						<div class="form-group">
+						<div class="form-group" id="team-id-group">
 							<label for="team-id">ID:</label>
 							<input type="text" id="team-id" required>
 						</div>
@@ -92,6 +92,7 @@ export default class TeamsView {
 				if (team) {
 					editingId = id;
 					modalTitle.innerText = 'Edit Team';
+					container.querySelector('#team-id-group').style.display = 'block';
 					container.querySelector('#team-id').value = team.id;
 					container.querySelector('#team-id').disabled = true;
 					container.querySelector('#team-name').value = team.name;
@@ -117,7 +118,8 @@ export default class TeamsView {
 			editingId = null;
 			modalTitle.innerText = 'Add Team';
 			form.reset();
-			container.querySelector('#team-id').disabled = false;
+			container.querySelector('#team-id-group').style.display = 'none';
+			container.querySelector('#team-id').required = false;
 			modal.style.display = 'block';
 		});
 
@@ -128,12 +130,12 @@ export default class TeamsView {
 		form.addEventListener('submit', async (e) => {
 			e.preventDefault();
 			const team = {
-				id: container.querySelector('#team-id').value,
 				name: container.querySelector('#team-name').value
 			};
 
 			try {
 				if (editingId) {
+					team.id = editingId;
 					await TeamApi.update(team);
 				} else {
 					await TeamApi.create(team);

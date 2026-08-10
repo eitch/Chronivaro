@@ -22,7 +22,7 @@ public class EmployeeResourceTest extends AbstractChronivaroRestfulTest {
 		String authToken = authenticate();
 
 		// Create
-		EmployeeDto newEmployee = new EmployeeDto("test-employee", "PN001", "Test Employee", "team-1", "location-1",
+		EmployeeDto newEmployee = new EmployeeDto(null, "PN001", "Test Employee", "team-1", "location-1",
 				"Europe/Zurich", LocalDate.of(2025, 1, 1), null, true, "admin");
 		String json = ChronivaroRestHelper.createGson().toJson(newEmployee);
 
@@ -33,6 +33,7 @@ public class EmployeeResourceTest extends AbstractChronivaroRestfulTest {
 			assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
 		}
 
+		String employeeId;
 		// Get all
 		try (Response response = target().path("chronivaro/v1/admin/employees")
 				.request(MediaType.APPLICATION_JSON)
@@ -42,11 +43,11 @@ public class EmployeeResourceTest extends AbstractChronivaroRestfulTest {
 			List<EmployeeDto> employees = ChronivaroRestHelper.createGson()
 					.fromJson(response.readEntity(String.class), new TypeToken<List<EmployeeDto>>() {
 					}.getType());
-			assertTrue(employees.stream().anyMatch(e -> e.id().equals("test-employee")));
+			employeeId = employees.stream().filter(e -> e.displayName().equals("Test Employee")).findFirst().orElseThrow().id();
 		}
 
 		// Get by ID
-		try (Response response = target().path("chronivaro/v1/admin/employees/test-employee")
+		try (Response response = target().path("chronivaro/v1/admin/employees/" + employeeId)
 				.request(MediaType.APPLICATION_JSON)
 				.header("Authorization", authToken)
 				.get()) {
@@ -56,11 +57,11 @@ public class EmployeeResourceTest extends AbstractChronivaroRestfulTest {
 		}
 
 		// Update
-		EmployeeDto updatedEmployee = new EmployeeDto("test-employee", "PN001", "Updated Test Employee", "team-1",
+		EmployeeDto updatedEmployee = new EmployeeDto(employeeId, "PN001", "Updated Test Employee", "team-1",
 				"location-1", "Europe/Zurich", LocalDate.of(2025, 1, 1), null, false, "admin");
 		String updatedJson = ChronivaroRestHelper.createGson().toJson(updatedEmployee);
 
-		try (Response response = target().path("chronivaro/v1/admin/employees/test-employee")
+		try (Response response = target().path("chronivaro/v1/admin/employees/" + employeeId)
 				.request(MediaType.APPLICATION_JSON)
 				.header("Authorization", authToken)
 				.put(Entity.json(updatedJson))) {
@@ -68,7 +69,7 @@ public class EmployeeResourceTest extends AbstractChronivaroRestfulTest {
 		}
 
 		// Verify update
-		try (Response response = target().path("chronivaro/v1/admin/employees/test-employee")
+		try (Response response = target().path("chronivaro/v1/admin/employees/" + employeeId)
 				.request(MediaType.APPLICATION_JSON)
 				.header("Authorization", authToken)
 				.get()) {
@@ -78,7 +79,7 @@ public class EmployeeResourceTest extends AbstractChronivaroRestfulTest {
 		}
 
 		// Delete
-		try (Response response = target().path("chronivaro/v1/admin/employees/test-employee")
+		try (Response response = target().path("chronivaro/v1/admin/employees/" + employeeId)
 				.request(MediaType.APPLICATION_JSON)
 				.header("Authorization", authToken)
 				.delete()) {
@@ -86,7 +87,7 @@ public class EmployeeResourceTest extends AbstractChronivaroRestfulTest {
 		}
 
 		// Verify deletion
-		try (Response response = target().path("chronivaro/v1/admin/employees/test-employee")
+		try (Response response = target().path("chronivaro/v1/admin/employees/" + employeeId)
 				.request(MediaType.APPLICATION_JSON)
 				.header("Authorization", authToken)
 				.get()) {

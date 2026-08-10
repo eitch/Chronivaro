@@ -42,11 +42,8 @@ public class AbsenceTypeServiceTest {
 	public void shouldCreateUpdateAndRemoveAbsenceType() {
 		ServiceHandler serviceHandler = runtimeMock.getServiceHandler();
 
-		String absenceTypeId = "test-absence-type";
-
 		// Create
 		CreateAbsenceTypeService.AbsenceTypeArgument createArg = new CreateAbsenceTypeService.AbsenceTypeArgument();
-		createArg.id = absenceTypeId;
 		createArg.code = "VAC";
 		createArg.name = "Vacation";
 		createArg.countAsTargetTime = true;
@@ -59,8 +56,13 @@ public class AbsenceTypeServiceTest {
 		ServiceResult createResult = serviceHandler.doService(certificate, new CreateAbsenceTypeService(), createArg);
 		assertTrue(createResult.getMessage(), createResult.isOk());
 
+		String absenceTypeId;
 		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
-			Resource type = tx.getResourceBy(TYPE_ABSENCE_TYPE, absenceTypeId, true);
+			Resource type = tx.streamResources(TYPE_ABSENCE_TYPE)
+					.filter(r -> r.getName().equals("Vacation"))
+					.findFirst()
+					.orElseThrow();
+			absenceTypeId = type.getId();
 			assertEquals("VAC", type.getString(PARAM_CODE));
 			assertEquals("Vacation", type.getString(PARAM_NAME));
 			assertTrue(type.getBoolean(PARAM_ACTIVE));
@@ -68,8 +70,17 @@ public class AbsenceTypeServiceTest {
 		}
 
 		// Update
-		createArg.name = "Updated Vacation";
-		ServiceResult updateResult = serviceHandler.doService(certificate, new UpdateAbsenceTypeService(), createArg);
+		CreateAbsenceTypeService.UpdateAbsenceTypeArgument updateArg = new CreateAbsenceTypeService.UpdateAbsenceTypeArgument();
+		updateArg.id = absenceTypeId;
+		updateArg.code = "VAC";
+		updateArg.name = "Updated Vacation";
+		updateArg.countAsTargetTime = true;
+		updateArg.reduceVacationCredit = true;
+		updateArg.paid = true;
+		updateArg.approvalRequired = true;
+		updateArg.durationTypes = List.of(DURATION_FULL_DAY, DURATION_HALF_DAY);
+		updateArg.active = true;
+		ServiceResult updateResult = serviceHandler.doService(certificate, new UpdateAbsenceTypeService(), updateArg);
 		assertTrue(updateResult.getMessage(), updateResult.isOk());
 
 		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {

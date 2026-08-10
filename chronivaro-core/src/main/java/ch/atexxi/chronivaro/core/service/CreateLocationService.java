@@ -2,18 +2,19 @@ package ch.atexxi.chronivaro.core.service;
 
 import li.strolch.model.Resource;
 import li.strolch.persistence.api.StrolchTransaction;
-import li.strolch.service.api.ServiceResult;
 import li.strolch.service.api.AbstractService;
 import li.strolch.service.api.ServiceArgument;
+import li.strolch.service.api.ServiceResult;
 
 import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
+import static li.strolch.agent.api.StrolchAgent.getUniqueId;
 
 public class CreateLocationService extends AbstractService<CreateLocationService.LocationArgument, ServiceResult> {
 
 	@Override
 	protected ServiceResult internalDoService(LocationArgument arg) throws Exception {
 		try (StrolchTransaction tx = openArgOrUserTx(arg)) {
-			Resource location = new Resource(arg.id, arg.name, TYPE_LOCATION);
+			Resource location = new Resource(getUniqueId(), arg.name, TYPE_LOCATION);
 			location.addParameterBag(new li.strolch.model.ParameterBag(BAG_PARAMETERS, "Parameters", "Parameters"));
 			location.addParameterBag(new li.strolch.model.ParameterBag(BAG_RELATIONS, "Relations", "Relations"));
 			location.setString(PARAM_NAME, arg.name);
@@ -36,9 +37,12 @@ public class CreateLocationService extends AbstractService<CreateLocationService
 	}
 
 	public static class LocationArgument extends ServiceArgument {
-		public String id;
 		public String name;
 		public String timezone;
 		public String holidayCalendarId;
+	}
+
+	public static class UpdateLocationArgument extends LocationArgument {
+		public String id;
 	}
 }

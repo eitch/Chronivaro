@@ -10,10 +10,10 @@ import java.time.ZoneId;
 
 import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
 
-public class UpdateEmployeeService extends AbstractService<CreateEmployeeService.EmployeeArgument, ServiceResult> {
+public class UpdateEmployeeService extends AbstractService<CreateEmployeeService.UpdateEmployeeArgument, ServiceResult> {
 
 	@Override
-	protected ServiceResult internalDoService(CreateEmployeeService.EmployeeArgument arg) throws Exception {
+	protected ServiceResult internalDoService(CreateEmployeeService.UpdateEmployeeArgument arg) throws Exception {
 		try (StrolchTransaction tx = openArgOrUserTx(arg)) {
 			Resource employee = ChronivaroModelHelper.getEmployee(tx, arg.id);
 			ZoneId zoneId = ChronivaroModelHelper.getEmployeeTimezone(employee);
@@ -38,8 +38,8 @@ public class UpdateEmployeeService extends AbstractService<CreateEmployeeService
 	}
 
 	@Override
-	public CreateEmployeeService.EmployeeArgument getArgumentInstance() {
-		return new CreateEmployeeService.EmployeeArgument();
+	public CreateEmployeeService.UpdateEmployeeArgument getArgumentInstance() {
+		return new CreateEmployeeService.UpdateEmployeeArgument();
 	}
 
 	@Override

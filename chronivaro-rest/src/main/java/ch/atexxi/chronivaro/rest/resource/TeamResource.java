@@ -46,7 +46,6 @@ public class TeamResource {
 		TeamDto dto = ChronivaroRestHelper.createGson().fromJson(data, TeamDto.class);
 
 		CreateTeamService.TeamArgument arg = new CreateTeamService.TeamArgument();
-		arg.id = dto.id();
 		arg.name = dto.name();
 
 		ServiceResult result = serviceHandler.doService(cert, new CreateTeamService(), arg);
@@ -62,7 +61,7 @@ public class TeamResource {
 		ServiceHandler serviceHandler = ChronivaroRestHelper.getServiceHandler();
 		TeamDto dto = ChronivaroRestHelper.createGson().fromJson(data, TeamDto.class);
 
-		CreateTeamService.TeamArgument arg = new CreateTeamService.TeamArgument();
+		CreateTeamService.UpdateTeamArgument arg = new CreateTeamService.UpdateTeamArgument();
 		arg.id = id;
 		arg.name = dto.name();
 

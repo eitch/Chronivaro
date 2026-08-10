@@ -40,24 +40,28 @@ public class TeamServiceTest {
 	public void shouldCreateUpdateAndRemoveTeam() {
 		ServiceHandler serviceHandler = runtimeMock.getServiceHandler();
 
-		String teamId = "test-team";
-
 		// Create
 		CreateTeamService.TeamArgument createArg = new CreateTeamService.TeamArgument();
-		createArg.id = teamId;
 		createArg.name = "Test Team";
 
 		ServiceResult createResult = serviceHandler.doService(certificate, new CreateTeamService(), createArg);
 		assertTrue(createResult.getMessage(), createResult.isOk());
 
+		String teamId;
 		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
-			Resource team = tx.getResourceBy(TYPE_TEAM, teamId, true);
+			Resource team = tx.streamResources(TYPE_TEAM)
+					.filter(r -> r.getName().equals("Test Team"))
+					.findFirst()
+					.orElseThrow();
+			teamId = team.getId();
 			assertEquals("Test Team", team.getString(PARAM_NAME));
 		}
 
 		// Update
-		createArg.name = "Updated Team";
-		ServiceResult updateResult = serviceHandler.doService(certificate, new UpdateTeamService(), createArg);
+		CreateTeamService.UpdateTeamArgument updateArg = new CreateTeamService.UpdateTeamArgument();
+		updateArg.id = teamId;
+		updateArg.name = "Updated Team";
+		ServiceResult updateResult = serviceHandler.doService(certificate, new UpdateTeamService(), updateArg);
 		assertTrue(updateResult.getMessage(), updateResult.isOk());
 
 		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {

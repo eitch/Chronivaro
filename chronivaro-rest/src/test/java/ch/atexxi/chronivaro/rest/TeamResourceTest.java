@@ -21,7 +21,7 @@ public class TeamResourceTest extends AbstractChronivaroRestfulTest {
 		String authToken = authenticate();
 
 		// Create
-		TeamDto newTeam = new TeamDto("test-team", "Test Team");
+		TeamDto newTeam = new TeamDto(null, "Test Team");
 		String json = ChronivaroRestHelper.createGson().toJson(newTeam);
 
 		try (Response response = target().path("chronivaro/v1/admin/teams")
@@ -31,6 +31,7 @@ public class TeamResourceTest extends AbstractChronivaroRestfulTest {
 			assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
 		}
 
+		String teamId;
 		// Get all
 		try (Response response = target().path("chronivaro/v1/admin/teams")
 				.request(MediaType.APPLICATION_JSON)
@@ -40,14 +41,14 @@ public class TeamResourceTest extends AbstractChronivaroRestfulTest {
 			List<TeamDto> teams = ChronivaroRestHelper.createGson()
 					.fromJson(response.readEntity(String.class), new TypeToken<List<TeamDto>>() {
 					}.getType());
-			assertTrue(teams.stream().anyMatch(t -> t.id().equals("test-team")));
+			teamId = teams.stream().filter(t -> t.name().equals("Test Team")).findFirst().orElseThrow().id();
 		}
 
 		// Update
-		TeamDto updatedTeam = new TeamDto("test-team", "Updated Test Team");
+		TeamDto updatedTeam = new TeamDto(teamId, "Updated Test Team");
 		String updatedJson = ChronivaroRestHelper.createGson().toJson(updatedTeam);
 
-		try (Response response = target().path("chronivaro/v1/admin/teams/test-team")
+		try (Response response = target().path("chronivaro/v1/admin/teams/" + teamId)
 				.request(MediaType.APPLICATION_JSON)
 				.header("Authorization", authToken)
 				.put(Entity.json(updatedJson))) {
@@ -62,12 +63,12 @@ public class TeamResourceTest extends AbstractChronivaroRestfulTest {
 			List<TeamDto> teams = ChronivaroRestHelper.createGson()
 					.fromJson(response.readEntity(String.class), new TypeToken<List<TeamDto>>() {
 					}.getType());
-			TeamDto found = teams.stream().filter(t -> t.id().equals("test-team")).findFirst().orElseThrow();
+			TeamDto found = teams.stream().filter(t -> t.id().equals(teamId)).findFirst().orElseThrow();
 			assertEquals("Updated Test Team", found.name());
 		}
 
 		// Delete
-		try (Response response = target().path("chronivaro/v1/admin/teams/test-team")
+		try (Response response = target().path("chronivaro/v1/admin/teams/" + teamId)
 				.request(MediaType.APPLICATION_JSON)
 				.header("Authorization", authToken)
 				.delete()) {
@@ -82,7 +83,7 @@ public class TeamResourceTest extends AbstractChronivaroRestfulTest {
 			List<TeamDto> teams = ChronivaroRestHelper.createGson()
 					.fromJson(response.readEntity(String.class), new TypeToken<List<TeamDto>>() {
 					}.getType());
-			assertFalse(teams.stream().anyMatch(t -> t.id().equals("test-team")));
+			assertFalse(teams.stream().anyMatch(t -> t.id().equals(teamId)));
 		}
 	}
 }

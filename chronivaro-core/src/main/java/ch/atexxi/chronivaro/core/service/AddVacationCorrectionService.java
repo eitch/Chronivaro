@@ -11,11 +11,12 @@ import li.strolch.service.api.ServiceResult;
 import li.strolch.utils.dbc.DBC;
 
 import java.time.ZonedDateTime;
-import java.util.UUID;
 
 import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
+import static li.strolch.agent.api.StrolchAgent.getUniqueId;
 
-public class AddVacationCorrectionService extends AbstractService<AddVacationCorrectionService.AddVacationCorrectionArgument, ServiceResult> {
+public class AddVacationCorrectionService
+		extends AbstractService<AddVacationCorrectionService.AddVacationCorrectionArgument, ServiceResult> {
 
 	@Override
 	protected ServiceResult internalDoService(AddVacationCorrectionArgument arg) throws Exception {
@@ -26,7 +27,8 @@ public class AddVacationCorrectionService extends AbstractService<AddVacationCor
 		try (StrolchTransaction tx = openArgOrUserTx(arg)) {
 			Resource employee = ChronivaroModelHelper.getEmployee(tx, arg.employeeId);
 
-			Resource entry = new Resource(UUID.randomUUID().toString(), "Vacation Correction " + arg.employeeId, TYPE_VACATION_ACCOUNT_ENTRY);
+			Resource entry = new Resource(getUniqueId(), "Vacation Correction " + arg.employeeId,
+					TYPE_VACATION_ACCOUNT_ENTRY);
 			entry.addParameterBag(new ParameterBag(BAG_PARAMETERS, "Parameters", "Parameters"));
 			entry.addParameterBag(new ParameterBag(BAG_RELATIONS, "Relations", "Relations"));
 
@@ -41,7 +43,8 @@ public class AddVacationCorrectionService extends AbstractService<AddVacationCor
 
 			tx.add(entry);
 
-			ChronivaroAuditHelper.audit(tx, TYPE_VACATION_ACCOUNT_ENTRY, entry.getId(), PARAM_VALUE, null, String.valueOf(arg.value));
+			ChronivaroAuditHelper.audit(tx, TYPE_VACATION_ACCOUNT_ENTRY, entry.getId(), PARAM_VALUE, null,
+					String.valueOf(arg.value));
 
 			tx.commitOnClose();
 		}

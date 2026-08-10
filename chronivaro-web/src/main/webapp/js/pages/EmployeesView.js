@@ -36,7 +36,7 @@ export default class EmployeesView {
 				<div style="background-color:#fefefe; margin:15% auto; padding:20px; border:1px solid #888; width:80%; max-width:600px;">
 					<h3 id="modal-title">Add Employee</h3>
 					<form id="employee-form">
-						<div class="form-group">
+						<div class="form-group" id="emp-id-group">
 							<label for="emp-id">ID:</label>
 							<input type="text" id="emp-id" required>
 						</div>
@@ -155,6 +155,7 @@ export default class EmployeesView {
 				if (emp) {
 					editingId = id;
 					modalTitle.innerText = 'Edit Employee';
+					container.querySelector('#emp-id-group').style.display = 'block';
 					container.querySelector('#emp-id').value = emp.id;
 					container.querySelector('#emp-id').disabled = true;
 					container.querySelector('#emp-pers-nr').value = emp.personalNumber;
@@ -189,7 +190,8 @@ export default class EmployeesView {
 			editingId = null;
 			modalTitle.innerText = 'Add Employee';
 			form.reset();
-			container.querySelector('#emp-id').disabled = false;
+			container.querySelector('#emp-id-group').style.display = 'none';
+			container.querySelector('#emp-id').required = false;
 			container.querySelector('#emp-active').checked = true;
 			modal.style.display = 'block';
 		});
@@ -201,7 +203,6 @@ export default class EmployeesView {
 		form.addEventListener('submit', async (e) => {
 			e.preventDefault();
 			const emp = {
-				id: container.querySelector('#emp-id').value,
 				personalNumber: container.querySelector('#emp-pers-nr').value,
 				displayName: container.querySelector('#emp-name').value,
 				teamId: container.querySelector('#emp-team').value,
@@ -215,6 +216,7 @@ export default class EmployeesView {
 
 			try {
 				if (editingId) {
+					emp.id = editingId;
 					await EmployeeApi.update(emp);
 				} else {
 					await EmployeeApi.create(emp);

@@ -40,11 +40,8 @@ public class LocationServiceTest {
 	public void shouldCreateUpdateAndRemoveLocation() {
 		ServiceHandler serviceHandler = runtimeMock.getServiceHandler();
 
-		String locationId = "test-loc";
-
 		// Create
 		CreateLocationService.LocationArgument createArg = new CreateLocationService.LocationArgument();
-		createArg.id = locationId;
 		createArg.name = "Test Location";
 		createArg.timezone = "Europe/Zurich";
 		createArg.holidayCalendarId = "cal1";
@@ -52,16 +49,25 @@ public class LocationServiceTest {
 		ServiceResult createResult = serviceHandler.doService(certificate, new CreateLocationService(), createArg);
 		assertTrue(createResult.getMessage(), createResult.isOk());
 
+		String locationId;
 		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
-			Resource location = tx.getResourceBy(TYPE_LOCATION, locationId, true);
+			Resource location = tx.streamResources(TYPE_LOCATION)
+					.filter(r -> r.getName().equals("Test Location"))
+					.findFirst()
+					.orElseThrow();
+			locationId = location.getId();
 			assertEquals("Test Location", location.getString(PARAM_NAME));
 			assertEquals("Europe/Zurich", location.getString(PARAM_TIMEZONE));
 			assertEquals("cal1", location.getString(BAG_RELATIONS, TYPE_HOLIDAY_CALENDAR));
 		}
 
 		// Update
-		createArg.name = "Updated Location";
-		ServiceResult updateResult = serviceHandler.doService(certificate, new UpdateLocationService(), createArg);
+		CreateLocationService.UpdateLocationArgument updateArg = new CreateLocationService.UpdateLocationArgument();
+		updateArg.id = locationId;
+		updateArg.name = "Updated Location";
+		updateArg.timezone = "Europe/Zurich";
+		updateArg.holidayCalendarId = "cal1";
+		ServiceResult updateResult = serviceHandler.doService(certificate, new UpdateLocationService(), updateArg);
 		assertTrue(updateResult.getMessage(), updateResult.isOk());
 
 		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
@@ -75,6 +81,26 @@ public class LocationServiceTest {
 
 		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
 			assertNull(tx.getResourceBy(TYPE_LOCATION, locationId));
+		}
+	}
+	@Test
+	public void shouldCreateLocationWithoutId() {
+		ServiceHandler serviceHandler = runtimeMock.getServiceHandler();
+
+		// Create
+		CreateLocationService.LocationArgument createArg = new CreateLocationService.LocationArgument();
+		createArg.name = "Test Location 2";
+		createArg.timezone = "Europe/Zurich";
+
+		ServiceResult createResult = serviceHandler.doService(certificate, new CreateLocationService(), createArg);
+		assertTrue(createResult.getMessage(), createResult.isOk());
+
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
+			Resource location = tx.streamResources(TYPE_LOCATION)
+					.filter(r -> r.getName().equals("Test Location 2"))
+					.findFirst()
+					.orElseThrow();
+			assertNotNull(location.getId());
 		}
 	}
 }

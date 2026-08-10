@@ -45,31 +45,43 @@ public class ExtensiveIntegrationTest {
 	public void shouldPerformExtensiveApplicationTest() {
 		ServiceHandler serviceHandler = runtimeMock.getServiceHandler();
 
-		String employeeId = "extensive-emp";
-		String locationId = "extensive-loc";
-		String holidayCalendarId = "extensive-cal";
-		String teamId = "extensive-team";
-
 		// 1. Create Infrastructure
 		CreateHolidayCalendarService.HolidayCalendarArgument calArg = new CreateHolidayCalendarService.HolidayCalendarArgument();
-		calArg.id = holidayCalendarId;
 		calArg.name = "Extensive Calendar";
 		assertTrue(serviceHandler.doService(certificate, new CreateHolidayCalendarService(), calArg).isOk());
 
+		String holidayCalendarId;
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
+			holidayCalendarId = tx.streamResources(TYPE_HOLIDAY_CALENDAR)
+					.filter(r -> r.getName().equals("Extensive Calendar"))
+					.findFirst().orElseThrow().getId();
+		}
+
 		CreateLocationService.LocationArgument locArg = new CreateLocationService.LocationArgument();
-		locArg.id = locationId;
 		locArg.name = "Extensive Location";
 		locArg.timezone = "Europe/Zurich";
 		locArg.holidayCalendarId = holidayCalendarId;
 		assertTrue(serviceHandler.doService(certificate, new CreateLocationService(), locArg).isOk());
 
+		String locationId;
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
+			locationId = tx.streamResources(TYPE_LOCATION)
+					.filter(r -> r.getName().equals("Extensive Location"))
+					.findFirst().orElseThrow().getId();
+		}
+
 		CreateTeamService.TeamArgument teamArg = new CreateTeamService.TeamArgument();
-		teamArg.id = teamId;
 		teamArg.name = "Extensive Team";
 		assertTrue(serviceHandler.doService(certificate, new CreateTeamService(), teamArg).isOk());
 
+		String teamId;
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
+			teamId = tx.streamResources(TYPE_TEAM)
+					.filter(r -> r.getName().equals("Extensive Team"))
+					.findFirst().orElseThrow().getId();
+		}
+
 		CreateHolidayService.HolidayArgument holidayArg = new CreateHolidayService.HolidayArgument();
-		holidayArg.id = "may-day";
 		holidayArg.name = "May Day";
 		holidayArg.holidayCalendarId = holidayCalendarId;
 		holidayArg.date = LocalDate.of(2026, 5, 1);
@@ -78,7 +90,6 @@ public class ExtensiveIntegrationTest {
 
 		// 2. Add Employee
 		CreateEmployeeService.EmployeeArgument createArg = new CreateEmployeeService.EmployeeArgument();
-		createArg.id = employeeId;
 		createArg.personalNumber = "EXT-001";
 		createArg.displayName = "Extensive Employee";
 		createArg.teamId = teamId;
@@ -89,6 +100,13 @@ public class ExtensiveIntegrationTest {
 		createArg.userId = "extuser";
 
 		assertTrue(serviceHandler.doService(certificate, new CreateEmployeeService(), createArg).isOk());
+
+		String employeeId;
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
+			employeeId = tx.streamResources(TYPE_EMPLOYEE)
+					.filter(r -> r.getString(PARAM_PERSONAL_NUMBER).equals("EXT-001"))
+					.findFirst().orElseThrow().getId();
+		}
 
 		// 3. Configure Schedule
 		CreateScheduleService.CreateScheduleArgument scheduleArg = new CreateScheduleService.CreateScheduleArgument();
@@ -116,7 +134,6 @@ public class ExtensiveIntegrationTest {
 
 		// 5. Add Absence
 		CreateAbsenceTypeService.AbsenceTypeArgument typeArg = new CreateAbsenceTypeService.AbsenceTypeArgument();
-		typeArg.id = "vacation";
 		typeArg.code = "vacation";
 		typeArg.name = "Vacation";
 		typeArg.active = true;

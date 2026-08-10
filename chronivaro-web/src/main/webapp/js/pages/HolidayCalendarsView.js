@@ -19,10 +19,6 @@ export default class HolidayCalendarsView {
 					<h3>Add Holiday Calendar</h3>
 					<form id="calendar-form">
 						<div class="form-group">
-							<label for="cal-id">ID:</label>
-							<input type="text" id="cal-id" required>
-						</div>
-						<div class="form-group">
 							<label for="cal-name">Name:</label>
 							<input type="text" id="cal-name" required>
 						</div>
@@ -39,10 +35,6 @@ export default class HolidayCalendarsView {
 					<h3>Add Holiday</h3>
 					<form id="holiday-form">
 						<input type="hidden" id="hol-cal-id">
-						<div class="form-group">
-							<label for="hol-id">ID:</label>
-							<input type="text" id="hol-id" required>
-						</div>
 						<div class="form-group">
 							<label for="hol-name">Name:</label>
 							<input type="text" id="hol-name" required>
@@ -83,7 +75,6 @@ export default class HolidayCalendarsView {
 		calForm.addEventListener('submit', async (e) => {
 			e.preventDefault();
 			const cal = {
-				id: container.querySelector('#cal-id').value,
 				name: container.querySelector('#cal-name').value
 			};
 			try {
@@ -99,7 +90,6 @@ export default class HolidayCalendarsView {
 			e.preventDefault();
 			const calendarId = container.querySelector('#hol-cal-id').value;
 			const holiday = {
-				id: container.querySelector('#hol-id').value,
 				name: container.querySelector('#hol-name').value,
 				date: container.querySelector('#hol-date').value
 			};

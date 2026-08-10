@@ -8,10 +8,10 @@ import li.strolch.service.api.AbstractService;
 
 import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
 
-public class UpdateLocationService extends AbstractService<CreateLocationService.LocationArgument, ServiceResult> {
+public class UpdateLocationService extends AbstractService<CreateLocationService.UpdateLocationArgument, ServiceResult> {
 
 	@Override
-	protected ServiceResult internalDoService(CreateLocationService.LocationArgument arg) throws Exception {
+	protected ServiceResult internalDoService(CreateLocationService.UpdateLocationArgument arg) throws Exception {
 		try (StrolchTransaction tx = openArgOrUserTx(arg)) {
 			Resource location = ChronivaroModelHelper.getLocation(tx, arg.id);
 			location.setName(arg.name);
@@ -25,8 +25,8 @@ public class UpdateLocationService extends AbstractService<CreateLocationService
 	}
 
 	@Override
-	public CreateLocationService.LocationArgument getArgumentInstance() {
-		return new CreateLocationService.LocationArgument();
+	public CreateLocationService.UpdateLocationArgument getArgumentInstance() {
+		return new CreateLocationService.UpdateLocationArgument();
 	}
 
 	@Override

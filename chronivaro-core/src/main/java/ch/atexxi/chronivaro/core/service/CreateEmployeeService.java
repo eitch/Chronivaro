@@ -1,26 +1,29 @@
 package ch.atexxi.chronivaro.core.service;
 
+import li.strolch.model.ParameterBag;
 import li.strolch.model.Resource;
 import li.strolch.persistence.api.StrolchTransaction;
-import li.strolch.service.api.ServiceResult;
 import li.strolch.service.api.AbstractService;
 import li.strolch.service.api.ServiceArgument;
+import li.strolch.service.api.ServiceResult;
 
 import java.time.LocalDate;
 import java.time.ZoneId;
 
 import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
+import static li.strolch.agent.api.StrolchAgent.getUniqueId;
 
 public class CreateEmployeeService extends AbstractService<CreateEmployeeService.EmployeeArgument, ServiceResult> {
 
 	@Override
 	protected ServiceResult internalDoService(EmployeeArgument arg) throws Exception {
 		try (StrolchTransaction tx = openArgOrUserTx(arg)) {
-			ZoneId zoneId = arg.timezone == null || arg.timezone.isEmpty() ? ZoneId.of("Europe/Zurich") : ZoneId.of(arg.timezone);
+			ZoneId zoneId = arg.timezone == null || arg.timezone.isEmpty() ? ZoneId.of("Europe/Zurich") :
+					ZoneId.of(arg.timezone);
 
-			Resource employee = new Resource(arg.id, arg.displayName, TYPE_EMPLOYEE);
-			employee.addParameterBag(new li.strolch.model.ParameterBag(BAG_PARAMETERS, "Parameters", "Parameters"));
-			employee.addParameterBag(new li.strolch.model.ParameterBag(BAG_RELATIONS, "Relations", "Relations"));
+			Resource employee = new Resource(getUniqueId(), arg.displayName, TYPE_EMPLOYEE);
+			employee.addParameterBag(new ParameterBag(BAG_PARAMETERS, "Parameters", "Parameters"));
+			employee.addParameterBag(new ParameterBag(BAG_RELATIONS, "Relations", "Relations"));
 			employee.setString(PARAM_PERSONAL_NUMBER, arg.personalNumber);
 			employee.setString(PARAM_DISPLAY_NAME, arg.displayName);
 			employee.setString(BAG_RELATIONS, TYPE_TEAM, arg.teamId);
@@ -48,7 +51,6 @@ public class CreateEmployeeService extends AbstractService<CreateEmployeeService
 	}
 
 	public static class EmployeeArgument extends ServiceArgument {
-		public String id;
 		public String personalNumber;
 		public String displayName;
 		public String teamId;
@@ -58,5 +60,9 @@ public class CreateEmployeeService extends AbstractService<CreateEmployeeService
 		public LocalDate exitDate;
 		public boolean active;
 		public String userId;
+	}
+
+	public static class UpdateEmployeeArgument extends EmployeeArgument {
+		public String id;
 	}
 }

@@ -16,7 +16,6 @@ public class HolidayCalendarResourceTest extends AbstractChronivaroRestfulTest {
 		// Create calendar
 		String calendarJson = """
 				{
-				  "id": "ch-zh",
 				  "name": "Zurich",
 				  "active": true
 				}
@@ -31,13 +30,12 @@ public class HolidayCalendarResourceTest extends AbstractChronivaroRestfulTest {
 		// Create holiday
 		String holidayJson = """
 				{
-				  "id": "new-year",
 				  "name": "New Year",
 				  "date": "2025-01-01",
 				  "creditFactor": 1.0
 				}
 				""";
-		try (Response response = target().path("chronivaro/v1/admin/holiday-calendars/ch-zh/holidays")
+		try (Response response = target().path("chronivaro/v1/admin/holiday-calendars/any/holidays")
 				.request(MediaType.APPLICATION_JSON)
 				.header("Authorization", authToken)
 				.post(Entity.json(holidayJson))) {

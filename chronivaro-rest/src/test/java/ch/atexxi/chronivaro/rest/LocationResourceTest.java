@@ -21,7 +21,7 @@ public class LocationResourceTest extends AbstractChronivaroRestfulTest {
 		String authToken = authenticate();
 
 		// Create
-		LocationDto newLocation = new LocationDto("test-location", "Test Location", "Europe/Zurich", "calendar-1");
+		LocationDto newLocation = new LocationDto(null, "Test Location", "Europe/Zurich", "calendar-1");
 		String json = ChronivaroRestHelper.createGson().toJson(newLocation);
 
 		try (Response response = target().path("chronivaro/v1/admin/locations")
@@ -31,6 +31,7 @@ public class LocationResourceTest extends AbstractChronivaroRestfulTest {
 			assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
 		}
 
+		String locationId;
 		// Get all
 		try (Response response = target().path("chronivaro/v1/admin/locations")
 				.request(MediaType.APPLICATION_JSON)
@@ -40,15 +41,15 @@ public class LocationResourceTest extends AbstractChronivaroRestfulTest {
 			List<LocationDto> locations = ChronivaroRestHelper.createGson()
 					.fromJson(response.readEntity(String.class), new TypeToken<List<LocationDto>>() {
 					}.getType());
-			assertTrue(locations.stream().anyMatch(l -> l.id().equals("test-location")));
+			locationId = locations.stream().filter(l -> l.name().equals("Test Location")).findFirst().orElseThrow().id();
 		}
 
 		// Update
-		LocationDto updatedLocation = new LocationDto("test-location", "Updated Test Location", "Europe/Zurich",
+		LocationDto updatedLocation = new LocationDto(locationId, "Updated Test Location", "Europe/Zurich",
 				"calendar-2");
 		String updatedJson = ChronivaroRestHelper.createGson().toJson(updatedLocation);
 
-		try (Response response = target().path("chronivaro/v1/admin/locations/test-location")
+		try (Response response = target().path("chronivaro/v1/admin/locations/" + locationId)
 				.request(MediaType.APPLICATION_JSON)
 				.header("Authorization", authToken)
 				.put(Entity.json(updatedJson))) {
@@ -63,13 +64,13 @@ public class LocationResourceTest extends AbstractChronivaroRestfulTest {
 			List<LocationDto> locations = ChronivaroRestHelper.createGson()
 					.fromJson(response.readEntity(String.class), new TypeToken<List<LocationDto>>() {
 					}.getType());
-			LocationDto found = locations.stream().filter(l -> l.id().equals("test-location")).findFirst().orElseThrow();
+			LocationDto found = locations.stream().filter(l -> l.id().equals(locationId)).findFirst().orElseThrow();
 			assertEquals("Updated Test Location", found.name());
 			assertEquals("calendar-2", found.holidayCalendarId());
 		}
 
 		// Delete
-		try (Response response = target().path("chronivaro/v1/admin/locations/test-location")
+		try (Response response = target().path("chronivaro/v1/admin/locations/" + locationId)
 				.request(MediaType.APPLICATION_JSON)
 				.header("Authorization", authToken)
 				.delete()) {
@@ -84,7 +85,7 @@ public class LocationResourceTest extends AbstractChronivaroRestfulTest {
 			List<LocationDto> locations = ChronivaroRestHelper.createGson()
 					.fromJson(response.readEntity(String.class), new TypeToken<List<LocationDto>>() {
 					}.getType());
-			assertFalse(locations.stream().anyMatch(l -> l.id().equals("test-location")));
+			assertFalse(locations.stream().anyMatch(l -> l.id().equals(locationId)));
 		}
 	}
 }

@@ -46,7 +46,6 @@ public class AbsenceTypeResource {
 		AbsenceTypeDto dto = ChronivaroRestHelper.createGson().fromJson(data, AbsenceTypeDto.class);
 
 		CreateAbsenceTypeService.AbsenceTypeArgument arg = new CreateAbsenceTypeService.AbsenceTypeArgument();
-		arg.id = dto.id();
 		arg.code = dto.code();
 		arg.name = dto.name();
 		arg.countAsTargetTime = dto.countAsTargetTime();
@@ -69,7 +68,7 @@ public class AbsenceTypeResource {
 		ServiceHandler serviceHandler = ChronivaroRestHelper.getServiceHandler();
 		AbsenceTypeDto dto = ChronivaroRestHelper.createGson().fromJson(data, AbsenceTypeDto.class);
 
-		CreateAbsenceTypeService.AbsenceTypeArgument arg = new CreateAbsenceTypeService.AbsenceTypeArgument();
+		CreateAbsenceTypeService.UpdateAbsenceTypeArgument arg = new CreateAbsenceTypeService.UpdateAbsenceTypeArgument();
 		arg.id = id;
 		arg.code = dto.code();
 		arg.name = dto.name();

@@ -8,10 +8,10 @@ import li.strolch.service.api.AbstractService;
 
 import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
 
-public class UpdateAbsenceTypeService extends AbstractService<CreateAbsenceTypeService.AbsenceTypeArgument, ServiceResult> {
+public class UpdateAbsenceTypeService extends AbstractService<CreateAbsenceTypeService.UpdateAbsenceTypeArgument, ServiceResult> {
 
 	@Override
-	protected ServiceResult internalDoService(CreateAbsenceTypeService.AbsenceTypeArgument arg) throws Exception {
+	protected ServiceResult internalDoService(CreateAbsenceTypeService.UpdateAbsenceTypeArgument arg) throws Exception {
 		try (StrolchTransaction tx = openArgOrUserTx(arg)) {
 			Resource type = ChronivaroModelHelper.getAbsenceType(tx, arg.id);
 			type.setName(arg.name);
@@ -30,8 +30,8 @@ public class UpdateAbsenceTypeService extends AbstractService<CreateAbsenceTypeS
 	}
 
 	@Override
-	public CreateAbsenceTypeService.AbsenceTypeArgument getArgumentInstance() {
-		return new CreateAbsenceTypeService.AbsenceTypeArgument();
+	public CreateAbsenceTypeService.UpdateAbsenceTypeArgument getArgumentInstance() {
+		return new CreateAbsenceTypeService.UpdateAbsenceTypeArgument();
 	}
 
 	@Override

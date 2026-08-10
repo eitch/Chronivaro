@@ -37,19 +37,39 @@ public class HolidayCalendarServiceTest {
 	public void shouldCreateHolidayCalendar() {
 		ServiceHandler serviceHandler = runtimeMock.getServiceHandler();
 
-		String calendarId = "test-calendar";
-
 		// Create
 		CreateHolidayCalendarService.HolidayCalendarArgument createArg = new CreateHolidayCalendarService.HolidayCalendarArgument();
-		createArg.id = calendarId;
 		createArg.name = "Test Calendar";
 
 		ServiceResult createResult = serviceHandler.doService(certificate, new CreateHolidayCalendarService(), createArg);
 		assertTrue(createResult.getMessage(), createResult.isOk());
 
 		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
-			Resource calendar = tx.getResourceBy(TYPE_HOLIDAY_CALENDAR, calendarId, true);
+			Resource calendar = tx.streamResources(TYPE_HOLIDAY_CALENDAR)
+					.filter(r -> r.getName().equals("Test Calendar"))
+					.findFirst()
+					.orElseThrow();
 			assertEquals("Test Calendar", calendar.getString(PARAM_NAME));
+		}
+	}
+	@Test
+	public void shouldCreateHolidayCalendarWithoutId() {
+		ServiceHandler serviceHandler = runtimeMock.getServiceHandler();
+
+		// Create
+		CreateHolidayCalendarService.HolidayCalendarArgument createArg = new CreateHolidayCalendarService.HolidayCalendarArgument();
+		createArg.name = "Test Calendar 2";
+
+		ServiceResult createResult = serviceHandler.doService(certificate, new CreateHolidayCalendarService(), createArg);
+		assertTrue(createResult.getMessage(), createResult.isOk());
+
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
+			Resource calendar = tx.streamResources(TYPE_HOLIDAY_CALENDAR)
+					.filter(r -> r.getName().equals("Test Calendar 2"))
+					.findFirst()
+					.orElseThrow();
+			assertNotNull(calendar.getId());
+			assertEquals("Test Calendar 2", calendar.getString(PARAM_NAME));
 		}
 	}
 }

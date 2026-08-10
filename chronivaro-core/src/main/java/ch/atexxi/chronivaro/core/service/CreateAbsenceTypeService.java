@@ -2,20 +2,21 @@ package ch.atexxi.chronivaro.core.service;
 
 import li.strolch.model.Resource;
 import li.strolch.persistence.api.StrolchTransaction;
-import li.strolch.service.api.ServiceResult;
 import li.strolch.service.api.AbstractService;
 import li.strolch.service.api.ServiceArgument;
+import li.strolch.service.api.ServiceResult;
 
 import java.util.List;
 
 import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
+import static li.strolch.agent.api.StrolchAgent.getUniqueId;
 
 public class CreateAbsenceTypeService extends AbstractService<CreateAbsenceTypeService.AbsenceTypeArgument, ServiceResult> {
 
 	@Override
 	protected ServiceResult internalDoService(AbsenceTypeArgument arg) throws Exception {
 		try (StrolchTransaction tx = openArgOrUserTx(arg)) {
-			Resource type = new Resource(arg.id, arg.name, TYPE_ABSENCE_TYPE);
+			Resource type = new Resource(getUniqueId(), arg.name, TYPE_ABSENCE_TYPE);
 			type.addParameterBag(new li.strolch.model.ParameterBag(BAG_PARAMETERS, "Parameters", "Parameters"));
 			type.setString(PARAM_CODE, arg.code);
 			type.setString(PARAM_NAME, arg.name);
@@ -42,7 +43,6 @@ public class CreateAbsenceTypeService extends AbstractService<CreateAbsenceTypeS
 	}
 
 	public static class AbsenceTypeArgument extends ServiceArgument {
-		public String id;
 		public String code;
 		public String name;
 		public boolean countAsTargetTime;
@@ -51,5 +51,9 @@ public class CreateAbsenceTypeService extends AbstractService<CreateAbsenceTypeS
 		public boolean approvalRequired;
 		public List<String> durationTypes;
 		public boolean active;
+	}
+
+	public static class UpdateAbsenceTypeArgument extends AbsenceTypeArgument {
+		public String id;
 	}
 }
