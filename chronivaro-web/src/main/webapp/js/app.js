@@ -2,6 +2,11 @@ import AuthApi from './api/AuthApi.js';
 import LoginView from './pages/LoginView.js';
 import DashboardView from './pages/DashboardView.js';
 import MyTimesView from './pages/MyTimesView.js';
+import EmployeesView from './pages/EmployeesView.js';
+import TeamsView from './pages/TeamsView.js';
+import LocationsView from './pages/LocationsView.js';
+import AbsenceTypesView from './pages/AbsenceTypesView.js';
+import HolidayCalendarsView from './pages/HolidayCalendarsView.js';
 
 class ChronivaroApp {
 	constructor() {
@@ -56,6 +61,21 @@ class ChronivaroApp {
 				break;
 			case 'my-times':
 				view = new MyTimesView(this);
+				break;
+			case 'employees':
+				view = new EmployeesView(this);
+				break;
+			case 'teams':
+				view = new TeamsView(this);
+				break;
+			case 'locations':
+				view = new LocationsView(this);
+				break;
+			case 'absence-types':
+				view = new AbsenceTypesView(this);
+				break;
+			case 'holiday-calendars':
+				view = new HolidayCalendarsView(this);
 				break;
 			default:
 				this.appContainer.innerHTML = `<h2>404</h2><p>View ${viewName} not found.</p>`;
