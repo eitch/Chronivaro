@@ -170,7 +170,7 @@ public class ExtensiveIntegrationTest {
 		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
 			id = tx
 					.streamResources(TYPE_ABSENCE)
-					.filter(a -> a.getString(BAG_RELATIONS, TYPE_EMPLOYEE).equals(employeeId))
+					.filter(a -> a.getString(BAG_RELATIONS, PARAM_EMPLOYEE).equals(employeeId))
 					.findFirst()
 					.orElseThrow()
 					.getId();

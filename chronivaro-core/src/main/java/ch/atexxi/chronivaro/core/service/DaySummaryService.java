@@ -48,8 +48,7 @@ public class DaySummaryService
 			ZonedDateTime from = arg.date.atStartOfDay(ChronivaroModelHelper.getEmployeeTimezone(employee));
 			ZonedDateTime to = arg.date
 					.plusDays(1)
-					.atStartOfDay(ChronivaroModelHelper.getEmployeeTimezone(employee))
-					.minusNanos(1);
+					.atStartOfDay(ChronivaroModelHelper.getEmployeeTimezone(employee));
 
 			int targetMinutes = ScheduleHelper.getTargetMinutes(tx, arg.employeeId, arg.date);
 			int holidayMinutes = HolidayHelper.getHolidayMinutes(tx, arg.employeeId, arg.date);
@@ -67,10 +66,11 @@ public class DaySummaryService
 			for (Resource entry : entries) {
 				ZonedDateTime start = entry.getDate(PARAM_START);
 				ZonedDateTime end = entry.getDate(PARAM_END);
+				boolean isActive = end.getYear() == 1970;
 
 				// Clip to day boundaries
 				ZonedDateTime effectiveStart = start.isBefore(from) ? from : start;
-				ZonedDateTime effectiveEnd = (end == null || end.isAfter(to)) ? to : end;
+				ZonedDateTime effectiveEnd = (isActive || end.isAfter(to)) ? to : end;
 
 				if (effectiveEnd.isBefore(effectiveStart))
 					continue;
@@ -79,7 +79,7 @@ public class DaySummaryService
 				actualMinutes += duration;
 
 				ranges.add(new WorkEntryRange(entry.getId(), effectiveStart.format(timeFormatter),
-						end == null ? "..." : effectiveEnd.format(timeFormatter), duration));
+						isActive ? "..." : effectiveEnd.format(timeFormatter), duration));
 
 				if (lastEnd != null && start.isAfter(lastEnd)) {
 					int breakDuration = (int) Duration.between(lastEnd, start).toMinutes();

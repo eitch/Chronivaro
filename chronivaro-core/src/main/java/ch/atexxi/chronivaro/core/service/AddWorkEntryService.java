@@ -29,14 +29,15 @@ public class AddWorkEntryService extends AbstractService<AddWorkEntryService.Add
 
 			WorkEntryHelper.validateNoOverlap(tx, arg.employeeId, arg.start, arg.end, null);
 
-			Resource workEntry = new Resource(UUID.randomUUID().toString(), "WorkEntry " + arg.start, TYPE_WORK_ENTRY);
-			workEntry.addParameterBag(new ParameterBag(BAG_PARAMETERS, "Parameters", "Parameters"));
-			workEntry.addParameterBag(new ParameterBag(BAG_RELATIONS, "Relations", "Relations"));
+			Resource workEntry = tx.getResourceTemplate(TYPE_WORK_ENTRY, true);
+			workEntry.setId(UUID.randomUUID().toString());
+			workEntry.setName("WorkEntry " + arg.start);
 
-			workEntry.setString(BAG_RELATIONS, TYPE_EMPLOYEE, arg.employeeId);
+			workEntry.setString(BAG_RELATIONS, PARAM_EMPLOYEE, arg.employeeId);
 			workEntry.setDate(PARAM_START, arg.start);
 			workEntry.setDate(PARAM_END, arg.end);
 			workEntry.setString(PARAM_SOURCE, SOURCE_MANUAL);
+			workEntry.setString(PARAM_CREATED_BY, tx.getCertificate().getUsername());
 			if (arg.comment != null)
 				workEntry.setString(PARAM_COMMENT, arg.comment);
 

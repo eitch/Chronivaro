@@ -59,7 +59,7 @@ public class LocationServiceTest {
 			locationId = location.getId();
 			assertEquals("Test Location", location.getString(PARAM_NAME));
 			assertEquals("Europe/Zurich", location.getString(PARAM_TIMEZONE));
-			assertEquals("cal1", location.getString(BAG_RELATIONS, TYPE_HOLIDAY_CALENDAR));
+			assertEquals("cal1", location.getString(BAG_RELATIONS, PARAM_HOLIDAY_CALENDAR));
 		}
 
 		// Update

@@ -15,7 +15,7 @@ public class ScheduleHelper {
 	public static Optional<Resource> findScheduleVersion(StrolchTransaction tx, String employeeId, LocalDate date) {
 		return tx
 				.streamResources(TYPE_EMPLOYMENT_SCHEDULE_VERSION)
-				.filter(v -> v.getString(BAG_RELATIONS, TYPE_EMPLOYEE).equals(employeeId))
+				.filter(v -> v.getString(BAG_RELATIONS, PARAM_EMPLOYEE).equals(employeeId))
 				.filter(v -> {
 					LocalDate validFrom = v.getDate(PARAM_VALID_FROM).toLocalDate();
 					if (date.isBefore(validFrom))

@@ -77,11 +77,12 @@ public class HolidayCalendarResourceTest extends AbstractChronivaroRestfulTest {
 				.header("Authorization", authToken)
 				.get()) {
 			assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
-			List<HolidayDto> holidays = ChronivaroRestHelper.createGson().fromJson(response.readEntity(String.class),
+			String json = response.readEntity(String.class);
+			List<HolidayDto> holidays = ChronivaroRestHelper.createGson().fromJson(json,
 					new TypeToken<List<HolidayDto>>() {
 					}.getType());
 			assertFalse(holidays.isEmpty());
-			assertEquals("New Year", holidays.get(0).name());
+			assertEquals("New Year", holidays.getFirst().name());
 		}
 
 		// Delete calendar

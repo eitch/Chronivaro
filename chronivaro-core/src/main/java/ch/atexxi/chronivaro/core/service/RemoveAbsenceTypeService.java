@@ -7,8 +7,8 @@ import li.strolch.service.StringArgument;
 import li.strolch.service.api.AbstractService;
 import li.strolch.service.api.ServiceResult;
 
+import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.PARAM_ABSENCE_TYPE;
 import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.TYPE_ABSENCE;
-import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.TYPE_ABSENCE_TYPE;
 import static li.strolch.model.StrolchModelConstants.BAG_RELATIONS;
 
 public class RemoveAbsenceTypeService extends AbstractService<StringArgument, ServiceResult> {
@@ -20,8 +20,8 @@ public class RemoveAbsenceTypeService extends AbstractService<StringArgument, Se
 
 			boolean absenceReferencing = tx
 					.streamResources(TYPE_ABSENCE)
-					.anyMatch(a -> a.hasParameter(BAG_RELATIONS, TYPE_ABSENCE_TYPE) && a
-							.getString(BAG_RELATIONS, TYPE_ABSENCE_TYPE)
+					.anyMatch(a -> a.hasParameter(BAG_RELATIONS, PARAM_ABSENCE_TYPE) && a
+							.getString(BAG_RELATIONS, PARAM_ABSENCE_TYPE)
 							.equals(arg.value));
 
 			if (absenceReferencing) {

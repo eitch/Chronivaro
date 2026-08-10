@@ -19,8 +19,8 @@ public class RemoveHolidayCalendarService extends AbstractService<StringArgument
 			// validate: no location references this calendar
 			boolean locationReferencing = tx
 					.streamResources(TYPE_LOCATION)
-					.anyMatch(l -> l.hasParameter(BAG_RELATIONS, TYPE_HOLIDAY_CALENDAR) && l
-							.getString(BAG_RELATIONS, TYPE_HOLIDAY_CALENDAR)
+					.anyMatch(l -> l.hasParameter(BAG_RELATIONS, PARAM_HOLIDAY_CALENDAR) && l
+							.getString(BAG_RELATIONS, PARAM_HOLIDAY_CALENDAR)
 							.equals(arg.value));
 
 			if (locationReferencing) {
@@ -30,8 +30,8 @@ public class RemoveHolidayCalendarService extends AbstractService<StringArgument
 			// cascading remove holidays
 			tx
 					.streamResources(TYPE_HOLIDAY)
-					.filter(h -> h.hasParameter(BAG_RELATIONS, TYPE_HOLIDAY_CALENDAR) && h
-							.getString(BAG_RELATIONS, TYPE_HOLIDAY_CALENDAR)
+					.filter(h -> h.hasParameter(BAG_RELATIONS, PARAM_HOLIDAY_CALENDAR) && h
+							.getString(BAG_RELATIONS, PARAM_HOLIDAY_CALENDAR)
 							.equals(arg.value))
 					.forEach(tx::remove);
 

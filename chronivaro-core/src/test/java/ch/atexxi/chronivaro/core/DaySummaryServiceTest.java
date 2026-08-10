@@ -57,7 +57,7 @@ public class DaySummaryServiceTest {
 					TYPE_EMPLOYMENT_SCHEDULE_VERSION);
 			schedule.addParameterBag(new ParameterBag(BAG_PARAMETERS, "Parameters", "Parameters"));
 			schedule.addParameterBag(new ParameterBag(BAG_RELATIONS, "Relations", "Relations"));
-			schedule.setString(BAG_RELATIONS, TYPE_EMPLOYEE, employeeId);
+			schedule.setString(BAG_RELATIONS, PARAM_EMPLOYEE, employeeId);
 			schedule.setDate(PARAM_VALID_FROM, ZonedDateTime.parse("2026-01-01T00:00:00Z"));
 			schedule.setInteger(PARAM_DAILY_TARGET_MINUTES + "Monday", 480);
 			tx.add(schedule);
@@ -66,7 +66,7 @@ public class DaySummaryServiceTest {
 			Resource e1 = new Resource(UUID.randomUUID().toString(), "E1", TYPE_WORK_ENTRY);
 			e1.addParameterBag(new ParameterBag(BAG_PARAMETERS, "Parameters", "Parameters"));
 			e1.addParameterBag(new ParameterBag(BAG_RELATIONS, "Relations", "Relations"));
-			e1.setString(BAG_RELATIONS, TYPE_EMPLOYEE, employeeId);
+			e1.setString(BAG_RELATIONS, PARAM_EMPLOYEE, employeeId);
 			e1.setDate(PARAM_START, ZonedDateTime.parse("2026-02-02T08:00:00+01:00[Europe/Zurich]"));
 			e1.setDate(PARAM_END, ZonedDateTime.parse("2026-02-02T12:00:00+01:00[Europe/Zurich]"));
 			tx.add(e1);
@@ -75,7 +75,7 @@ public class DaySummaryServiceTest {
 			Resource e2 = new Resource(UUID.randomUUID().toString(), "E2", TYPE_WORK_ENTRY);
 			e2.addParameterBag(new ParameterBag(BAG_PARAMETERS, "Parameters", "Parameters"));
 			e2.addParameterBag(new ParameterBag(BAG_RELATIONS, "Relations", "Relations"));
-			e2.setString(BAG_RELATIONS, TYPE_EMPLOYEE, employeeId);
+			e2.setString(BAG_RELATIONS, PARAM_EMPLOYEE, employeeId);
 			e2.setDate(PARAM_START, ZonedDateTime.parse("2026-02-02T13:00:00+01:00[Europe/Zurich]"));
 			e2.setDate(PARAM_END, ZonedDateTime.parse("2026-02-02T17:00:00+01:00[Europe/Zurich]"));
 			tx.add(e2);
@@ -100,5 +100,56 @@ public class DaySummaryServiceTest {
 		assertEquals(2, summary.workEntries().size());
 		assertEquals(1, summary.breaks().size());
 		assertEquals(60, summary.breaks().getFirst().durationMinutes());
+	}
+
+	@Test
+	public void shouldCalculateDaySummaryWithActiveEntry() {
+		String employeeId = "emp4";
+		LocalDate date = LocalDate.of(2026, 2, 2); // Monday
+
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
+			Resource employee = new Resource(employeeId, "Jane Doe", TYPE_EMPLOYEE);
+			employee.addParameterBag(new ParameterBag(BAG_PARAMETERS, "Parameters", "Parameters"));
+			employee.addParameterBag(new ParameterBag(BAG_RELATIONS, "Relations", "Relations"));
+			employee.setBoolean(PARAM_ACTIVE, true);
+			employee.setDate(PARAM_JOIN_DATE, ZonedDateTime.parse("2026-01-01T00:00:00Z"));
+			employee.setString(PARAM_TIMEZONE, "Europe/Zurich");
+			tx.add(employee);
+
+			Resource schedule = new Resource(UUID.randomUUID().toString(), "Schedule",
+					TYPE_EMPLOYMENT_SCHEDULE_VERSION);
+			schedule.addParameterBag(new ParameterBag(BAG_PARAMETERS, "Parameters", "Parameters"));
+			schedule.addParameterBag(new ParameterBag(BAG_RELATIONS, "Relations", "Relations"));
+			schedule.setString(BAG_RELATIONS, PARAM_EMPLOYEE, employeeId);
+			schedule.setDate(PARAM_VALID_FROM, ZonedDateTime.parse("2026-01-01T00:00:00Z"));
+			schedule.setInteger(PARAM_DAILY_TARGET_MINUTES + "Monday", 480);
+			tx.add(schedule);
+
+			// Active Work Entry: 08:00 - ...
+			Resource e1 = new Resource(UUID.randomUUID().toString(), "E1", TYPE_WORK_ENTRY);
+			e1.addParameterBag(new ParameterBag(BAG_PARAMETERS, "Parameters", "Parameters"));
+			e1.addParameterBag(new ParameterBag(BAG_RELATIONS, "Relations", "Relations"));
+			e1.setString(BAG_RELATIONS, PARAM_EMPLOYEE, employeeId);
+			e1.setDate(PARAM_START, ZonedDateTime.parse("2026-02-02T08:00:00+01:00[Europe/Zurich]"));
+			e1.setDate(PARAM_END, ZonedDateTime.parse("1970-01-01T00:00:00+01:00"));
+			tx.add(e1);
+
+			tx.commitOnClose();
+		}
+
+		ServiceHandler serviceHandler = runtimeMock.getServiceHandler();
+		DaySummaryService.DaySummaryArgument arg = new DaySummaryService.DaySummaryArgument();
+		arg.employeeId = employeeId;
+		arg.date = date;
+
+		DaySummaryService.DaySummaryResult result = serviceHandler.doService(certificate, new DaySummaryService(), arg);
+		assertEquals(ServiceResult.success().getState(), result.getState());
+
+		DaySummary summary = result.daySummary;
+		assertEquals(480, summary.targetMinutes());
+		// 08:00 to end of day (23:59:59...) -> 16 hours -> 960 minutes
+		assertEquals(960, summary.actualMinutes());
+		assertEquals(1, summary.workEntries().size());
+		assertEquals("...", summary.workEntries().getFirst().end());
 	}
 }

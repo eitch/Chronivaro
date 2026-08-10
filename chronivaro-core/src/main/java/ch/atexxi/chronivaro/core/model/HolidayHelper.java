@@ -12,14 +12,14 @@ public class HolidayHelper {
 
 	public static Optional<Resource> findHoliday(StrolchTransaction tx, String locationId, LocalDate date) {
 		Resource location = tx.getResourceBy(TYPE_LOCATION, locationId, true);
-		String holidayCalendarId = location.getString(BAG_RELATIONS, TYPE_HOLIDAY_CALENDAR);
+		String holidayCalendarId = location.getString(BAG_RELATIONS, PARAM_HOLIDAY_CALENDAR);
 		if (holidayCalendarId == null || holidayCalendarId.isEmpty())
 			return Optional.empty();
 
 		return tx
 				.streamResources(TYPE_HOLIDAY)
-				.filter(h -> h.hasParameter(BAG_RELATIONS, TYPE_HOLIDAY_CALENDAR) && h.getString(BAG_RELATIONS,
-						TYPE_HOLIDAY_CALENDAR).equals(holidayCalendarId))
+				.filter(h -> h.hasParameter(BAG_RELATIONS, PARAM_HOLIDAY_CALENDAR) && h.getString(BAG_RELATIONS,
+						PARAM_HOLIDAY_CALENDAR).equals(holidayCalendarId))
 				.filter(h -> h.hasParameter(PARAM_DATE) && h.getDate(PARAM_DATE).toLocalDate().equals(date))
 				.findFirst();
 	}
@@ -30,7 +30,7 @@ public class HolidayHelper {
 
 	public static int getHolidayMinutes(StrolchTransaction tx, String employeeId, LocalDate date) {
 		Resource employee = ChronivaroModelHelper.getEmployee(tx, employeeId);
-		String locationId = employee.getString(BAG_RELATIONS, TYPE_LOCATION);
+		String locationId = employee.getString(BAG_PARAMETERS, PARAM_LOCATION);
 		if (locationId == null || locationId.isEmpty())
 			return 0;
 

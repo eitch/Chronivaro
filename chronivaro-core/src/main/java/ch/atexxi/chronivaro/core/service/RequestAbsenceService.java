@@ -43,8 +43,8 @@ public class RequestAbsenceService
 			absence.addParameterBag(new ParameterBag(BAG_PARAMETERS, "Parameters", "Parameters"));
 			absence.addParameterBag(new ParameterBag(BAG_RELATIONS, "Relations", "Relations"));
 
-			absence.setString(BAG_RELATIONS, TYPE_EMPLOYEE, arg.employeeId);
-			absence.setString(BAG_RELATIONS, TYPE_ABSENCE_TYPE, absenceType.getId());
+			absence.setString(BAG_RELATIONS, PARAM_EMPLOYEE, arg.employeeId);
+			absence.setString(BAG_RELATIONS, PARAM_ABSENCE_TYPE, absenceType.getId());
 			absence.setDate(PARAM_START, arg.start);
 			absence.setDate(PARAM_END, arg.end);
 			absence.setString(PARAM_DURATION_TYPE, arg.durationType);

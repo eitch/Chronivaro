@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <StrolchModel xmlns="https://strolch.li/schema/StrolchModel.xsd">
 
-    <Resource Id="TemplateEmployee" Name="Template Employee" Type="Employee">
+    <Resource Id="Employee" Name="Template Employee" Type="Template">
         <ParameterBag Id="parameters" Name="Parameters" Type="Parameters">
             <Parameter Id="personalNumber" Name="Personal Number" Type="String" Value=""/>
             <Parameter Id="displayName" Name="Display Name" Type="String" Value=""/>
@@ -17,20 +17,7 @@
         </ParameterBag>
     </Resource>
 
-    <Resource Id="TemplateTeam" Name="Template Team" Type="Team">
-        <ParameterBag Id="parameters" Name="Parameters" Type="Parameters">
-            <Parameter Id="name" Name="Name" Type="String" Value=""/>
-        </ParameterBag>
-    </Resource>
-
-    <Resource Id="TemplateLocation" Name="Template Location" Type="Location">
-        <ParameterBag Id="parameters" Name="Parameters" Type="Parameters">
-            <Parameter Id="name" Name="Name" Type="String" Value=""/>
-            <Parameter Id="timezone" Name="Timezone" Type="String" Value="Europe/Zurich"/>
-        </ParameterBag>
-    </Resource>
-
-    <Resource Id="TemplateWorkEntry" Name="Template Work Entry" Type="WorkEntry">
+    <Resource Id="WorkEntry" Name="Template Work Entry" Type="Template">
         <ParameterBag Id="parameters" Name="Parameters" Type="Parameters">
             <Parameter Id="start" Name="Start" Type="Date" Value="1970-01-01T00:00:00.000+01:00"/>
             <Parameter Id="end" Name="End" Type="Date" Value="1970-01-01T00:00:00.000+01:00"/>
@@ -39,11 +26,27 @@
             <Parameter Id="createdBy" Name="Created By" Type="String" Value=""/>
         </ParameterBag>
         <ParameterBag Id="relations" Name="Relations" Type="Relations">
-            <Parameter Id="Employee" Name="Employee" Type="String" Value=""/>
+            <Parameter Id="employee" Name="Employee" Type="String" Value=""/>
         </ParameterBag>
     </Resource>
 
-    <Resource Id="TemplateAbsenceType" Name="Template Absence Type" Type="AbsenceType">
+    <Resource Id="Team" Name="Template Team" Type="Template">
+        <ParameterBag Id="parameters" Name="Parameters" Type="Parameters">
+            <Parameter Id="name" Name="Name" Type="String" Value=""/>
+        </ParameterBag>
+    </Resource>
+
+    <Resource Id="Location" Name="Template Location" Type="Template">
+        <ParameterBag Id="parameters" Name="Parameters" Type="Parameters">
+            <Parameter Id="name" Name="Name" Type="String" Value=""/>
+            <Parameter Id="timezone" Name="Timezone" Type="String" Value="Europe/Zurich"/>
+        </ParameterBag>
+        <ParameterBag Id="relations" Name="Relations" Type="Relations">
+            <Parameter Id="holidayCalendar" Name="Holiday Calendar" Type="String" Value=""/>
+        </ParameterBag>
+    </Resource>
+
+    <Resource Id="AbsenceType" Name="Template Absence Type" Type="Template">
         <ParameterBag Id="parameters" Name="Parameters" Type="Parameters">
             <Parameter Id="code" Name="Code" Type="String" Value=""/>
             <Parameter Id="name" Name="Name" Type="String" Value=""/>
@@ -55,7 +58,7 @@
         </ParameterBag>
     </Resource>
 
-    <Resource Id="TemplateAbsence" Name="Template Absence" Type="Absence">
+    <Resource Id="Absence" Name="Template Absence" Type="Template">
         <ParameterBag Id="parameters" Name="Parameters" Type="Parameters">
             <Parameter Id="start" Name="Start" Type="Date" Value="1970-01-01T00:00:00.000+01:00"/>
             <Parameter Id="end" Name="End" Type="Date" Value="1970-01-01T00:00:00.000+01:00"/>
@@ -66,12 +69,12 @@
             <Parameter Id="state" Name="State" Type="String" Value="DRAFT"/>
         </ParameterBag>
         <ParameterBag Id="relations" Name="Relations" Type="Relations">
-            <Parameter Id="Employee" Name="Employee" Type="String" Value=""/>
-            <Parameter Id="AbsenceType" Name="Absence Type" Type="String" Value=""/>
+            <Parameter Id="employee" Name="Employee" Type="String" Value=""/>
+            <Parameter Id="absenceType" Name="Absence Type" Type="String" Value=""/>
         </ParameterBag>
     </Resource>
 
-    <Resource Id="TemplateVacationAccountEntry" Name="Template Vacation Account Entry" Type="VacationAccountEntry">
+    <Resource Id="VacationAccountEntry" Name="Template Vacation Account Entry" Type="Template">
         <ParameterBag Id="parameters" Name="Parameters" Type="Parameters">
             <Parameter Id="date" Name="Date" Type="Date" Value="1970-01-01T00:00:00.000+01:00"/>
             <Parameter Id="vacationType" Name="Vacation Type" Type="String" Value=""/>
@@ -79,39 +82,39 @@
             <Parameter Id="comment" Name="Comment" Type="String" Value=""/>
         </ParameterBag>
         <ParameterBag Id="relations" Name="Relations" Type="Relations">
-            <Parameter Id="Employee" Name="Employee" Type="String" Value=""/>
-            <Parameter Id="Absence" Name="Absence" Type="String" Value=""/>
+            <Parameter Id="employee" Name="Employee" Type="String" Value=""/>
+            <Parameter Id="absence" Name="Absence" Type="String" Value=""/>
         </ParameterBag>
     </Resource>
 
-    <Resource Id="TemplateHolidayCalendar" Name="Template Holiday Calendar" Type="HolidayCalendar">
+    <Resource Id="HolidayCalendar" Name="Template Holiday Calendar" Type="Template">
         <ParameterBag Id="parameters" Name="Parameters" Type="Parameters">
             <Parameter Id="name" Name="Name" Type="String" Value=""/>
         </ParameterBag>
     </Resource>
 
-    <Resource Id="TemplateHoliday" Name="Template Holiday" Type="Holiday">
+    <Resource Id="Holiday" Name="Template Holiday" Type="Template">
         <ParameterBag Id="parameters" Name="Parameters" Type="Parameters">
             <Parameter Id="name" Name="Name" Type="String" Value=""/>
             <Parameter Id="date" Name="Date" Type="Date" Value="1970-01-01T00:00:00.000+01:00"/>
             <Parameter Id="creditFactor" Name="Credit Factor" Type="Float" Value="1.0"/>
         </ParameterBag>
         <ParameterBag Id="relations" Name="Relations" Type="Relations">
-            <Parameter Id="HolidayCalendar" Name="Holiday Calendar" Type="String" Value=""/>
+            <Parameter Id="holidayCalendar" Name="Holiday Calendar" Type="String" Value=""/>
         </ParameterBag>
     </Resource>
 
-    <Resource Id="TemplateTimePeriod" Name="Template Time Period" Type="TimePeriod">
+    <Resource Id="TimePeriod" Name="Template Time Period" Type="Template">
         <ParameterBag Id="parameters" Name="Parameters" Type="Parameters">
             <Parameter Id="yearMonth" Name="Year Month" Type="String" Value=""/>
             <Parameter Id="state" Name="State" Type="String" Value="OPEN"/>
         </ParameterBag>
         <ParameterBag Id="relations" Name="Relations" Type="Relations">
-            <Parameter Id="Employee" Name="Employee" Type="String" Value=""/>
+            <Parameter Id="employee" Name="Employee" Type="String" Value=""/>
         </ParameterBag>
     </Resource>
 
-    <Resource Id="TemplateEmploymentScheduleVersion" Name="Template Employment Schedule Version" Type="EmploymentScheduleVersion">
+    <Resource Id="EmploymentScheduleVersion" Name="Template Employment Schedule Version" Type="Template">
         <ParameterBag Id="parameters" Name="Parameters" Type="Parameters">
             <Parameter Id="validFrom" Name="Valid From" Type="Date" Value="1970-01-01T00:00:00.000+01:00"/>
             <Parameter Id="validTo" Name="Valid To" Type="Date" Value="9999-12-31T23:59:59.999+01:00"/>
@@ -127,11 +130,11 @@
             <Parameter Id="dailyTargetMinutesSunday" Name="Daily Target Minutes Sunday" Type="Integer" Value="0"/>
         </ParameterBag>
         <ParameterBag Id="relations" Name="Relations" Type="Relations">
-            <Parameter Id="Employee" Name="Employee" Type="String" Value=""/>
+            <Parameter Id="employee" Name="Employee" Type="String" Value=""/>
         </ParameterBag>
     </Resource>
 
-    <Resource Id="TemplateChronivaroAuditEvent" Name="Template Chronivaro Audit Event" Type="ChronivaroAuditEvent">
+    <Resource Id="ChronivaroAuditEvent" Name="Template Chronivaro Audit Event" Type="Template">
         <ParameterBag Id="parameters" Name="Parameters" Type="Parameters">
             <Parameter Id="elementType" Name="Element Type" Type="String" Value=""/>
             <Parameter Id="elementId" Name="Element Id" Type="String" Value=""/>

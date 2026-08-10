@@ -23,7 +23,7 @@ public class CreateScheduleService
 			schedule.addParameterBag(new ParameterBag(BAG_PARAMETERS, "Parameters", "Parameters"));
 			schedule.addParameterBag(new ParameterBag(BAG_RELATIONS, "Relations", "Relations"));
 
-			schedule.setString(BAG_RELATIONS, TYPE_EMPLOYEE, arg.employeeId);
+			schedule.setString(BAG_RELATIONS, PARAM_EMPLOYEE, arg.employeeId);
 			schedule.setDate(PARAM_VALID_FROM, arg.validFrom);
 			if (arg.validTo != null)
 				schedule.setDate(PARAM_VALID_TO, arg.validTo);

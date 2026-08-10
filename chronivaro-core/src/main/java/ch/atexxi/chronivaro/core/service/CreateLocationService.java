@@ -22,7 +22,7 @@ public class CreateLocationService extends AbstractService<CreateLocationService
 			location.setString(PARAM_NAME, arg.name);
 			location.setString(PARAM_TIMEZONE, timeZone);
 			if (arg.holidayCalendarId != null)
-				location.setString(BAG_RELATIONS, TYPE_HOLIDAY_CALENDAR, arg.holidayCalendarId);
+				location.setString(BAG_RELATIONS, PARAM_HOLIDAY_CALENDAR, arg.holidayCalendarId);
 			tx.add(location);
 			tx.commitOnClose();
 		}

@@ -19,8 +19,8 @@ public class RemoveLocationService extends AbstractService<StringArgument, Servi
 
 			boolean employeeReferencing = tx
 					.streamResources(TYPE_EMPLOYEE)
-					.anyMatch(e -> e.hasParameter(BAG_RELATIONS, TYPE_LOCATION) && e
-							.getString(BAG_RELATIONS, TYPE_LOCATION)
+					.anyMatch(e -> e.hasParameter(BAG_RELATIONS, PARAM_LOCATION) && e
+							.getString(BAG_RELATIONS, PARAM_LOCATION)
 							.equals(arg.value));
 
 			if (employeeReferencing) {

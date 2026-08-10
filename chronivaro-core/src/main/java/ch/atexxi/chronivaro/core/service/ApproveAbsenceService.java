@@ -33,9 +33,9 @@ public class ApproveAbsenceService extends AbstractService<StringArgument, Servi
 
 			// If it's a vacation absence, create a vacation account entry
 			Resource absenceType = tx.getResourceBy(TYPE_ABSENCE_TYPE,
-					absence.getString(BAG_RELATIONS, TYPE_ABSENCE_TYPE), true);
+					absence.getString(BAG_RELATIONS, PARAM_ABSENCE_TYPE), true);
 			if (absenceType.getBoolean(PARAM_REDUCE_VACATION_CREDIT)) {
-				String employeeId = absence.getString(BAG_RELATIONS, TYPE_EMPLOYEE);
+				String employeeId = absence.getString(BAG_RELATIONS, PARAM_EMPLOYEE);
 				LocalDate start = absence.getDate(PARAM_START).toLocalDate();
 				LocalDate end = absence.getDate(PARAM_END).toLocalDate();
 
@@ -58,8 +58,8 @@ public class ApproveAbsenceService extends AbstractService<StringArgument, Servi
 					entry.addParameterBag(new ParameterBag(BAG_PARAMETERS, "Parameters", "Parameters"));
 					entry.addParameterBag(new ParameterBag(BAG_RELATIONS, "Relations", "Relations"));
 
-					entry.setString(BAG_RELATIONS, TYPE_EMPLOYEE, employeeId);
-					entry.setString(BAG_RELATIONS, TYPE_ABSENCE, absence.getId());
+					entry.setString(BAG_RELATIONS, PARAM_EMPLOYEE, employeeId);
+					entry.setString(BAG_RELATIONS, PARAM_ABSENCE, absence.getId());
 					entry.setDate(PARAM_DATE, absence.getDate(PARAM_START));
 					entry.setString(PARAM_VACATION_TYPE, VACATION_USAGE);
 					entry.setInteger(PARAM_VALUE, -totalMinutes);

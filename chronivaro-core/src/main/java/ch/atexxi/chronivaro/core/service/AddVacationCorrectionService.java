@@ -34,7 +34,7 @@ public class AddVacationCorrectionService
 
 			ZonedDateTime now = ZonedDateTime.now(ChronivaroModelHelper.getEmployeeTimezone(employee));
 
-			entry.setString(BAG_RELATIONS, TYPE_EMPLOYEE, arg.employeeId);
+			entry.setString(BAG_RELATIONS, PARAM_EMPLOYEE, arg.employeeId);
 			entry.setDate(PARAM_DATE, now);
 			entry.setString(PARAM_VACATION_TYPE, VACATION_CORRECTION);
 			entry.setInteger(PARAM_VALUE, arg.value);

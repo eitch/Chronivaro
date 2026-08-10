@@ -64,7 +64,7 @@ public class ManualCorrectionServiceTest {
 		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
 			List<Resource> entries = tx
 					.streamResources(TYPE_VACATION_ACCOUNT_ENTRY)
-					.filter(e -> e.getString(BAG_RELATIONS, TYPE_EMPLOYEE).equals(employeeId))
+					.filter(e -> e.getString(BAG_RELATIONS, PARAM_EMPLOYEE).equals(employeeId))
 					.toList();
 			assertEquals(1, entries.size());
 			assertEquals(480, entries.getFirst().getInteger(PARAM_VALUE));
@@ -96,7 +96,7 @@ public class ManualCorrectionServiceTest {
 			Resource workEntry = new Resource(workEntryId, "Work Entry", TYPE_WORK_ENTRY);
 			workEntry.addParameterBag(new ParameterBag(BAG_PARAMETERS, "Parameters", "Parameters"));
 			workEntry.addParameterBag(new ParameterBag(BAG_RELATIONS, "Relations", "Relations"));
-			workEntry.setString(BAG_RELATIONS, TYPE_EMPLOYEE, employeeId);
+			workEntry.setString(BAG_RELATIONS, PARAM_EMPLOYEE, employeeId);
 			workEntry.setDate(PARAM_START, start);
 			workEntry.setDate(PARAM_END, end);
 			tx.add(workEntry);

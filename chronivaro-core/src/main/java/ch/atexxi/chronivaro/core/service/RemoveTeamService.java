@@ -19,8 +19,8 @@ public class RemoveTeamService extends AbstractService<StringArgument, ServiceRe
 
 			boolean employeeReferencing = tx
 					.streamResources(TYPE_EMPLOYEE)
-					.anyMatch(e -> e.hasParameter(BAG_RELATIONS, TYPE_TEAM) && e
-							.getString(BAG_RELATIONS, TYPE_TEAM)
+					.anyMatch(e -> e.hasParameter(BAG_RELATIONS, PARAM_TEAM) && e
+							.getString(BAG_RELATIONS, PARAM_TEAM)
 							.equals(arg.value));
 
 			if (employeeReferencing) {

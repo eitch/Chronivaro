@@ -25,10 +25,12 @@ public class CorrectWorkEntryService
 
 		try (StrolchTransaction tx = openArgOrUserTx(arg)) {
 			Resource workEntry = tx.getResourceBy(TYPE_WORK_ENTRY, arg.workEntryId, true).getClone();
-			String employeeId = workEntry.getString(BAG_RELATIONS, TYPE_EMPLOYEE);
+			String employeeId = workEntry.getString(BAG_RELATIONS, PARAM_EMPLOYEE);
 
 			ZonedDateTime oldStart = workEntry.getDate(PARAM_START);
-			ZonedDateTime oldEnd = workEntry.hasParameter(PARAM_END) ? workEntry.getDate(PARAM_END) : null;
+			ZonedDateTime oldEnd = workEntry.getDate(PARAM_END);
+			if (oldEnd.getYear() == 1970)
+				oldEnd = null;
 
 			if (arg.end.isBefore(arg.start)) {
 				throw new IllegalStateException("End time cannot be before start time!");

@@ -29,8 +29,8 @@ public class CreateHolidayService extends AbstractService<CreateHolidayService.H
 
 			boolean exists = tx
 					.streamResources(TYPE_HOLIDAY)
-					.filter(h -> h.hasParameter(BAG_RELATIONS, TYPE_HOLIDAY_CALENDAR) && h
-							.getString(BAG_RELATIONS, TYPE_HOLIDAY_CALENDAR)
+					.filter(h -> h.hasParameter(BAG_RELATIONS, PARAM_HOLIDAY_CALENDAR) && h
+							.getString(BAG_RELATIONS, PARAM_HOLIDAY_CALENDAR)
 							.equals(arg.holidayCalendarId))
 					.anyMatch(h -> h.hasParameter(PARAM_DATE) && h.getDate(PARAM_DATE).equals(date));
 
@@ -41,7 +41,7 @@ public class CreateHolidayService extends AbstractService<CreateHolidayService.H
 			Resource holiday = new Resource(getUniqueId(), arg.name, TYPE_HOLIDAY);
 			holiday.addParameterBag(new li.strolch.model.ParameterBag(BAG_PARAMETERS, "Parameters", "Parameters"));
 			holiday.addParameterBag(new li.strolch.model.ParameterBag(BAG_RELATIONS, "Relations", "Relations"));
-			holiday.setString(BAG_RELATIONS, TYPE_HOLIDAY_CALENDAR, arg.holidayCalendarId);
+			holiday.setString(BAG_RELATIONS, PARAM_HOLIDAY_CALENDAR, arg.holidayCalendarId);
 			holiday.setDate(PARAM_DATE, date);
 			holiday.setString(PARAM_NAME, arg.name);
 			holiday.setDouble(PARAM_CREDIT_FACTOR, arg.creditFactor == 0.0 ? 1.0 : arg.creditFactor);

@@ -66,7 +66,7 @@ public class AddWorkEntryServiceTest {
 		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
 			List<Resource> entries = tx
 					.streamResources(TYPE_WORK_ENTRY)
-					.filter(e -> e.getString(BAG_RELATIONS, TYPE_EMPLOYEE).equals(employeeId))
+					.filter(e -> e.getString(BAG_RELATIONS, PARAM_EMPLOYEE).equals(employeeId))
 					.toList();
 			assertEquals(1, entries.size());
 			Resource entry = entries.getFirst();

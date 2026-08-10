@@ -57,7 +57,7 @@ public class AbsenceServiceTest {
 					TYPE_EMPLOYMENT_SCHEDULE_VERSION);
 			schedule.addParameterBag(new ParameterBag(BAG_PARAMETERS, "Parameters", "Parameters"));
 			schedule.addParameterBag(new ParameterBag(BAG_RELATIONS, "Relations", "Relations"));
-			schedule.setString(BAG_RELATIONS, TYPE_EMPLOYEE, employeeId);
+			schedule.setString(BAG_RELATIONS, PARAM_EMPLOYEE, employeeId);
 			schedule.setDate(PARAM_VALID_FROM, ZonedDateTime.parse("2026-01-01T00:00:00Z"));
 			schedule.setInteger(PARAM_DAILY_TARGET_MINUTES + "Monday", 480);
 			tx.add(schedule);
@@ -72,7 +72,7 @@ public class AbsenceServiceTest {
 			Resource entry = new Resource(UUID.randomUUID().toString(), "Entitlement", TYPE_VACATION_ACCOUNT_ENTRY);
 			entry.addParameterBag(new ParameterBag(BAG_PARAMETERS, "Parameters", "Parameters"));
 			entry.addParameterBag(new ParameterBag(BAG_RELATIONS, "Relations", "Relations"));
-			entry.setString(BAG_RELATIONS, TYPE_EMPLOYEE, employeeId);
+			entry.setString(BAG_RELATIONS, PARAM_EMPLOYEE, employeeId);
 			entry.setDate(PARAM_DATE, ZonedDateTime.parse("2026-01-01T00:00:00Z"));
 			entry.setString(PARAM_VACATION_TYPE, VACATION_ENTITLEMENT);
 			entry.setInteger(PARAM_VALUE, 20 * 480); // 20 days

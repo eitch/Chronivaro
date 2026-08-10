@@ -77,10 +77,36 @@ public class WorkEntryServiceTest {
 			assertTrue(WorkEntryHelper.findActiveWorkEntry(tx, employeeId).isEmpty());
 			List<Resource> entries = tx
 					.streamResources(TYPE_WORK_ENTRY)
-					.filter(e -> e.getString(BAG_RELATIONS, TYPE_EMPLOYEE).equals(employeeId))
+					.filter(e -> e.getString(BAG_RELATIONS, PARAM_EMPLOYEE).equals(employeeId))
 					.toList();
 			assertEquals(1, entries.size());
 			assertTrue(entries.getFirst().hasParameter(PARAM_END));
 		}
+	}
+
+	@Test
+	public void shouldNotStartTimerTwice() {
+		String employeeId = "emp1";
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
+			Resource e1 = new Resource(employeeId, "Emp 1", TYPE_EMPLOYEE);
+			e1.addParameterBag(new ParameterBag(BAG_PARAMETERS, "Parameters", "Parameters"));
+			e1.addParameterBag(new ParameterBag(BAG_RELATIONS, "Relations", "Relations"));
+			e1.setBoolean(PARAM_ACTIVE, true);
+			e1.setString(BAG_RELATIONS, PARAM_PRIMARY_TEAM, "team1");
+			e1.setString(BAG_PARAMETERS, PARAM_LOCATION, "loc1");
+			e1.setDate(PARAM_JOIN_DATE, ZonedDateTime.now());
+			tx.add(e1);
+			tx.commitOnClose();
+		}
+
+		ServiceHandler serviceHandler = runtimeMock.getServiceHandler();
+		ServiceResult result1 = serviceHandler.doService(certificate, new StartTimerService(),
+				new StringArgument(employeeId));
+		assertTrue(result1.isOk());
+
+		ServiceResult result2 = serviceHandler.doService(certificate, new StartTimerService(),
+				new StringArgument(employeeId));
+		assertTrue(!result2.isOk());
+		assertTrue(result2.getMessage().contains("An active work entry already exists"));
 	}
 }

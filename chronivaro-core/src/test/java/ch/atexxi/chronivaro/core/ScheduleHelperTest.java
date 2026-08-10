@@ -42,7 +42,7 @@ public class ScheduleHelperTest {
 			// Create Location
 			Resource location = new Resource("loc1", "Location 1", TYPE_LOCATION);
 			location.addParameterBag(new ParameterBag(BAG_RELATIONS, "Relations", "Relations"));
-			location.setString(BAG_RELATIONS, TYPE_HOLIDAY_CALENDAR, "cal1");
+			location.setString(BAG_RELATIONS, PARAM_HOLIDAY_CALENDAR, "cal1");
 			tx.add(location);
 
 			// Create Employee
@@ -51,14 +51,14 @@ public class ScheduleHelperTest {
 			employee.addParameterBag(new ParameterBag(BAG_RELATIONS, "Relations", "Relations"));
 			employee.setBoolean(PARAM_ACTIVE, true);
 			employee.setDate(PARAM_JOIN_DATE, ZonedDateTime.parse("2026-01-01T00:00:00Z"));
-			employee.setString(BAG_RELATIONS, TYPE_LOCATION, "loc1");
+			employee.setString(BAG_PARAMETERS, PARAM_LOCATION, "loc1");
 			tx.add(employee);
 
 			// Create Schedule Version
 			Resource schedule = new Resource("v1", "Schedule V1", TYPE_EMPLOYMENT_SCHEDULE_VERSION);
 			schedule.addParameterBag(new ParameterBag(BAG_PARAMETERS, "Parameters", "Parameters"));
 			schedule.addParameterBag(new ParameterBag(BAG_RELATIONS, "Relations", "Relations"));
-			schedule.setString(BAG_RELATIONS, TYPE_EMPLOYEE, "emp1");
+			schedule.setString(BAG_RELATIONS, PARAM_EMPLOYEE, "emp1");
 			schedule.setDate(PARAM_VALID_FROM, ZonedDateTime.parse("2026-01-01T00:00:00Z"));
 			schedule.setInteger(PARAM_DAILY_TARGET_MINUTES + "Monday", 480);
 			schedule.setInteger(PARAM_DAILY_TARGET_MINUTES + "Tuesday", 480);
@@ -73,7 +73,7 @@ public class ScheduleHelperTest {
 			Resource holiday = new Resource("h1", "New Year", TYPE_HOLIDAY);
 			holiday.addParameterBag(new ParameterBag(BAG_RELATIONS, "Relations", "Relations"));
 			holiday.addParameterBag(new ParameterBag(BAG_PARAMETERS, "Parameters", "Parameters"));
-			holiday.setString(BAG_RELATIONS, TYPE_HOLIDAY_CALENDAR, "cal1");
+			holiday.setString(BAG_RELATIONS, PARAM_HOLIDAY_CALENDAR, "cal1");
 			holiday.setDate(PARAM_DATE, ZonedDateTime.parse("2026-01-01T00:00:00Z"));
 			holiday.setDouble(PARAM_CREDIT_FACTOR, 1.0);
 			tx.add(holiday);

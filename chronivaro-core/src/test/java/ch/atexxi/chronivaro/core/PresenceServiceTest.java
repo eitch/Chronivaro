@@ -49,8 +49,8 @@ public class PresenceServiceTest {
 			e1.addParameterBag(new ParameterBag(BAG_PARAMETERS, "Parameters", "Parameters"));
 			e1.addParameterBag(new ParameterBag(BAG_RELATIONS, "Relations", "Relations"));
 			e1.setBoolean(PARAM_ACTIVE, true);
-			e1.setString(BAG_RELATIONS, TYPE_TEAM, teamId);
-			e1.setString(BAG_RELATIONS, TYPE_LOCATION, locationId);
+			e1.setString(BAG_RELATIONS, PARAM_PRIMARY_TEAM, teamId);
+			e1.setString(BAG_PARAMETERS, PARAM_LOCATION, locationId);
 			e1.setDate(PARAM_JOIN_DATE, ZonedDateTime.now());
 			tx.add(e1);
 
@@ -59,8 +59,8 @@ public class PresenceServiceTest {
 			e2.addParameterBag(new ParameterBag(BAG_PARAMETERS, "Parameters", "Parameters"));
 			e2.addParameterBag(new ParameterBag(BAG_RELATIONS, "Relations", "Relations"));
 			e2.setBoolean(PARAM_ACTIVE, true);
-			e2.setString(BAG_RELATIONS, TYPE_TEAM, teamId);
-			e2.setString(BAG_RELATIONS, TYPE_LOCATION, locationId);
+			e2.setString(BAG_RELATIONS, PARAM_PRIMARY_TEAM, teamId);
+			e2.setString(BAG_PARAMETERS, PARAM_LOCATION, locationId);
 			e2.setDate(PARAM_JOIN_DATE, ZonedDateTime.now());
 			tx.add(e2);
 
@@ -85,6 +85,7 @@ public class PresenceServiceTest {
 				.findFirst()
 				.orElseThrow();
 		assertEquals(PresenceService.PresenceStatus.WORKING, info1.status());
+		assertTrue(info1.minutesToday() >= 0);
 
 		PresenceService.PresenceInfo info2 = result.presenceInfos
 				.stream()
@@ -92,5 +93,6 @@ public class PresenceServiceTest {
 				.findFirst()
 				.orElseThrow();
 		assertEquals(PresenceService.PresenceStatus.NOT_WORKING, info2.status());
+		assertEquals(0, info2.minutesToday());
 	}
 }

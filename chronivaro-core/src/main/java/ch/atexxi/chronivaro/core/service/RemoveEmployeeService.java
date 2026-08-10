@@ -24,8 +24,8 @@ public class RemoveEmployeeService extends AbstractService<StringArgument, Servi
 			for (String type : types) {
 				tx
 						.streamResources(type)
-						.filter(r -> r.hasParameter(BAG_RELATIONS, TYPE_EMPLOYEE) && r
-								.getString(BAG_RELATIONS, TYPE_EMPLOYEE)
+						.filter(r -> r.hasParameter(BAG_RELATIONS, PARAM_EMPLOYEE) && r
+								.getString(BAG_RELATIONS, PARAM_EMPLOYEE)
 								.equals(arg.value))
 						.forEach(tx::remove);
 			}

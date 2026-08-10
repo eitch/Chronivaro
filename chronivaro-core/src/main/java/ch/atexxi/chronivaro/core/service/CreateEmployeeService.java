@@ -27,8 +27,8 @@ public class CreateEmployeeService extends AbstractService<CreateEmployeeService
 			employee.addParameterBag(new ParameterBag(BAG_RELATIONS, "Relations", "Relations"));
 			employee.setString(PARAM_PERSONAL_NUMBER, arg.personalNumber);
 			employee.setString(PARAM_DISPLAY_NAME, arg.displayName);
-			employee.setString(BAG_RELATIONS, TYPE_TEAM, arg.teamId);
-			employee.setString(BAG_RELATIONS, TYPE_LOCATION, arg.locationId);
+			employee.setString(BAG_RELATIONS, PARAM_PRIMARY_TEAM, arg.teamId);
+			employee.setString(BAG_PARAMETERS, PARAM_LOCATION, arg.locationId);
 			employee.setString(PARAM_TIMEZONE, timeZone);
 			employee.setDate(PARAM_JOIN_DATE, arg.joinDate.atStartOfDay(zoneId));
 			if (arg.exitDate != null)

@@ -29,15 +29,16 @@ public class StartTimerService extends AbstractService<StringArgument, ServiceRe
 			}
 
 			ZonedDateTime now = ZonedDateTime.now(ChronivaroModelHelper.getEmployeeTimezone(employee));
+			String username = tx.getCertificate().getUsername();
 
-			Resource workEntry = new Resource(UUID.randomUUID().toString(), "Timer " + now, TYPE_WORK_ENTRY);
-			workEntry.addParameterBag(new ParameterBag(BAG_PARAMETERS, "Parameters", "Parameters"));
-			workEntry.addParameterBag(new ParameterBag(BAG_RELATIONS, "Relations", "Relations"));
+			Resource workEntry = tx.getResourceTemplate(TYPE_WORK_ENTRY, true);
+			workEntry.setId(UUID.randomUUID().toString());
+			workEntry.setName("Timer " + now);
 
-			workEntry.setString(BAG_RELATIONS, TYPE_EMPLOYEE, employee.getId());
+			workEntry.setString(BAG_RELATIONS, PARAM_EMPLOYEE, employee.getId());
 			workEntry.setDate(PARAM_START, now);
 			workEntry.setString(PARAM_SOURCE, SOURCE_TIMER);
-			workEntry.setString(PARAM_CREATED_BY, tx.getCertificate().getUsername());
+			workEntry.setString(PARAM_CREATED_BY, username);
 
 			WorkEntryHelper.validateNoOverlap(tx, employee.getId(), now, null, null);
 

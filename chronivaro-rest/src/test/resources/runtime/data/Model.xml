@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <StrolchModel>
+
+    <IncludeFile file="../../../../runtime/data/Model.xml"/>
+
     <Resource Id="loc1" Name="Zurich" Type="Location">
         <ParameterBag Id="parameters" Name="Parameters" Type="Parameters">
             <Parameter Id="timezone" Name="Timezone" Type="String" Value="Europe/Zurich"/>
