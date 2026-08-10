@@ -13,12 +13,12 @@ export default class HolidayCalendarsView {
         container.innerHTML = `
 			<h2>Holiday Calendars</h2>
 			
-			<div class="calendar-layout" style="display: flex; gap: 20px;">
-				<div class="calendar-list-panel" style="flex: 1; border-right: 1px solid #ccc; padding-right: 20px;">
-					<div class="actions" style="margin-bottom: 10px;">
+			<div class="calendar-layout">
+				<div class="calendar-list-panel">
+					<div class="actions">
 						<button id="add-calendar-btn">Add Calendar</button>
 					</div>
-					<table id="calendars-table" style="width: 100%;">
+					<table id="calendars-table">
 						<thead>
 							<tr>
 								<th>Name</th>
@@ -31,14 +31,14 @@ export default class HolidayCalendarsView {
 					</table>
 				</div>
 				
-				<div class="calendar-details-panel" style="flex: 2;">
+				<div class="calendar-details-panel">
 					<div id="no-selection-msg">Select a calendar to see holidays</div>
 					<div id="details-content" style="display: none;">
 						<h3 id="selected-calendar-name"></h3>
-						<div class="actions" style="margin-bottom: 10px;">
+						<div class="actions">
 							<button id="add-holiday-btn">Add Holiday</button>
 						</div>
-						<table id="holidays-table" style="width: 100%;">
+						<table id="holidays-table">
 							<thead>
 								<tr>
 									<th>Date</th>
@@ -55,15 +55,15 @@ export default class HolidayCalendarsView {
 				</div>
 			</div>
 			
-			<div id="calendar-modal" class="modal" style="display:none; position:fixed; z-index:100; left:0; top:0; width:100%; height:100%; overflow:auto; background-color:rgba(0,0,0,0.4);">
-				<div style="background-color:#fefefe; margin:15% auto; padding:20px; border:1px solid #888; width:80%; max-width:500px;">
+			<div id="calendar-modal" class="modal">
+				<div class="modal-content">
 					<h3>Add Holiday Calendar</h3>
 					<form id="calendar-form">
 						<div class="form-group">
 							<label for="cal-name">Name:</label>
-							<input type="text" id="cal-name" required style="width: 100%;">
+							<input type="text" id="cal-name" required>
 						</div>
-						<div class="actions" style="margin-top: 20px;">
+						<div class="actions">
 							<button type="submit">Save</button>
 							<button type="button" class="close-modal">Cancel</button>
 						</div>
@@ -71,23 +71,23 @@ export default class HolidayCalendarsView {
 				</div>
 			</div>
 
-			<div id="holiday-modal" class="modal" style="display:none; position:fixed; z-index:100; left:0; top:0; width:100%; height:100%; overflow:auto; background-color:rgba(0,0,0,0.4);">
-				<div style="background-color:#fefefe; margin:15% auto; padding:20px; border:1px solid #888; width:80%; max-width:500px;">
+			<div id="holiday-modal" class="modal">
+				<div class="modal-content">
 					<h3>Add Holiday</h3>
 					<form id="holiday-form">
 						<div class="form-group">
 							<label for="hol-name">Name:</label>
-							<input type="text" id="hol-name" required style="width: 100%;">
+							<input type="text" id="hol-name" required>
 						</div>
 						<div class="form-group">
 							<label for="hol-date">Date:</label>
-							<input type="date" id="hol-date" required style="width: 100%;">
+							<input type="date" id="hol-date" required>
 						</div>
 						<div class="form-group">
 							<label for="hol-credit">Credit Factor:</label>
-							<input type="number" id="hol-credit" step="0.1" min="0" max="1" value="1.0" style="width: 100%;">
+							<input type="number" id="hol-credit" step="0.1" min="0" max="1" value="1.0">
 						</div>
-						<div class="actions" style="margin-top: 20px;">
+						<div class="actions">
 							<button type="submit">Save</button>
 							<button type="button" class="close-modal">Cancel</button>
 						</div>
@@ -176,7 +176,7 @@ export default class HolidayCalendarsView {
                     this.selectCalendar(cal);
                 });
                 tr.querySelector('.delete-cal').addEventListener('click', async () => {
-                    if (confirm(`Are you sure you want to delete calendar "${cal.name}"?`)) {
+                    if (await NotificationDialog.confirm(`Are you sure you want to delete calendar "${cal.name}"?`)) {
                         try {
                             await HolidayCalendarApi.deleteCalendar(cal.id);
                             NotificationDialog.show('Calendar deleted');
@@ -219,7 +219,7 @@ export default class HolidayCalendarsView {
 					<td><button class="delete-hol" data-id="${hol.id}">Delete</button></td>
 				`;
                 tr.querySelector('.delete-hol').addEventListener('click', async () => {
-                    if (confirm(`Are you sure you want to delete holiday "${hol.name}"?`)) {
+                    if (await NotificationDialog.confirm(`Are you sure you want to delete holiday "${hol.name}"?`)) {
                         try {
                             await HolidayCalendarApi.deleteHoliday(calendarId, hol.id);
                             NotificationDialog.show('Holiday deleted');

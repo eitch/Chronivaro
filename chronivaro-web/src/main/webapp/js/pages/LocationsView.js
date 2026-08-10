@@ -29,8 +29,8 @@ export default class LocationsView {
 				</tbody>
 			</table>
 
-			<div id="location-modal" style="display:none; position:fixed; z-index:1; left:0; top:0; width:100%; height:100%; overflow:auto; background-color:rgba(0,0,0,0.4);">
-				<div style="background-color:#fefefe; margin:15% auto; padding:20px; border:1px solid #888; width:80%; max-width:500px;">
+			<div id="location-modal" class="modal">
+				<div class="modal-content">
 					<h3 id="modal-title">Add Location</h3>
 					<form id="location-form">
 						<div class="form-group" id="loc-id-group">

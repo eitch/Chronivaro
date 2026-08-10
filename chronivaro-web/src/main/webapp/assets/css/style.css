@@ -1,194 +1,447 @@
+:root {
+    --primary-color: #2563eb;
+    --primary-hover: #1d4ed8;
+    --bg-color: #f8fafc;
+    --text-color: #1e293b;
+    --border-color: #e2e8f0;
+    --card-bg: #ffffff;
+    --header-bg: #1e293b;
+    --error-color: #ef4444;
+    --success-color: #22c55e;
+}
+
 body {
-    font-family: sans-serif;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     margin: 0;
     padding: 0;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    line-height: 1.5;
 }
 
 header {
-    background-color: #333;
+    background-color: var(--header-bg);
     color: white;
-    padding: 1rem;
+    padding: 0.75rem 2rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 header h1 {
     margin: 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: -0.025em;
 }
 
 nav ul {
     list-style: none;
     display: flex;
-    gap: 1rem;
+    gap: 1.5rem;
     margin: 0;
     padding: 0;
 }
 
 nav a {
-    color: white;
+    color: #cbd5e1;
     text-decoration: none;
+    font-weight: 500;
+    font-size: 0.875rem;
+    transition: color 0.2s;
+}
+
+nav a:hover {
+    color: white;
 }
 
 main {
     padding: 2rem;
-}
-
-#presence-status {
-    font-size: 1.5rem;
-    margin-bottom: 1rem;
-}
-
-button:disabled {
-    cursor: not-allowed;
-    opacity: 0.6;
-}
-
-.status-working {
-    color: green;
-    font-weight: bold;
-}
-
-.status-not-working {
-    color: red;
-    font-weight: bold;
+    max-width: 1200px;
+    margin: 0 auto;
 }
 
 #login-view {
     max-width: 400px;
-    margin: 2rem auto;
-    padding: 2rem;
-    border: 1px solid #ccc;
-    border-radius: 8px;
+    margin: 4rem auto;
+    padding: 2.5rem;
+    background-color: var(--card-bg);
+    border-radius: 1rem;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+#login-view h2 {
+    text-align: center;
+    margin-top: 0;
+    margin-bottom: 2rem;
+}
+
+#login-view button {
+    width: 100%;
+    margin-top: 1rem;
+    padding: 0.75rem;
+}
+
+h2 {
+    font-size: 1.875rem;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+    color: #0f172a;
+}
+
+h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+button {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 0.375rem;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background-color 0.2s;
+}
+
+button:hover {
+    background-color: var(--primary-hover);
+}
+
+button:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+.actions {
+    margin-bottom: 1.5rem;
+    display: flex;
+    gap: 0.5rem;
+}
+
+#filter-controls {
+    margin-bottom: 2rem;
+    display: flex;
+    gap: 1.5rem;
+    align-items: center;
+    background-color: var(--card-bg);
+    padding: 1.25rem;
+    border-radius: 0.5rem;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+#filter-controls label {
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: #475569;
+}
+
+#filter-controls input {
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+}
+
+.edit-btn {
+    background-color: #f1f5f9;
+    color: #475569;
+}
+
+.edit-btn:hover {
+    background-color: #e2e8f0;
+}
+
+.delete-btn {
+    background-color: #fee2e2;
+    color: #dc2626;
+}
+
+.delete-btn:hover {
+    background-color: #fecaca;
 }
 
 .form-group {
-    margin-bottom: 1rem;
+    margin-bottom: 1.25rem;
 }
 
 .form-group label {
     display: block;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.375rem;
+    font-weight: 500;
+    font-size: 0.875rem;
+    color: #475569;
 }
 
-.form-group input {
+.form-group input[type="text"],
+.form-group input[type="password"],
+.form-group input[type="email"],
+.form-group input[type="number"],
+.form-group select,
+.form-group textarea {
     width: 100%;
-    padding: 0.5rem;
+    padding: 0.625rem;
+    border: 1px solid var(--border-color);
+    border-radius: 0.375rem;
     box-sizing: border-box;
+    font-size: 0.875rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+/* Fix for checkboxes and radio buttons alignment */
+.form-group label:has(input[type="checkbox"]),
+.form-group label:has(input[type="radio"]) {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    font-weight: 400;
+}
+
+.form-group input[type="checkbox"],
+.form-group input[type="radio"] {
+    width: auto;
+    margin: 0;
+    cursor: pointer;
 }
 
 .error {
-    color: red;
+    color: var(--error-color);
+    font-size: 0.875rem;
     margin-bottom: 1rem;
-}
-
-#day-summary {
-    margin-top: 2rem;
-    padding-top: 1rem;
-    border-top: 1px solid #eee;
 }
 
 table {
     width: 100%;
-    border-collapse: collapse;
+    border-collapse: separate;
+    border-spacing: 0;
     margin-top: 1rem;
+    background-color: var(--card-bg);
+    border-radius: 0.5rem;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--border-color);
 }
 
 th, td {
-    border: 1px solid #ddd;
-    padding: 8px;
+    padding: 0.75rem 1rem;
     text-align: left;
+    border-bottom: 1px solid var(--border-color);
 }
 
 th {
-    background-color: #f2f2f2;
+    background-color: #f8fafc;
+    font-weight: 600;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #64748b;
 }
 
-tr:nth-child(even) {
-    background-color: #f9f9f9;
+tr:last-child td {
+    border-bottom: none;
 }
 
-#filter-controls {
-    margin-bottom: 1rem;
-    display: flex;
-    gap: 1rem;
-    align-items: center;
+tr:hover {
+    background-color: #f8fafc;
 }
 
-/* Notification Dialog */
+/* Modal Styling */
+.modal,
 .notification-dialog-overlay {
+    display: none;
     position: fixed;
-    top: 0;
+    z-index: 100;
     left: 0;
+    top: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
+    overflow: auto;
+    background-color: rgba(15, 23, 42, 0.75);
+    backdrop-filter: blur(4px);
 }
 
+.notification-dialog-overlay {
+    display: block;
+}
+
+.modal-content,
 .notification-dialog {
-    background-color: white;
-    padding: 0;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    min-width: 300px;
+    background-color: var(--card-bg);
+    margin: 5% auto;
+    padding: 2rem;
+    border-radius: 0.75rem;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    width: 90%;
     max-width: 500px;
-    overflow: hidden;
-    animation: dialog-fade-in 0.2s ease-out;
+    position: relative;
 }
 
-@keyframes dialog-fade-in {
-    from { opacity: 0; transform: translateY(-20px); }
-    to { opacity: 1; transform: translateY(0); }
+/* Notification Dialog override */
+.notification-dialog {
+    padding: 0; /* Header and body will have their own padding */
+    overflow: hidden;
 }
 
 .notification-dialog-header {
-    background-color: #333;
-    color: white;
-    padding: 1rem;
+    background-color: #f8fafc;
+    color: var(--text-color);
+    padding: 1.25rem 2rem;
+    border-bottom: 1px solid var(--border-color);
 }
 
 .notification-dialog-header h3 {
     margin: 0;
-    font-size: 1.2rem;
 }
 
 .notification-dialog-body {
-    padding: 1.5rem;
-    font-size: 1rem;
-    line-height: 1.5;
+    padding: 2rem;
 }
 
 .notification-dialog-footer {
-    padding: 1rem;
-    text-align: right;
-    border-top: 1px solid #eee;
+    padding: 1.25rem 2rem;
+    background-color: #f8fafc;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
 }
 
 .notification-dialog-button {
-    padding: 0.5rem 1.5rem;
-    background-color: #333;
+    background-color: var(--primary-color);
     color: white;
     border: none;
-    border-radius: 4px;
+    padding: 0.5rem 1.25rem;
+    border-radius: 0.375rem;
     cursor: pointer;
-    font-size: 1rem;
+    font-weight: 500;
     transition: background-color 0.2s;
-    margin-left: 0.5rem;
-}
-
-.notification-dialog-button:hover {
-    background-color: #555;
 }
 
 .notification-dialog-button.secondary {
-    background-color: #ccc;
-    color: #333;
+    background-color: #f1f5f9;
+    color: #475569;
 }
 
 .notification-dialog-button.secondary:hover {
-    background-color: #bbb;
+    background-color: #e2e8f0;
+}
+
+.notification-dialog-button:hover {
+    background-color: var(--primary-hover);
+}
+
+/* Layouts */
+.calendar-layout {
+    display: flex;
+    gap: 2rem;
+}
+
+.calendar-list-panel {
+    flex: 1;
+    background-color: var(--card-bg);
+    padding: 1.5rem;
+    border-radius: 0.5rem;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.calendar-details-panel {
+    flex: 2;
+    background-color: var(--card-bg);
+    padding: 1.5rem;
+    border-radius: 0.5rem;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+#no-selection-msg {
+    color: #64748b;
+    text-align: center;
+    padding: 2rem;
+    font-style: italic;
+}
+
+#status-container {
+    background-color: var(--card-bg);
+    padding: 2rem;
+    border-radius: 0.75rem;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    margin-bottom: 2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+#presence-status {
+    font-size: 2.5rem;
+    font-weight: 800;
+    margin: 1rem 0;
+    display: block;
+}
+
+#timer-controls {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+#timer-controls button {
+    padding: 0.75rem 2rem;
+    font-size: 1.125rem;
+}
+
+#start-timer {
+    background-color: var(--success-color);
+}
+
+#start-timer:hover {
+    background-color: #16a34a;
+}
+
+#stop-timer {
+    background-color: var(--error-color);
+}
+
+#stop-timer:hover {
+    background-color: #dc2626;
+}
+
+#day-summary {
+    background-color: var(--card-bg);
+    padding: 2rem;
+    border-radius: 0.75rem;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+#day-summary h3 {
+    margin-top: 0;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+#day-summary p {
+    display: flex;
+    justify-content: space-between;
+    margin: 0.75rem 0;
+    font-size: 1.125rem;
+}
+
+#day-summary span {
+    font-weight: 600;
 }
