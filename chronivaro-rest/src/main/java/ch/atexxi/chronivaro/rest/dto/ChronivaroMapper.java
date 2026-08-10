@@ -72,4 +72,14 @@ public class ChronivaroMapper {
 						employee.getDate(PARAM_EXIT_DATE).toLocalDate() : null, employee.getBoolean(PARAM_ACTIVE),
 				employee.getString(BAG_RELATIONS, PARAM_USER));
 	}
+
+	public static HolidayCalendarDto holidayCalendarToDto(Resource calendar) {
+		return new HolidayCalendarDto(calendar.getId(), calendar.getString(PARAM_NAME));
+	}
+
+	public static HolidayDto holidayToDto(Resource holiday) {
+		return new HolidayDto(holiday.getId(), holiday.getString(BAG_RELATIONS, TYPE_HOLIDAY_CALENDAR),
+				holiday.getDate(PARAM_DATE).toLocalDate(), holiday.getString(PARAM_NAME),
+				holiday.getDouble(PARAM_CREDIT_FACTOR));
+	}
 }
