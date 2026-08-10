@@ -1,4 +1,5 @@
 import HolidayCalendarApi from '../api/HolidayCalendarApi.js';
+import NotificationDialog from '../utils/NotificationDialog.js';
 
 export default class HolidayCalendarsView {
     constructor(app) {
@@ -89,9 +90,9 @@ export default class HolidayCalendarsView {
                 container.querySelector('#hol-cal-id').value = result.value;
                 holModal.style.display = 'block';
 
-                alert('Calendar created successfully. Now add holidays to it.');
+                NotificationDialog.show('Calendar created successfully. Now add holidays to it.');
             } catch (err) {
-                alert(err.message);
+                NotificationDialog.error(err.message);
             }
         });
 
@@ -106,9 +107,9 @@ export default class HolidayCalendarsView {
             try {
                 await HolidayCalendarApi.createHoliday(calendarId, holiday);
                 holModal.style.display = 'none';
-                alert('Holiday created successfully');
+                NotificationDialog.show('Holiday created successfully');
             } catch (err) {
-                alert(err.message);
+                NotificationDialog.error(err.message);
             }
         });
 

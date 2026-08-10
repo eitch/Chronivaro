@@ -1,4 +1,5 @@
 import LocationApi from '../api/LocationApi.js';
+import NotificationDialog from '../utils/NotificationDialog.js';
 
 export default class LocationsView {
     constructor(app) {
@@ -113,17 +114,17 @@ export default class LocationsView {
                     modal.style.display = 'block';
                 }
             } catch (err) {
-                alert(err.message);
+                NotificationDialog.error(err.message);
             }
         };
 
         const deleteLocation = async (id) => {
-            if (confirm(`Are you sure you want to delete location ${id}?`)) {
+            if (await NotificationDialog.confirm(`Are you sure you want to delete location ${id}?`)) {
                 try {
                     await LocationApi.remove(id);
                     refresh();
                 } catch (err) {
-                    alert(err.message);
+                    NotificationDialog.error(err.message);
                 }
             }
         };
@@ -159,7 +160,7 @@ export default class LocationsView {
                 modal.style.display = 'none';
                 refresh();
             } catch (err) {
-                alert(err.message);
+                NotificationDialog.error(err.message);
             }
         });
 

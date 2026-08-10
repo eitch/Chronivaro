@@ -1,4 +1,5 @@
 import WorkEntryApi from '../api/WorkEntryApi.js';
+import NotificationDialog from '../utils/NotificationDialog.js';
 
 export default class DashboardView {
 
@@ -56,7 +57,7 @@ export default class DashboardView {
                 await WorkEntryApi.startTimer();
                 await refresh();
             } catch (err) {
-                alert(err.message);
+                NotificationDialog.error(err.message);
             }
         });
 
@@ -65,7 +66,7 @@ export default class DashboardView {
                 await WorkEntryApi.stopTimer();
                 await refresh();
             } catch (err) {
-                alert(err.message);
+                NotificationDialog.error(err.message);
             }
         });
 

@@ -1,4 +1,5 @@
 import AbsenceTypeApi from '../api/AbsenceTypeApi.js';
+import NotificationDialog from '../utils/NotificationDialog.js';
 
 export default class AbsenceTypesView {
     constructor(app) {
@@ -130,17 +131,17 @@ export default class AbsenceTypesView {
                     modal.style.display = 'block';
                 }
             } catch (err) {
-                alert(err.message);
+                NotificationDialog.error(err.message);
             }
         };
 
         const deleteAbsenceType = async (id) => {
-            if (confirm(`Are you sure you want to delete absence type ${id}?`)) {
+            if (await NotificationDialog.confirm(`Are you sure you want to delete absence type ${id}?`)) {
                 try {
                     await AbsenceTypeApi.remove(id);
                     refresh();
                 } catch (err) {
-                    alert(err.message);
+                    NotificationDialog.error(err.message);
                 }
             }
         };
@@ -182,7 +183,7 @@ export default class AbsenceTypesView {
                 modal.style.display = 'none';
                 refresh();
             } catch (err) {
-                alert(err.message);
+                NotificationDialog.error(err.message);
             }
         });
 

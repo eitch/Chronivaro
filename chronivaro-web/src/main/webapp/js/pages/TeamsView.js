@@ -1,4 +1,5 @@
 import TeamApi from '../api/TeamApi.js';
+import NotificationDialog from '../utils/NotificationDialog.js';
 
 export default class TeamsView {
     constructor(app) {
@@ -99,17 +100,17 @@ export default class TeamsView {
                     modal.style.display = 'block';
                 }
             } catch (err) {
-                alert(err.message);
+                NotificationDialog.error(err.message);
             }
         };
 
         const deleteTeam = async (id) => {
-            if (confirm(`Are you sure you want to delete team ${id}?`)) {
+            if (await NotificationDialog.confirm(`Are you sure you want to delete team ${id}?`)) {
                 try {
                     await TeamApi.remove(id);
                     refresh();
                 } catch (err) {
-                    alert(err.message);
+                    NotificationDialog.error(err.message);
                 }
             }
         };
@@ -143,7 +144,7 @@ export default class TeamsView {
                 modal.style.display = 'none';
                 refresh();
             } catch (err) {
-                alert(err.message);
+                NotificationDialog.error(err.message);
             }
         });
 
