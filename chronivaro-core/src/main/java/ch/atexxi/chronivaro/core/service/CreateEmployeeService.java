@@ -34,8 +34,6 @@ public class CreateEmployeeService extends AbstractService<CreateEmployeeService
 			if (arg.exitDate != null)
 				employee.setDate(PARAM_EXIT_DATE, arg.exitDate.atStartOfDay(zoneId));
 			employee.setBoolean(PARAM_ACTIVE, arg.active);
-			if (arg.userId != null)
-				employee.setString(BAG_RELATIONS, PARAM_USER, arg.userId);
 			tx.add(employee);
 			tx.commitOnClose();
 		}

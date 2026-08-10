@@ -120,7 +120,7 @@ export default class EmployeesView {
             if (users.length === 0) {
                 userSelect.innerHTML = '<option value="">No users available</option>';
             } else {
-                userSelect.innerHTML = users.map(u => `<option value="${u.username}">${u.username} (${u.firstname} ${u.lastname})</option>`).join('');
+                userSelect.innerHTML = users.map(u => `<option value="${u.userId}">${u.username} (${u.firstname} ${u.lastname})</option>`).join('');
             }
         };
 
