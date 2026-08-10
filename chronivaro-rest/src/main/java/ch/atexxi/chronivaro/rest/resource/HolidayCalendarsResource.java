@@ -14,7 +14,7 @@ import li.strolch.service.api.ServiceHandler;
 import li.strolch.service.api.ServiceResult;
 
 @Path("chronivaro/v1/admin/holiday-calendars")
-public class HolidayCalendarResource {
+public class HolidayCalendarsResource {
 
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
@@ -25,7 +25,8 @@ public class HolidayCalendarResource {
 		CreateHolidayCalendarService.HolidayCalendarArgument arg = ChronivaroRestHelper
 				.createGson()
 				.fromJson(data, CreateHolidayCalendarService.HolidayCalendarArgument.class);
-		ServiceResult result = serviceHandler.doService(cert, new CreateHolidayCalendarService(), arg);
+		CreateHolidayCalendarService service = new CreateHolidayCalendarService();
+		var result = serviceHandler.doService(cert, service, arg);
 		return ResponseUtil.toResponse(result);
 	}
 

@@ -18,8 +18,9 @@ public class HolidayHelper {
 
 		return tx
 				.streamResources(TYPE_HOLIDAY)
-				.filter(h -> h.getString(BAG_RELATIONS, TYPE_HOLIDAY_CALENDAR).equals(holidayCalendarId))
-				.filter(h -> h.getDate(PARAM_DATE).toLocalDate().equals(date))
+				.filter(h -> h.hasParameter(BAG_RELATIONS, TYPE_HOLIDAY_CALENDAR) && h.getString(BAG_RELATIONS,
+						TYPE_HOLIDAY_CALENDAR).equals(holidayCalendarId))
+				.filter(h -> h.hasParameter(PARAM_DATE) && h.getDate(PARAM_DATE).toLocalDate().equals(date))
 				.findFirst();
 	}
 

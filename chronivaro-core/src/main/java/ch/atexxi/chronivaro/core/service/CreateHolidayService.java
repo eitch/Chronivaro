@@ -25,7 +25,7 @@ public class CreateHolidayService extends AbstractService<CreateHolidayService.H
 			holiday.setString(BAG_RELATIONS, TYPE_HOLIDAY_CALENDAR, arg.holidayCalendarId);
 			holiday.setDate(PARAM_DATE, arg.date.atStartOfDay(zoneId));
 			holiday.setString(PARAM_NAME, arg.name);
-			holiday.setDouble(PARAM_CREDIT_FACTOR, arg.creditFactor);
+			holiday.setDouble(PARAM_CREDIT_FACTOR, arg.creditFactor == 0.0 ? 1.0 : arg.creditFactor);
 			tx.add(holiday);
 			tx.commitOnClose();
 		}

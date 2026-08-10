@@ -43,6 +43,10 @@ export default class HolidayCalendarsView {
 							<label for="hol-date">Date:</label>
 							<input type="date" id="hol-date" required>
 						</div>
+						<div class="form-group">
+							<label for="hol-credit">Credit Factor:</label>
+							<input type="number" id="hol-credit" step="0.1" min="0" max="1" value="1.0">
+						</div>
 						<div class="actions">
 							<button type="submit">Save</button>
 							<button type="button" class="close-modal">Cancel</button>
@@ -78,9 +82,14 @@ export default class HolidayCalendarsView {
                 name: container.querySelector('#cal-name').value
             };
             try {
-                await HolidayCalendarApi.createCalendar(cal);
+                const result = await HolidayCalendarApi.createCalendar(cal);
                 calModal.style.display = 'none';
-                alert('Calendar created successfully');
+                
+                // Set the ID for the holiday form
+                container.querySelector('#hol-cal-id').value = result.value;
+                holModal.style.display = 'block';
+
+                alert('Calendar created successfully. Now add holidays to it.');
             } catch (err) {
                 alert(err.message);
             }
@@ -91,7 +100,8 @@ export default class HolidayCalendarsView {
             const calendarId = container.querySelector('#hol-cal-id').value;
             const holiday = {
                 name: container.querySelector('#hol-name').value,
-                date: container.querySelector('#hol-date').value
+                date: container.querySelector('#hol-date').value,
+                creditFactor: parseFloat(container.querySelector('#hol-credit').value) || 1.0
             };
             try {
                 await HolidayCalendarApi.createHoliday(calendarId, holiday);
