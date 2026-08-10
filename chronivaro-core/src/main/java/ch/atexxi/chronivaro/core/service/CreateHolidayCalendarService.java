@@ -9,7 +9,8 @@ import li.strolch.service.api.ServiceResult;
 import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
 import static li.strolch.agent.api.StrolchAgent.getUniqueId;
 
-public class CreateHolidayCalendarService extends AbstractService<CreateHolidayCalendarService.HolidayCalendarArgument, ServiceResult> {
+public class CreateHolidayCalendarService
+		extends AbstractService<CreateHolidayCalendarService.HolidayCalendarArgument, ServiceResult> {
 
 	@Override
 	protected ServiceResult internalDoService(HolidayCalendarArgument arg) throws Exception {

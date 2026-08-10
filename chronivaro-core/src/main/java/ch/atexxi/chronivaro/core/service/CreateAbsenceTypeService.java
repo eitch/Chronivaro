@@ -11,7 +11,8 @@ import java.util.List;
 import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
 import static li.strolch.agent.api.StrolchAgent.getUniqueId;
 
-public class CreateAbsenceTypeService extends AbstractService<CreateAbsenceTypeService.AbsenceTypeArgument, ServiceResult> {
+public class CreateAbsenceTypeService
+		extends AbstractService<CreateAbsenceTypeService.AbsenceTypeArgument, ServiceResult> {
 
 	@Override
 	protected ServiceResult internalDoService(AbsenceTypeArgument arg) throws Exception {

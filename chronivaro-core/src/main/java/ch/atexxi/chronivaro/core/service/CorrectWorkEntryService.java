@@ -13,7 +13,8 @@ import java.time.ZonedDateTime;
 
 import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
 
-public class CorrectWorkEntryService extends AbstractService<CorrectWorkEntryService.CorrectWorkEntryArgument, ServiceResult> {
+public class CorrectWorkEntryService
+		extends AbstractService<CorrectWorkEntryService.CorrectWorkEntryArgument, ServiceResult> {
 
 	@Override
 	protected ServiceResult internalDoService(CorrectWorkEntryArgument arg) throws Exception {
@@ -43,10 +44,12 @@ public class CorrectWorkEntryService extends AbstractService<CorrectWorkEntrySer
 			tx.update(workEntry);
 
 			if (!arg.start.equals(oldStart)) {
-				ChronivaroAuditHelper.audit(tx, TYPE_WORK_ENTRY, workEntry.getId(), PARAM_START, oldStart.toString(), arg.start.toString());
+				ChronivaroAuditHelper.audit(tx, TYPE_WORK_ENTRY, workEntry.getId(), PARAM_START, oldStart.toString(),
+						arg.start.toString());
 			}
 			if (oldEnd == null || !arg.end.equals(oldEnd)) {
-				ChronivaroAuditHelper.audit(tx, TYPE_WORK_ENTRY, workEntry.getId(), PARAM_END, oldEnd == null ? null : oldEnd.toString(), arg.end.toString());
+				ChronivaroAuditHelper.audit(tx, TYPE_WORK_ENTRY, workEntry.getId(), PARAM_END,
+						oldEnd == null ? null : oldEnd.toString(), arg.end.toString());
 			}
 
 			tx.commitOnClose();

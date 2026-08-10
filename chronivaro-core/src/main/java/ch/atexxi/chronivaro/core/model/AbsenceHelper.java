@@ -10,7 +10,8 @@ import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
 public class AbsenceHelper {
 
 	public static int getAbsenceMinutes(StrolchTransaction tx, String employeeId, LocalDate date) {
-		return tx.streamResources(TYPE_ABSENCE)
+		return tx
+				.streamResources(TYPE_ABSENCE)
 				.filter(a -> a.getString(BAG_RELATIONS, TYPE_EMPLOYEE).equals(employeeId))
 				.filter(a -> a.getString(PARAM_STATE).equals(STATE_APPROVED))
 				.filter(a -> {
@@ -22,7 +23,8 @@ public class AbsenceHelper {
 				.sum();
 	}
 
-	private static int calculateMinutesForDay(StrolchTransaction tx, String employeeId, Resource absence, LocalDate date) {
+	private static int calculateMinutesForDay(StrolchTransaction tx, String employeeId, Resource absence,
+			LocalDate date) {
 		String durationType = absence.getString(PARAM_DURATION_TYPE);
 		int targetMinutes = ScheduleHelper.getTargetMinutes(tx, employeeId, date);
 
@@ -38,7 +40,8 @@ public class AbsenceHelper {
 	}
 
 	public static Resource getAbsenceType(StrolchTransaction tx, String absenceTypeCode) {
-		return tx.streamResources(TYPE_ABSENCE_TYPE)
+		return tx
+				.streamResources(TYPE_ABSENCE_TYPE)
 				.filter(t -> t.getString(PARAM_CODE).equals(absenceTypeCode))
 				.findFirst()
 				.orElseThrow(() -> new IllegalArgumentException("Absence type not found: " + absenceTypeCode));

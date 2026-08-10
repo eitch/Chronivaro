@@ -1,7 +1,5 @@
 package ch.atexxi.chronivaro.core.service;
 
-import ch.atexxi.chronivaro.core.model.ChronivaroModelHelper;
-import ch.atexxi.chronivaro.core.model.ScheduleHelper;
 import ch.atexxi.chronivaro.core.model.*;
 import li.strolch.model.Resource;
 import li.strolch.persistence.api.StrolchTransaction;
@@ -15,9 +13,11 @@ import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.List;
 
-import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
+import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.PARAM_END;
+import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.PARAM_START;
 
-public class MonthSummaryService extends AbstractService<MonthSummaryService.MonthSummaryArgument, MonthSummaryService.MonthSummaryResult> {
+public class MonthSummaryService
+		extends AbstractService<MonthSummaryService.MonthSummaryArgument, MonthSummaryService.MonthSummaryResult> {
 
 	public static class MonthSummaryArgument extends ServiceArgument {
 		public String employeeId;
@@ -60,7 +60,7 @@ public class MonthSummaryService extends AbstractService<MonthSummaryService.Mon
 				// We can call internalDoService directly if we share the transaction, but AbstractService.doService opens its own.
 				// However, we want to stay in the same transaction.
 				// Let's refactor DaySummary logic into a helper if needed, but for now I'll just call the service logic manually or reuse the helper methods.
-				
+
 				int target = ScheduleHelper.getTargetMinutes(tx, arg.employeeId, date);
 				int holiday = HolidayHelper.getHolidayMinutes(tx, arg.employeeId, date);
 				int absence = AbsenceHelper.getAbsenceMinutes(tx, arg.employeeId, date);
@@ -68,7 +68,10 @@ public class MonthSummaryService extends AbstractService<MonthSummaryService.Mon
 				// TODO: Calculate actual minutes for the day
 				Resource employee = ChronivaroModelHelper.getEmployee(tx, arg.employeeId);
 				java.time.ZonedDateTime from = date.atStartOfDay(ChronivaroModelHelper.getEmployeeTimezone(employee));
-				java.time.ZonedDateTime to = date.plusDays(1).atStartOfDay(ChronivaroModelHelper.getEmployeeTimezone(employee)).minusNanos(1);
+				java.time.ZonedDateTime to = date
+						.plusDays(1)
+						.atStartOfDay(ChronivaroModelHelper.getEmployeeTimezone(employee))
+						.minusNanos(1);
 				List<Resource> entries = WorkEntryHelper.findWorkEntries(tx, arg.employeeId, from, to);
 				int actual = 0;
 				for (Resource entry : entries) {
@@ -92,7 +95,8 @@ public class MonthSummaryService extends AbstractService<MonthSummaryService.Mon
 			// TODO: Initial balance from previous period
 			int initialBalance = 0;
 
-			MonthSummary summary = new MonthSummary(arg.employeeId, arg.yearMonth, totalTarget, totalActual, totalHoliday, totalAbsence, initialBalance, daySummaries);
+			MonthSummary summary = new MonthSummary(arg.employeeId, arg.yearMonth, totalTarget, totalActual,
+					totalHoliday, totalAbsence, initialBalance, daySummaries);
 			return new MonthSummaryResult(summary);
 		}
 	}

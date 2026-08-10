@@ -3,14 +3,15 @@ package ch.atexxi.chronivaro.core.service;
 import ch.atexxi.chronivaro.core.model.ChronivaroModelHelper;
 import li.strolch.model.Resource;
 import li.strolch.persistence.api.StrolchTransaction;
-import li.strolch.service.api.ServiceResult;
 import li.strolch.service.api.AbstractService;
+import li.strolch.service.api.ServiceResult;
 
 import java.time.ZoneId;
 
 import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
 
-public class UpdateEmployeeService extends AbstractService<CreateEmployeeService.UpdateEmployeeArgument, ServiceResult> {
+public class UpdateEmployeeService
+		extends AbstractService<CreateEmployeeService.UpdateEmployeeArgument, ServiceResult> {
 
 	@Override
 	protected ServiceResult internalDoService(CreateEmployeeService.UpdateEmployeeArgument arg) throws Exception {

@@ -27,7 +27,8 @@ public class ApprovePeriodService extends AbstractService<StringArgument, Servic
 			period.setString(PARAM_STATE, STATE_APPROVED);
 			tx.update(period);
 
-			ChronivaroAuditHelper.audit(tx, TYPE_TIME_PERIOD, period.getId(), PARAM_STATE, currentState, STATE_APPROVED);
+			ChronivaroAuditHelper.audit(tx, TYPE_TIME_PERIOD, period.getId(), PARAM_STATE, currentState,
+					STATE_APPROVED);
 
 			tx.commitOnClose();
 		}

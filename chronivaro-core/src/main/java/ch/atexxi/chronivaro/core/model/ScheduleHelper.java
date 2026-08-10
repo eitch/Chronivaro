@@ -13,7 +13,8 @@ import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
 public class ScheduleHelper {
 
 	public static Optional<Resource> findScheduleVersion(StrolchTransaction tx, String employeeId, LocalDate date) {
-		return tx.streamResources(TYPE_EMPLOYMENT_SCHEDULE_VERSION)
+		return tx
+				.streamResources(TYPE_EMPLOYMENT_SCHEDULE_VERSION)
 				.filter(v -> v.getString(BAG_RELATIONS, TYPE_EMPLOYEE).equals(employeeId))
 				.filter(v -> {
 					LocalDate validFrom = v.getDate(PARAM_VALID_FROM).toLocalDate();
@@ -38,7 +39,10 @@ public class ScheduleHelper {
 
 		Resource v = version.get();
 		DayOfWeek dayOfWeek = date.getDayOfWeek();
-		String paramName = PARAM_DAILY_TARGET_MINUTES + dayOfWeek.name().substring(0, 1) + dayOfWeek.name().substring(1).toLowerCase();
+		String paramName = PARAM_DAILY_TARGET_MINUTES + dayOfWeek.name().charAt(0) + dayOfWeek
+				.name()
+				.substring(1)
+				.toLowerCase();
 		// In Strolch we can use dynamic parameter names if we define them correctly
 		// But for now let's assume parameters are named like dailyTargetMinutesMonday, etc.
 		// Or we use a bag for daily values

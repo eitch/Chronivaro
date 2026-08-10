@@ -3,12 +3,13 @@ package ch.atexxi.chronivaro.core.service;
 import ch.atexxi.chronivaro.core.model.ChronivaroModelHelper;
 import li.strolch.model.Resource;
 import li.strolch.persistence.api.StrolchTransaction;
-import li.strolch.service.api.ServiceResult;
 import li.strolch.service.api.AbstractService;
+import li.strolch.service.api.ServiceResult;
 
 import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
 
-public class UpdateAbsenceTypeService extends AbstractService<CreateAbsenceTypeService.UpdateAbsenceTypeArgument, ServiceResult> {
+public class UpdateAbsenceTypeService
+		extends AbstractService<CreateAbsenceTypeService.UpdateAbsenceTypeArgument, ServiceResult> {
 
 	@Override
 	protected ServiceResult internalDoService(CreateAbsenceTypeService.UpdateAbsenceTypeArgument arg) throws Exception {

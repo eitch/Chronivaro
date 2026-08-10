@@ -1,7 +1,7 @@
 package ch.atexxi.chronivaro.core.service;
 
-import ch.atexxi.chronivaro.core.model.ScheduleHelper;
 import ch.atexxi.chronivaro.core.model.AbsenceHelper;
+import ch.atexxi.chronivaro.core.model.ScheduleHelper;
 import li.strolch.model.ParameterBag;
 import li.strolch.model.Resource;
 import li.strolch.persistence.api.StrolchTransaction;
@@ -32,7 +32,8 @@ public class ApproveAbsenceService extends AbstractService<StringArgument, Servi
 			tx.update(absence);
 
 			// If it's a vacation absence, create a vacation account entry
-			Resource absenceType = tx.getResourceBy(TYPE_ABSENCE_TYPE, absence.getString(BAG_RELATIONS, TYPE_ABSENCE_TYPE), true);
+			Resource absenceType = tx.getResourceBy(TYPE_ABSENCE_TYPE,
+					absence.getString(BAG_RELATIONS, TYPE_ABSENCE_TYPE), true);
 			if (absenceType.getBoolean(PARAM_REDUCE_VACATION_CREDIT)) {
 				String employeeId = absence.getString(BAG_RELATIONS, TYPE_EMPLOYEE);
 				LocalDate start = absence.getDate(PARAM_START).toLocalDate();
@@ -52,7 +53,8 @@ public class ApproveAbsenceService extends AbstractService<StringArgument, Servi
 				}
 
 				if (totalMinutes > 0) {
-					Resource entry = new Resource(UUID.randomUUID().toString(), "Vacation Usage " + absence.getId(), TYPE_VACATION_ACCOUNT_ENTRY);
+					Resource entry = new Resource(UUID.randomUUID().toString(), "Vacation Usage " + absence.getId(),
+							TYPE_VACATION_ACCOUNT_ENTRY);
 					entry.addParameterBag(new ParameterBag(BAG_PARAMETERS, "Parameters", "Parameters"));
 					entry.addParameterBag(new ParameterBag(BAG_RELATIONS, "Relations", "Relations"));
 

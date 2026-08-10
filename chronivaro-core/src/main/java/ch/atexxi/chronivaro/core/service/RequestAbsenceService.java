@@ -14,7 +14,8 @@ import java.util.UUID;
 
 import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
 
-public class RequestAbsenceService extends AbstractService<RequestAbsenceService.RequestAbsenceArgument, ServiceResult> {
+public class RequestAbsenceService
+		extends AbstractService<RequestAbsenceService.RequestAbsenceArgument, ServiceResult> {
 
 	public static class RequestAbsenceArgument extends ServiceArgument {
 		public String employeeId;

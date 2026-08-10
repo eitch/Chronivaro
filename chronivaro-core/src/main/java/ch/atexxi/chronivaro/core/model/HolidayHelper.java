@@ -16,16 +16,15 @@ public class HolidayHelper {
 		if (holidayCalendarId == null || holidayCalendarId.isEmpty())
 			return Optional.empty();
 
-		return tx.streamResources(TYPE_HOLIDAY)
+		return tx
+				.streamResources(TYPE_HOLIDAY)
 				.filter(h -> h.getString(BAG_RELATIONS, TYPE_HOLIDAY_CALENDAR).equals(holidayCalendarId))
 				.filter(h -> h.getDate(PARAM_DATE).toLocalDate().equals(date))
 				.findFirst();
 	}
 
 	public static double getHolidayCreditFactor(StrolchTransaction tx, String locationId, LocalDate date) {
-		return findHoliday(tx, locationId, date)
-				.map(h -> h.getDouble(PARAM_CREDIT_FACTOR))
-				.orElse(0.0);
+		return findHoliday(tx, locationId, date).map(h -> h.getDouble(PARAM_CREDIT_FACTOR)).orElse(0.0);
 	}
 
 	public static int getHolidayMinutes(StrolchTransaction tx, String employeeId, LocalDate date) {

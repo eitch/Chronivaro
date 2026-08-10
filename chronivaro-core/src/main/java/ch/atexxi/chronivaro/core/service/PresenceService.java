@@ -15,10 +15,12 @@ import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
 public class PresenceService extends AbstractService<PresenceService.PresenceArgument, PresenceService.PresenceResult> {
 
 	public enum PresenceStatus {
-		WORKING, NOT_WORKING
+		WORKING,
+		NOT_WORKING
 	}
 
-	public record PresenceInfo(String employeeId, String displayName, PresenceStatus status) {}
+	public record PresenceInfo(String employeeId, String displayName, PresenceStatus status) {
+	}
 
 	public static class PresenceArgument extends ServiceArgument {
 		public String teamId;
@@ -40,13 +42,17 @@ public class PresenceService extends AbstractService<PresenceService.PresenceArg
 	@Override
 	protected PresenceResult internalDoService(PresenceArgument arg) throws Exception {
 		try (StrolchTransaction tx = openArgOrUserTx(arg)) {
-			List<PresenceInfo> presenceInfos = tx.streamResources(TYPE_EMPLOYEE)
+			List<PresenceInfo> presenceInfos = tx
+					.streamResources(TYPE_EMPLOYEE)
 					.filter(e -> arg.teamId == null || e.getString(BAG_RELATIONS, TYPE_TEAM).equals(arg.teamId))
-					.filter(e -> arg.locationId == null || e.getString(BAG_RELATIONS, TYPE_LOCATION).equals(arg.locationId))
+					.filter(e -> arg.locationId == null || e
+							.getString(BAG_RELATIONS, TYPE_LOCATION)
+							.equals(arg.locationId))
 					.filter(e -> e.getBoolean(PARAM_ACTIVE))
 					.map(e -> {
 						Optional<Resource> activeEntry = WorkEntryHelper.findActiveWorkEntry(tx, e.getId());
-						PresenceStatus status = activeEntry.isPresent() ? PresenceStatus.WORKING : PresenceStatus.NOT_WORKING;
+						PresenceStatus status = activeEntry.isPresent() ? PresenceStatus.WORKING :
+								PresenceStatus.NOT_WORKING;
 						return new PresenceInfo(e.getId(), e.getString(PARAM_DISPLAY_NAME), status);
 					})
 					.toList();

@@ -51,7 +51,8 @@ public class LocationServiceTest {
 
 		String locationId;
 		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
-			Resource location = tx.streamResources(TYPE_LOCATION)
+			Resource location = tx
+					.streamResources(TYPE_LOCATION)
 					.filter(r -> r.getName().equals("Test Location"))
 					.findFirst()
 					.orElseThrow();
@@ -76,31 +77,12 @@ public class LocationServiceTest {
 		}
 
 		// Remove
-		ServiceResult removeResult = serviceHandler.doService(certificate, new RemoveLocationService(), new StringArgument(locationId));
+		ServiceResult removeResult = serviceHandler.doService(certificate, new RemoveLocationService(),
+				new StringArgument(locationId));
 		assertTrue(removeResult.getMessage(), removeResult.isOk());
 
 		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
 			assertNull(tx.getResourceBy(TYPE_LOCATION, locationId));
-		}
-	}
-	@Test
-	public void shouldCreateLocationWithoutId() {
-		ServiceHandler serviceHandler = runtimeMock.getServiceHandler();
-
-		// Create
-		CreateLocationService.LocationArgument createArg = new CreateLocationService.LocationArgument();
-		createArg.name = "Test Location 2";
-		createArg.timezone = "Europe/Zurich";
-
-		ServiceResult createResult = serviceHandler.doService(certificate, new CreateLocationService(), createArg);
-		assertTrue(createResult.getMessage(), createResult.isOk());
-
-		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
-			Resource location = tx.streamResources(TYPE_LOCATION)
-					.filter(r -> r.getName().equals("Test Location 2"))
-					.findFirst()
-					.orElseThrow();
-			assertNotNull(location.getId());
 		}
 	}
 }

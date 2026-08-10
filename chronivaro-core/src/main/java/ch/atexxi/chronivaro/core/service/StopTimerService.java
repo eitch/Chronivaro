@@ -12,7 +12,8 @@ import li.strolch.utils.dbc.DBC;
 import java.time.ZonedDateTime;
 import java.util.Optional;
 
-import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
+import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.PARAM_END;
+import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.PARAM_START;
 
 public class StopTimerService extends AbstractService<StringArgument, ServiceResult> {
 

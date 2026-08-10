@@ -1,7 +1,5 @@
 package ch.atexxi.chronivaro.core.service;
 
-import ch.atexxi.chronivaro.core.model.ChronivaroModelHelper;
-import ch.atexxi.chronivaro.core.model.ScheduleHelper;
 import ch.atexxi.chronivaro.core.model.*;
 import li.strolch.model.Resource;
 import li.strolch.persistence.api.StrolchTransaction;
@@ -17,9 +15,11 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
-import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
+import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.PARAM_END;
+import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.PARAM_START;
 
-public class DaySummaryService extends AbstractService<DaySummaryService.DaySummaryArgument, DaySummaryService.DaySummaryResult> {
+public class DaySummaryService
+		extends AbstractService<DaySummaryService.DaySummaryArgument, DaySummaryService.DaySummaryResult> {
 
 	public static class DaySummaryArgument extends ServiceArgument {
 		public String employeeId;
@@ -46,7 +46,10 @@ public class DaySummaryService extends AbstractService<DaySummaryService.DaySumm
 		try (StrolchTransaction tx = openArgOrUserTx(arg)) {
 			Resource employee = ChronivaroModelHelper.getEmployee(tx, arg.employeeId);
 			ZonedDateTime from = arg.date.atStartOfDay(ChronivaroModelHelper.getEmployeeTimezone(employee));
-			ZonedDateTime to = arg.date.plusDays(1).atStartOfDay(ChronivaroModelHelper.getEmployeeTimezone(employee)).minusNanos(1);
+			ZonedDateTime to = arg.date
+					.plusDays(1)
+					.atStartOfDay(ChronivaroModelHelper.getEmployeeTimezone(employee))
+					.minusNanos(1);
 
 			int targetMinutes = ScheduleHelper.getTargetMinutes(tx, arg.employeeId, arg.date);
 			int holidayMinutes = HolidayHelper.getHolidayMinutes(tx, arg.employeeId, arg.date);
@@ -81,13 +84,15 @@ public class DaySummaryService extends AbstractService<DaySummaryService.DaySumm
 				if (lastEnd != null && start.isAfter(lastEnd)) {
 					int breakDuration = (int) Duration.between(lastEnd, start).toMinutes();
 					if (breakDuration > 0) {
-						breaks.add(new BreakRange(lastEnd.format(timeFormatter), start.format(timeFormatter), breakDuration));
+						breaks.add(new BreakRange(lastEnd.format(timeFormatter), start.format(timeFormatter),
+								breakDuration));
 					}
 				}
 				lastEnd = end;
 			}
 
-			DaySummary summary = new DaySummary(arg.date, targetMinutes, actualMinutes, holidayMinutes, absenceMinutes, ranges, breaks);
+			DaySummary summary = new DaySummary(arg.date, targetMinutes, actualMinutes, holidayMinutes, absenceMinutes,
+					ranges, breaks);
 			return new DaySummaryResult(summary);
 		}
 	}
