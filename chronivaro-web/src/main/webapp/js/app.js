@@ -51,6 +51,14 @@ class ChronivaroApp {
         this.appContainer.innerHTML = '';
         this.nav.style.display = viewName === 'login' ? 'none' : 'block';
 
+        // Update active nav link
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.classList.remove('active');
+            if (link.getAttribute('href') === `#${viewName}`) {
+                link.classList.add('active');
+            }
+        });
+
         let view;
         switch (viewName) {
             case 'login':

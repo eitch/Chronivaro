@@ -67,8 +67,8 @@ export default class TeamsView {
 						<td>${team.id}</td>
 						<td>${team.name}</td>
 						<td>
-							<button class="edit-btn" data-id="${team.id}">Edit</button>
-							<button class="delete-btn" data-id="${team.id}">Delete</button>
+							<button class="ghost edit-btn" data-id="${team.id}">Edit</button>
+							<button class="secondary delete-btn" data-id="${team.id}">Delete</button>
 						</td>
 					`;
                     tbody.appendChild(row);

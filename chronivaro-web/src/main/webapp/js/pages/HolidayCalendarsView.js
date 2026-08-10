@@ -167,9 +167,9 @@ export default class HolidayCalendarsView {
             this.calendarsBody.innerHTML = '';
             calendars.forEach(cal => {
                 const tr = document.createElement('tr');
-                tr.innerHTML = `
-					<td><a href="#" class="select-cal" data-id="${cal.id}">${cal.name}</a></td>
-					<td><button class="delete-cal" data-id="${cal.id}">Delete</button></td>
+            				tr.innerHTML = `
+					<td><button class="ghost select-cal" data-id="${cal.id}">${cal.name}</button></td>
+					<td><button class="secondary delete-cal" data-id="${cal.id}">Delete</button></td>
 				`;
                 tr.querySelector('.select-cal').addEventListener('click', (e) => {
                     e.preventDefault();
@@ -216,7 +216,7 @@ export default class HolidayCalendarsView {
 					<td>${hol.date}</td>
 					<td>${hol.name}</td>
 					<td>${hol.creditFactor}</td>
-					<td><button class="delete-hol" data-id="${hol.id}">Delete</button></td>
+					<td><button class="secondary delete-hol" data-id="${hol.id}">Delete</button></td>
 				`;
                 tr.querySelector('.delete-hol').addEventListener('click', async () => {
                     if (await NotificationDialog.confirm(`Are you sure you want to delete holiday "${hol.name}"?`)) {

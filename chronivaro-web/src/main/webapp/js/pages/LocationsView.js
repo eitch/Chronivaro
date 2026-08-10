@@ -79,8 +79,8 @@ export default class LocationsView {
 						<td>${loc.timezone}</td>
 						<td>${loc.holidayCalendarId || ''}</td>
 						<td>
-							<button class="edit-btn" data-id="${loc.id}">Edit</button>
-							<button class="delete-btn" data-id="${loc.id}">Delete</button>
+							<button class="ghost edit-btn" data-id="${loc.id}">Edit</button>
+							<button class="secondary delete-btn" data-id="${loc.id}">Delete</button>
 						</td>
 					`;
                     tbody.appendChild(row);

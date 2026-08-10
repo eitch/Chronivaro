@@ -129,8 +129,8 @@ export default class EmployeesView {
 						<td>${emp.locationId}</td>
 						<td>${emp.active ? 'Yes' : 'No'}</td>
 						<td>
-							<button class="edit-btn" data-id="${emp.id}">Edit</button>
-							<button class="delete-btn" data-id="${emp.id}">Delete</button>
+							<button class="ghost edit-btn" data-id="${emp.id}">Edit</button>
+							<button class="secondary delete-btn" data-id="${emp.id}">Delete</button>
 						</td>
 					`;
                     tbody.appendChild(row);

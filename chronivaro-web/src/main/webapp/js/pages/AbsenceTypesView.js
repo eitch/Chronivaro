@@ -92,8 +92,8 @@ export default class AbsenceTypesView {
 						<td>${type.paid ? 'Yes' : 'No'}</td>
 						<td>${type.approvalRequired ? 'Yes' : 'No'}</td>
 						<td>
-							<button class="edit-btn" data-id="${type.id}">Edit</button>
-							<button class="delete-btn" data-id="${type.id}">Delete</button>
+							<button class="ghost edit-btn" data-id="${type.id}">Edit</button>
+							<button class="secondary delete-btn" data-id="${type.id}">Delete</button>
 						</td>
 					`;
                     tbody.appendChild(row);
