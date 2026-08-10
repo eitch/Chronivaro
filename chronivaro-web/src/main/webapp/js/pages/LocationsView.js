@@ -1,4 +1,5 @@
 import LocationApi from '../api/LocationApi.js';
+import HolidayCalendarApi from '../api/HolidayCalendarApi.js';
 import NotificationDialog from '../utils/NotificationDialog.js';
 
 export default class LocationsView {
@@ -46,8 +47,8 @@ export default class LocationsView {
 							<input type="text" id="loc-timezone" required placeholder="Europe/Zurich">
 						</div>
 						<div class="form-group">
-							<label for="loc-holiday-calendar">Holiday Calendar ID:</label>
-							<input type="text" id="loc-holiday-calendar">
+							<label for="loc-holiday-calendar">Holiday Calendar:</label>
+							<select id="loc-holiday-calendar"></select>
 						</div>
 						<div class="actions">
 							<button type="submit">Save</button>
@@ -64,8 +65,24 @@ export default class LocationsView {
         const modalTitle = container.querySelector('#modal-title');
         const addBtn = container.querySelector('#add-location-btn');
         const closeBtn = container.querySelector('#close-modal');
+        const holidayCalendarSelect = container.querySelector('#loc-holiday-calendar');
 
         let editingId = null;
+
+        const loadOptions = async () => {
+            try {
+                const calendars = await HolidayCalendarApi.getCalendars();
+                if (calendars.length === 0) {
+                    holidayCalendarSelect.innerHTML = '<option value="">No calendars available</option>';
+                } else {
+                    holidayCalendarSelect.innerHTML = '<option value=""></option>' +
+                        calendars.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+                }
+            } catch (err) {
+                console.error(err);
+                holidayCalendarSelect.innerHTML = '<option value="">Error loading calendars</option>';
+            }
+        };
 
         const refresh = async () => {
             try {
@@ -100,6 +117,7 @@ export default class LocationsView {
 
         const editLocation = async (id) => {
             try {
+                await loadOptions();
                 const locations = await LocationApi.getAll();
                 const loc = locations.find(l => l.id === id);
                 if (loc) {
@@ -129,12 +147,14 @@ export default class LocationsView {
             }
         };
 
-        addBtn.addEventListener('click', () => {
+        addBtn.addEventListener('click', async () => {
             editingId = null;
+            await loadOptions();
             modalTitle.innerText = 'Add Location';
             form.reset();
             container.querySelector('#loc-id-group').style.display = 'none';
             container.querySelector('#loc-id').required = false;
+            container.querySelector('#loc-timezone').value = Intl.DateTimeFormat().resolvedOptions().timeZone || 'Europe/Zurich';
             modal.style.display = 'block';
         });
 
