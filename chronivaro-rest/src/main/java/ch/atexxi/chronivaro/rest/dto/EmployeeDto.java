@@ -2,15 +2,6 @@ package ch.atexxi.chronivaro.rest.dto;
 
 import java.time.LocalDate;
 
-public record EmployeeDto(
-		String id,
-		String personalNumber,
-		String displayName,
-		String teamId,
-		String locationId,
-		String timezone,
-		LocalDate joinDate,
-		LocalDate exitDate,
-		boolean active,
-		String userId) {
+public record EmployeeDto(String id, String personalNumber, String displayName, String teamId, String locationId,
+                          String timezone, LocalDate joinDate, LocalDate exitDate, boolean active, String userId) {
 }

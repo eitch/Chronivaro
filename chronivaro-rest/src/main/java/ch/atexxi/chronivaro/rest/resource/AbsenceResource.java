@@ -1,7 +1,8 @@
 package ch.atexxi.chronivaro.rest.resource;
 
 import ch.atexxi.chronivaro.core.service.ApproveAbsenceService;
-import ch.atexxi.chronivaro.rest.dto.*;
+import ch.atexxi.chronivaro.rest.dto.AbsenceDto;
+import ch.atexxi.chronivaro.rest.dto.ChronivaroMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.Context;

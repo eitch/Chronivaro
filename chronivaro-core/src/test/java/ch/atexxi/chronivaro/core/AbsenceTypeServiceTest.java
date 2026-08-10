@@ -58,7 +58,8 @@ public class AbsenceTypeServiceTest {
 
 		String absenceTypeId;
 		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
-			Resource type = tx.streamResources(TYPE_ABSENCE_TYPE)
+			Resource type = tx
+					.streamResources(TYPE_ABSENCE_TYPE)
 					.filter(r -> r.getName().equals("Vacation"))
 					.findFirst()
 					.orElseThrow();
@@ -70,7 +71,8 @@ public class AbsenceTypeServiceTest {
 		}
 
 		// Update
-		CreateAbsenceTypeService.UpdateAbsenceTypeArgument updateArg = new CreateAbsenceTypeService.UpdateAbsenceTypeArgument();
+		CreateAbsenceTypeService.UpdateAbsenceTypeArgument updateArg
+				= new CreateAbsenceTypeService.UpdateAbsenceTypeArgument();
 		updateArg.id = absenceTypeId;
 		updateArg.code = "VAC";
 		updateArg.name = "Updated Vacation";
@@ -89,7 +91,8 @@ public class AbsenceTypeServiceTest {
 		}
 
 		// Remove
-		ServiceResult removeResult = serviceHandler.doService(certificate, new RemoveAbsenceTypeService(), new StringArgument(absenceTypeId));
+		ServiceResult removeResult = serviceHandler.doService(certificate, new RemoveAbsenceTypeService(),
+				new StringArgument(absenceTypeId));
 		assertTrue(removeResult.getMessage(), removeResult.isOk());
 
 		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {

@@ -1,6 +1,5 @@
 package ch.atexxi.chronivaro.rest;
 
-import ch.atexxi.chronivaro.rest.resource.ChronivaroResource;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import jakarta.ws.rs.ProcessingException;
@@ -27,8 +26,6 @@ import org.glassfish.jersey.test.spi.TestContainerException;
 import org.glassfish.jersey.test.spi.TestContainerFactory;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -136,11 +133,11 @@ public abstract class AbstractChronivaroRestfulTest extends JerseyTest {
 						try {
 							this.server = GrizzlyWebContainerFactory.create(baseUri,
 									Collections.singletonMap("jersey.config.server.provider.packages",
-											"ch.atexxi.chronivaro.rest.resource"
-													+ ";"
-													+ AuthenticationResource.class.getPackage().getName()
-													+ ";"
-													+ AuthenticationRequestFilter.class.getPackage().getName()));
+											"ch.atexxi.chronivaro.rest.resource" + ";" + AuthenticationResource.class
+													.getPackage()
+													.getName() + ";" + AuthenticationRequestFilter.class
+													.getPackage()
+													.getName()));
 						} catch (ProcessingException | IOException e) {
 							throw new TestContainerException(e);
 						}

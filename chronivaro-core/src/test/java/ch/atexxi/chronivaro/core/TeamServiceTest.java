@@ -14,7 +14,8 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
+import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.PARAM_NAME;
+import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.TYPE_TEAM;
 import static org.junit.Assert.*;
 
 public class TeamServiceTest {
@@ -49,7 +50,8 @@ public class TeamServiceTest {
 
 		String teamId;
 		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
-			Resource team = tx.streamResources(TYPE_TEAM)
+			Resource team = tx
+					.streamResources(TYPE_TEAM)
 					.filter(r -> r.getName().equals("Test Team"))
 					.findFirst()
 					.orElseThrow();
@@ -70,7 +72,8 @@ public class TeamServiceTest {
 		}
 
 		// Remove
-		ServiceResult removeResult = serviceHandler.doService(certificate, new RemoveTeamService(), new StringArgument(teamId));
+		ServiceResult removeResult = serviceHandler.doService(certificate, new RemoveTeamService(),
+				new StringArgument(teamId));
 		assertTrue(removeResult.getMessage(), removeResult.isOk());
 
 		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {

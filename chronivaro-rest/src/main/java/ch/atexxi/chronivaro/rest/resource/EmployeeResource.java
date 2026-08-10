@@ -44,7 +44,10 @@ public class EmployeeResource {
 			Resource employee = tx.getResourceBy(TYPE_EMPLOYEE, id);
 			if (employee == null)
 				return Response.status(Response.Status.NOT_FOUND).build();
-			return Response.ok(ChronivaroRestHelper.createGson().toJson(ChronivaroMapper.employeeToDto(employee)), MediaType.APPLICATION_JSON).build();
+			return Response
+					.ok(ChronivaroRestHelper.createGson().toJson(ChronivaroMapper.employeeToDto(employee)),
+							MediaType.APPLICATION_JSON)
+					.build();
 		}
 	}
 
@@ -113,7 +116,9 @@ public class EmployeeResource {
 	public Response createSchedule(@Context HttpServletRequest request, @PathParam("id") String id, String data) {
 		Certificate cert = (Certificate) request.getAttribute(StrolchRestfulConstants.STROLCH_CERTIFICATE);
 		ServiceHandler serviceHandler = ChronivaroRestHelper.getServiceHandler();
-		CreateScheduleService.CreateScheduleArgument arg = ChronivaroRestHelper.createGson().fromJson(data, CreateScheduleService.CreateScheduleArgument.class);
+		CreateScheduleService.CreateScheduleArgument arg = ChronivaroRestHelper
+				.createGson()
+				.fromJson(data, CreateScheduleService.CreateScheduleArgument.class);
 		arg.employeeId = id;
 		ServiceResult result = serviceHandler.doService(cert, new CreateScheduleService(), arg);
 		return ResponseUtil.toResponse(result);
@@ -123,10 +128,13 @@ public class EmployeeResource {
 	@Path("{id}/vacation-corrections")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response addVacationCorrection(@Context HttpServletRequest request, @PathParam("id") String id, String data) {
+	public Response addVacationCorrection(@Context HttpServletRequest request, @PathParam("id") String id,
+			String data) {
 		Certificate cert = (Certificate) request.getAttribute(StrolchRestfulConstants.STROLCH_CERTIFICATE);
 		ServiceHandler serviceHandler = ChronivaroRestHelper.getServiceHandler();
-		AddVacationCorrectionService.AddVacationCorrectionArgument arg = ChronivaroRestHelper.createGson().fromJson(data, AddVacationCorrectionService.AddVacationCorrectionArgument.class);
+		AddVacationCorrectionService.AddVacationCorrectionArgument arg = ChronivaroRestHelper
+				.createGson()
+				.fromJson(data, AddVacationCorrectionService.AddVacationCorrectionArgument.class);
 		arg.employeeId = id;
 		ServiceResult result = serviceHandler.doService(cert, new AddVacationCorrectionService(), arg);
 		return ResponseUtil.toResponse(result);

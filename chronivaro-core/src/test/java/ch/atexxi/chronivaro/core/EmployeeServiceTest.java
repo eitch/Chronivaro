@@ -58,7 +58,8 @@ public class EmployeeServiceTest {
 
 		String employeeId;
 		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
-			Resource employee = tx.streamResources(TYPE_EMPLOYEE)
+			Resource employee = tx
+					.streamResources(TYPE_EMPLOYEE)
 					.filter(r -> r.getName().equals("Test Employee"))
 					.findFirst()
 					.orElseThrow();
@@ -88,7 +89,8 @@ public class EmployeeServiceTest {
 		}
 
 		// Remove
-		ServiceResult removeResult = serviceHandler.doService(certificate, new RemoveEmployeeService(), new StringArgument(employeeId));
+		ServiceResult removeResult = serviceHandler.doService(certificate, new RemoveEmployeeService(),
+				new StringArgument(employeeId));
 		assertTrue(removeResult.getMessage(), removeResult.isOk());
 
 		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {

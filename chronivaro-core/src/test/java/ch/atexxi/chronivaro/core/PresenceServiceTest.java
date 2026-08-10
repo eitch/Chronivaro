@@ -79,10 +79,18 @@ public class PresenceServiceTest {
 		assertTrue(result.isOk());
 		assertEquals(2, result.presenceInfos.size());
 
-		PresenceService.PresenceInfo info1 = result.presenceInfos.stream().filter(i -> i.employeeId().equals("p-emp1")).findFirst().orElseThrow();
+		PresenceService.PresenceInfo info1 = result.presenceInfos
+				.stream()
+				.filter(i -> i.employeeId().equals("p-emp1"))
+				.findFirst()
+				.orElseThrow();
 		assertEquals(PresenceService.PresenceStatus.WORKING, info1.status());
 
-		PresenceService.PresenceInfo info2 = result.presenceInfos.stream().filter(i -> i.employeeId().equals("p-emp2")).findFirst().orElseThrow();
+		PresenceService.PresenceInfo info2 = result.presenceInfos
+				.stream()
+				.filter(i -> i.employeeId().equals("p-emp2"))
+				.findFirst()
+				.orElseThrow();
 		assertEquals(PresenceService.PresenceStatus.NOT_WORKING, info2.status());
 	}
 }

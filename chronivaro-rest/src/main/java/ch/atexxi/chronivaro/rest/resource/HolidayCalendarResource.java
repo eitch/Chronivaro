@@ -22,7 +22,9 @@ public class HolidayCalendarResource {
 	public Response createHolidayCalendar(@Context HttpServletRequest request, String data) {
 		Certificate cert = (Certificate) request.getAttribute(StrolchRestfulConstants.STROLCH_CERTIFICATE);
 		ServiceHandler serviceHandler = ChronivaroRestHelper.getServiceHandler();
-		CreateHolidayCalendarService.HolidayCalendarArgument arg = ChronivaroRestHelper.createGson().fromJson(data, CreateHolidayCalendarService.HolidayCalendarArgument.class);
+		CreateHolidayCalendarService.HolidayCalendarArgument arg = ChronivaroRestHelper
+				.createGson()
+				.fromJson(data, CreateHolidayCalendarService.HolidayCalendarArgument.class);
 		ServiceResult result = serviceHandler.doService(cert, new CreateHolidayCalendarService(), arg);
 		return ResponseUtil.toResponse(result);
 	}
@@ -31,10 +33,13 @@ public class HolidayCalendarResource {
 	@Path("{id}/holidays")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response createHoliday(@Context HttpServletRequest request, @PathParam("id") String calendarId, String data) {
+	public Response createHoliday(@Context HttpServletRequest request, @PathParam("id") String calendarId,
+			String data) {
 		Certificate cert = (Certificate) request.getAttribute(StrolchRestfulConstants.STROLCH_CERTIFICATE);
 		ServiceHandler serviceHandler = ChronivaroRestHelper.getServiceHandler();
-		CreateHolidayService.HolidayArgument arg = ChronivaroRestHelper.createGson().fromJson(data, CreateHolidayService.HolidayArgument.class);
+		CreateHolidayService.HolidayArgument arg = ChronivaroRestHelper
+				.createGson()
+				.fromJson(data, CreateHolidayService.HolidayArgument.class);
 		arg.holidayCalendarId = calendarId;
 		ServiceResult result = serviceHandler.doService(cert, new CreateHolidayService(), arg);
 		return ResponseUtil.toResponse(result);

@@ -64,7 +64,8 @@ public class AddWorkEntryServiceTest {
 		assertTrue(result.getMessage(), result.isOk());
 
 		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
-			List<Resource> entries = tx.streamResources(TYPE_WORK_ENTRY)
+			List<Resource> entries = tx
+					.streamResources(TYPE_WORK_ENTRY)
 					.filter(e -> e.getString(BAG_RELATIONS, TYPE_EMPLOYEE).equals(employeeId))
 					.toList();
 			assertEquals(1, entries.size());

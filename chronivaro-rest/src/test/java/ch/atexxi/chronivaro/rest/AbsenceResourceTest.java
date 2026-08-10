@@ -11,7 +11,8 @@ public class AbsenceResourceTest extends AbstractChronivaroRestfulTest {
 	@Test
 	public void shouldGetAbsences() {
 		String authToken = authenticate();
-		try (Response response = target().path("chronivaro/v1/admin/absences")
+		try (Response response = target()
+				.path("chronivaro/v1/admin/absences")
 				.request(MediaType.APPLICATION_JSON)
 				.header("Authorization", authToken)
 				.get()) {
@@ -22,7 +23,8 @@ public class AbsenceResourceTest extends AbstractChronivaroRestfulTest {
 	@Test
 	public void shouldApproveAbsence() {
 		String authToken = authenticate();
-		try (Response response = target().path("chronivaro/v1/admin/absences/test-absence/approve")
+		try (Response response = target()
+				.path("chronivaro/v1/admin/absences/test-absence/approve")
 				.request(MediaType.APPLICATION_JSON)
 				.header("Authorization", authToken)
 				.post(null)) {

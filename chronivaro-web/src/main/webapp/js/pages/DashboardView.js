@@ -1,16 +1,15 @@
-
 import WorkEntryApi from '../api/WorkEntryApi.js';
 
 export default class DashboardView {
 
-	constructor(app) {
-		this.app = app;
-	}
+    constructor(app) {
+        this.app = app;
+    }
 
-	async render() {
-		const container = document.createElement('div');
-		container.id = 'dashboard-view';
-		container.innerHTML = `
+    async render() {
+        const container = document.createElement('div');
+        container.id = 'dashboard-view';
+        container.innerHTML = `
 			<h2>Dashboard</h2>
 			<div id="status-container">
 				<p>Current Status: <span id="presence-status">Loading...</span></p>
@@ -27,51 +26,51 @@ export default class DashboardView {
 			</div>
 		`;
 
-		const statusSpan = container.querySelector('#presence-status');
-		const startBtn = container.querySelector('#start-timer');
-		const stopBtn = container.querySelector('#stop-timer');
-		const workedSpan = container.querySelector('#worked-time');
-		const requiredSpan = container.querySelector('#required-time');
-		const balanceSpan = container.querySelector('#day-balance');
+        const statusSpan = container.querySelector('#presence-status');
+        const startBtn = container.querySelector('#start-timer');
+        const stopBtn = container.querySelector('#stop-timer');
+        const workedSpan = container.querySelector('#worked-time');
+        const requiredSpan = container.querySelector('#required-time');
+        const balanceSpan = container.querySelector('#day-balance');
 
-		const refresh = async () => {
-			try {
-				const summary = await WorkEntryApi.getDaySummary(new Date());
-				statusSpan.textContent = summary.state;
-				statusSpan.className = summary.state === 'WORKING' ? 'status-working' : 'status-not-working';
-				
-				workedSpan.textContent = `${summary.actualTime} min`;
-				requiredSpan.textContent = `${summary.targetTime} min`;
-				balanceSpan.textContent = `${summary.balance} min`;
+        const refresh = async () => {
+            try {
+                const summary = await WorkEntryApi.getDaySummary(new Date());
+                statusSpan.textContent = summary.state;
+                statusSpan.className = summary.state === 'WORKING' ? 'status-working' : 'status-not-working';
 
-				startBtn.disabled = summary.state === 'WORKING';
-				stopBtn.disabled = summary.state !== 'WORKING';
-			} catch (err) {
-				console.error(err);
-				statusSpan.textContent = 'Error loading status';
-			}
-		};
+                workedSpan.textContent = `${summary.actualTime} min`;
+                requiredSpan.textContent = `${summary.targetTime} min`;
+                balanceSpan.textContent = `${summary.balance} min`;
 
-		startBtn.addEventListener('click', async () => {
-			try {
-				await WorkEntryApi.startTimer();
-				await refresh();
-			} catch (err) {
-				alert(err.message);
-			}
-		});
+                startBtn.disabled = summary.state === 'WORKING';
+                stopBtn.disabled = summary.state !== 'WORKING';
+            } catch (err) {
+                console.error(err);
+                statusSpan.textContent = 'Error loading status';
+            }
+        };
 
-		stopBtn.addEventListener('click', async () => {
-			try {
-				await WorkEntryApi.stopTimer();
-				await refresh();
-			} catch (err) {
-				alert(err.message);
-			}
-		});
+        startBtn.addEventListener('click', async () => {
+            try {
+                await WorkEntryApi.startTimer();
+                await refresh();
+            } catch (err) {
+                alert(err.message);
+            }
+        });
 
-		refresh();
+        stopBtn.addEventListener('click', async () => {
+            try {
+                await WorkEntryApi.stopTimer();
+                await refresh();
+            } catch (err) {
+                alert(err.message);
+            }
+        });
 
-		return container;
-	}
+        refresh();
+
+        return container;
+    }
 }

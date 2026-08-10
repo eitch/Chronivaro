@@ -11,7 +11,8 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
+import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.PARAM_NAME;
+import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.TYPE_HOLIDAY_CALENDAR;
 import static org.junit.Assert.*;
 
 public class HolidayCalendarServiceTest {
@@ -38,33 +39,40 @@ public class HolidayCalendarServiceTest {
 		ServiceHandler serviceHandler = runtimeMock.getServiceHandler();
 
 		// Create
-		CreateHolidayCalendarService.HolidayCalendarArgument createArg = new CreateHolidayCalendarService.HolidayCalendarArgument();
+		CreateHolidayCalendarService.HolidayCalendarArgument createArg
+				= new CreateHolidayCalendarService.HolidayCalendarArgument();
 		createArg.name = "Test Calendar";
 
-		ServiceResult createResult = serviceHandler.doService(certificate, new CreateHolidayCalendarService(), createArg);
+		ServiceResult createResult = serviceHandler.doService(certificate, new CreateHolidayCalendarService(),
+				createArg);
 		assertTrue(createResult.getMessage(), createResult.isOk());
 
 		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
-			Resource calendar = tx.streamResources(TYPE_HOLIDAY_CALENDAR)
+			Resource calendar = tx
+					.streamResources(TYPE_HOLIDAY_CALENDAR)
 					.filter(r -> r.getName().equals("Test Calendar"))
 					.findFirst()
 					.orElseThrow();
 			assertEquals("Test Calendar", calendar.getString(PARAM_NAME));
 		}
 	}
+
 	@Test
 	public void shouldCreateHolidayCalendarWithoutId() {
 		ServiceHandler serviceHandler = runtimeMock.getServiceHandler();
 
 		// Create
-		CreateHolidayCalendarService.HolidayCalendarArgument createArg = new CreateHolidayCalendarService.HolidayCalendarArgument();
+		CreateHolidayCalendarService.HolidayCalendarArgument createArg
+				= new CreateHolidayCalendarService.HolidayCalendarArgument();
 		createArg.name = "Test Calendar 2";
 
-		ServiceResult createResult = serviceHandler.doService(certificate, new CreateHolidayCalendarService(), createArg);
+		ServiceResult createResult = serviceHandler.doService(certificate, new CreateHolidayCalendarService(),
+				createArg);
 		assertTrue(createResult.getMessage(), createResult.isOk());
 
 		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
-			Resource calendar = tx.streamResources(TYPE_HOLIDAY_CALENDAR)
+			Resource calendar = tx
+					.streamResources(TYPE_HOLIDAY_CALENDAR)
 					.filter(r -> r.getName().equals("Test Calendar 2"))
 					.findFirst()
 					.orElseThrow();

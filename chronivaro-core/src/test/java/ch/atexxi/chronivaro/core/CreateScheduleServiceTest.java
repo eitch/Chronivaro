@@ -68,7 +68,8 @@ public class CreateScheduleServiceTest {
 		assertTrue(result.getMessage(), result.isOk());
 
 		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
-			List<Resource> schedules = tx.streamResources(TYPE_EMPLOYMENT_SCHEDULE_VERSION)
+			List<Resource> schedules = tx
+					.streamResources(TYPE_EMPLOYMENT_SCHEDULE_VERSION)
 					.filter(s -> s.getString(BAG_RELATIONS, TYPE_EMPLOYEE).equals(employeeId))
 					.toList();
 			assertEquals(1, schedules.size());

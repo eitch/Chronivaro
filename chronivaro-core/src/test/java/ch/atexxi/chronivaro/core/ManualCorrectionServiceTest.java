@@ -52,7 +52,8 @@ public class ManualCorrectionServiceTest {
 		}
 
 		ServiceHandler serviceHandler = runtimeMock.getServiceHandler();
-		AddVacationCorrectionService.AddVacationCorrectionArgument arg = new AddVacationCorrectionService.AddVacationCorrectionArgument();
+		AddVacationCorrectionService.AddVacationCorrectionArgument arg
+				= new AddVacationCorrectionService.AddVacationCorrectionArgument();
 		arg.employeeId = employeeId;
 		arg.value = 480;
 		arg.comment = "Manual addition";
@@ -61,7 +62,8 @@ public class ManualCorrectionServiceTest {
 		assertTrue(result.getMessage(), result.isOk());
 
 		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
-			List<Resource> entries = tx.streamResources(TYPE_VACATION_ACCOUNT_ENTRY)
+			List<Resource> entries = tx
+					.streamResources(TYPE_VACATION_ACCOUNT_ENTRY)
 					.filter(e -> e.getString(BAG_RELATIONS, TYPE_EMPLOYEE).equals(employeeId))
 					.toList();
 			assertEquals(1, entries.size());
@@ -69,7 +71,8 @@ public class ManualCorrectionServiceTest {
 			assertEquals(VACATION_CORRECTION, entries.getFirst().getString(PARAM_VACATION_TYPE));
 
 			// Check Audit
-			List<Resource> audits = tx.streamResources(TYPE_AUDIT_EVENT)
+			List<Resource> audits = tx
+					.streamResources(TYPE_AUDIT_EVENT)
 					.filter(e -> e.getString(PARAM_ELEMENT_TYPE).equals(TYPE_VACATION_ACCOUNT_ENTRY))
 					.toList();
 			assertEquals(1, audits.size());
@@ -118,8 +121,11 @@ public class ManualCorrectionServiceTest {
 			assertEquals(SOURCE_MANUAL, workEntry.getString(PARAM_SOURCE));
 
 			// Check Audit (should have 2: one for start, one for end)
-			List<Resource> audits = tx.streamResources(TYPE_AUDIT_EVENT)
-					.filter(e -> e.getString(PARAM_ELEMENT_TYPE).equals(TYPE_WORK_ENTRY) && e.getString(PARAM_ELEMENT_ID).equals(workEntryId))
+			List<Resource> audits = tx
+					.streamResources(TYPE_AUDIT_EVENT)
+					.filter(e -> e.getString(PARAM_ELEMENT_TYPE).equals(TYPE_WORK_ENTRY) && e
+							.getString(PARAM_ELEMENT_ID)
+							.equals(workEntryId))
 					.toList();
 			assertEquals(2, audits.size());
 		}

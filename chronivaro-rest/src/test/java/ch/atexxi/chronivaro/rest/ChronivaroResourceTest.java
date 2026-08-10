@@ -5,8 +5,6 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import org.junit.Test;
 
-import java.time.ZonedDateTime;
-
 import static org.junit.Assert.assertEquals;
 
 public class ChronivaroResourceTest extends AbstractChronivaroRestfulTest {
@@ -14,7 +12,8 @@ public class ChronivaroResourceTest extends AbstractChronivaroRestfulTest {
 	@Test
 	public void shouldGetPresence() {
 		String authToken = authenticate();
-		try (Response response = target().path("chronivaro/v1/presence")
+		try (Response response = target()
+				.path("chronivaro/v1/presence")
 				.request(MediaType.APPLICATION_JSON)
 				.header("Authorization", authToken)
 				.get()) {
@@ -34,7 +33,8 @@ public class ChronivaroResourceTest extends AbstractChronivaroRestfulTest {
 				  "comment": "Test work entry"
 				}
 				""";
-		try (Response response = target().path("chronivaro/v1/me/work-entries")
+		try (Response response = target()
+				.path("chronivaro/v1/me/work-entries")
 				.request(MediaType.APPLICATION_JSON)
 				.header("Authorization", authToken)
 				.post(Entity.json(json))) {
@@ -64,7 +64,8 @@ public class ChronivaroResourceTest extends AbstractChronivaroRestfulTest {
 				  "durationTypes": ["full_day", "half_day"]
 				}
 				""";
-		try (Response response = target().path("chronivaro/v1/admin/absence-types")
+		try (Response response = target()
+				.path("chronivaro/v1/admin/absence-types")
 				.request(MediaType.APPLICATION_JSON)
 				.header("Authorization", authToken)
 				.post(Entity.json(typeJson))) {
@@ -80,7 +81,8 @@ public class ChronivaroResourceTest extends AbstractChronivaroRestfulTest {
 				  "comment": "Test absence"
 				}
 				""";
-		try (Response response = target().path("chronivaro/v1/me/absences")
+		try (Response response = target()
+				.path("chronivaro/v1/me/absences")
 				.request(MediaType.APPLICATION_JSON)
 				.header("Authorization", authToken)
 				.post(Entity.json(json))) {
@@ -91,7 +93,8 @@ public class ChronivaroResourceTest extends AbstractChronivaroRestfulTest {
 	@Test
 	public void shouldSubmitPeriod() {
 		String authToken = authenticate();
-		try (Response response = target().path("chronivaro/v1/me/periods/test-period/submit")
+		try (Response response = target()
+				.path("chronivaro/v1/me/periods/test-period/submit")
 				.request(MediaType.APPLICATION_JSON)
 				.header("Authorization", authToken)
 				.post(Entity.json(""))) {
@@ -108,7 +111,8 @@ public class ChronivaroResourceTest extends AbstractChronivaroRestfulTest {
 		String authToken = authenticate();
 
 		// Start timer
-		try (Response response = target().path("chronivaro/v1/me/timer/start")
+		try (Response response = target()
+				.path("chronivaro/v1/me/timer/start")
 				.request(MediaType.APPLICATION_JSON)
 				.header("Authorization", authToken)
 				.post(null)) {
@@ -116,7 +120,8 @@ public class ChronivaroResourceTest extends AbstractChronivaroRestfulTest {
 		}
 
 		// Stop timer
-		try (Response response = target().path("chronivaro/v1/me/timer/stop")
+		try (Response response = target()
+				.path("chronivaro/v1/me/timer/stop")
 				.request(MediaType.APPLICATION_JSON)
 				.header("Authorization", authToken)
 				.post(null)) {
@@ -129,7 +134,8 @@ public class ChronivaroResourceTest extends AbstractChronivaroRestfulTest {
 		String authToken = authenticate();
 		String date = "2025-01-01";
 
-		try (Response response = target().path("chronivaro/v1/me/day-summary/" + date)
+		try (Response response = target()
+				.path("chronivaro/v1/me/day-summary/" + date)
 				.request(MediaType.APPLICATION_JSON)
 				.header("Authorization", authToken)
 				.get()) {
@@ -142,7 +148,8 @@ public class ChronivaroResourceTest extends AbstractChronivaroRestfulTest {
 		String authToken = authenticate();
 		String yearMonth = "2025-01";
 
-		try (Response response = target().path("chronivaro/v1/me/month-summary/" + yearMonth)
+		try (Response response = target()
+				.path("chronivaro/v1/me/month-summary/" + yearMonth)
 				.request(MediaType.APPLICATION_JSON)
 				.header("Authorization", authToken)
 				.get()) {

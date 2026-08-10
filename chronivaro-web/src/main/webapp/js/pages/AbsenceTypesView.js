@@ -1,14 +1,14 @@
 import AbsenceTypeApi from '../api/AbsenceTypeApi.js';
 
 export default class AbsenceTypesView {
-	constructor(app) {
-		this.app = app;
-	}
+    constructor(app) {
+        this.app = app;
+    }
 
-	async render() {
-		const container = document.createElement('div');
-		container.id = 'absence-types-view';
-		container.innerHTML = `
+    async render() {
+        const container = document.createElement('div');
+        container.id = 'absence-types-view';
+        container.innerHTML = `
 			<h2>Absence Types</h2>
 			<div class="actions">
 				<button id="add-absence-type-btn">Add Absence Type</button>
@@ -69,22 +69,22 @@ export default class AbsenceTypesView {
 			</div>
 		`;
 
-		const tbody = container.querySelector('tbody');
-		const modal = container.querySelector('#absence-type-modal');
-		const form = container.querySelector('#absence-type-form');
-		const modalTitle = container.querySelector('#modal-title');
-		const addBtn = container.querySelector('#add-absence-type-btn');
-		const closeBtn = container.querySelector('#close-modal');
+        const tbody = container.querySelector('tbody');
+        const modal = container.querySelector('#absence-type-modal');
+        const form = container.querySelector('#absence-type-form');
+        const modalTitle = container.querySelector('#modal-title');
+        const addBtn = container.querySelector('#add-absence-type-btn');
+        const closeBtn = container.querySelector('#close-modal');
 
-		let editingId = null;
+        let editingId = null;
 
-		const refresh = async () => {
-			try {
-				const types = await AbsenceTypeApi.getAll();
-				tbody.innerHTML = '';
-				types.forEach(type => {
-					const row = document.createElement('tr');
-					row.innerHTML = `
+        const refresh = async () => {
+            try {
+                const types = await AbsenceTypeApi.getAll();
+                tbody.innerHTML = '';
+                types.forEach(type => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
 						<td>${type.id}</td>
 						<td>${type.code}</td>
 						<td>${type.name}</td>
@@ -95,98 +95,98 @@ export default class AbsenceTypesView {
 							<button class="delete-btn" data-id="${type.id}">Delete</button>
 						</td>
 					`;
-					tbody.appendChild(row);
-				});
+                    tbody.appendChild(row);
+                });
 
-				container.querySelectorAll('.edit-btn').forEach(btn => {
-					btn.addEventListener('click', () => editAbsenceType(btn.dataset.id));
-				});
-				container.querySelectorAll('.delete-btn').forEach(btn => {
-					btn.addEventListener('click', () => deleteAbsenceType(btn.dataset.id));
-				});
-			} catch (err) {
-				console.error(err);
-				tbody.innerHTML = `<tr><td colspan="6" class="error">${err.message}</td></tr>`;
-			}
-		};
+                container.querySelectorAll('.edit-btn').forEach(btn => {
+                    btn.addEventListener('click', () => editAbsenceType(btn.dataset.id));
+                });
+                container.querySelectorAll('.delete-btn').forEach(btn => {
+                    btn.addEventListener('click', () => deleteAbsenceType(btn.dataset.id));
+                });
+            } catch (err) {
+                console.error(err);
+                tbody.innerHTML = `<tr><td colspan="6" class="error">${err.message}</td></tr>`;
+            }
+        };
 
-		const editAbsenceType = async (id) => {
-			try {
-				const types = await AbsenceTypeApi.getAll();
-				const type = types.find(t => t.id === id);
-				if (type) {
-					editingId = id;
-					modalTitle.innerText = 'Edit Absence Type';
-					container.querySelector('#at-id-group').style.display = 'block';
-					container.querySelector('#at-id').value = type.id;
-					container.querySelector('#at-id').disabled = true;
-					container.querySelector('#at-code').value = type.code;
-					container.querySelector('#at-name').value = type.name;
-					container.querySelector('#at-paid').checked = type.paid;
-					container.querySelector('#at-approval-required').checked = type.approvalRequired;
-					container.querySelector('#at-count-as-target-time').checked = type.countAsTargetTime;
-					container.querySelector('#at-reduce-vacation-credit').checked = type.reduceVacationCredit;
-					container.querySelector('#at-active').checked = type.active;
-					modal.style.display = 'block';
-				}
-			} catch (err) {
-				alert(err.message);
-			}
-		};
+        const editAbsenceType = async (id) => {
+            try {
+                const types = await AbsenceTypeApi.getAll();
+                const type = types.find(t => t.id === id);
+                if (type) {
+                    editingId = id;
+                    modalTitle.innerText = 'Edit Absence Type';
+                    container.querySelector('#at-id-group').style.display = 'block';
+                    container.querySelector('#at-id').value = type.id;
+                    container.querySelector('#at-id').disabled = true;
+                    container.querySelector('#at-code').value = type.code;
+                    container.querySelector('#at-name').value = type.name;
+                    container.querySelector('#at-paid').checked = type.paid;
+                    container.querySelector('#at-approval-required').checked = type.approvalRequired;
+                    container.querySelector('#at-count-as-target-time').checked = type.countAsTargetTime;
+                    container.querySelector('#at-reduce-vacation-credit').checked = type.reduceVacationCredit;
+                    container.querySelector('#at-active').checked = type.active;
+                    modal.style.display = 'block';
+                }
+            } catch (err) {
+                alert(err.message);
+            }
+        };
 
-		const deleteAbsenceType = async (id) => {
-			if (confirm(`Are you sure you want to delete absence type ${id}?`)) {
-				try {
-					await AbsenceTypeApi.remove(id);
-					refresh();
-				} catch (err) {
-					alert(err.message);
-				}
-			}
-		};
+        const deleteAbsenceType = async (id) => {
+            if (confirm(`Are you sure you want to delete absence type ${id}?`)) {
+                try {
+                    await AbsenceTypeApi.remove(id);
+                    refresh();
+                } catch (err) {
+                    alert(err.message);
+                }
+            }
+        };
 
-		addBtn.addEventListener('click', () => {
-			editingId = null;
-			modalTitle.innerText = 'Add Absence Type';
-			form.reset();
-			container.querySelector('#at-id-group').style.display = 'none';
-			container.querySelector('#at-id').required = false;
-			container.querySelector('#at-active').checked = true;
-			modal.style.display = 'block';
-		});
+        addBtn.addEventListener('click', () => {
+            editingId = null;
+            modalTitle.innerText = 'Add Absence Type';
+            form.reset();
+            container.querySelector('#at-id-group').style.display = 'none';
+            container.querySelector('#at-id').required = false;
+            container.querySelector('#at-active').checked = true;
+            modal.style.display = 'block';
+        });
 
-		closeBtn.addEventListener('click', () => {
-			modal.style.display = 'none';
-		});
+        closeBtn.addEventListener('click', () => {
+            modal.style.display = 'none';
+        });
 
-		form.addEventListener('submit', async (e) => {
-			e.preventDefault();
-			const type = {
-				code: container.querySelector('#at-code').value,
-				name: container.querySelector('#at-name').value,
-				paid: container.querySelector('#at-paid').checked,
-				approvalRequired: container.querySelector('#at-approval-required').checked,
-				countAsTargetTime: container.querySelector('#at-count-as-target-time').checked,
-				reduceVacationCredit: container.querySelector('#at-reduce-vacation-credit').checked,
-				active: container.querySelector('#at-active').checked,
-				durationTypes: ['HOURS', 'HALF_DAY', 'FULL_DAY'] // Default for now
-			};
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const type = {
+                code: container.querySelector('#at-code').value,
+                name: container.querySelector('#at-name').value,
+                paid: container.querySelector('#at-paid').checked,
+                approvalRequired: container.querySelector('#at-approval-required').checked,
+                countAsTargetTime: container.querySelector('#at-count-as-target-time').checked,
+                reduceVacationCredit: container.querySelector('#at-reduce-vacation-credit').checked,
+                active: container.querySelector('#at-active').checked,
+                durationTypes: ['HOURS', 'HALF_DAY', 'FULL_DAY'] // Default for now
+            };
 
-			try {
-				if (editingId) {
-					type.id = editingId;
-					await AbsenceTypeApi.update(type);
-				} else {
-					await AbsenceTypeApi.create(type);
-				}
-				modal.style.display = 'none';
-				refresh();
-			} catch (err) {
-				alert(err.message);
-			}
-		});
+            try {
+                if (editingId) {
+                    type.id = editingId;
+                    await AbsenceTypeApi.update(type);
+                } else {
+                    await AbsenceTypeApi.create(type);
+                }
+                modal.style.display = 'none';
+                refresh();
+            } catch (err) {
+                alert(err.message);
+            }
+        });
 
-		refresh();
-		return container;
-	}
+        refresh();
+        return container;
+    }
 }

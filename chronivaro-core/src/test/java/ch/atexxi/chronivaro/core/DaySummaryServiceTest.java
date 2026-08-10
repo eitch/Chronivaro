@@ -44,7 +44,7 @@ public class DaySummaryServiceTest {
 		String employeeId = "emp3";
 		LocalDate date = LocalDate.of(2026, 2, 2); // Monday
 
-  try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
 			Resource employee = new Resource(employeeId, "Jack Doe", TYPE_EMPLOYEE);
 			employee.addParameterBag(new ParameterBag(BAG_PARAMETERS, "Parameters", "Parameters"));
 			employee.addParameterBag(new ParameterBag(BAG_RELATIONS, "Relations", "Relations"));

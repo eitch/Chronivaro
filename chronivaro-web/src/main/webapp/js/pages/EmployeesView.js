@@ -3,14 +3,14 @@ import TeamApi from '../api/TeamApi.js';
 import LocationApi from '../api/LocationApi.js';
 
 export default class EmployeesView {
-	constructor(app) {
-		this.app = app;
-	}
+    constructor(app) {
+        this.app = app;
+    }
 
-	async render() {
-		const container = document.createElement('div');
-		container.id = 'employees-view';
-		container.innerHTML = `
+    async render() {
+        const container = document.createElement('div');
+        container.id = 'employees-view';
+        container.innerHTML = `
 			<h2>Employees</h2>
 			<div class="actions">
 				<button id="add-employee-btn">Add Employee</button>
@@ -84,43 +84,43 @@ export default class EmployeesView {
 			</div>
 		`;
 
-		const tbody = container.querySelector('tbody');
-		const modal = container.querySelector('#employee-modal');
-		const form = container.querySelector('#employee-form');
-		const modalTitle = container.querySelector('#modal-title');
-		const addBtn = container.querySelector('#add-employee-btn');
-		const closeBtn = container.querySelector('#close-modal');
-		const teamSelect = container.querySelector('#emp-team');
-		const locationSelect = container.querySelector('#emp-location');
+        const tbody = container.querySelector('tbody');
+        const modal = container.querySelector('#employee-modal');
+        const form = container.querySelector('#employee-form');
+        const modalTitle = container.querySelector('#modal-title');
+        const addBtn = container.querySelector('#add-employee-btn');
+        const closeBtn = container.querySelector('#close-modal');
+        const teamSelect = container.querySelector('#emp-team');
+        const locationSelect = container.querySelector('#emp-location');
 
-		let editingId = null;
+        let editingId = null;
 
-		const loadOptions = async () => {
-			const [teams, locations] = await Promise.all([
-				TeamApi.getAll(),
-				LocationApi.getAll()
-			]);
-			
-			if (teams.length === 0) {
-				teamSelect.innerHTML = '<option value="">No teams available</option>';
-			} else {
-				teamSelect.innerHTML = teams.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
-			}
+        const loadOptions = async () => {
+            const [teams, locations] = await Promise.all([
+                TeamApi.getAll(),
+                LocationApi.getAll()
+            ]);
 
-			if (locations.length === 0) {
-				locationSelect.innerHTML = '<option value="">No locations available</option>';
-			} else {
-				locationSelect.innerHTML = locations.map(l => `<option value="${l.id}">${l.name}</option>`).join('');
-			}
-		};
+            if (teams.length === 0) {
+                teamSelect.innerHTML = '<option value="">No teams available</option>';
+            } else {
+                teamSelect.innerHTML = teams.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+            }
 
-		const refresh = async () => {
-			try {
-				const employees = await EmployeeApi.getAll();
-				tbody.innerHTML = '';
-				employees.forEach(emp => {
-					const row = document.createElement('tr');
-					row.innerHTML = `
+            if (locations.length === 0) {
+                locationSelect.innerHTML = '<option value="">No locations available</option>';
+            } else {
+                locationSelect.innerHTML = locations.map(l => `<option value="${l.id}">${l.name}</option>`).join('');
+            }
+        };
+
+        const refresh = async () => {
+            try {
+                const employees = await EmployeeApi.getAll();
+                tbody.innerHTML = '';
+                employees.forEach(emp => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
 						<td>${emp.id}</td>
 						<td>${emp.personalNumber}</td>
 						<td>${emp.displayName}</td>
@@ -132,103 +132,103 @@ export default class EmployeesView {
 							<button class="delete-btn" data-id="${emp.id}">Delete</button>
 						</td>
 					`;
-					tbody.appendChild(row);
-				});
+                    tbody.appendChild(row);
+                });
 
-				container.querySelectorAll('.edit-btn').forEach(btn => {
-					btn.addEventListener('click', () => editEmployee(btn.dataset.id));
-				});
-				container.querySelectorAll('.delete-btn').forEach(btn => {
-					btn.addEventListener('click', () => deleteEmployee(btn.dataset.id));
-				});
-			} catch (err) {
-				console.error(err);
-				tbody.innerHTML = `<tr><td colspan="7" class="error">${err.message}</td></tr>`;
-			}
-		};
+                container.querySelectorAll('.edit-btn').forEach(btn => {
+                    btn.addEventListener('click', () => editEmployee(btn.dataset.id));
+                });
+                container.querySelectorAll('.delete-btn').forEach(btn => {
+                    btn.addEventListener('click', () => deleteEmployee(btn.dataset.id));
+                });
+            } catch (err) {
+                console.error(err);
+                tbody.innerHTML = `<tr><td colspan="7" class="error">${err.message}</td></tr>`;
+            }
+        };
 
-		const editEmployee = async (id) => {
-			try {
-				await loadOptions();
-				const employees = await EmployeeApi.getAll();
-				const emp = employees.find(e => e.id === id);
-				if (emp) {
-					editingId = id;
-					modalTitle.innerText = 'Edit Employee';
-					container.querySelector('#emp-id-group').style.display = 'block';
-					container.querySelector('#emp-id').value = emp.id;
-					container.querySelector('#emp-id').disabled = true;
-					container.querySelector('#emp-pers-nr').value = emp.personalNumber;
-					container.querySelector('#emp-name').value = emp.displayName;
-					container.querySelector('#emp-team').value = emp.teamId;
-					container.querySelector('#emp-location').value = emp.locationId;
-					container.querySelector('#emp-timezone').value = emp.timezone;
-					container.querySelector('#emp-join-date').value = emp.joinDate;
-					container.querySelector('#emp-exit-date').value = emp.exitDate || '';
-					container.querySelector('#emp-user').value = emp.userId;
-					container.querySelector('#emp-active').checked = emp.active;
-					modal.style.display = 'block';
-				}
-			} catch (err) {
-				alert(err.message);
-			}
-		};
+        const editEmployee = async (id) => {
+            try {
+                await loadOptions();
+                const employees = await EmployeeApi.getAll();
+                const emp = employees.find(e => e.id === id);
+                if (emp) {
+                    editingId = id;
+                    modalTitle.innerText = 'Edit Employee';
+                    container.querySelector('#emp-id-group').style.display = 'block';
+                    container.querySelector('#emp-id').value = emp.id;
+                    container.querySelector('#emp-id').disabled = true;
+                    container.querySelector('#emp-pers-nr').value = emp.personalNumber;
+                    container.querySelector('#emp-name').value = emp.displayName;
+                    container.querySelector('#emp-team').value = emp.teamId;
+                    container.querySelector('#emp-location').value = emp.locationId;
+                    container.querySelector('#emp-timezone').value = emp.timezone;
+                    container.querySelector('#emp-join-date').value = emp.joinDate;
+                    container.querySelector('#emp-exit-date').value = emp.exitDate || '';
+                    container.querySelector('#emp-user').value = emp.userId;
+                    container.querySelector('#emp-active').checked = emp.active;
+                    modal.style.display = 'block';
+                }
+            } catch (err) {
+                alert(err.message);
+            }
+        };
 
-		const deleteEmployee = async (id) => {
-			if (confirm(`Are you sure you want to delete employee ${id}?`)) {
-				try {
-					await EmployeeApi.remove(id);
-					refresh();
-				} catch (err) {
-					alert(err.message);
-				}
-			}
-		};
+        const deleteEmployee = async (id) => {
+            if (confirm(`Are you sure you want to delete employee ${id}?`)) {
+                try {
+                    await EmployeeApi.remove(id);
+                    refresh();
+                } catch (err) {
+                    alert(err.message);
+                }
+            }
+        };
 
-		addBtn.addEventListener('click', async () => {
-			await loadOptions();
-			editingId = null;
-			modalTitle.innerText = 'Add Employee';
-			form.reset();
-			container.querySelector('#emp-id-group').style.display = 'none';
-			container.querySelector('#emp-id').required = false;
-			container.querySelector('#emp-active').checked = true;
-			modal.style.display = 'block';
-		});
+        addBtn.addEventListener('click', async () => {
+            await loadOptions();
+            editingId = null;
+            modalTitle.innerText = 'Add Employee';
+            form.reset();
+            container.querySelector('#emp-id-group').style.display = 'none';
+            container.querySelector('#emp-id').required = false;
+            container.querySelector('#emp-active').checked = true;
+            modal.style.display = 'block';
+        });
 
-		closeBtn.addEventListener('click', () => {
-			modal.style.display = 'none';
-		});
+        closeBtn.addEventListener('click', () => {
+            modal.style.display = 'none';
+        });
 
-		form.addEventListener('submit', async (e) => {
-			e.preventDefault();
-			const emp = {
-				personalNumber: container.querySelector('#emp-pers-nr').value,
-				displayName: container.querySelector('#emp-name').value,
-				teamId: container.querySelector('#emp-team').value,
-				locationId: container.querySelector('#emp-location').value,
-				timezone: container.querySelector('#emp-timezone').value,
-				joinDate: container.querySelector('#emp-join-date').value,
-				exitDate: container.querySelector('#emp-exit-date').value || null,
-				userId: container.querySelector('#emp-user').value,
-				active: container.querySelector('#emp-active').checked
-			};
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const emp = {
+                personalNumber: container.querySelector('#emp-pers-nr').value,
+                displayName: container.querySelector('#emp-name').value,
+                teamId: container.querySelector('#emp-team').value,
+                locationId: container.querySelector('#emp-location').value,
+                timezone: container.querySelector('#emp-timezone').value,
+                joinDate: container.querySelector('#emp-join-date').value,
+                exitDate: container.querySelector('#emp-exit-date').value || null,
+                userId: container.querySelector('#emp-user').value,
+                active: container.querySelector('#emp-active').checked
+            };
 
-			try {
-				if (editingId) {
-					emp.id = editingId;
-					await EmployeeApi.update(emp);
-				} else {
-					await EmployeeApi.create(emp);
-				}
-				modal.style.display = 'none';
-				refresh();
-			} catch (err) {
-				alert(err.message);
-			}
-		});
+            try {
+                if (editingId) {
+                    emp.id = editingId;
+                    await EmployeeApi.update(emp);
+                } else {
+                    await EmployeeApi.create(emp);
+                }
+                modal.style.display = 'none';
+                refresh();
+            } catch (err) {
+                alert(err.message);
+            }
+        });
 
-		refresh();
-		return container;
-	}
+        refresh();
+        return container;
+    }
 }

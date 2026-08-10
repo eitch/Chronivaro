@@ -1,116 +1,116 @@
 body {
-	font-family: sans-serif;
-	margin: 0;
-	padding: 0;
+    font-family: sans-serif;
+    margin: 0;
+    padding: 0;
 }
 
 header {
-	background-color: #333;
-	color: white;
-	padding: 1rem;
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
+    background-color: #333;
+    color: white;
+    padding: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 header h1 {
-	margin: 0;
+    margin: 0;
 }
 
 nav ul {
-	list-style: none;
-	display: flex;
-	gap: 1rem;
-	margin: 0;
-	padding: 0;
+    list-style: none;
+    display: flex;
+    gap: 1rem;
+    margin: 0;
+    padding: 0;
 }
 
 nav a {
-	color: white;
-	text-decoration: none;
+    color: white;
+    text-decoration: none;
 }
 
 main {
-	padding: 2rem;
+    padding: 2rem;
 }
 
 #presence-status {
-	font-size: 1.5rem;
-	margin-bottom: 1rem;
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
 }
 
 button:disabled {
-	cursor: not-allowed;
-	opacity: 0.6;
+    cursor: not-allowed;
+    opacity: 0.6;
 }
 
 .status-working {
-	color: green;
-	font-weight: bold;
+    color: green;
+    font-weight: bold;
 }
 
 .status-not-working {
-	color: red;
-	font-weight: bold;
+    color: red;
+    font-weight: bold;
 }
 
 #login-view {
-	max-width: 400px;
-	margin: 2rem auto;
-	padding: 2rem;
-	border: 1px solid #ccc;
-	border-radius: 8px;
+    max-width: 400px;
+    margin: 2rem auto;
+    padding: 2rem;
+    border: 1px solid #ccc;
+    border-radius: 8px;
 }
 
 .form-group {
-	margin-bottom: 1rem;
+    margin-bottom: 1rem;
 }
 
 .form-group label {
-	display: block;
-	margin-bottom: 0.5rem;
+    display: block;
+    margin-bottom: 0.5rem;
 }
 
 .form-group input {
-	width: 100%;
-	padding: 0.5rem;
-	box-sizing: border-box;
+    width: 100%;
+    padding: 0.5rem;
+    box-sizing: border-box;
 }
 
 .error {
-	color: red;
-	margin-bottom: 1rem;
+    color: red;
+    margin-bottom: 1rem;
 }
 
 #day-summary {
-	margin-top: 2rem;
-	padding-top: 1rem;
-	border-top: 1px solid #eee;
+    margin-top: 2rem;
+    padding-top: 1rem;
+    border-top: 1px solid #eee;
 }
 
 table {
-	width: 100%;
-	border-collapse: collapse;
-	margin-top: 1rem;
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
 }
 
 th, td {
-	border: 1px solid #ddd;
-	padding: 8px;
-	text-align: left;
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
 }
 
 th {
-	background-color: #f2f2f2;
+    background-color: #f2f2f2;
 }
 
 tr:nth-child(even) {
-	background-color: #f9f9f9;
+    background-color: #f9f9f9;
 }
 
 #filter-controls {
-	margin-bottom: 1rem;
-	display: flex;
-	gap: 1rem;
-	align-items: center;
+    margin-bottom: 1rem;
+    display: flex;
+    gap: 1rem;
+    align-items: center;
 }

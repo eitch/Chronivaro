@@ -68,7 +68,8 @@ public class AbsenceTypeResource {
 		ServiceHandler serviceHandler = ChronivaroRestHelper.getServiceHandler();
 		AbsenceTypeDto dto = ChronivaroRestHelper.createGson().fromJson(data, AbsenceTypeDto.class);
 
-		CreateAbsenceTypeService.UpdateAbsenceTypeArgument arg = new CreateAbsenceTypeService.UpdateAbsenceTypeArgument();
+		CreateAbsenceTypeService.UpdateAbsenceTypeArgument arg
+				= new CreateAbsenceTypeService.UpdateAbsenceTypeArgument();
 		arg.id = id;
 		arg.code = dto.code();
 		arg.name = dto.name();

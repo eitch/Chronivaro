@@ -38,7 +38,7 @@ public class ScheduleHelperTest {
 
 	@Test
 	public void shouldCalculateTargetMinutes() {
-  try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
 			// Create Location
 			Resource location = new Resource("loc1", "Location 1", TYPE_LOCATION);
 			location.addParameterBag(new ParameterBag(BAG_RELATIONS, "Relations", "Relations"));
@@ -81,7 +81,7 @@ public class ScheduleHelperTest {
 			tx.commitOnClose();
 		}
 
-  try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
 			// 2026-01-01 was a Thursday
 			LocalDate holidayDate = LocalDate.of(2026, 1, 1);
 			assertEquals(480, ScheduleHelper.getTargetMinutes(tx, "emp1", holidayDate));

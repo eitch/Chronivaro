@@ -20,7 +20,8 @@ public class HolidayCalendarResourceTest extends AbstractChronivaroRestfulTest {
 				  "active": true
 				}
 				""";
-		try (Response response = target().path("chronivaro/v1/admin/holiday-calendars")
+		try (Response response = target()
+				.path("chronivaro/v1/admin/holiday-calendars")
 				.request(MediaType.APPLICATION_JSON)
 				.header("Authorization", authToken)
 				.post(Entity.json(calendarJson))) {
@@ -35,7 +36,8 @@ public class HolidayCalendarResourceTest extends AbstractChronivaroRestfulTest {
 				  "creditFactor": 1.0
 				}
 				""";
-		try (Response response = target().path("chronivaro/v1/admin/holiday-calendars/any/holidays")
+		try (Response response = target()
+				.path("chronivaro/v1/admin/holiday-calendars/any/holidays")
 				.request(MediaType.APPLICATION_JSON)
 				.header("Authorization", authToken)
 				.post(Entity.json(holidayJson))) {

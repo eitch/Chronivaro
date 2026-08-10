@@ -55,7 +55,8 @@ public class PeriodLifecycleServiceTest {
 		ServiceHandler serviceHandler = runtimeMock.getServiceHandler();
 
 		// Submit
-		ServiceResult result = serviceHandler.doService(certificate, new SubmitPeriodService(), new StringArgument(periodId));
+		ServiceResult result = serviceHandler.doService(certificate, new SubmitPeriodService(),
+				new StringArgument(periodId));
 		assertTrue(result.getMessage(), result.isOk());
 
 		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
@@ -76,10 +77,13 @@ public class PeriodLifecycleServiceTest {
 
 		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
 			assertEquals(STATE_LOCKED, tx.getResourceBy(TYPE_TIME_PERIOD, periodId, true).getString(PARAM_STATE));
-			
+
 			// Check Audit
-			List<Resource> audits = tx.streamResources(TYPE_AUDIT_EVENT)
-					.filter(e -> e.getString(PARAM_ELEMENT_TYPE).equals(TYPE_TIME_PERIOD) && e.getString(PARAM_ELEMENT_ID).equals(periodId))
+			List<Resource> audits = tx
+					.streamResources(TYPE_AUDIT_EVENT)
+					.filter(e -> e.getString(PARAM_ELEMENT_TYPE).equals(TYPE_TIME_PERIOD) && e
+							.getString(PARAM_ELEMENT_ID)
+							.equals(periodId))
 					.toList();
 			assertEquals(3, audits.size());
 		}

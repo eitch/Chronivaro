@@ -1,14 +1,14 @@
 import HolidayCalendarApi from '../api/HolidayCalendarApi.js';
 
 export default class HolidayCalendarsView {
-	constructor(app) {
-		this.app = app;
-	}
+    constructor(app) {
+        this.app = app;
+    }
 
-	async render() {
-		const container = document.createElement('div');
-		container.id = 'holiday-calendars-view';
-		container.innerHTML = `
+    async render() {
+        const container = document.createElement('div');
+        container.id = 'holiday-calendars-view';
+        container.innerHTML = `
 			<h2>Holiday Calendars</h2>
 			<div class="actions">
 				<button id="add-calendar-btn">Add Calendar</button>
@@ -54,54 +54,54 @@ export default class HolidayCalendarsView {
 			<p>Note: Listing and editing not yet implemented in REST API for Holiday Calendars. Use this to add new calendars and holidays.</p>
 		`;
 
-		const calModal = container.querySelector('#calendar-modal');
-		const holModal = container.querySelector('#holiday-modal');
-		const calForm = container.querySelector('#calendar-form');
-		const holForm = container.querySelector('#holiday-form');
-		const addCalBtn = container.querySelector('#add-calendar-btn');
+        const calModal = container.querySelector('#calendar-modal');
+        const holModal = container.querySelector('#holiday-modal');
+        const calForm = container.querySelector('#calendar-form');
+        const holForm = container.querySelector('#holiday-form');
+        const addCalBtn = container.querySelector('#add-calendar-btn');
 
-		addCalBtn.addEventListener('click', () => {
-			calForm.reset();
-			calModal.style.display = 'block';
-		});
+        addCalBtn.addEventListener('click', () => {
+            calForm.reset();
+            calModal.style.display = 'block';
+        });
 
-		container.querySelectorAll('.close-modal').forEach(btn => {
-			btn.addEventListener('click', () => {
-				calModal.style.display = 'none';
-				holModal.style.display = 'none';
-			});
-		});
+        container.querySelectorAll('.close-modal').forEach(btn => {
+            btn.addEventListener('click', () => {
+                calModal.style.display = 'none';
+                holModal.style.display = 'none';
+            });
+        });
 
-		calForm.addEventListener('submit', async (e) => {
-			e.preventDefault();
-			const cal = {
-				name: container.querySelector('#cal-name').value
-			};
-			try {
-				await HolidayCalendarApi.createCalendar(cal);
-				calModal.style.display = 'none';
-				alert('Calendar created successfully');
-			} catch (err) {
-				alert(err.message);
-			}
-		});
+        calForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const cal = {
+                name: container.querySelector('#cal-name').value
+            };
+            try {
+                await HolidayCalendarApi.createCalendar(cal);
+                calModal.style.display = 'none';
+                alert('Calendar created successfully');
+            } catch (err) {
+                alert(err.message);
+            }
+        });
 
-		holForm.addEventListener('submit', async (e) => {
-			e.preventDefault();
-			const calendarId = container.querySelector('#hol-cal-id').value;
-			const holiday = {
-				name: container.querySelector('#hol-name').value,
-				date: container.querySelector('#hol-date').value
-			};
-			try {
-				await HolidayCalendarApi.createHoliday(calendarId, holiday);
-				holModal.style.display = 'none';
-				alert('Holiday created successfully');
-			} catch (err) {
-				alert(err.message);
-			}
-		});
+        holForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const calendarId = container.querySelector('#hol-cal-id').value;
+            const holiday = {
+                name: container.querySelector('#hol-name').value,
+                date: container.querySelector('#hol-date').value
+            };
+            try {
+                await HolidayCalendarApi.createHoliday(calendarId, holiday);
+                holModal.style.display = 'none';
+                alert('Holiday created successfully');
+            } catch (err) {
+                alert(err.message);
+            }
+        });
 
-		return container;
-	}
+        return container;
+    }
 }

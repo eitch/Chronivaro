@@ -1,21 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Users>
-	<User userId="admin" username="admin" password="$PBKDF2WithHmacSHA512,10000,256$61646d696e$cb69962946617da006a2f95776d78b49e5ec7941d2bdb2d25cdb05f957f64344">
-		<Firstname>Admin</Firstname>
-		<Lastname>Admin</Lastname>
-		<State>ENABLED</State>
-		<Locale>en</Locale>
-		<Roles>
-			<Role>StrolchAdmin</Role>
-		</Roles>
-	</User>
-	<User userId="agent" username="agent">
-		<Firstname>Agent</Firstname>
-		<Lastname>Agent</Lastname>
-		<State>SYSTEM</State>
-		<Locale>en</Locale>
-		<Roles>
-			<Role>StrolchAdmin</Role>
-		</Roles>
-	</User>
+    <User userId="admin" username="admin"
+          password="$PBKDF2WithHmacSHA512,10000,256$61646d696e$cb69962946617da006a2f95776d78b49e5ec7941d2bdb2d25cdb05f957f64344">
+        <Firstname>Admin</Firstname>
+        <Lastname>Admin</Lastname>
+        <State>ENABLED</State>
+        <Locale>en</Locale>
+        <Roles>
+            <Role>StrolchAdmin</Role>
+        </Roles>
+    </User>
+    <User userId="agent" username="agent">
+        <Firstname>Agent</Firstname>
+        <Lastname>Agent</Lastname>
+        <State>SYSTEM</State>
+        <Locale>en</Locale>
+        <Roles>
+            <Role>StrolchAdmin</Role>
+        </Roles>
+    </User>
 </Users>

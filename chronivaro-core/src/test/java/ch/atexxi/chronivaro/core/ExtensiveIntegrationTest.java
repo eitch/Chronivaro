@@ -2,8 +2,6 @@ package ch.atexxi.chronivaro.core;
 
 import ch.atexxi.chronivaro.core.model.MonthSummary;
 import ch.atexxi.chronivaro.core.service.*;
-import li.strolch.model.ParameterBag;
-import li.strolch.model.Resource;
 import li.strolch.persistence.api.StrolchTransaction;
 import li.strolch.privilege.model.Certificate;
 import li.strolch.service.api.ServiceHandler;
@@ -16,7 +14,6 @@ import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.ZonedDateTime;
 import java.util.List;
-import java.util.UUID;
 
 import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
 import static org.junit.Assert.assertEquals;
@@ -46,15 +43,19 @@ public class ExtensiveIntegrationTest {
 		ServiceHandler serviceHandler = runtimeMock.getServiceHandler();
 
 		// 1. Create Infrastructure
-		CreateHolidayCalendarService.HolidayCalendarArgument calArg = new CreateHolidayCalendarService.HolidayCalendarArgument();
+		CreateHolidayCalendarService.HolidayCalendarArgument calArg
+				= new CreateHolidayCalendarService.HolidayCalendarArgument();
 		calArg.name = "Extensive Calendar";
 		assertTrue(serviceHandler.doService(certificate, new CreateHolidayCalendarService(), calArg).isOk());
 
 		String holidayCalendarId;
 		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
-			holidayCalendarId = tx.streamResources(TYPE_HOLIDAY_CALENDAR)
+			holidayCalendarId = tx
+					.streamResources(TYPE_HOLIDAY_CALENDAR)
 					.filter(r -> r.getName().equals("Extensive Calendar"))
-					.findFirst().orElseThrow().getId();
+					.findFirst()
+					.orElseThrow()
+					.getId();
 		}
 
 		CreateLocationService.LocationArgument locArg = new CreateLocationService.LocationArgument();
@@ -65,9 +66,12 @@ public class ExtensiveIntegrationTest {
 
 		String locationId;
 		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
-			locationId = tx.streamResources(TYPE_LOCATION)
+			locationId = tx
+					.streamResources(TYPE_LOCATION)
 					.filter(r -> r.getName().equals("Extensive Location"))
-					.findFirst().orElseThrow().getId();
+					.findFirst()
+					.orElseThrow()
+					.getId();
 		}
 
 		CreateTeamService.TeamArgument teamArg = new CreateTeamService.TeamArgument();
@@ -76,9 +80,12 @@ public class ExtensiveIntegrationTest {
 
 		String teamId;
 		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
-			teamId = tx.streamResources(TYPE_TEAM)
+			teamId = tx
+					.streamResources(TYPE_TEAM)
 					.filter(r -> r.getName().equals("Extensive Team"))
-					.findFirst().orElseThrow().getId();
+					.findFirst()
+					.orElseThrow()
+					.getId();
 		}
 
 		CreateHolidayService.HolidayArgument holidayArg = new CreateHolidayService.HolidayArgument();
@@ -103,9 +110,12 @@ public class ExtensiveIntegrationTest {
 
 		String employeeId;
 		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
-			employeeId = tx.streamResources(TYPE_EMPLOYEE)
+			employeeId = tx
+					.streamResources(TYPE_EMPLOYEE)
 					.filter(r -> r.getString(PARAM_PERSONAL_NUMBER).equals("EXT-001"))
-					.findFirst().orElseThrow().getId();
+					.findFirst()
+					.orElseThrow()
+					.getId();
 		}
 
 		// 3. Configure Schedule
@@ -126,11 +136,16 @@ public class ExtensiveIntegrationTest {
 		// 2026-05-04: Monday, 08:00 - 12:00, 13:00 - 17:00 (8h)
 		// 2026-05-05: Tuesday, 08:30 - 12:30, 13:30 - 17:30 (8h)
 		// 2026-05-06: Wednesday, 08:00 - 12:00 (4h) + Absence in afternoon
-		addWorkEntry(serviceHandler, employeeId, "2026-05-04T08:00:00+02:00[Europe/Zurich]", "2026-05-04T12:00:00+02:00[Europe/Zurich]");
-		addWorkEntry(serviceHandler, employeeId, "2026-05-04T13:00:00+02:00[Europe/Zurich]", "2026-05-04T17:00:00+02:00[Europe/Zurich]");
-		addWorkEntry(serviceHandler, employeeId, "2026-05-05T08:30:00+02:00[Europe/Zurich]", "2026-05-05T12:30:00+02:00[Europe/Zurich]");
-		addWorkEntry(serviceHandler, employeeId, "2026-05-05T13:30:00+02:00[Europe/Zurich]", "2026-05-05T17:30:00+02:00[Europe/Zurich]");
-		addWorkEntry(serviceHandler, employeeId, "2026-05-06T08:00:00+02:00[Europe/Zurich]", "2026-05-06T12:00:00+02:00[Europe/Zurich]");
+		addWorkEntry(serviceHandler, employeeId, "2026-05-04T08:00:00+02:00[Europe/Zurich]",
+				"2026-05-04T12:00:00+02:00[Europe/Zurich]");
+		addWorkEntry(serviceHandler, employeeId, "2026-05-04T13:00:00+02:00[Europe/Zurich]",
+				"2026-05-04T17:00:00+02:00[Europe/Zurich]");
+		addWorkEntry(serviceHandler, employeeId, "2026-05-05T08:30:00+02:00[Europe/Zurich]",
+				"2026-05-05T12:30:00+02:00[Europe/Zurich]");
+		addWorkEntry(serviceHandler, employeeId, "2026-05-05T13:30:00+02:00[Europe/Zurich]",
+				"2026-05-05T17:30:00+02:00[Europe/Zurich]");
+		addWorkEntry(serviceHandler, employeeId, "2026-05-06T08:00:00+02:00[Europe/Zurich]",
+				"2026-05-06T12:00:00+02:00[Europe/Zurich]");
 
 		// 5. Add Absence
 		CreateAbsenceTypeService.AbsenceTypeArgument typeArg = new CreateAbsenceTypeService.AbsenceTypeArgument();
@@ -147,23 +162,30 @@ public class ExtensiveIntegrationTest {
 		absenceArg.end = ZonedDateTime.parse("2026-05-06T23:59:59+02:00[Europe/Zurich]");
 		absenceArg.durationType = DURATION_HOURS;
 		absenceArg.minutes = 240;
-		li.strolch.service.api.ServiceResult absenceResult = serviceHandler.doService(certificate, new RequestAbsenceService(), absenceArg);
+		li.strolch.service.api.ServiceResult absenceResult = serviceHandler.doService(certificate,
+				new RequestAbsenceService(), absenceArg);
 		assertTrue(absenceResult.isOk());
 
 		String id;
 		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
-			id = tx.streamResources(TYPE_ABSENCE)
+			id = tx
+					.streamResources(TYPE_ABSENCE)
 					.filter(a -> a.getString(BAG_RELATIONS, TYPE_EMPLOYEE).equals(employeeId))
-					.findFirst().orElseThrow().getId();
+					.findFirst()
+					.orElseThrow()
+					.getId();
 		}
-		assertTrue(serviceHandler.doService(certificate, new ApproveAbsenceService(), new li.strolch.service.StringArgument(id)).isOk());
+		assertTrue(serviceHandler
+				.doService(certificate, new ApproveAbsenceService(), new li.strolch.service.StringArgument(id))
+				.isOk());
 
 		// 6. Verify Month Summary
 		MonthSummaryService.MonthSummaryArgument arg = new MonthSummaryService.MonthSummaryArgument();
 		arg.employeeId = employeeId;
 		arg.yearMonth = YearMonth.of(2026, 5);
 
-		MonthSummaryService.MonthSummaryResult result = serviceHandler.doService(certificate, new MonthSummaryService(), arg);
+		MonthSummaryService.MonthSummaryResult result = serviceHandler.doService(certificate, new MonthSummaryService(),
+				arg);
 		assertTrue(result.getMessage(), result.isOk());
 
 		MonthSummary summary = result.monthSummary;

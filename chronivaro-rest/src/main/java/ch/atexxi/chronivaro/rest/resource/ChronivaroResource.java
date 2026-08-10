@@ -3,7 +3,9 @@ package ch.atexxi.chronivaro.rest.resource;
 import ch.atexxi.chronivaro.core.model.ChronivaroModelHelper;
 import ch.atexxi.chronivaro.core.model.WorkEntryHelper;
 import ch.atexxi.chronivaro.core.service.*;
-import ch.atexxi.chronivaro.rest.dto.*;
+import ch.atexxi.chronivaro.rest.dto.AbsenceDto;
+import ch.atexxi.chronivaro.rest.dto.ChronivaroMapper;
+import ch.atexxi.chronivaro.rest.dto.WorkEntryDto;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.Context;
@@ -30,8 +32,7 @@ public class ChronivaroResource {
 	@GET
 	@Path("presence")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response getPresence(@Context HttpServletRequest request,
-			@QueryParam("teamId") String teamId,
+	public Response getPresence(@Context HttpServletRequest request, @QueryParam("teamId") String teamId,
 			@QueryParam("locationId") String locationId) {
 		Certificate cert = (Certificate) request.getAttribute(StrolchRestfulConstants.STROLCH_CERTIFICATE);
 		ServiceHandler serviceHandler = ChronivaroRestHelper.getServiceHandler();
@@ -42,8 +43,12 @@ public class ChronivaroResource {
 
 		PresenceService.PresenceResult result = serviceHandler.doService(cert, new PresenceService(), arg);
 		if (result.isOk()) {
-			return Response.ok(ChronivaroRestHelper.createGson().toJson(result.presenceInfos.stream().map(ChronivaroMapper::toDto).toList()),
-					MediaType.APPLICATION_JSON).build();
+			return Response
+					.ok(ChronivaroRestHelper
+									.createGson()
+									.toJson(result.presenceInfos.stream().map(ChronivaroMapper::toDto).toList()),
+							MediaType.APPLICATION_JSON)
+					.build();
 		}
 		return ResponseUtil.toResponse(result);
 	}
@@ -51,8 +56,7 @@ public class ChronivaroResource {
 	@GET
 	@Path("me/work-entries")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response getMyWorkEntries(@Context HttpServletRequest request,
-			@QueryParam("from") String fromStr,
+	public Response getMyWorkEntries(@Context HttpServletRequest request, @QueryParam("from") String fromStr,
 			@QueryParam("to") String toStr) {
 
 		Certificate cert = (Certificate) request.getAttribute(StrolchRestfulConstants.STROLCH_CERTIFICATE);
@@ -222,7 +226,10 @@ public class ChronivaroResource {
 
 		DaySummaryService.DaySummaryResult result = serviceHandler.doService(cert, new DaySummaryService(), arg);
 		if (result.isOk()) {
-			return Response.ok(ChronivaroRestHelper.createGson().toJson(ChronivaroMapper.toDto(result.daySummary)), MediaType.APPLICATION_JSON).build();
+			return Response
+					.ok(ChronivaroRestHelper.createGson().toJson(ChronivaroMapper.toDto(result.daySummary)),
+							MediaType.APPLICATION_JSON)
+					.build();
 		}
 		return ResponseUtil.toResponse(result);
 	}
@@ -248,7 +255,10 @@ public class ChronivaroResource {
 
 		MonthSummaryService.MonthSummaryResult result = serviceHandler.doService(cert, new MonthSummaryService(), arg);
 		if (result.isOk()) {
-			return Response.ok(ChronivaroRestHelper.createGson().toJson(ChronivaroMapper.toDto(result.monthSummary)), MediaType.APPLICATION_JSON).build();
+			return Response
+					.ok(ChronivaroRestHelper.createGson().toJson(ChronivaroMapper.toDto(result.monthSummary)),
+							MediaType.APPLICATION_JSON)
+					.build();
 		}
 		return ResponseUtil.toResponse(result);
 	}

@@ -1,14 +1,14 @@
 import LocationApi from '../api/LocationApi.js';
 
 export default class LocationsView {
-	constructor(app) {
-		this.app = app;
-	}
+    constructor(app) {
+        this.app = app;
+    }
 
-	async render() {
-		const container = document.createElement('div');
-		container.id = 'locations-view';
-		container.innerHTML = `
+    async render() {
+        const container = document.createElement('div');
+        container.id = 'locations-view';
+        container.innerHTML = `
 			<h2>Locations</h2>
 			<div class="actions">
 				<button id="add-location-btn">Add Location</button>
@@ -57,22 +57,22 @@ export default class LocationsView {
 			</div>
 		`;
 
-		const tbody = container.querySelector('tbody');
-		const modal = container.querySelector('#location-modal');
-		const form = container.querySelector('#location-form');
-		const modalTitle = container.querySelector('#modal-title');
-		const addBtn = container.querySelector('#add-location-btn');
-		const closeBtn = container.querySelector('#close-modal');
+        const tbody = container.querySelector('tbody');
+        const modal = container.querySelector('#location-modal');
+        const form = container.querySelector('#location-form');
+        const modalTitle = container.querySelector('#modal-title');
+        const addBtn = container.querySelector('#add-location-btn');
+        const closeBtn = container.querySelector('#close-modal');
 
-		let editingId = null;
+        let editingId = null;
 
-		const refresh = async () => {
-			try {
-				const locations = await LocationApi.getAll();
-				tbody.innerHTML = '';
-				locations.forEach(loc => {
-					const row = document.createElement('tr');
-					row.innerHTML = `
+        const refresh = async () => {
+            try {
+                const locations = await LocationApi.getAll();
+                tbody.innerHTML = '';
+                locations.forEach(loc => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
 						<td>${loc.id}</td>
 						<td>${loc.name}</td>
 						<td>${loc.timezone}</td>
@@ -82,88 +82,88 @@ export default class LocationsView {
 							<button class="delete-btn" data-id="${loc.id}">Delete</button>
 						</td>
 					`;
-					tbody.appendChild(row);
-				});
+                    tbody.appendChild(row);
+                });
 
-				container.querySelectorAll('.edit-btn').forEach(btn => {
-					btn.addEventListener('click', () => editLocation(btn.dataset.id));
-				});
-				container.querySelectorAll('.delete-btn').forEach(btn => {
-					btn.addEventListener('click', () => deleteLocation(btn.dataset.id));
-				});
-			} catch (err) {
-				console.error(err);
-				tbody.innerHTML = `<tr><td colspan="5" class="error">${err.message}</td></tr>`;
-			}
-		};
+                container.querySelectorAll('.edit-btn').forEach(btn => {
+                    btn.addEventListener('click', () => editLocation(btn.dataset.id));
+                });
+                container.querySelectorAll('.delete-btn').forEach(btn => {
+                    btn.addEventListener('click', () => deleteLocation(btn.dataset.id));
+                });
+            } catch (err) {
+                console.error(err);
+                tbody.innerHTML = `<tr><td colspan="5" class="error">${err.message}</td></tr>`;
+            }
+        };
 
-		const editLocation = async (id) => {
-			try {
-				const locations = await LocationApi.getAll();
-				const loc = locations.find(l => l.id === id);
-				if (loc) {
-					editingId = id;
-					modalTitle.innerText = 'Edit Location';
-					container.querySelector('#loc-id-group').style.display = 'block';
-					container.querySelector('#loc-id').value = loc.id;
-					container.querySelector('#loc-id').disabled = true;
-					container.querySelector('#loc-name').value = loc.name;
-					container.querySelector('#loc-timezone').value = loc.timezone;
-					container.querySelector('#loc-holiday-calendar').value = loc.holidayCalendarId || '';
-					modal.style.display = 'block';
-				}
-			} catch (err) {
-				alert(err.message);
-			}
-		};
+        const editLocation = async (id) => {
+            try {
+                const locations = await LocationApi.getAll();
+                const loc = locations.find(l => l.id === id);
+                if (loc) {
+                    editingId = id;
+                    modalTitle.innerText = 'Edit Location';
+                    container.querySelector('#loc-id-group').style.display = 'block';
+                    container.querySelector('#loc-id').value = loc.id;
+                    container.querySelector('#loc-id').disabled = true;
+                    container.querySelector('#loc-name').value = loc.name;
+                    container.querySelector('#loc-timezone').value = loc.timezone;
+                    container.querySelector('#loc-holiday-calendar').value = loc.holidayCalendarId || '';
+                    modal.style.display = 'block';
+                }
+            } catch (err) {
+                alert(err.message);
+            }
+        };
 
-		const deleteLocation = async (id) => {
-			if (confirm(`Are you sure you want to delete location ${id}?`)) {
-				try {
-					await LocationApi.remove(id);
-					refresh();
-				} catch (err) {
-					alert(err.message);
-				}
-			}
-		};
+        const deleteLocation = async (id) => {
+            if (confirm(`Are you sure you want to delete location ${id}?`)) {
+                try {
+                    await LocationApi.remove(id);
+                    refresh();
+                } catch (err) {
+                    alert(err.message);
+                }
+            }
+        };
 
-		addBtn.addEventListener('click', () => {
-			editingId = null;
-			modalTitle.innerText = 'Add Location';
-			form.reset();
-			container.querySelector('#loc-id-group').style.display = 'none';
-			container.querySelector('#loc-id').required = false;
-			modal.style.display = 'block';
-		});
+        addBtn.addEventListener('click', () => {
+            editingId = null;
+            modalTitle.innerText = 'Add Location';
+            form.reset();
+            container.querySelector('#loc-id-group').style.display = 'none';
+            container.querySelector('#loc-id').required = false;
+            modal.style.display = 'block';
+        });
 
-		closeBtn.addEventListener('click', () => {
-			modal.style.display = 'none';
-		});
+        closeBtn.addEventListener('click', () => {
+            modal.style.display = 'none';
+        });
 
-		form.addEventListener('submit', async (e) => {
-			e.preventDefault();
-			const loc = {
-				name: container.querySelector('#loc-name').value,
-				timezone: container.querySelector('#loc-timezone').value,
-				holidayCalendarId: container.querySelector('#loc-holiday-calendar').value || null
-			};
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const loc = {
+                name: container.querySelector('#loc-name').value,
+                timezone: container.querySelector('#loc-timezone').value,
+                holidayCalendarId: container.querySelector('#loc-holiday-calendar').value || null
+            };
 
-			try {
-				if (editingId) {
-					loc.id = editingId;
-					await LocationApi.update(loc);
-				} else {
-					await LocationApi.create(loc);
-				}
-				modal.style.display = 'none';
-				refresh();
-			} catch (err) {
-				alert(err.message);
-			}
-		});
+            try {
+                if (editingId) {
+                    loc.id = editingId;
+                    await LocationApi.update(loc);
+                } else {
+                    await LocationApi.create(loc);
+                }
+                modal.style.display = 'none';
+                refresh();
+            } catch (err) {
+                alert(err.message);
+            }
+        });
 
-		refresh();
-		return container;
-	}
+        refresh();
+        return container;
+    }
 }

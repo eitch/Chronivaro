@@ -12,7 +12,6 @@ import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 public class LocationResourceTest extends AbstractChronivaroRestfulTest {
 
@@ -24,7 +23,8 @@ public class LocationResourceTest extends AbstractChronivaroRestfulTest {
 		LocationDto newLocation = new LocationDto(null, "Test Location", "Europe/Zurich", "calendar-1");
 		String json = ChronivaroRestHelper.createGson().toJson(newLocation);
 
-		try (Response response = target().path("chronivaro/v1/admin/locations")
+		try (Response response = target()
+				.path("chronivaro/v1/admin/locations")
 				.request(MediaType.APPLICATION_JSON)
 				.header("Authorization", authToken)
 				.post(Entity.json(json))) {
@@ -33,15 +33,22 @@ public class LocationResourceTest extends AbstractChronivaroRestfulTest {
 
 		String locationId;
 		// Get all
-		try (Response response = target().path("chronivaro/v1/admin/locations")
+		try (Response response = target()
+				.path("chronivaro/v1/admin/locations")
 				.request(MediaType.APPLICATION_JSON)
 				.header("Authorization", authToken)
 				.get()) {
 			assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
-			List<LocationDto> locations = ChronivaroRestHelper.createGson()
+			List<LocationDto> locations = ChronivaroRestHelper
+					.createGson()
 					.fromJson(response.readEntity(String.class), new TypeToken<List<LocationDto>>() {
 					}.getType());
-			locationId = locations.stream().filter(l -> l.name().equals("Test Location")).findFirst().orElseThrow().id();
+			locationId = locations
+					.stream()
+					.filter(l -> l.name().equals("Test Location"))
+					.findFirst()
+					.orElseThrow()
+					.id();
 		}
 
 		// Update
@@ -49,7 +56,8 @@ public class LocationResourceTest extends AbstractChronivaroRestfulTest {
 				"calendar-2");
 		String updatedJson = ChronivaroRestHelper.createGson().toJson(updatedLocation);
 
-		try (Response response = target().path("chronivaro/v1/admin/locations/" + locationId)
+		try (Response response = target()
+				.path("chronivaro/v1/admin/locations/" + locationId)
 				.request(MediaType.APPLICATION_JSON)
 				.header("Authorization", authToken)
 				.put(Entity.json(updatedJson))) {
@@ -57,11 +65,13 @@ public class LocationResourceTest extends AbstractChronivaroRestfulTest {
 		}
 
 		// Verify update
-		try (Response response = target().path("chronivaro/v1/admin/locations")
+		try (Response response = target()
+				.path("chronivaro/v1/admin/locations")
 				.request(MediaType.APPLICATION_JSON)
 				.header("Authorization", authToken)
 				.get()) {
-			List<LocationDto> locations = ChronivaroRestHelper.createGson()
+			List<LocationDto> locations = ChronivaroRestHelper
+					.createGson()
 					.fromJson(response.readEntity(String.class), new TypeToken<List<LocationDto>>() {
 					}.getType());
 			LocationDto found = locations.stream().filter(l -> l.id().equals(locationId)).findFirst().orElseThrow();
@@ -70,7 +80,8 @@ public class LocationResourceTest extends AbstractChronivaroRestfulTest {
 		}
 
 		// Delete
-		try (Response response = target().path("chronivaro/v1/admin/locations/" + locationId)
+		try (Response response = target()
+				.path("chronivaro/v1/admin/locations/" + locationId)
 				.request(MediaType.APPLICATION_JSON)
 				.header("Authorization", authToken)
 				.delete()) {
@@ -78,11 +89,13 @@ public class LocationResourceTest extends AbstractChronivaroRestfulTest {
 		}
 
 		// Verify deletion
-		try (Response response = target().path("chronivaro/v1/admin/locations")
+		try (Response response = target()
+				.path("chronivaro/v1/admin/locations")
 				.request(MediaType.APPLICATION_JSON)
 				.header("Authorization", authToken)
 				.get()) {
-			List<LocationDto> locations = ChronivaroRestHelper.createGson()
+			List<LocationDto> locations = ChronivaroRestHelper
+					.createGson()
 					.fromJson(response.readEntity(String.class), new TypeToken<List<LocationDto>>() {
 					}.getType());
 			assertFalse(locations.stream().anyMatch(l -> l.id().equals(locationId)));

@@ -12,7 +12,6 @@ import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 public class AbsenceTypeResourceTest extends AbstractChronivaroRestfulTest {
 
@@ -25,7 +24,8 @@ public class AbsenceTypeResourceTest extends AbstractChronivaroRestfulTest {
 				List.of("FULL_DAY"), true);
 		String json = ChronivaroRestHelper.createGson().toJson(newType);
 
-		try (Response response = target().path("chronivaro/v1/admin/absence-types")
+		try (Response response = target()
+				.path("chronivaro/v1/admin/absence-types")
 				.request(MediaType.APPLICATION_JSON)
 				.header("Authorization", authToken)
 				.post(Entity.json(json))) {
@@ -34,23 +34,26 @@ public class AbsenceTypeResourceTest extends AbstractChronivaroRestfulTest {
 
 		String absenceTypeId;
 		// Get all
-		try (Response response = target().path("chronivaro/v1/admin/absence-types")
+		try (Response response = target()
+				.path("chronivaro/v1/admin/absence-types")
 				.request(MediaType.APPLICATION_JSON)
 				.header("Authorization", authToken)
 				.get()) {
 			assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
-			List<AbsenceTypeDto> types = ChronivaroRestHelper.createGson()
+			List<AbsenceTypeDto> types = ChronivaroRestHelper
+					.createGson()
 					.fromJson(response.readEntity(String.class), new TypeToken<List<AbsenceTypeDto>>() {
 					}.getType());
 			absenceTypeId = types.stream().filter(t -> t.name().equals("Test Absence")).findFirst().orElseThrow().id();
 		}
 
 		// Update
-		AbsenceTypeDto updatedType = new AbsenceTypeDto(absenceTypeId, "TEST", "Updated Test Absence", true, false, true,
-				true, List.of("FULL_DAY"), false);
+		AbsenceTypeDto updatedType = new AbsenceTypeDto(absenceTypeId, "TEST", "Updated Test Absence", true, false,
+				true, true, List.of("FULL_DAY"), false);
 		String updatedJson = ChronivaroRestHelper.createGson().toJson(updatedType);
 
-		try (Response response = target().path("chronivaro/v1/admin/absence-types/" + absenceTypeId)
+		try (Response response = target()
+				.path("chronivaro/v1/admin/absence-types/" + absenceTypeId)
 				.request(MediaType.APPLICATION_JSON)
 				.header("Authorization", authToken)
 				.put(Entity.json(updatedJson))) {
@@ -58,11 +61,13 @@ public class AbsenceTypeResourceTest extends AbstractChronivaroRestfulTest {
 		}
 
 		// Verify update
-		try (Response response = target().path("chronivaro/v1/admin/absence-types")
+		try (Response response = target()
+				.path("chronivaro/v1/admin/absence-types")
 				.request(MediaType.APPLICATION_JSON)
 				.header("Authorization", authToken)
 				.get()) {
-			List<AbsenceTypeDto> types = ChronivaroRestHelper.createGson()
+			List<AbsenceTypeDto> types = ChronivaroRestHelper
+					.createGson()
 					.fromJson(response.readEntity(String.class), new TypeToken<List<AbsenceTypeDto>>() {
 					}.getType());
 			AbsenceTypeDto found = types.stream().filter(t -> t.id().equals(absenceTypeId)).findFirst().orElseThrow();
@@ -71,7 +76,8 @@ public class AbsenceTypeResourceTest extends AbstractChronivaroRestfulTest {
 		}
 
 		// Delete
-		try (Response response = target().path("chronivaro/v1/admin/absence-types/" + absenceTypeId)
+		try (Response response = target()
+				.path("chronivaro/v1/admin/absence-types/" + absenceTypeId)
 				.request(MediaType.APPLICATION_JSON)
 				.header("Authorization", authToken)
 				.delete()) {
@@ -79,11 +85,13 @@ public class AbsenceTypeResourceTest extends AbstractChronivaroRestfulTest {
 		}
 
 		// Verify deletion
-		try (Response response = target().path("chronivaro/v1/admin/absence-types")
+		try (Response response = target()
+				.path("chronivaro/v1/admin/absence-types")
 				.request(MediaType.APPLICATION_JSON)
 				.header("Authorization", authToken)
 				.get()) {
-			List<AbsenceTypeDto> types = ChronivaroRestHelper.createGson()
+			List<AbsenceTypeDto> types = ChronivaroRestHelper
+					.createGson()
 					.fromJson(response.readEntity(String.class), new TypeToken<List<AbsenceTypeDto>>() {
 					}.getType());
 			assertFalse(types.stream().anyMatch(t -> t.id().equals(absenceTypeId)));

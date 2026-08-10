@@ -45,7 +45,7 @@ public class WorkEntryServiceTest {
 	public void shouldStartAndStopTimer() {
 		String employeeId = "emp2";
 
-  try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
 			Resource employee = new Resource(employeeId, "Jane Doe", TYPE_EMPLOYEE);
 			employee.addParameterBag(new ParameterBag(BAG_PARAMETERS, "Parameters", "Parameters"));
 			employee.addParameterBag(new ParameterBag(BAG_RELATIONS, "Relations", "Relations"));
@@ -63,7 +63,7 @@ public class WorkEntryServiceTest {
 		assertTrue(startResult.getMessage(), startResult.isOk());
 
 		// Verify Active Entry
-  try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
 			assertTrue(WorkEntryHelper.findActiveWorkEntry(tx, employeeId).isPresent());
 		}
 
@@ -73,7 +73,7 @@ public class WorkEntryServiceTest {
 		assertTrue(stopResult.getMessage(), stopResult.isOk());
 
 		// Verify No Active Entry and one completed entry
-  try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
 			assertTrue(WorkEntryHelper.findActiveWorkEntry(tx, employeeId).isEmpty());
 			List<Resource> entries = tx
 					.streamResources(TYPE_WORK_ENTRY)

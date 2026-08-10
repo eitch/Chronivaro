@@ -9,82 +9,82 @@ import AbsenceTypesView from './pages/AbsenceTypesView.js';
 import HolidayCalendarsView from './pages/HolidayCalendarsView.js';
 
 class ChronivaroApp {
-	constructor() {
-		this.appContainer = document.getElementById('app');
-		this.nav = document.querySelector('header nav');
-		
-		window.addEventListener('unauthorized', () => {
-			this.navigate('login');
-		});
+    constructor() {
+        this.appContainer = document.getElementById('app');
+        this.nav = document.querySelector('header nav');
 
-		window.addEventListener('hashchange', () => {
-			this.route();
-		});
+        window.addEventListener('unauthorized', () => {
+            this.navigate('login');
+        });
 
-		document.getElementById('logout-link').addEventListener('click', (e) => {
-			e.preventDefault();
-			AuthApi.logout();
-			this.navigate('login');
-		});
-	}
+        window.addEventListener('hashchange', () => {
+            this.route();
+        });
 
-	start() {
-		this.route();
-	}
+        document.getElementById('logout-link').addEventListener('click', (e) => {
+            e.preventDefault();
+            AuthApi.logout();
+            this.navigate('login');
+        });
+    }
 
-	route() {
-		let hash = window.location.hash.substring(1) || 'dashboard';
+    start() {
+        this.route();
+    }
 
-		if (!AuthApi.isLoggedIn() && hash !== 'login') {
-			this.navigate('login');
-			return;
-		}
+    route() {
+        let hash = window.location.hash.substring(1) || 'dashboard';
 
-		this.showView(hash);
-	}
+        if (!AuthApi.isLoggedIn() && hash !== 'login') {
+            this.navigate('login');
+            return;
+        }
 
-	navigate(page) {
-		window.location.hash = page;
-	}
+        this.showView(hash);
+    }
 
-	async showView(viewName) {
-		this.appContainer.innerHTML = '';
-		this.nav.style.display = viewName === 'login' ? 'none' : 'block';
+    navigate(page) {
+        window.location.hash = page;
+    }
 
-		let view;
-		switch (viewName) {
-			case 'login':
-				view = new LoginView(this);
-				break;
-			case 'dashboard':
-				view = new DashboardView(this);
-				break;
-			case 'my-times':
-				view = new MyTimesView(this);
-				break;
-			case 'employees':
-				view = new EmployeesView(this);
-				break;
-			case 'teams':
-				view = new TeamsView(this);
-				break;
-			case 'locations':
-				view = new LocationsView(this);
-				break;
-			case 'absence-types':
-				view = new AbsenceTypesView(this);
-				break;
-			case 'holiday-calendars':
-				view = new HolidayCalendarsView(this);
-				break;
-			default:
-				this.appContainer.innerHTML = `<h2>404</h2><p>View ${viewName} not found.</p>`;
-				return;
-		}
+    async showView(viewName) {
+        this.appContainer.innerHTML = '';
+        this.nav.style.display = viewName === 'login' ? 'none' : 'block';
 
-		const renderedView = await view.render();
-		this.appContainer.appendChild(renderedView);
-	}
+        let view;
+        switch (viewName) {
+            case 'login':
+                view = new LoginView(this);
+                break;
+            case 'dashboard':
+                view = new DashboardView(this);
+                break;
+            case 'my-times':
+                view = new MyTimesView(this);
+                break;
+            case 'employees':
+                view = new EmployeesView(this);
+                break;
+            case 'teams':
+                view = new TeamsView(this);
+                break;
+            case 'locations':
+                view = new LocationsView(this);
+                break;
+            case 'absence-types':
+                view = new AbsenceTypesView(this);
+                break;
+            case 'holiday-calendars':
+                view = new HolidayCalendarsView(this);
+                break;
+            default:
+                this.appContainer.innerHTML = `<h2>404</h2><p>View ${viewName} not found.</p>`;
+                return;
+        }
+
+        const renderedView = await view.render();
+        this.appContainer.appendChild(renderedView);
+    }
 }
 
 const app = new ChronivaroApp();

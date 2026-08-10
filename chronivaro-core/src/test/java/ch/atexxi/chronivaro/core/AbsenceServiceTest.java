@@ -45,7 +45,7 @@ public class AbsenceServiceTest {
 	public void shouldRequestAndApproveAbsence() {
 		String employeeId = "emp4";
 
-  try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
 			Resource employee = new Resource(employeeId, "Jane Doe", TYPE_EMPLOYEE);
 			employee.addParameterBag(new ParameterBag(BAG_PARAMETERS, "Parameters", "Parameters"));
 			employee.addParameterBag(new ParameterBag(BAG_RELATIONS, "Relations", "Relations"));
@@ -94,7 +94,7 @@ public class AbsenceServiceTest {
 		assertTrue(reqResult.getMessage(), reqResult.isOk());
 
 		String absenceId;
-  try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
 			Resource absence = tx.streamResources(TYPE_ABSENCE).findFirst().orElseThrow();
 			absenceId = absence.getId();
 			assertEquals(STATE_SUBMITTED, absence.getString(PARAM_STATE));
@@ -106,7 +106,7 @@ public class AbsenceServiceTest {
 		assertTrue(appResult.getMessage(), appResult.isOk());
 
 		// Verify Balance
-  try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
 			Resource absence = tx.getResourceBy(TYPE_ABSENCE, absenceId, true);
 			assertEquals(STATE_APPROVED, absence.getString(PARAM_STATE));
 
