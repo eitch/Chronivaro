@@ -1,6 +1,7 @@
 import EmployeeApi from '../api/EmployeeApi.js';
 import TeamApi from '../api/TeamApi.js';
 import LocationApi from '../api/LocationApi.js';
+import UserApi from '../api/UserApi.js';
 import NotificationDialog from '../utils/NotificationDialog.js';
 
 export default class EmployeesView {
@@ -70,8 +71,8 @@ export default class EmployeesView {
 							<input type="date" id="emp-exit-date">
 						</div>
 						<div class="form-group">
-							<label for="emp-user">User ID:</label>
-							<input type="text" id="emp-user" required>
+							<label for="emp-user">User:</label>
+							<select id="emp-user" required></select>
 						</div>
 						<div class="form-group">
 							<label><input type="checkbox" id="emp-active" checked> Active</label>
@@ -93,13 +94,15 @@ export default class EmployeesView {
         const closeBtn = container.querySelector('#close-modal');
         const teamSelect = container.querySelector('#emp-team');
         const locationSelect = container.querySelector('#emp-location');
+        const userSelect = container.querySelector('#emp-user');
 
         let editingId = null;
 
         const loadOptions = async () => {
-            const [teams, locations] = await Promise.all([
+            const [teams, locations, users] = await Promise.all([
                 TeamApi.getAll(),
-                LocationApi.getAll()
+                LocationApi.getAll(),
+                UserApi.getUsers()
             ]);
 
             if (teams.length === 0) {
@@ -112,6 +115,12 @@ export default class EmployeesView {
                 locationSelect.innerHTML = '<option value="">No locations available</option>';
             } else {
                 locationSelect.innerHTML = locations.map(l => `<option value="${l.id}">${l.name}</option>`).join('');
+            }
+
+            if (users.length === 0) {
+                userSelect.innerHTML = '<option value="">No users available</option>';
+            } else {
+                userSelect.innerHTML = users.map(u => `<option value="${u.username}">${u.username} (${u.firstname} ${u.lastname})</option>`).join('');
             }
         };
 
@@ -193,6 +202,7 @@ export default class EmployeesView {
             form.reset();
             container.querySelector('#emp-id-group').style.display = 'none';
             container.querySelector('#emp-id').required = false;
+            container.querySelector('#emp-timezone').value = Intl.DateTimeFormat().resolvedOptions().timeZone || 'Europe/Zurich';
             container.querySelector('#emp-active').checked = true;
             modal.style.display = 'block';
         });
