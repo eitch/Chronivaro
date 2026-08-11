@@ -3,6 +3,7 @@ package ch.atexxi.chronivaro.rest.resource;
 import ch.atexxi.chronivaro.core.service.*;
 import ch.atexxi.chronivaro.rest.dto.ChronivaroMapper;
 import ch.atexxi.chronivaro.rest.dto.EmployeeDto;
+import ch.atexxi.chronivaro.rest.dto.ScheduleDto;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.Context;
@@ -19,7 +20,7 @@ import li.strolch.service.api.ServiceResult;
 
 import java.util.List;
 
-import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.TYPE_EMPLOYEE;
+import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
 
 @Path("chronivaro/v1/admin/employees")
 public class EmployeeResource {
@@ -121,6 +122,48 @@ public class EmployeeResource {
 				.fromJson(data, CreateScheduleService.CreateScheduleArgument.class);
 		arg.employeeId = id;
 		ServiceResult result = serviceHandler.doService(cert, new CreateScheduleService(), arg);
+		return ResponseUtil.toResponse(result);
+	}
+
+	@GET
+	@Path("{id}/schedules")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response getSchedules(@Context HttpServletRequest request, @PathParam("id") String id) {
+		Certificate cert = (Certificate) request.getAttribute(StrolchRestfulConstants.STROLCH_CERTIFICATE);
+		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
+			List<Resource> schedules = tx
+					.streamResources(TYPE_EMPLOYMENT_SCHEDULE_VERSION)
+					.filter(s -> s.getRelationId(PARAM_EMPLOYEE).equals(id))
+					.toList();
+			List<ScheduleDto> dtos = schedules.stream().map(ChronivaroMapper::scheduleToDto).toList();
+			return Response.ok(ChronivaroRestHelper.createGson().toJson(dtos), MediaType.APPLICATION_JSON).build();
+		}
+	}
+
+	@PUT
+	@Path("{id}/schedules/{scheduleId}")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response updateSchedule(@Context HttpServletRequest request, @PathParam("id") String id,
+			@PathParam("scheduleId") String scheduleId, String data) {
+		Certificate cert = (Certificate) request.getAttribute(StrolchRestfulConstants.STROLCH_CERTIFICATE);
+		ServiceHandler serviceHandler = ChronivaroRestHelper.getServiceHandler();
+		UpdateScheduleService.UpdateScheduleArgument arg = ChronivaroRestHelper
+				.createGson()
+				.fromJson(data, UpdateScheduleService.UpdateScheduleArgument.class);
+		arg.id = scheduleId;
+		ServiceResult result = serviceHandler.doService(cert, new UpdateScheduleService(), arg);
+		return ResponseUtil.toResponse(result);
+	}
+
+	@DELETE
+	@Path("{id}/schedules/{scheduleId}")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response removeSchedule(@Context HttpServletRequest request, @PathParam("id") String id,
+			@PathParam("scheduleId") String scheduleId) {
+		Certificate cert = (Certificate) request.getAttribute(StrolchRestfulConstants.STROLCH_CERTIFICATE);
+		ServiceHandler serviceHandler = ChronivaroRestHelper.getServiceHandler();
+		ServiceResult result = serviceHandler.doService(cert, new RemoveScheduleService(), new StringArgument(scheduleId));
 		return ResponseUtil.toResponse(result);
 	}
 

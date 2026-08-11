@@ -1,6 +1,7 @@
 package ch.atexxi.chronivaro.core.service;
 
 import ch.atexxi.chronivaro.core.model.ChronivaroAuditHelper;
+import ch.atexxi.chronivaro.core.model.ScheduleHelper;
 import ch.atexxi.chronivaro.core.model.WorkEntryHelper;
 import li.strolch.model.Resource;
 import li.strolch.persistence.api.StrolchTransaction;
@@ -42,6 +43,9 @@ public class CorrectWorkEntryService
 			workEntry.setDate(PARAM_END, arg.end);
 			workEntry.setString(PARAM_COMMENT, arg.comment);
 			workEntry.setString(PARAM_SOURCE, SOURCE_MANUAL);
+
+			Resource scheduleVersion = ScheduleHelper.findScheduleVersion(tx, employeeId).orElseThrow();
+			workEntry.setRelation(PARAM_SCHEDULE, scheduleVersion);
 
 			tx.update(workEntry);
 

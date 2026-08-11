@@ -2,6 +2,7 @@ package ch.atexxi.chronivaro.core;
 
 import ch.atexxi.chronivaro.core.model.MonthSummary;
 import ch.atexxi.chronivaro.core.service.*;
+import li.strolch.model.Resource;
 import li.strolch.persistence.api.StrolchTransaction;
 import li.strolch.privilege.model.Certificate;
 import li.strolch.service.api.ServiceHandler;
@@ -130,6 +131,12 @@ public class ExtensiveIntegrationTest {
 		scheduleArg.saturday = 0;
 		scheduleArg.sunday = 0;
 		assertTrue(serviceHandler.doService(certificate, new CreateScheduleService(), scheduleArg).isOk());
+		String scheduleId;
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
+			Resource employee = tx.getResourceBy(TYPE_EMPLOYEE, employeeId, true);
+			assertTrue("Employee should have currentSchedule relation", employee.hasRelation(PARAM_CURRENT_SCHEDULE));
+			scheduleId = employee.getRelationId(PARAM_CURRENT_SCHEDULE);
+		}
 
 		// 4. Add Work Items (WorkEntries)
 		// 2026-05-01: Holiday (Friday) - should not have work entries for normal test, but we can add some to see it works
@@ -146,6 +153,16 @@ public class ExtensiveIntegrationTest {
 				"2026-05-05T17:30:00+02:00[Europe/Zurich]");
 		addWorkEntry(serviceHandler, employeeId, "2026-05-06T08:00:00+02:00[Europe/Zurich]",
 				"2026-05-06T12:00:00+02:00[Europe/Zurich]");
+
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
+			List<Resource> entries = tx.streamResources(TYPE_WORK_ENTRY)
+					.filter(e -> e.getRelationId(PARAM_EMPLOYEE).equals(employeeId))
+					.toList();
+			for (Resource entry : entries) {
+				assertTrue("WorkEntry " + entry.getId() + " should have schedule relation", entry.hasRelation(PARAM_SCHEDULE));
+				assertEquals(scheduleId, entry.getRelationId(PARAM_SCHEDULE));
+			}
+		}
 
 		// 5. Add Absence
 		CreateAbsenceTypeService.AbsenceTypeArgument typeArg = new CreateAbsenceTypeService.AbsenceTypeArgument();

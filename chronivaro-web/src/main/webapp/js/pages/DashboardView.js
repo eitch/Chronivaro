@@ -1,5 +1,6 @@
 import WorkEntryApi from '../api/WorkEntryApi.js';
 import NotificationDialog from '../utils/NotificationDialog.js';
+import Format from '../utils/Format.js';
 
 export default class DashboardView {
 
@@ -40,9 +41,9 @@ export default class DashboardView {
                 statusSpan.textContent = summary.state;
                 statusSpan.className = summary.state === 'WORKING' ? 'status-working' : 'status-not-working';
 
-                workedSpan.textContent = `${summary.actualMinutes} min`;
-                requiredSpan.textContent = `${summary.targetMinutes} min`;
-                balanceSpan.textContent = `${summary.balance} min`;
+                workedSpan.textContent = Format.duration(summary.actualMinutes);
+                requiredSpan.textContent = Format.duration(summary.targetMinutes);
+                balanceSpan.textContent = Format.duration(summary.balance);
 
                 startBtn.disabled = summary.state === 'WORKING';
                 stopBtn.disabled = summary.state !== 'WORKING';

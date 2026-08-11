@@ -1,148 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <StrolchModel xmlns="https://strolch.li/schema/StrolchModel.xsd">
 
-    <Resource Id="Employee" Name="Template Employee" Type="Template">
-        <ParameterBag Id="parameters" Name="Parameters" Type="Parameters">
-            <Parameter Id="personalNumber" Name="Personal Number" Type="String" Value=""/>
-            <Parameter Id="displayName" Name="Display Name" Type="String" Value=""/>
-            <Parameter Id="timezone" Name="Timezone" Type="String" Value="Europe/Zurich"/>
-            <Parameter Id="joinDate" Name="Join Date" Type="Date" Value="1970-01-01T00:00:00.000+01:00"/>
-            <Parameter Id="exitDate" Name="Exit Date" Type="Date" Value="9999-12-31T23:59:59.999+01:00"/>
-            <Parameter Id="active" Name="Active" Type="Boolean" Value="true"/>
-        </ParameterBag>
-        <ParameterBag Id="relations" Name="Relations" Type="Relations">
-            <Parameter Id="location" Name="Location" Type="String" Value=""/>
-            <Parameter Id="primaryTeam" Name="Primary Team" Type="String" Value=""/>
-            <Parameter Id="user" Name="User" Type="String" Value=""/>
-        </ParameterBag>
-    </Resource>
+    <IncludeFile file="Templates.xml"/>
 
-    <Resource Id="WorkEntry" Name="Template Work Entry" Type="Template">
+    <Resource Id="Standard-8h-Mon-Fri" Name="Standard Monday-Friday 8h" Type="EmploymentScheduleTemplate">
         <ParameterBag Id="parameters" Name="Parameters" Type="Parameters">
-            <Parameter Id="start" Name="Start" Type="Date" Value="1970-01-01T00:00:00.000+01:00"/>
-            <Parameter Id="end" Name="End" Type="Date" Value="1970-01-01T00:00:00.000+01:00"/>
-            <Parameter Id="source" Name="Source" Type="String" Value=""/>
-            <Parameter Id="comment" Name="Comment" Type="String" Value=""/>
-            <Parameter Id="createdBy" Name="Created By" Type="String" Value=""/>
-        </ParameterBag>
-        <ParameterBag Id="relations" Name="Relations" Type="Relations">
-            <Parameter Id="employee" Name="Employee" Type="String" Value=""/>
-        </ParameterBag>
-    </Resource>
-
-    <Resource Id="Team" Name="Template Team" Type="Template">
-        <ParameterBag Id="parameters" Name="Parameters" Type="Parameters">
-            <Parameter Id="name" Name="Name" Type="String" Value=""/>
-        </ParameterBag>
-    </Resource>
-
-    <Resource Id="Location" Name="Template Location" Type="Template">
-        <ParameterBag Id="parameters" Name="Parameters" Type="Parameters">
-            <Parameter Id="name" Name="Name" Type="String" Value=""/>
-            <Parameter Id="timezone" Name="Timezone" Type="String" Value="Europe/Zurich"/>
-        </ParameterBag>
-        <ParameterBag Id="relations" Name="Relations" Type="Relations">
-            <Parameter Id="holidayCalendar" Name="Holiday Calendar" Type="String" Value=""/>
-        </ParameterBag>
-    </Resource>
-
-    <Resource Id="AbsenceType" Name="Template Absence Type" Type="Template">
-        <ParameterBag Id="parameters" Name="Parameters" Type="Parameters">
-            <Parameter Id="code" Name="Code" Type="String" Value=""/>
-            <Parameter Id="name" Name="Name" Type="String" Value=""/>
-            <Parameter Id="countAsTargetTime" Name="Count As Target Time" Type="Boolean" Value="false"/>
-            <Parameter Id="reduceVacationCredit" Name="Reduce Vacation Credit" Type="Boolean" Value="false"/>
-            <Parameter Id="paid" Name="Paid" Type="Boolean" Value="false"/>
-            <Parameter Id="approvalRequired" Name="Approval Required" Type="Boolean" Value="true"/>
-            <Parameter Id="durationTypes" Name="Duration Types" Type="StringList" Value="FULL_DAY,HALF_DAY,HOURS"/>
-        </ParameterBag>
-    </Resource>
-
-    <Resource Id="Absence" Name="Template Absence" Type="Template">
-        <ParameterBag Id="parameters" Name="Parameters" Type="Parameters">
-            <Parameter Id="start" Name="Start" Type="Date" Value="1970-01-01T00:00:00.000+01:00"/>
-            <Parameter Id="end" Name="End" Type="Date" Value="1970-01-01T00:00:00.000+01:00"/>
-            <Parameter Id="durationType" Name="Duration Type" Type="String" Value="FULL_DAY"/>
-            <Parameter Id="dayPart" Name="Day Part" Type="String" Value=""/>
-            <Parameter Id="minutes" Name="Minutes" Type="Integer" Value="0"/>
-            <Parameter Id="comment" Name="Comment" Type="String" Value=""/>
-            <Parameter Id="state" Name="State" Type="String" Value="DRAFT"/>
-        </ParameterBag>
-        <ParameterBag Id="relations" Name="Relations" Type="Relations">
-            <Parameter Id="employee" Name="Employee" Type="String" Value=""/>
-            <Parameter Id="absenceType" Name="Absence Type" Type="String" Value=""/>
-        </ParameterBag>
-    </Resource>
-
-    <Resource Id="VacationAccountEntry" Name="Template Vacation Account Entry" Type="Template">
-        <ParameterBag Id="parameters" Name="Parameters" Type="Parameters">
-            <Parameter Id="date" Name="Date" Type="Date" Value="1970-01-01T00:00:00.000+01:00"/>
-            <Parameter Id="vacationType" Name="Vacation Type" Type="String" Value=""/>
-            <Parameter Id="value" Name="Value" Type="Integer" Value="0"/>
-            <Parameter Id="comment" Name="Comment" Type="String" Value=""/>
-        </ParameterBag>
-        <ParameterBag Id="relations" Name="Relations" Type="Relations">
-            <Parameter Id="employee" Name="Employee" Type="String" Value=""/>
-            <Parameter Id="absence" Name="Absence" Type="String" Value=""/>
-        </ParameterBag>
-    </Resource>
-
-    <Resource Id="HolidayCalendar" Name="Template Holiday Calendar" Type="Template">
-        <ParameterBag Id="parameters" Name="Parameters" Type="Parameters">
-            <Parameter Id="name" Name="Name" Type="String" Value=""/>
-        </ParameterBag>
-    </Resource>
-
-    <Resource Id="Holiday" Name="Template Holiday" Type="Template">
-        <ParameterBag Id="parameters" Name="Parameters" Type="Parameters">
-            <Parameter Id="name" Name="Name" Type="String" Value=""/>
-            <Parameter Id="date" Name="Date" Type="Date" Value="1970-01-01T00:00:00.000+01:00"/>
-            <Parameter Id="creditFactor" Name="Credit Factor" Type="Float" Value="1.0"/>
-        </ParameterBag>
-        <ParameterBag Id="relations" Name="Relations" Type="Relations">
-            <Parameter Id="holidayCalendar" Name="Holiday Calendar" Type="String" Value=""/>
-        </ParameterBag>
-    </Resource>
-
-    <Resource Id="TimePeriod" Name="Template Time Period" Type="Template">
-        <ParameterBag Id="parameters" Name="Parameters" Type="Parameters">
-            <Parameter Id="yearMonth" Name="Year Month" Type="String" Value=""/>
-            <Parameter Id="state" Name="State" Type="String" Value="OPEN"/>
-        </ParameterBag>
-        <ParameterBag Id="relations" Name="Relations" Type="Relations">
-            <Parameter Id="employee" Name="Employee" Type="String" Value=""/>
-        </ParameterBag>
-    </Resource>
-
-    <Resource Id="EmploymentScheduleVersion" Name="Template Employment Schedule Version" Type="Template">
-        <ParameterBag Id="parameters" Name="Parameters" Type="Parameters">
-            <Parameter Id="validFrom" Name="Valid From" Type="Date" Value="1970-01-01T00:00:00.000+01:00"/>
-            <Parameter Id="validTo" Name="Valid To" Type="Date" Value="9999-12-31T23:59:59.999+01:00"/>
-            <Parameter Id="employmentRate" Name="Employment Rate" Type="Float" Value="1.0"/>
-            <Parameter Id="weeklyTargetMinutes" Name="Weekly Target Minutes" Type="Integer" Value="0"/>
-            <Parameter Id="dailyTargetMinutes" Name="Daily Target Minutes" Type="Integer" Value="0"/>
-            <Parameter Id="dailyTargetMinutesMonday" Name="Daily Target Minutes Monday" Type="Integer" Value="0"/>
-            <Parameter Id="dailyTargetMinutesTuesday" Name="Daily Target Minutes Tuesday" Type="Integer" Value="0"/>
-            <Parameter Id="dailyTargetMinutesWednesday" Name="Daily Target Minutes Wednesday" Type="Integer" Value="0"/>
-            <Parameter Id="dailyTargetMinutesThursday" Name="Daily Target Minutes Thursday" Type="Integer" Value="0"/>
-            <Parameter Id="dailyTargetMinutesFriday" Name="Daily Target Minutes Friday" Type="Integer" Value="0"/>
+            <Parameter Id="name" Name="Name" Type="String" Value="Standard Monday-Friday 8h"/>
+            <Parameter Id="dailyTargetMinutesMonday" Name="Daily Target Minutes Monday" Type="Integer" Value="480"/>
+            <Parameter Id="dailyTargetMinutesTuesday" Name="Daily Target Minutes Tuesday" Type="Integer" Value="480"/>
+            <Parameter Id="dailyTargetMinutesWednesday" Name="Daily Target Minutes Wednesday" Type="Integer" Value="480"/>
+            <Parameter Id="dailyTargetMinutesThursday" Name="Daily Target Minutes Thursday" Type="Integer" Value="480"/>
+            <Parameter Id="dailyTargetMinutesFriday" Name="Daily Target Minutes Friday" Type="Integer" Value="480"/>
             <Parameter Id="dailyTargetMinutesSaturday" Name="Daily Target Minutes Saturday" Type="Integer" Value="0"/>
             <Parameter Id="dailyTargetMinutesSunday" Name="Daily Target Minutes Sunday" Type="Integer" Value="0"/>
-        </ParameterBag>
-        <ParameterBag Id="relations" Name="Relations" Type="Relations">
-            <Parameter Id="employee" Name="Employee" Type="String" Value=""/>
-        </ParameterBag>
-    </Resource>
-
-    <Resource Id="ChronivaroAuditEvent" Name="Template Chronivaro Audit Event" Type="Template">
-        <ParameterBag Id="parameters" Name="Parameters" Type="Parameters">
-            <Parameter Id="elementType" Name="Element Type" Type="String" Value=""/>
-            <Parameter Id="elementId" Name="Element Id" Type="String" Value=""/>
-            <Parameter Id="name" Name="Name" Type="String" Value=""/>
-            <Parameter Id="oldValue" Name="Old Value" Type="String" Value=""/>
-            <Parameter Id="newValue" Name="New Value" Type="String" Value=""/>
-            <Parameter Id="date" Name="Date" Type="Date" Value="1970-01-01T00:00:00.000+01:00"/>
-            <Parameter Id="createdBy" Name="Created By" Type="String" Value=""/>
         </ParameterBag>
     </Resource>
 

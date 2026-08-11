@@ -7,6 +7,7 @@ import TeamsView from './pages/TeamsView.js';
 import LocationsView from './pages/LocationsView.js';
 import AbsenceTypesView from './pages/AbsenceTypesView.js';
 import HolidayCalendarsView from './pages/HolidayCalendarsView.js';
+import SchedulesView from './pages/SchedulesView.js';
 
 class ChronivaroApp {
     constructor() {
@@ -43,11 +44,28 @@ class ChronivaroApp {
         this.showView(hash);
     }
 
-    navigate(page) {
-        window.location.hash = page;
+    navigate(page, params) {
+        if (params) {
+            const query = Object.keys(params).map(k => `${encodeURIComponent(k)}=${encodeURIComponent(params[k])}`).join('&');
+            window.location.hash = `${page}?${query}`;
+        } else {
+            window.location.hash = page;
+        }
     }
 
-    async showView(viewName) {
+    async showView(hash) {
+        let viewName = hash;
+        let params = {};
+        if (hash.includes('?')) {
+            const parts = hash.split('?');
+            viewName = parts[0];
+            const query = parts[1];
+            query.split('&').forEach(p => {
+                const kv = p.split('=');
+                params[decodeURIComponent(kv[0])] = decodeURIComponent(kv[1]);
+            });
+        }
+
         this.appContainer.innerHTML = '';
         this.nav.style.display = viewName === 'login' ? 'none' : 'block';
 
@@ -85,12 +103,15 @@ class ChronivaroApp {
             case 'holiday-calendars':
                 view = new HolidayCalendarsView(this);
                 break;
+            case 'schedules':
+                view = new SchedulesView(this);
+                break;
             default:
                 this.appContainer.innerHTML = `<h2>404</h2><p>View ${viewName} not found.</p>`;
                 return;
         }
 
-        const renderedView = await view.render();
+        const renderedView = await view.render(params);
         this.appContainer.appendChild(renderedView);
     }
 }

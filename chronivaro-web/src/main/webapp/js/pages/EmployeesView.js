@@ -139,6 +139,7 @@ export default class EmployeesView {
 						<td>${emp.active ? 'Yes' : 'No'}</td>
 						<td>
 							<button class="ghost edit-btn" data-id="${emp.id}">Edit</button>
+							<button class="ghost schedules-btn" data-id="${emp.id}">Schedules</button>
 							<button class="secondary delete-btn" data-id="${emp.id}">Delete</button>
 						</td>
 					`;
@@ -147,6 +148,9 @@ export default class EmployeesView {
 
                 container.querySelectorAll('.edit-btn').forEach(btn => {
                     btn.addEventListener('click', () => editEmployee(btn.dataset.id));
+                });
+                container.querySelectorAll('.schedules-btn').forEach(btn => {
+                    btn.addEventListener('click', () => this.app.navigate('schedules', {employeeId: btn.dataset.id}));
                 });
                 container.querySelectorAll('.delete-btn').forEach(btn => {
                     btn.addEventListener('click', () => deleteEmployee(btn.dataset.id));

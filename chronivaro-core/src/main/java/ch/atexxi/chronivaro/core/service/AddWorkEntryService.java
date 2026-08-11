@@ -1,5 +1,6 @@
 package ch.atexxi.chronivaro.core.service;
 
+import ch.atexxi.chronivaro.core.model.ScheduleHelper;
 import ch.atexxi.chronivaro.core.model.WorkEntryHelper;
 import li.strolch.model.Resource;
 import li.strolch.persistence.api.StrolchTransaction;
@@ -21,9 +22,8 @@ public class AddWorkEntryService extends AbstractService<AddWorkEntryService.Add
 		DBC.PRE.assertNotNull("end must be set", arg.end);
 
 		try (StrolchTransaction tx = openArgOrUserTx(arg)) {
-			if (arg.end.isBefore(arg.start)) {
+			if (arg.end.isBefore(arg.start))
 				throw new IllegalStateException("End time cannot be before start time!");
-			}
 
 			WorkEntryHelper.validateNoOverlap(tx, arg.employeeId, arg.start, arg.end, null);
 
@@ -37,6 +37,9 @@ public class AddWorkEntryService extends AbstractService<AddWorkEntryService.Add
 			workEntry.setString(PARAM_CREATED_BY, tx.getCertificate().getUsername());
 			if (arg.comment != null)
 				workEntry.setString(PARAM_COMMENT, arg.comment);
+
+			Resource scheduleVersion = ScheduleHelper.findScheduleVersion(tx, arg.employeeId).orElseThrow();
+			workEntry.setRelation(PARAM_SCHEDULE, scheduleVersion);
 
 			tx.add(workEntry);
 			tx.commitOnClose();

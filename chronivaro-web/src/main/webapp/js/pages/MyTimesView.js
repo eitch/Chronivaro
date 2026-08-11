@@ -1,4 +1,5 @@
 import WorkEntryApi from '../api/WorkEntryApi.js';
+import Format from '../utils/Format.js';
 
 export default class MyTimesView {
 
@@ -23,7 +24,7 @@ export default class MyTimesView {
 					<tr>
 						<th>Start</th>
 						<th>End</th>
-						<th>Duration (min)</th>
+						<th>Duration</th>
 						<th>Comment</th>
 					</tr>
 				</thead>
@@ -66,7 +67,7 @@ export default class MyTimesView {
                     row.innerHTML = `
 						<td>${new Date(entry.start).toLocaleString()}</td>
 						<td>${entry.end ? new Date(entry.end).toLocaleString() : 'Running...'}</td>
-						<td>${entry.durationMinutes}</td>
+						<td>${Format.duration(entry.durationMinutes)}</td>
 						<td>${entry.comment || ''}</td>
 					`;
                     tbody.appendChild(row);

@@ -33,10 +33,25 @@ public class CreateScheduleService
 			schedule.setInteger(PARAM_DAILY_TARGET_MINUTES_SUNDAY, arg.sunday);
 
 			tx.add(schedule);
+			updateEmployeeCurrentSchedule(tx, arg.employeeId, schedule, arg.validFrom, arg.validTo);
 			tx.commitOnClose();
 		}
 
 		return ServiceResult.success();
+	}
+
+	private void updateEmployeeCurrentSchedule(StrolchTransaction tx, String employeeId, Resource schedule,
+			ZonedDateTime validFrom, ZonedDateTime validTo) {
+
+		ZonedDateTime now = ZonedDateTime.now();
+		if (now.isBefore(validFrom))
+			return;
+		if (validTo != null && now.isAfter(validTo))
+			return;
+
+		Resource employee = tx.getResourceBy(TYPE_EMPLOYEE, employeeId, true);
+		employee.setRelation(PARAM_CURRENT_SCHEDULE, schedule);
+		tx.update(employee);
 	}
 
 	@Override

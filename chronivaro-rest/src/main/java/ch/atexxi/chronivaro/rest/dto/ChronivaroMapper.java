@@ -92,4 +92,28 @@ public class ChronivaroMapper {
 				holiday.getDate(PARAM_DATE).toLocalDate(), holiday.getString(PARAM_NAME),
 				holiday.getDouble(PARAM_CREDIT_FACTOR));
 	}
+
+	public static ScheduleDto scheduleToDto(Resource schedule) {
+		return new ScheduleDto(schedule.getId(), schedule.getRelationId(PARAM_EMPLOYEE),
+				schedule.getDate(PARAM_VALID_FROM),
+				schedule.hasParameter(PARAM_VALID_TO) ? schedule.getDate(PARAM_VALID_TO) : null,
+				schedule.getInteger(PARAM_DAILY_TARGET_MINUTES_MONDAY),
+				schedule.getInteger(PARAM_DAILY_TARGET_MINUTES_TUESDAY),
+				schedule.getInteger(PARAM_DAILY_TARGET_MINUTES_WEDNESDAY),
+				schedule.getInteger(PARAM_DAILY_TARGET_MINUTES_THURSDAY),
+				schedule.getInteger(PARAM_DAILY_TARGET_MINUTES_FRIDAY),
+				schedule.getInteger(PARAM_DAILY_TARGET_MINUTES_SATURDAY),
+				schedule.getInteger(PARAM_DAILY_TARGET_MINUTES_SUNDAY));
+	}
+
+	public static ScheduleTemplateDto scheduleTemplateToDto(Resource template) {
+		return new ScheduleTemplateDto(template.getId(), template.getString(PARAM_NAME),
+				template.getInteger(PARAM_DAILY_TARGET_MINUTES_MONDAY),
+				template.getInteger(PARAM_DAILY_TARGET_MINUTES_TUESDAY),
+				template.getInteger(PARAM_DAILY_TARGET_MINUTES_WEDNESDAY),
+				template.getInteger(PARAM_DAILY_TARGET_MINUTES_THURSDAY),
+				template.getInteger(PARAM_DAILY_TARGET_MINUTES_FRIDAY),
+				template.getInteger(PARAM_DAILY_TARGET_MINUTES_SATURDAY),
+				template.getInteger(PARAM_DAILY_TARGET_MINUTES_SUNDAY));
+	}
 }

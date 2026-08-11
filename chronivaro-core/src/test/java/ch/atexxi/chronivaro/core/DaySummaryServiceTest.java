@@ -149,4 +149,41 @@ public class DaySummaryServiceTest {
 		assertEquals(1, summary.workEntries().size());
 		assertEquals("...", summary.workEntries().getFirst().end());
 	}
+
+	@Test
+	public void shouldCalculateDaySummaryWithFallbackTargetMinutes() {
+		String employeeId = "emp5";
+		LocalDate date = LocalDate.of(2026, 2, 2); // Monday
+
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
+			Resource employee = tx.getResourceTemplate(TYPE_EMPLOYEE, true);
+			employee.setId(employeeId);
+			employee.setName("Fallback Doe");
+			employee.setBoolean(PARAM_ACTIVE, true);
+			employee.setDate(PARAM_JOIN_DATE, ZonedDateTime.parse("2026-01-01T00:00:00Z"));
+			employee.setString(PARAM_TIMEZONE, "Europe/Zurich");
+			tx.add(employee);
+
+			Resource schedule = tx.getResourceTemplate(TYPE_EMPLOYMENT_SCHEDULE_VERSION, true);
+			schedule.setName("Schedule");
+			schedule.setRelation(PARAM_EMPLOYEE, employee);
+			schedule.setDate(PARAM_VALID_FROM, ZonedDateTime.parse("2026-01-01T00:00:00Z"));
+			// Only set the general dailyTargetMinutes
+			schedule.setInteger(PARAM_DAILY_TARGET_MINUTES, 480);
+			tx.add(schedule);
+
+			tx.commitOnClose();
+		}
+
+		ServiceHandler serviceHandler = runtimeMock.getServiceHandler();
+		DaySummaryService.DaySummaryArgument arg = new DaySummaryService.DaySummaryArgument();
+		arg.employeeId = employeeId;
+		arg.date = date;
+
+		DaySummaryService.DaySummaryResult result = serviceHandler.doService(certificate, new DaySummaryService(), arg);
+		assertEquals(ServiceResult.success().getState(), result.getState());
+
+		DaySummary summary = result.daySummary;
+		assertEquals(480, summary.targetMinutes());
+	}
 }

@@ -5,27 +5,15 @@ import li.strolch.persistence.api.StrolchTransaction;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.util.Comparator;
 import java.util.Optional;
 
 import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
 
 public class ScheduleHelper {
 
-	public static Optional<Resource> findScheduleVersion(StrolchTransaction tx, String employeeId, LocalDate date) {
-		return tx
-				.streamResources(TYPE_EMPLOYMENT_SCHEDULE_VERSION)
-				.filter(v -> v.getRelationId(PARAM_EMPLOYEE).equals(employeeId))
-				.filter(v -> {
-					LocalDate validFrom = v.getDate(PARAM_VALID_FROM).toLocalDate();
-					if (date.isBefore(validFrom))
-						return false;
-					if (!v.hasParameter(PARAM_VALID_TO) || v.getDate(PARAM_VALID_TO) == null)
-						return true;
-					LocalDate validTo = v.getDate(PARAM_VALID_TO).toLocalDate();
-					return !date.isAfter(validTo);
-				})
-				.max(Comparator.comparing(v -> v.getDate(PARAM_VALID_FROM)));
+	public static Optional<Resource> findScheduleVersion(StrolchTransaction tx, String employeeId) {
+		Resource employee = tx.getResourceBy(TYPE_EMPLOYEE, employeeId, true);
+		return Optional.ofNullable(tx.getResourceByRelation(employee, PARAM_CURRENT_SCHEDULE, true));
 	}
 
 	public static int getTargetMinutes(StrolchTransaction tx, String employeeId, LocalDate date) {
@@ -33,11 +21,17 @@ public class ScheduleHelper {
 		if (!ChronivaroModelHelper.isEmployeeActive(employee, date))
 			return 0;
 
-		Optional<Resource> version = findScheduleVersion(tx, employeeId, date);
+		Optional<Resource> version;
+		if (date.equals(LocalDate.now()) && employee.hasRelation(PARAM_CURRENT_SCHEDULE)) {
+			version = Optional.of(tx.getResourceBy(employee.getRelationP(PARAM_CURRENT_SCHEDULE), true));
+		} else {
+			version = findScheduleVersion(tx, employeeId);
+		}
+
 		if (version.isEmpty())
 			return 0;
 
-		Resource v = version.get();
+		Resource scheduleVersion = version.get();
 		DayOfWeek dayOfWeek = date.getDayOfWeek();
 		String paramName = PARAM_DAILY_TARGET_MINUTES + dayOfWeek.name().charAt(0) + dayOfWeek
 				.name()
@@ -47,8 +41,15 @@ public class ScheduleHelper {
 		// In Strolch we can use dynamic parameter names if we define them correctly
 		// But for now let's assume parameters are named like dailyTargetMinutesMonday, etc.
 		// Or we use a bag for daily values
-		if (v.hasParameter(paramName)) {
-			return v.getInteger(paramName);
+		if (scheduleVersion.hasParameter(paramName)) {
+			int targetMinutes = scheduleVersion.getInteger(paramName);
+			if (targetMinutes > 0)
+				return targetMinutes;
+		}
+
+		// Fallback to general dailyTargetMinutes
+		if (scheduleVersion.hasParameter(PARAM_DAILY_TARGET_MINUTES)) {
+			return scheduleVersion.getInteger(PARAM_DAILY_TARGET_MINUTES);
 		}
 
 		return 0;

@@ -17,6 +17,7 @@ public class ChronivaroConstants {
 	public static final String TYPE_TIME_PERIOD = "TimePeriod";
 	public static final String TYPE_AUDIT_EVENT = "ChronivaroAuditEvent";
 	public static final String TYPE_EMPLOYMENT_SCHEDULE_VERSION = "EmploymentScheduleVersion";
+	public static final String TYPE_EMPLOYMENT_SCHEDULE_TEMPLATE = "EmploymentScheduleTemplate";
 
 	public static final String PARAM_PERSONAL_NUMBER = "personalNumber";
 	public static final String PARAM_DISPLAY_NAME = "displayName";
@@ -30,6 +31,8 @@ public class ChronivaroConstants {
 	public static final String PARAM_EMPLOYEE = "employee";
 	public static final String PARAM_ABSENCE = "absence";
 	public static final String PARAM_TEAM = "team";
+	public static final String PARAM_CURRENT_SCHEDULE = "currentSchedule";
+	public static final String PARAM_SCHEDULE = "schedule";
 
 	public static final String PARAM_VALID_FROM = "validFrom";
 	public static final String PARAM_VALID_TO = "validTo";

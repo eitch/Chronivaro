@@ -1,6 +1,7 @@
 package ch.atexxi.chronivaro.core.service;
 
 import ch.atexxi.chronivaro.core.model.ChronivaroModelHelper;
+import ch.atexxi.chronivaro.core.model.ScheduleHelper;
 import ch.atexxi.chronivaro.core.model.WorkEntryHelper;
 import li.strolch.model.Resource;
 import li.strolch.persistence.api.StrolchTransaction;
@@ -36,6 +37,9 @@ public class StartTimerService extends AbstractService<StringArgument, ServiceRe
 			workEntry.setDate(PARAM_START, now);
 			workEntry.setString(PARAM_SOURCE, SOURCE_TIMER);
 			workEntry.setString(PARAM_CREATED_BY, username);
+
+			Resource scheduleVersion = ScheduleHelper.findScheduleVersion(tx, employee.getId()).orElseThrow();
+			workEntry.setRelation(PARAM_SCHEDULE, scheduleVersion);
 
 			WorkEntryHelper.validateNoOverlap(tx, employee.getId(), now, null, null);
 
