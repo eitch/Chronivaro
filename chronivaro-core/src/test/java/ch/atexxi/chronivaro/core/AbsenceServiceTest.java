@@ -51,7 +51,7 @@ public class AbsenceServiceTest {
 			employee.setDate(PARAM_JOIN_DATE, ZonedDateTime.parse("2026-01-01T00:00:00Z"));
 			tx.add(employee);
 
-			Resource schedule = tx.getResourceTemplate(TYPE_EMPLOYMENT_SCHEDULE_VERSION, true);
+			Resource schedule = tx.getResourceTemplate(TYPE_EMPLOYMENT_SCHEDULE, true);
 			schedule.setName("Schedule");
 			schedule.setRelation(PARAM_EMPLOYEE, employee);
 			schedule.setDate(PARAM_VALID_FROM, ZonedDateTime.parse("2026-01-01T00:00:00Z"));

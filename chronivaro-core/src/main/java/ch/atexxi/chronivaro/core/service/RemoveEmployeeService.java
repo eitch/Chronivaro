@@ -19,7 +19,7 @@ public class RemoveEmployeeService extends AbstractService<StringArgument, Servi
 
 			// cascading remove related data
 			String[] types = {TYPE_WORK_ENTRY, TYPE_ABSENCE, TYPE_VACATION_ACCOUNT_ENTRY, TYPE_TIME_PERIOD,
-					TYPE_EMPLOYMENT_SCHEDULE_VERSION};
+					TYPE_EMPLOYMENT_SCHEDULE};
 
 			for (String type : types) {
 				tx

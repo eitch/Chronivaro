@@ -72,7 +72,7 @@ public class UpdateAndRemoveScheduleServiceTest {
 		String scheduleId;
 		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
 			List<Resource> schedules = tx
-					.streamResources(TYPE_EMPLOYMENT_SCHEDULE_VERSION)
+					.streamResources(TYPE_EMPLOYMENT_SCHEDULE)
 					.filter(s -> s.getRelationId(PARAM_EMPLOYEE).equals(employeeId))
 					.toList();
 			assertEquals(1, schedules.size());
@@ -96,7 +96,7 @@ public class UpdateAndRemoveScheduleServiceTest {
 		assertTrue(updateResult.getMessage(), updateResult.isOk());
 
 		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
-			Resource schedule = tx.getResourceBy(TYPE_EMPLOYMENT_SCHEDULE_VERSION, scheduleId);
+			Resource schedule = tx.getResourceBy(TYPE_EMPLOYMENT_SCHEDULE, scheduleId);
 			assertEquals(updateArg.validFrom, schedule.getDate(PARAM_VALID_FROM));
 			assertEquals(updateArg.validTo, schedule.getDate(PARAM_VALID_TO));
 			assertEquals(400, (int) schedule.getInteger(PARAM_DAILY_TARGET_MINUTES_MONDAY));
@@ -108,7 +108,7 @@ public class UpdateAndRemoveScheduleServiceTest {
 		assertTrue(removeResult.getMessage(), removeResult.isOk());
 
 		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
-			Resource schedule = tx.getResourceBy(TYPE_EMPLOYMENT_SCHEDULE_VERSION, scheduleId);
+			Resource schedule = tx.getResourceBy(TYPE_EMPLOYMENT_SCHEDULE, scheduleId);
 			assertNull(schedule);
 		}
 	}
@@ -144,7 +144,7 @@ public class UpdateAndRemoveScheduleServiceTest {
 		String scheduleId;
 		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
 			scheduleId = tx
-					.streamResources(TYPE_EMPLOYMENT_SCHEDULE_VERSION)
+					.streamResources(TYPE_EMPLOYMENT_SCHEDULE)
 					.filter(s -> s.getRelationId(PARAM_EMPLOYEE).equals(employeeId))
 					.findFirst()
 					.get()
@@ -200,7 +200,7 @@ public class UpdateAndRemoveScheduleServiceTest {
 		String initialScheduleId;
 		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
 			initialScheduleId = tx
-					.streamResources(TYPE_EMPLOYMENT_SCHEDULE_VERSION)
+					.streamResources(TYPE_EMPLOYMENT_SCHEDULE)
 					.filter(s -> s.getRelationId(PARAM_EMPLOYEE).equals(employeeId))
 					.findFirst()
 					.get()
@@ -224,11 +224,11 @@ public class UpdateAndRemoveScheduleServiceTest {
 
 		// 3. Verify
 		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
-			Resource oldVersion = tx.getResourceBy(TYPE_EMPLOYMENT_SCHEDULE_VERSION, initialScheduleId, true);
+			Resource oldVersion = tx.getResourceBy(TYPE_EMPLOYMENT_SCHEDULE, initialScheduleId, true);
 			assertTrue(oldVersion.hasParameter(PARAM_VALID_TO));
 			assertEquals("2026-01-31", oldVersion.getDate(PARAM_VALID_TO).toLocalDate().toString());
 
-			List<Resource> versions = tx.streamResources(TYPE_EMPLOYMENT_SCHEDULE_VERSION)
+			List<Resource> versions = tx.streamResources(TYPE_EMPLOYMENT_SCHEDULE)
 					.filter(s -> s.getRelationId(PARAM_EMPLOYEE).equals(employeeId))
 					.toList();
 			assertEquals(2, versions.size());
@@ -275,7 +275,7 @@ public class UpdateAndRemoveScheduleServiceTest {
 			assertTrue("Employee should have currentSchedule relation", employee.hasRelation(PARAM_CURRENT_SCHEDULE));
 			String scheduleId = employee.getRelationId(PARAM_CURRENT_SCHEDULE);
 
-			Resource schedule = tx.getResourceBy(TYPE_EMPLOYMENT_SCHEDULE_VERSION, scheduleId, true);
+			Resource schedule = tx.getResourceBy(TYPE_EMPLOYMENT_SCHEDULE, scheduleId, true);
 			assertEquals(employeeId, schedule.getRelationId(PARAM_EMPLOYEE));
 		}
 

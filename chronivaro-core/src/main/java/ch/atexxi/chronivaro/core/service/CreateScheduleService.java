@@ -16,7 +16,7 @@ public class CreateScheduleService
 	@Override
 	protected ServiceResult internalDoService(CreateScheduleArgument arg) throws Exception {
 		try (StrolchTransaction tx = openArgOrUserTx(arg)) {
-			Resource schedule = tx.getResourceTemplate(TYPE_EMPLOYMENT_SCHEDULE_VERSION, true);
+			Resource schedule = tx.getResourceTemplate(TYPE_EMPLOYMENT_SCHEDULE, true);
 			schedule.setName("Schedule for " + arg.employeeId);
 
 			schedule.setRelation(PARAM_EMPLOYEE, tx.getResourceBy(TYPE_EMPLOYEE, arg.employeeId, true));

@@ -17,7 +17,7 @@ public class RemoveScheduleService extends AbstractService<StringArgument, Servi
 	@Override
 	protected ServiceResult internalDoService(StringArgument arg) throws Exception {
 		try (StrolchTransaction tx = openArgOrUserTx(arg)) {
-			Resource schedule = tx.getResourceBy(TYPE_EMPLOYMENT_SCHEDULE_VERSION, arg.value, true);
+			Resource schedule = tx.getResourceBy(TYPE_EMPLOYMENT_SCHEDULE, arg.value, true);
 
 			String employeeId = schedule.getRelationId(PARAM_EMPLOYEE);
 			ZonedDateTime validFrom = schedule.getDate(PARAM_VALID_FROM);

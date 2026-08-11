@@ -16,7 +16,7 @@ public class ChronivaroConstants {
 	public static final String TYPE_HOLIDAY = "Holiday";
 	public static final String TYPE_TIME_PERIOD = "TimePeriod";
 	public static final String TYPE_AUDIT_EVENT = "ChronivaroAuditEvent";
-	public static final String TYPE_EMPLOYMENT_SCHEDULE_VERSION = "EmploymentScheduleVersion";
+	public static final String TYPE_EMPLOYMENT_SCHEDULE = "EmploymentSchedule";
 	public static final String TYPE_EMPLOYMENT_SCHEDULE_TEMPLATE = "EmploymentScheduleTemplate";
 
 	public static final String PARAM_PERSONAL_NUMBER = "personalNumber";

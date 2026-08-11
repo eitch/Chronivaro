@@ -53,7 +53,7 @@ public class DaySummaryServiceTest {
 			employee.setString(PARAM_TIMEZONE, "Europe/Zurich");
 			tx.add(employee);
 
-			Resource schedule = tx.getResourceTemplate(TYPE_EMPLOYMENT_SCHEDULE_VERSION, true);
+			Resource schedule = tx.getResourceTemplate(TYPE_EMPLOYMENT_SCHEDULE, true);
 			schedule.setName("Schedule");
 			schedule.setRelation(PARAM_EMPLOYEE, employee);
 			schedule.setDate(PARAM_VALID_FROM, ZonedDateTime.parse("2026-01-01T00:00:00Z"));
@@ -113,16 +113,22 @@ public class DaySummaryServiceTest {
 			employee.setString(PARAM_TIMEZONE, "Europe/Zurich");
 			tx.add(employee);
 
-			Resource schedule = tx.getResourceTemplate(TYPE_EMPLOYMENT_SCHEDULE_VERSION, true);
+			Resource schedule = tx.getResourceTemplate(TYPE_EMPLOYMENT_SCHEDULE, true);
 			schedule.setName("Schedule");
 			schedule.setRelation(PARAM_EMPLOYEE, employee);
 			schedule.setDate(PARAM_VALID_FROM, ZonedDateTime.parse("2026-01-01T00:00:00Z"));
-			schedule.setInteger(PARAM_DAILY_TARGET_MINUTES + date.getDayOfWeek().name().substring(0, 1).toUpperCase()
-					+ date.getDayOfWeek().name().substring(1).toLowerCase(), 480);
+			schedule.setInteger(
+					PARAM_DAILY_TARGET_MINUTES + date.getDayOfWeek().name().substring(0, 1).toUpperCase() + date
+							.getDayOfWeek()
+							.name()
+							.substring(1)
+							.toLowerCase(), 480);
 			tx.add(schedule);
 
 			// Active Work Entry: started 10 minutes ago
-			ZonedDateTime start = ZonedDateTime.now(ChronivaroModelHelper.getEmployeeTimezone(employee)).minusMinutes(10);
+			ZonedDateTime start = ZonedDateTime
+					.now(ChronivaroModelHelper.getEmployeeTimezone(employee))
+					.minusMinutes(10);
 			Resource e1 = tx.getResourceTemplate(TYPE_WORK_ENTRY, true);
 			e1.setName("E1");
 			e1.setRelation(PARAM_EMPLOYEE, employee);
@@ -164,7 +170,7 @@ public class DaySummaryServiceTest {
 			employee.setString(PARAM_TIMEZONE, "Europe/Zurich");
 			tx.add(employee);
 
-			Resource schedule = tx.getResourceTemplate(TYPE_EMPLOYMENT_SCHEDULE_VERSION, true);
+			Resource schedule = tx.getResourceTemplate(TYPE_EMPLOYMENT_SCHEDULE, true);
 			schedule.setName("Schedule");
 			schedule.setRelation(PARAM_EMPLOYEE, employee);
 			schedule.setDate(PARAM_VALID_FROM, ZonedDateTime.parse("2026-01-01T00:00:00Z"));

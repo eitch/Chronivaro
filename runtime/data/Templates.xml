@@ -11,10 +11,10 @@
             <Parameter Id="active" Name="Active" Type="Boolean" Value="true"/>
         </ParameterBag>
         <ParameterBag Id="relations" Name="Relations" Type="Relations">
-            <Parameter Id="location" Name="Location" Type="String" Value=""/>
-            <Parameter Id="primaryTeam" Name="Primary Team" Type="String" Value=""/>
             <Parameter Id="user" Name="User" Type="String" Value=""/>
-            <Parameter Id="currentSchedule" Name="Current Schedule" Type="String" Value=""/>
+            <Parameter Id="location" Name="Location" Type="String" Interpretation="Resource-Ref" Uom="Location" Value=""/>
+            <Parameter Id="primaryTeam" Name="Primary Team" Type="String" Interpretation="Resource-Ref" Uom="Team" Value=""/>
+            <Parameter Id="currentSchedule" Name="Current Schedule" Type="String" Interpretation="Resource-Ref" Uom="EmploymentSchedule" Value=""/>
         </ParameterBag>
     </Resource>
 
@@ -27,8 +27,8 @@
             <Parameter Id="createdBy" Name="Created By" Type="String" Value=""/>
         </ParameterBag>
         <ParameterBag Id="relations" Name="Relations" Type="Relations">
-            <Parameter Id="employee" Name="Employee" Type="String" Value=""/>
-            <Parameter Id="schedule" Name="Schedule" Type="String" Value=""/>
+            <Parameter Id="employee" Name="Employee" Type="String" Interpretation="Resource-Ref" Uom="Employee" Value=""/>
+            <Parameter Id="schedule" Name="Schedule" Type="String" Interpretation="Resource-Ref" Uom="EmploymentSchedule" Value=""/>
         </ParameterBag>
     </Resource>
 
@@ -44,7 +44,7 @@
             <Parameter Id="timezone" Name="Timezone" Type="String" Value="Europe/Zurich"/>
         </ParameterBag>
         <ParameterBag Id="relations" Name="Relations" Type="Relations">
-            <Parameter Id="holidayCalendar" Name="Holiday Calendar" Type="String" Value=""/>
+            <Parameter Id="holidayCalendar" Name="Holiday Calendar" Type="String" Interpretation="Resource-Ref" Uom="HolidayCalendar" Value=""/>
         </ParameterBag>
     </Resource>
 
@@ -71,8 +71,8 @@
             <Parameter Id="state" Name="State" Type="String" Value="DRAFT"/>
         </ParameterBag>
         <ParameterBag Id="relations" Name="Relations" Type="Relations">
-            <Parameter Id="employee" Name="Employee" Type="String" Value=""/>
-            <Parameter Id="absenceType" Name="Absence Type" Type="String" Value=""/>
+            <Parameter Id="employee" Name="Employee" Type="String" Interpretation="Resource-Ref" Uom="Employee" Value=""/>
+            <Parameter Id="absenceType" Name="Absence Type" Type="String" Interpretation="Resource-Ref" Uom="AbsenceType" Value=""/>
         </ParameterBag>
     </Resource>
 
@@ -84,8 +84,8 @@
             <Parameter Id="comment" Name="Comment" Type="String" Value=""/>
         </ParameterBag>
         <ParameterBag Id="relations" Name="Relations" Type="Relations">
-            <Parameter Id="employee" Name="Employee" Type="String" Value=""/>
-            <Parameter Id="absence" Name="Absence" Type="String" Value=""/>
+            <Parameter Id="employee" Name="Employee" Type="String" Interpretation="Resource-Ref" Uom="Employee" Value=""/>
+            <Parameter Id="absence" Name="Absence" Type="String" Interpretation="Resource-Ref" Uom="Absense" Value=""/>
         </ParameterBag>
     </Resource>
 
@@ -102,7 +102,7 @@
             <Parameter Id="creditFactor" Name="Credit Factor" Type="Float" Value="1.0"/>
         </ParameterBag>
         <ParameterBag Id="relations" Name="Relations" Type="Relations">
-            <Parameter Id="holidayCalendar" Name="Holiday Calendar" Type="String" Value=""/>
+            <Parameter Id="holidayCalendar" Name="Holiday Calendar" Type="String" Interpretation="Resource-Ref" Uom="HolidayCalendar" Value=""/>
         </ParameterBag>
     </Resource>
 
@@ -112,7 +112,7 @@
             <Parameter Id="state" Name="State" Type="String" Value="OPEN"/>
         </ParameterBag>
         <ParameterBag Id="relations" Name="Relations" Type="Relations">
-            <Parameter Id="employee" Name="Employee" Type="String" Value=""/>
+            <Parameter Id="employee" Name="Employee" Type="String" Interpretation="Resource-Ref" Uom="Employee" Value=""/>
         </ParameterBag>
     </Resource>
 
@@ -132,7 +132,7 @@
             <Parameter Id="dailyTargetMinutesSunday" Name="Daily Target Minutes Sunday" Type="Integer" Value="0"/>
         </ParameterBag>
         <ParameterBag Id="relations" Name="Relations" Type="Relations">
-            <Parameter Id="employee" Name="Employee" Type="String" Value=""/>
+            <Parameter Id="employee" Name="Employee" Type="String" Interpretation="Resource-Ref" Uom="Employee" Value=""/>
         </ParameterBag>
     </Resource>
 
@@ -144,19 +144,6 @@
             <Parameter Id="dailyTargetMinutesWednesday" Name="Daily Target Minutes Wednesday" Type="Integer" Value="0"/>
             <Parameter Id="dailyTargetMinutesThursday" Name="Daily Target Minutes Thursday" Type="Integer" Value="0"/>
             <Parameter Id="dailyTargetMinutesFriday" Name="Daily Target Minutes Friday" Type="Integer" Value="0"/>
-            <Parameter Id="dailyTargetMinutesSaturday" Name="Daily Target Minutes Saturday" Type="Integer" Value="0"/>
-            <Parameter Id="dailyTargetMinutesSunday" Name="Daily Target Minutes Sunday" Type="Integer" Value="0"/>
-        </ParameterBag>
-    </Resource>
-
-    <Resource Id="Standard-8h-Mon-Fri" Name="Standard Monday-Friday 8h" Type="EmploymentScheduleTemplate">
-        <ParameterBag Id="parameters" Name="Parameters" Type="Parameters">
-            <Parameter Id="name" Name="Name" Type="String" Value="Standard Monday-Friday 8h"/>
-            <Parameter Id="dailyTargetMinutesMonday" Name="Daily Target Minutes Monday" Type="Integer" Value="480"/>
-            <Parameter Id="dailyTargetMinutesTuesday" Name="Daily Target Minutes Tuesday" Type="Integer" Value="480"/>
-            <Parameter Id="dailyTargetMinutesWednesday" Name="Daily Target Minutes Wednesday" Type="Integer" Value="480"/>
-            <Parameter Id="dailyTargetMinutesThursday" Name="Daily Target Minutes Thursday" Type="Integer" Value="480"/>
-            <Parameter Id="dailyTargetMinutesFriday" Name="Daily Target Minutes Friday" Type="Integer" Value="480"/>
             <Parameter Id="dailyTargetMinutesSaturday" Name="Daily Target Minutes Saturday" Type="Integer" Value="0"/>
             <Parameter Id="dailyTargetMinutesSunday" Name="Daily Target Minutes Sunday" Type="Integer" Value="0"/>
         </ParameterBag>

@@ -132,7 +132,7 @@ public class EmployeeResource {
 		Certificate cert = (Certificate) request.getAttribute(StrolchRestfulConstants.STROLCH_CERTIFICATE);
 		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
 			List<Resource> schedules = tx
-					.streamResources(TYPE_EMPLOYMENT_SCHEDULE_VERSION)
+					.streamResources(TYPE_EMPLOYMENT_SCHEDULE)
 					.filter(s -> s.getRelationId(PARAM_EMPLOYEE).equals(id))
 					.toList();
 			List<ScheduleDto> dtos = schedules.stream().map(ChronivaroMapper::scheduleToDto).toList();
@@ -163,7 +163,8 @@ public class EmployeeResource {
 			@PathParam("scheduleId") String scheduleId) {
 		Certificate cert = (Certificate) request.getAttribute(StrolchRestfulConstants.STROLCH_CERTIFICATE);
 		ServiceHandler serviceHandler = ChronivaroRestHelper.getServiceHandler();
-		ServiceResult result = serviceHandler.doService(cert, new RemoveScheduleService(), new StringArgument(scheduleId));
+		ServiceResult result = serviceHandler.doService(cert, new RemoveScheduleService(),
+				new StringArgument(scheduleId));
 		return ResponseUtil.toResponse(result);
 	}
 

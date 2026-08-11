@@ -16,7 +16,7 @@ public class UpdateScheduleService
 	@Override
 	protected ServiceResult internalDoService(UpdateScheduleArgument arg) throws Exception {
 		try (StrolchTransaction tx = openArgOrUserTx(arg).rollbackOnFailure()) {
-			Resource schedule = tx.getResourceBy(TYPE_EMPLOYMENT_SCHEDULE_VERSION, arg.id, true);
+			Resource schedule = tx.getResourceBy(TYPE_EMPLOYMENT_SCHEDULE, arg.id, true);
 
 			String employeeId = schedule.getRelationId(PARAM_EMPLOYEE);
 			ZonedDateTime oldValidFrom = schedule.getDate(PARAM_VALID_FROM);
@@ -27,11 +27,12 @@ public class UpdateScheduleService
 				// We must version the schedule
 				// If new validFrom is after old validFrom, we close the old one
 				if (arg.validFrom.isAfter(oldValidFrom)) {
-					schedule.setDate(PARAM_VALID_TO, arg.validFrom.minusDays(1).withHour(23).withMinute(59).withSecond(59));
+					schedule.setDate(PARAM_VALID_TO,
+							arg.validFrom.minusDays(1).withHour(23).withMinute(59).withSecond(59));
 					tx.update(schedule);
 
 					// Create new version
-					Resource newVersion = tx.getResourceTemplate(TYPE_EMPLOYMENT_SCHEDULE_VERSION, true);
+					Resource newVersion = tx.getResourceTemplate(TYPE_EMPLOYMENT_SCHEDULE, true);
 					newVersion.setName("Schedule for " + employeeId);
 					newVersion.setRelationId(PARAM_EMPLOYEE, employeeId);
 					updateSchedule(newVersion, arg);
@@ -52,7 +53,8 @@ public class UpdateScheduleService
 						// If the user wants to change it from the beginning, but work entries exist,
 						// we should probably forbid it or force them to pick a new start date.
 						if (arg.validFrom.equals(oldValidFrom)) {
-							throw new RuntimeException("Cannot change target times of an existing schedule that has work entries. Please create a new schedule version with a later start date.");
+							throw new RuntimeException(
+									"Cannot change target times of an existing schedule that has work entries. Please create a new schedule version with a later start date.");
 						}
 					}
 
@@ -74,7 +76,8 @@ public class UpdateScheduleService
 
 	private void updateEmployeeCurrentSchedule(StrolchTransaction tx, String employeeId) {
 		ZonedDateTime now = ZonedDateTime.now();
-		Resource schedule = tx.streamResources(TYPE_EMPLOYMENT_SCHEDULE_VERSION)
+		Resource schedule = tx
+				.streamResources(TYPE_EMPLOYMENT_SCHEDULE)
 				.filter(s -> s.getRelationId(PARAM_EMPLOYEE).equals(employeeId))
 				.filter(s -> {
 					ZonedDateTime validFrom = s.getDate(PARAM_VALID_FROM);
@@ -123,7 +126,8 @@ public class UpdateScheduleService
 		ZonedDateTime validFrom = schedule.getDate(PARAM_VALID_FROM);
 		ZonedDateTime validTo = schedule.getDate(PARAM_VALID_TO);
 
-		return tx.streamResources(TYPE_WORK_ENTRY)
+		return tx
+				.streamResources(TYPE_WORK_ENTRY)
 				.filter(e -> e.getRelationId(PARAM_EMPLOYEE).equals(employeeId))
 				.anyMatch(e -> {
 					ZonedDateTime start = e.getDate(PARAM_START);

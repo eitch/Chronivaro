@@ -61,7 +61,7 @@ public class ScheduleHelperTest {
 			tx.add(employee);
 
 			// Create Schedule Version
-			Resource schedule = tx.getResourceTemplate(TYPE_EMPLOYMENT_SCHEDULE_VERSION, true);
+			Resource schedule = tx.getResourceTemplate(TYPE_EMPLOYMENT_SCHEDULE, true);
 			schedule.setId("v1");
 			schedule.setName("Schedule V1");
 			schedule.setRelation(PARAM_EMPLOYEE, employee);
