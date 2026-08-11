@@ -20,8 +20,8 @@ public class RemoveAbsenceTypeService extends AbstractService<StringArgument, Se
 
 			boolean absenceReferencing = tx
 					.streamResources(TYPE_ABSENCE)
-					.anyMatch(a -> a.hasParameter(BAG_RELATIONS, PARAM_ABSENCE_TYPE) && a
-							.getString(BAG_RELATIONS, PARAM_ABSENCE_TYPE)
+					.anyMatch(a -> a.hasRelation(PARAM_ABSENCE_TYPE) && a
+							.getRelationId(PARAM_ABSENCE_TYPE)
 							.equals(arg.value));
 
 			if (absenceReferencing) {

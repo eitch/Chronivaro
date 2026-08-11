@@ -18,7 +18,8 @@ public class UpdateLocationService
 			location.setName(arg.name);
 			location.setString(PARAM_NAME, arg.name);
 			location.setString(PARAM_TIMEZONE, arg.timezone);
-			location.setString(BAG_RELATIONS, PARAM_HOLIDAY_CALENDAR, arg.holidayCalendarId);
+			location.setRelation(PARAM_HOLIDAY_CALENDAR,
+					tx.getResourceBy(TYPE_HOLIDAY_CALENDAR, arg.holidayCalendarId, true));
 			tx.update(location);
 			tx.commitOnClose();
 		}

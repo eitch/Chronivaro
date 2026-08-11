@@ -43,9 +43,9 @@ public class AddWorkEntryServiceTest {
 		String employeeId = "emp-add-work";
 
 		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
-			Resource employee = new Resource(employeeId, "Add Work Emp", TYPE_EMPLOYEE);
-			employee.addParameterBag(new ParameterBag(BAG_PARAMETERS, "Parameters", "Parameters"));
-			employee.addParameterBag(new ParameterBag(BAG_RELATIONS, "Relations", "Relations"));
+			Resource employee = tx.getResourceTemplate(TYPE_EMPLOYEE, true);
+			employee.setId(employeeId);
+			employee.setName("Add Work Emp");
 			employee.setBoolean(PARAM_ACTIVE, true);
 			employee.setDate(PARAM_JOIN_DATE, ZonedDateTime.parse("2026-01-01T00:00:00Z"));
 			tx.add(employee);
@@ -66,7 +66,7 @@ public class AddWorkEntryServiceTest {
 		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
 			List<Resource> entries = tx
 					.streamResources(TYPE_WORK_ENTRY)
-					.filter(e -> e.getString(BAG_RELATIONS, PARAM_EMPLOYEE).equals(employeeId))
+					.filter(e -> e.getRelationId(PARAM_EMPLOYEE).equals(employeeId))
 					.toList();
 			assertEquals(1, entries.size());
 			Resource entry = entries.getFirst();

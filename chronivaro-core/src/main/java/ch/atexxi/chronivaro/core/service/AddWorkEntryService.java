@@ -1,7 +1,6 @@
 package ch.atexxi.chronivaro.core.service;
 
 import ch.atexxi.chronivaro.core.model.WorkEntryHelper;
-import li.strolch.model.ParameterBag;
 import li.strolch.model.Resource;
 import li.strolch.persistence.api.StrolchTransaction;
 import li.strolch.service.api.AbstractService;
@@ -10,7 +9,6 @@ import li.strolch.service.api.ServiceResult;
 import li.strolch.utils.dbc.DBC;
 
 import java.time.ZonedDateTime;
-import java.util.UUID;
 
 import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
 
@@ -30,10 +28,9 @@ public class AddWorkEntryService extends AbstractService<AddWorkEntryService.Add
 			WorkEntryHelper.validateNoOverlap(tx, arg.employeeId, arg.start, arg.end, null);
 
 			Resource workEntry = tx.getResourceTemplate(TYPE_WORK_ENTRY, true);
-			workEntry.setId(UUID.randomUUID().toString());
 			workEntry.setName("WorkEntry " + arg.start);
 
-			workEntry.setString(BAG_RELATIONS, PARAM_EMPLOYEE, arg.employeeId);
+			workEntry.setRelation(PARAM_EMPLOYEE, tx.getResourceBy(TYPE_EMPLOYEE, arg.employeeId, true));
 			workEntry.setDate(PARAM_START, arg.start);
 			workEntry.setDate(PARAM_END, arg.end);
 			workEntry.setString(PARAM_SOURCE, SOURCE_MANUAL);

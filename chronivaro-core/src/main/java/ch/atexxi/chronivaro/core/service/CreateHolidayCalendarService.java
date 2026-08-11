@@ -2,28 +2,28 @@ package ch.atexxi.chronivaro.core.service;
 
 import li.strolch.model.Resource;
 import li.strolch.persistence.api.StrolchTransaction;
+import li.strolch.service.StringResult;
 import li.strolch.service.api.AbstractService;
 import li.strolch.service.api.ServiceArgument;
-import li.strolch.service.StringResult;
 import li.strolch.service.api.ServiceResultState;
 
-import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
-import static li.strolch.agent.api.StrolchAgent.getUniqueId;
+import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.PARAM_NAME;
+import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.TYPE_HOLIDAY_CALENDAR;
 
 public class CreateHolidayCalendarService
 		extends AbstractService<CreateHolidayCalendarService.HolidayCalendarArgument, StringResult> {
 
 	@Override
 	protected StringResult internalDoService(HolidayCalendarArgument arg) throws Exception {
-		String id = getUniqueId();
+		Resource calendar;
 		try (StrolchTransaction tx = openArgOrUserTx(arg)) {
-			Resource calendar = new Resource(id, arg.name, TYPE_HOLIDAY_CALENDAR);
-			calendar.addParameterBag(new li.strolch.model.ParameterBag(BAG_PARAMETERS, "Parameters", "Parameters"));
+			calendar = tx.getResourceTemplate(TYPE_HOLIDAY_CALENDAR, true);
+			calendar.setName(arg.name);
 			calendar.setString(PARAM_NAME, arg.name);
 			tx.add(calendar);
 			tx.commitOnClose();
 		}
-		return new StringResult(id);
+		return new StringResult(calendar.getId());
 	}
 
 	@Override

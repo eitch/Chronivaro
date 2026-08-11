@@ -9,7 +9,6 @@ import li.strolch.service.api.ServiceResult;
 import java.util.List;
 
 import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
-import static li.strolch.agent.api.StrolchAgent.getUniqueId;
 
 public class CreateAbsenceTypeService
 		extends AbstractService<CreateAbsenceTypeService.AbsenceTypeArgument, ServiceResult> {
@@ -17,8 +16,8 @@ public class CreateAbsenceTypeService
 	@Override
 	protected ServiceResult internalDoService(AbsenceTypeArgument arg) throws Exception {
 		try (StrolchTransaction tx = openArgOrUserTx(arg)) {
-			Resource type = new Resource(getUniqueId(), arg.name, TYPE_ABSENCE_TYPE);
-			type.addParameterBag(new li.strolch.model.ParameterBag(BAG_PARAMETERS, "Parameters", "Parameters"));
+			Resource type = tx.getResourceTemplate(TYPE_ABSENCE_TYPE, true);
+			type.setName(arg.name);
 			type.setString(PARAM_CODE, arg.code);
 			type.setString(PARAM_NAME, arg.name);
 			type.setBoolean(PARAM_COUNT_AS_TARGET_TIME, arg.countAsTargetTime);

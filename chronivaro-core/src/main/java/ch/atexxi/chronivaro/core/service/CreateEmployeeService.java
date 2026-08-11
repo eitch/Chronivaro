@@ -1,6 +1,5 @@
 package ch.atexxi.chronivaro.core.service;
 
-import li.strolch.model.ParameterBag;
 import li.strolch.model.Resource;
 import li.strolch.persistence.api.StrolchTransaction;
 import li.strolch.service.api.AbstractService;
@@ -11,7 +10,6 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 
 import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
-import static li.strolch.agent.api.StrolchAgent.getUniqueId;
 
 public class CreateEmployeeService extends AbstractService<CreateEmployeeService.EmployeeArgument, ServiceResult> {
 
@@ -22,13 +20,14 @@ public class CreateEmployeeService extends AbstractService<CreateEmployeeService
 
 		try (StrolchTransaction tx = openArgOrUserTx(arg)) {
 
-			Resource employee = new Resource(getUniqueId(), arg.displayName, TYPE_EMPLOYEE);
-			employee.addParameterBag(new ParameterBag(BAG_PARAMETERS, "Parameters", "Parameters"));
-			employee.addParameterBag(new ParameterBag(BAG_RELATIONS, "Relations", "Relations"));
+			Resource employee = tx.getResourceTemplate(TYPE_EMPLOYEE, true);
+			employee.setName(arg.displayName);
+
+			employee.setRelation(PARAM_PRIMARY_TEAM, tx.getResourceBy(TYPE_TEAM, arg.teamId, true));
+			employee.setRelationId(PARAM_USER, arg.userId);
 			employee.setString(PARAM_PERSONAL_NUMBER, arg.personalNumber);
 			employee.setString(PARAM_DISPLAY_NAME, arg.displayName);
-			employee.setString(BAG_RELATIONS, PARAM_PRIMARY_TEAM, arg.teamId);
-			employee.setString(BAG_PARAMETERS, PARAM_LOCATION, arg.locationId);
+			employee.setRelation(PARAM_LOCATION, tx.getResourceBy(TYPE_LOCATION, arg.locationId, true));
 			employee.setString(PARAM_TIMEZONE, timeZone);
 			employee.setDate(PARAM_JOIN_DATE, arg.joinDate.atStartOfDay(zoneId));
 			if (arg.exitDate != null)

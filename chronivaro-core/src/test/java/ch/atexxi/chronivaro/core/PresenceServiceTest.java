@@ -2,7 +2,6 @@ package ch.atexxi.chronivaro.core;
 
 import ch.atexxi.chronivaro.core.service.PresenceService;
 import ch.atexxi.chronivaro.core.service.StartTimerService;
-import li.strolch.model.ParameterBag;
 import li.strolch.model.Resource;
 import li.strolch.persistence.api.StrolchTransaction;
 import li.strolch.privilege.model.Certificate;
@@ -44,23 +43,29 @@ public class PresenceServiceTest {
 		String locationId = "loc-p";
 
 		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
+			// Team
+			Resource team = tx.getResourceTemplate(TYPE_TEAM, true);
+			team.setId(teamId);
+			team.setName("Test Team");
+			tx.add(team);
+
 			// Emp 1: Working
-			Resource e1 = new Resource("p-emp1", "Emp 1", TYPE_EMPLOYEE);
-			e1.addParameterBag(new ParameterBag(BAG_PARAMETERS, "Parameters", "Parameters"));
-			e1.addParameterBag(new ParameterBag(BAG_RELATIONS, "Relations", "Relations"));
+			Resource e1 = tx.getResourceTemplate(TYPE_EMPLOYEE, true);
+			e1.setId("p-emp1");
+			e1.setName("Emp 1");
 			e1.setBoolean(PARAM_ACTIVE, true);
-			e1.setString(BAG_RELATIONS, PARAM_PRIMARY_TEAM, teamId);
-			e1.setString(BAG_PARAMETERS, PARAM_LOCATION, locationId);
+			e1.setRelation(PARAM_PRIMARY_TEAM, team);
+			e1.setRelationId(PARAM_LOCATION, locationId);
 			e1.setDate(PARAM_JOIN_DATE, ZonedDateTime.now());
 			tx.add(e1);
 
 			// Emp 2: Not working
-			Resource e2 = new Resource("p-emp2", "Emp 2", TYPE_EMPLOYEE);
-			e2.addParameterBag(new ParameterBag(BAG_PARAMETERS, "Parameters", "Parameters"));
-			e2.addParameterBag(new ParameterBag(BAG_RELATIONS, "Relations", "Relations"));
+			Resource e2 = tx.getResourceTemplate(TYPE_EMPLOYEE, true);
+			e2.setId("p-emp2");
+			e2.setName("Emp 2");
 			e2.setBoolean(PARAM_ACTIVE, true);
-			e2.setString(BAG_RELATIONS, PARAM_PRIMARY_TEAM, teamId);
-			e2.setString(BAG_PARAMETERS, PARAM_LOCATION, locationId);
+			e2.setRelation(PARAM_PRIMARY_TEAM, team);
+			e2.setRelationId(PARAM_LOCATION, locationId);
 			e2.setDate(PARAM_JOIN_DATE, ZonedDateTime.now());
 			tx.add(e2);
 

@@ -12,7 +12,7 @@ public class AbsenceHelper {
 	public static int getAbsenceMinutes(StrolchTransaction tx, String employeeId, LocalDate date) {
 		return tx
 				.streamResources(TYPE_ABSENCE)
-				.filter(a -> a.getString(BAG_RELATIONS, PARAM_EMPLOYEE).equals(employeeId))
+				.filter(a -> a.getRelationId(PARAM_EMPLOYEE).equals(employeeId))
 				.filter(a -> a.getString(PARAM_STATE).equals(STATE_APPROVED))
 				.filter(a -> {
 					LocalDate start = a.getDate(PARAM_START).toLocalDate();

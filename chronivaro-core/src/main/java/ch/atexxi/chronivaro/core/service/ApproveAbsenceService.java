@@ -2,7 +2,6 @@ package ch.atexxi.chronivaro.core.service;
 
 import ch.atexxi.chronivaro.core.model.AbsenceHelper;
 import ch.atexxi.chronivaro.core.model.ScheduleHelper;
-import li.strolch.model.ParameterBag;
 import li.strolch.model.Resource;
 import li.strolch.persistence.api.StrolchTransaction;
 import li.strolch.service.StringArgument;
@@ -11,7 +10,6 @@ import li.strolch.service.api.ServiceResult;
 import li.strolch.utils.dbc.DBC;
 
 import java.time.LocalDate;
-import java.util.UUID;
 
 import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
 
@@ -32,10 +30,9 @@ public class ApproveAbsenceService extends AbstractService<StringArgument, Servi
 			tx.update(absence);
 
 			// If it's a vacation absence, create a vacation account entry
-			Resource absenceType = tx.getResourceBy(TYPE_ABSENCE_TYPE,
-					absence.getString(BAG_RELATIONS, PARAM_ABSENCE_TYPE), true);
+			Resource absenceType = tx.getResourceBy(TYPE_ABSENCE_TYPE, absence.getRelationId(PARAM_ABSENCE_TYPE), true);
 			if (absenceType.getBoolean(PARAM_REDUCE_VACATION_CREDIT)) {
-				String employeeId = absence.getString(BAG_RELATIONS, PARAM_EMPLOYEE);
+				String employeeId = absence.getRelationId(PARAM_EMPLOYEE);
 				LocalDate start = absence.getDate(PARAM_START).toLocalDate();
 				LocalDate end = absence.getDate(PARAM_END).toLocalDate();
 
@@ -53,13 +50,11 @@ public class ApproveAbsenceService extends AbstractService<StringArgument, Servi
 				}
 
 				if (totalMinutes > 0) {
-					Resource entry = new Resource(UUID.randomUUID().toString(), "Vacation Usage " + absence.getId(),
-							TYPE_VACATION_ACCOUNT_ENTRY);
-					entry.addParameterBag(new ParameterBag(BAG_PARAMETERS, "Parameters", "Parameters"));
-					entry.addParameterBag(new ParameterBag(BAG_RELATIONS, "Relations", "Relations"));
+					Resource entry = tx.getResourceTemplate(TYPE_VACATION_ACCOUNT_ENTRY, true);
+					entry.setName("Vacation Usage " + absence.getId());
 
-					entry.setString(BAG_RELATIONS, PARAM_EMPLOYEE, employeeId);
-					entry.setString(BAG_RELATIONS, PARAM_ABSENCE, absence.getId());
+					entry.setRelation(PARAM_EMPLOYEE, tx.getResourceBy(TYPE_EMPLOYEE, employeeId, true));
+					entry.setRelation(PARAM_ABSENCE, absence);
 					entry.setDate(PARAM_DATE, absence.getDate(PARAM_START));
 					entry.setString(PARAM_VACATION_TYPE, VACATION_USAGE);
 					entry.setInteger(PARAM_VALUE, -totalMinutes);

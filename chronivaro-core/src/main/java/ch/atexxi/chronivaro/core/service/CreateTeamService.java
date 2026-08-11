@@ -6,16 +6,16 @@ import li.strolch.service.api.AbstractService;
 import li.strolch.service.api.ServiceArgument;
 import li.strolch.service.api.ServiceResult;
 
-import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
-import static li.strolch.agent.api.StrolchAgent.getUniqueId;
+import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.PARAM_NAME;
+import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.TYPE_TEAM;
 
 public class CreateTeamService extends AbstractService<CreateTeamService.TeamArgument, ServiceResult> {
 
 	@Override
 	protected ServiceResult internalDoService(TeamArgument arg) throws Exception {
 		try (StrolchTransaction tx = openArgOrUserTx(arg)) {
-			Resource team = new Resource(getUniqueId(), arg.name, TYPE_TEAM);
-			team.addParameterBag(new li.strolch.model.ParameterBag(BAG_PARAMETERS, "Parameters", "Parameters"));
+			Resource team = tx.getResourceTemplate(TYPE_TEAM, true);
+			team.setName(arg.name);
 			team.setString(PARAM_NAME, arg.name);
 			tx.add(team);
 			tx.commitOnClose();

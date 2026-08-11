@@ -3,16 +3,27 @@
 
     <IncludeFile file="../../../../runtime/data/Model.xml"/>
 
-    <Resource Id="loc1" Name="Zurich" Type="Location">
+    <Resource Id="calendar-1" Name="Calendar 1" Type="HolidayCalendar">
+        <ParameterBag Id="parameters" Name="Parameters" Type="Parameters">
+            <Parameter Id="name" Name="Name" Type="String" Value="dd"/>
+        </ParameterBag>
+    </Resource>
+    <Resource Id="calendar-2" Name="Calendar 2" Type="HolidayCalendar">
+        <ParameterBag Id="parameters" Name="Parameters" Type="Parameters">
+            <Parameter Id="name" Name="Name" Type="String" Value="dd"/>
+        </ParameterBag>
+    </Resource>
+
+    <Resource Id="location-1" Name="Zurich" Type="Location">
         <ParameterBag Id="parameters" Name="Parameters" Type="Parameters">
             <Parameter Id="timezone" Name="Timezone" Type="String" Value="Europe/Zurich"/>
         </ParameterBag>
         <ParameterBag Id="relations" Name="Relations" Type="Relations">
-            <Parameter Id="HolidayCalendar" Name="Holiday Calendar" Type="String" Value="cal1"/>
+            <Parameter Id="HolidayCalendar" Name="Holiday Calendar" Type="String" Value="calendar-1"/>
         </ParameterBag>
     </Resource>
 
-    <Resource Id="team1" Name="Engineering" Type="Team"/>
+    <Resource Id="team-1" Name="Engineering" Type="Team"/>
 
     <Resource Id="admin_emp" Name="Admin User" Type="Employee">
         <ParameterBag Id="parameters" Name="Parameters" Type="Parameters">
@@ -22,10 +33,9 @@
         </ParameterBag>
         <ParameterBag Id="relations" Name="Relations" Type="Relations">
             <Parameter Id="user" Name="User" Type="String" Value="admin"/>
-            <Parameter Id="location" Name="Location" Type="String" Value="loc1"/>
-            <Parameter Id="primaryTeam" Name="Primary Team" Type="String" Value="team1"/>
+            <Parameter Id="location" Name="Location" Type="String" Value="location-1"/>
+            <Parameter Id="primaryTeam" Name="Primary Team" Type="String" Value="team-1"/>
         </ParameterBag>
     </Resource>
 
-    <Resource Id="cal1" Name="Standard Calendar" Type="HolidayCalendar"/>
 </StrolchModel>

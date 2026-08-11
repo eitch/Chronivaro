@@ -42,6 +42,20 @@ public class EmployeeServiceTest {
 	public void shouldCreateUpdateAndRemoveEmployee() {
 		ServiceHandler serviceHandler = runtimeMock.getServiceHandler();
 
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
+			Resource location = tx.getResourceTemplate(TYPE_LOCATION, true);
+			location.setId("loc1");
+			location.setName("Location 1");
+			tx.add(location);
+
+			Resource team = tx.getResourceTemplate(TYPE_TEAM, true);
+			team.setId("team1");
+			team.setName("Team 1");
+			tx.add(team);
+
+			tx.commitOnClose();
+		}
+
 		// Create
 		CreateEmployeeService.EmployeeArgument createArg = new CreateEmployeeService.EmployeeArgument();
 		createArg.personalNumber = "123";

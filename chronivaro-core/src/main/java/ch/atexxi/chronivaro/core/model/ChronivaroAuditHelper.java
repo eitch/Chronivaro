@@ -1,12 +1,10 @@
 package ch.atexxi.chronivaro.core.model;
 
-import li.strolch.model.ParameterBag;
 import li.strolch.model.Resource;
 import li.strolch.persistence.api.StrolchTransaction;
 import li.strolch.utils.dbc.DBC;
 
 import java.time.ZonedDateTime;
-import java.util.UUID;
 
 import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
 
@@ -18,10 +16,8 @@ public class ChronivaroAuditHelper {
 		DBC.PRE.assertNotEmpty("elementId must be set", elementId);
 		DBC.PRE.assertNotEmpty("paramName must be set", paramName);
 
-		Resource auditEvent = new Resource(UUID.randomUUID().toString(), "Audit " + elementType + " " + elementId,
-				TYPE_AUDIT_EVENT);
-		auditEvent.addParameterBag(new ParameterBag(BAG_PARAMETERS, "Parameters", "Parameters"));
-		auditEvent.addParameterBag(new ParameterBag(BAG_RELATIONS, "Relations", "Relations"));
+		Resource auditEvent = tx.getResourceTemplate(TYPE_AUDIT_EVENT, true);
+		auditEvent.setName("Audit " + elementType + " " + elementId);
 
 		auditEvent.setString(PARAM_ELEMENT_TYPE, elementType);
 		auditEvent.setString(PARAM_ELEMENT_ID, elementId);

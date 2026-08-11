@@ -23,7 +23,6 @@ import li.strolch.service.api.ServiceResult;
 import java.util.List;
 
 import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
-import static li.strolch.model.StrolchModelConstants.BAG_RELATIONS;
 import static li.strolch.rest.StrolchRestfulConstants.STROLCH_CERTIFICATE;
 
 @Path("chronivaro/v1/admin/holiday-calendars")
@@ -60,7 +59,7 @@ public class HolidayCalendarsResource {
 		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
 			List<Resource> holidays = tx
 					.streamResources(TYPE_HOLIDAY)
-					.filter(h -> h.getString(BAG_RELATIONS, PARAM_HOLIDAY_CALENDAR).equals(id))
+					.filter(h -> h.getRelationId(PARAM_HOLIDAY_CALENDAR).equals(id))
 					.toList();
 			List<HolidayDto> dtos = holidays.stream().map(ChronivaroMapper::holidayToDto).toList();
 			return Response.ok(ChronivaroRestHelper.createGson().toJson(dtos), MediaType.APPLICATION_JSON).build();

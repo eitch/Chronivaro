@@ -2,7 +2,6 @@ package ch.atexxi.chronivaro.core;
 
 import ch.atexxi.chronivaro.core.model.DaySummary;
 import ch.atexxi.chronivaro.core.service.DaySummaryService;
-import li.strolch.model.ParameterBag;
 import li.strolch.model.Resource;
 import li.strolch.persistence.api.StrolchTransaction;
 import li.strolch.privilege.model.Certificate;
@@ -15,7 +14,6 @@ import org.junit.Test;
 
 import java.time.LocalDate;
 import java.time.ZonedDateTime;
-import java.util.UUID;
 
 import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
 import static org.junit.Assert.assertEquals;
@@ -45,37 +43,33 @@ public class DaySummaryServiceTest {
 		LocalDate date = LocalDate.of(2026, 2, 2); // Monday
 
 		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
-			Resource employee = new Resource(employeeId, "Jack Doe", TYPE_EMPLOYEE);
-			employee.addParameterBag(new ParameterBag(BAG_PARAMETERS, "Parameters", "Parameters"));
-			employee.addParameterBag(new ParameterBag(BAG_RELATIONS, "Relations", "Relations"));
+			Resource employee = tx.getResourceTemplate(TYPE_EMPLOYEE, true);
+			employee.setId(employeeId);
+			employee.setName("Jack Doe");
 			employee.setBoolean(PARAM_ACTIVE, true);
 			employee.setDate(PARAM_JOIN_DATE, ZonedDateTime.parse("2026-01-01T00:00:00Z"));
 			employee.setString(PARAM_TIMEZONE, "Europe/Zurich");
 			tx.add(employee);
 
-			Resource schedule = new Resource(UUID.randomUUID().toString(), "Schedule",
-					TYPE_EMPLOYMENT_SCHEDULE_VERSION);
-			schedule.addParameterBag(new ParameterBag(BAG_PARAMETERS, "Parameters", "Parameters"));
-			schedule.addParameterBag(new ParameterBag(BAG_RELATIONS, "Relations", "Relations"));
-			schedule.setString(BAG_RELATIONS, PARAM_EMPLOYEE, employeeId);
+			Resource schedule = tx.getResourceTemplate(TYPE_EMPLOYMENT_SCHEDULE_VERSION, true);
+			schedule.setName("Schedule");
+			schedule.setRelation(PARAM_EMPLOYEE, employee);
 			schedule.setDate(PARAM_VALID_FROM, ZonedDateTime.parse("2026-01-01T00:00:00Z"));
 			schedule.setInteger(PARAM_DAILY_TARGET_MINUTES + "Monday", 480);
 			tx.add(schedule);
 
 			// Work Entry 1: 08:00 - 12:00
-			Resource e1 = new Resource(UUID.randomUUID().toString(), "E1", TYPE_WORK_ENTRY);
-			e1.addParameterBag(new ParameterBag(BAG_PARAMETERS, "Parameters", "Parameters"));
-			e1.addParameterBag(new ParameterBag(BAG_RELATIONS, "Relations", "Relations"));
-			e1.setString(BAG_RELATIONS, PARAM_EMPLOYEE, employeeId);
+			Resource e1 = tx.getResourceTemplate(TYPE_WORK_ENTRY, true);
+			e1.setName("E1");
+			e1.setRelation(PARAM_EMPLOYEE, employee);
 			e1.setDate(PARAM_START, ZonedDateTime.parse("2026-02-02T08:00:00+01:00[Europe/Zurich]"));
 			e1.setDate(PARAM_END, ZonedDateTime.parse("2026-02-02T12:00:00+01:00[Europe/Zurich]"));
 			tx.add(e1);
 
 			// Work Entry 2: 13:00 - 17:00
-			Resource e2 = new Resource(UUID.randomUUID().toString(), "E2", TYPE_WORK_ENTRY);
-			e2.addParameterBag(new ParameterBag(BAG_PARAMETERS, "Parameters", "Parameters"));
-			e2.addParameterBag(new ParameterBag(BAG_RELATIONS, "Relations", "Relations"));
-			e2.setString(BAG_RELATIONS, PARAM_EMPLOYEE, employeeId);
+			Resource e2 = tx.getResourceTemplate(TYPE_WORK_ENTRY, true);
+			e2.setName("E2");
+			e2.setRelation(PARAM_EMPLOYEE, employee);
 			e2.setDate(PARAM_START, ZonedDateTime.parse("2026-02-02T13:00:00+01:00[Europe/Zurich]"));
 			e2.setDate(PARAM_END, ZonedDateTime.parse("2026-02-02T17:00:00+01:00[Europe/Zurich]"));
 			tx.add(e2);
@@ -108,28 +102,25 @@ public class DaySummaryServiceTest {
 		LocalDate date = LocalDate.of(2026, 2, 2); // Monday
 
 		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
-			Resource employee = new Resource(employeeId, "Jane Doe", TYPE_EMPLOYEE);
-			employee.addParameterBag(new ParameterBag(BAG_PARAMETERS, "Parameters", "Parameters"));
-			employee.addParameterBag(new ParameterBag(BAG_RELATIONS, "Relations", "Relations"));
+			Resource employee = tx.getResourceTemplate(TYPE_EMPLOYEE, true);
+			employee.setId(employeeId);
+			employee.setName("Jane Doe");
 			employee.setBoolean(PARAM_ACTIVE, true);
 			employee.setDate(PARAM_JOIN_DATE, ZonedDateTime.parse("2026-01-01T00:00:00Z"));
 			employee.setString(PARAM_TIMEZONE, "Europe/Zurich");
 			tx.add(employee);
 
-			Resource schedule = new Resource(UUID.randomUUID().toString(), "Schedule",
-					TYPE_EMPLOYMENT_SCHEDULE_VERSION);
-			schedule.addParameterBag(new ParameterBag(BAG_PARAMETERS, "Parameters", "Parameters"));
-			schedule.addParameterBag(new ParameterBag(BAG_RELATIONS, "Relations", "Relations"));
-			schedule.setString(BAG_RELATIONS, PARAM_EMPLOYEE, employeeId);
+			Resource schedule = tx.getResourceTemplate(TYPE_EMPLOYMENT_SCHEDULE_VERSION, true);
+			schedule.setName("Schedule");
+			schedule.setRelation(PARAM_EMPLOYEE, employee);
 			schedule.setDate(PARAM_VALID_FROM, ZonedDateTime.parse("2026-01-01T00:00:00Z"));
 			schedule.setInteger(PARAM_DAILY_TARGET_MINUTES + "Monday", 480);
 			tx.add(schedule);
 
 			// Active Work Entry: 08:00 - ...
-			Resource e1 = new Resource(UUID.randomUUID().toString(), "E1", TYPE_WORK_ENTRY);
-			e1.addParameterBag(new ParameterBag(BAG_PARAMETERS, "Parameters", "Parameters"));
-			e1.addParameterBag(new ParameterBag(BAG_RELATIONS, "Relations", "Relations"));
-			e1.setString(BAG_RELATIONS, PARAM_EMPLOYEE, employeeId);
+			Resource e1 = tx.getResourceTemplate(TYPE_WORK_ENTRY, true);
+			e1.setName("E1");
+			e1.setRelation(PARAM_EMPLOYEE, employee);
 			e1.setDate(PARAM_START, ZonedDateTime.parse("2026-02-02T08:00:00+01:00[Europe/Zurich]"));
 			e1.setDate(PARAM_END, ZonedDateTime.parse("1970-01-01T00:00:00+01:00"));
 			tx.add(e1);

@@ -2,7 +2,6 @@ package ch.atexxi.chronivaro.core;
 
 import ch.atexxi.chronivaro.core.service.AddVacationCorrectionService;
 import ch.atexxi.chronivaro.core.service.CorrectWorkEntryService;
-import li.strolch.model.ParameterBag;
 import li.strolch.model.Resource;
 import li.strolch.persistence.api.StrolchTransaction;
 import li.strolch.privilege.model.Certificate;
@@ -43,9 +42,9 @@ public class ManualCorrectionServiceTest {
 	public void shouldAddVacationCorrection() {
 		String employeeId = "emp_vac";
 		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
-			Resource employee = new Resource(employeeId, "Vacation Employee", TYPE_EMPLOYEE);
-			employee.addParameterBag(new ParameterBag(BAG_PARAMETERS, "Parameters", "Parameters"));
-			employee.addParameterBag(new ParameterBag(BAG_RELATIONS, "Relations", "Relations"));
+			Resource employee = tx.getResourceTemplate(TYPE_EMPLOYEE, true);
+			employee.setId(employeeId);
+			employee.setName("Vacation Employee");
 			employee.setBoolean(PARAM_ACTIVE, true);
 			tx.add(employee);
 			tx.commitOnClose();
@@ -64,7 +63,7 @@ public class ManualCorrectionServiceTest {
 		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
 			List<Resource> entries = tx
 					.streamResources(TYPE_VACATION_ACCOUNT_ENTRY)
-					.filter(e -> e.getString(BAG_RELATIONS, PARAM_EMPLOYEE).equals(employeeId))
+					.filter(e -> e.getRelationId(PARAM_EMPLOYEE).equals(employeeId))
 					.toList();
 			assertEquals(1, entries.size());
 			assertEquals(480, entries.getFirst().getInteger(PARAM_VALUE));
@@ -87,16 +86,16 @@ public class ManualCorrectionServiceTest {
 		ZonedDateTime end = ZonedDateTime.parse("2026-08-08T12:00:00Z");
 
 		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
-			Resource employee = new Resource(employeeId, "Work Employee", TYPE_EMPLOYEE);
-			employee.addParameterBag(new ParameterBag(BAG_PARAMETERS, "Parameters", "Parameters"));
-			employee.addParameterBag(new ParameterBag(BAG_RELATIONS, "Relations", "Relations"));
+			Resource employee = tx.getResourceTemplate(TYPE_EMPLOYEE, true);
+			employee.setId(employeeId);
+			employee.setName("Work Employee");
 			employee.setBoolean(PARAM_ACTIVE, true);
 			tx.add(employee);
 
-			Resource workEntry = new Resource(workEntryId, "Work Entry", TYPE_WORK_ENTRY);
-			workEntry.addParameterBag(new ParameterBag(BAG_PARAMETERS, "Parameters", "Parameters"));
-			workEntry.addParameterBag(new ParameterBag(BAG_RELATIONS, "Relations", "Relations"));
-			workEntry.setString(BAG_RELATIONS, PARAM_EMPLOYEE, employeeId);
+			Resource workEntry = tx.getResourceTemplate(TYPE_WORK_ENTRY, true);
+			workEntry.setId(workEntryId);
+			workEntry.setName("Work Entry");
+			workEntry.setRelation(PARAM_EMPLOYEE, employee);
 			workEntry.setDate(PARAM_START, start);
 			workEntry.setDate(PARAM_END, end);
 			tx.add(workEntry);

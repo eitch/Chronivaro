@@ -40,6 +40,14 @@ public class LocationServiceTest {
 	public void shouldCreateUpdateAndRemoveLocation() {
 		ServiceHandler serviceHandler = runtimeMock.getServiceHandler();
 
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
+			Resource calendar = tx.getResourceTemplate(TYPE_HOLIDAY_CALENDAR, true);
+			calendar.setId("cal1");
+			calendar.setName("Calendar 1");
+			tx.add(calendar);
+			tx.commitOnClose();
+		}
+
 		// Create
 		CreateLocationService.LocationArgument createArg = new CreateLocationService.LocationArgument();
 		createArg.name = "Test Location";
@@ -59,7 +67,7 @@ public class LocationServiceTest {
 			locationId = location.getId();
 			assertEquals("Test Location", location.getString(PARAM_NAME));
 			assertEquals("Europe/Zurich", location.getString(PARAM_TIMEZONE));
-			assertEquals("cal1", location.getString(BAG_RELATIONS, PARAM_HOLIDAY_CALENDAR));
+			assertEquals("cal1", location.getRelationId(PARAM_HOLIDAY_CALENDAR));
 		}
 
 		// Update

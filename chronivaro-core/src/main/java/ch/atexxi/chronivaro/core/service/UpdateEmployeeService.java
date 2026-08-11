@@ -22,8 +22,8 @@ public class UpdateEmployeeService
 			employee.setName(arg.displayName);
 			employee.setString(PARAM_PERSONAL_NUMBER, arg.personalNumber);
 			employee.setString(PARAM_DISPLAY_NAME, arg.displayName);
-			employee.setString(BAG_RELATIONS, PARAM_PRIMARY_TEAM, arg.teamId);
-			employee.setString(BAG_PARAMETERS, PARAM_LOCATION, arg.locationId);
+			employee.setRelationId(PARAM_PRIMARY_TEAM, arg.teamId);
+			employee.setRelationId(PARAM_LOCATION, arg.locationId);
 			employee.setString(PARAM_TIMEZONE, arg.timezone);
 			employee.setDate(PARAM_JOIN_DATE, arg.joinDate.atStartOfDay(zoneId));
 			if (arg.exitDate != null)
@@ -31,7 +31,7 @@ public class UpdateEmployeeService
 			else
 				employee.removeParameter(PARAM_EXIT_DATE);
 			employee.setBoolean(PARAM_ACTIVE, arg.active);
-			employee.setString(BAG_RELATIONS, PARAM_USER, arg.userId);
+			employee.setRelationId(PARAM_USER, arg.userId);
 			tx.update(employee);
 			tx.commitOnClose();
 		}

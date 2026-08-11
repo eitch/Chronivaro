@@ -103,8 +103,8 @@ public class ExtensiveIntegrationTest {
 		createArg.locationId = locationId;
 		createArg.timezone = "Europe/Zurich";
 		createArg.joinDate = LocalDate.of(2026, 1, 1);
+		createArg.userId = certificate.getUserId();
 		createArg.active = true;
-		createArg.userId = "extuser";
 
 		assertTrue(serviceHandler.doService(certificate, new CreateEmployeeService(), createArg).isOk());
 
@@ -170,7 +170,7 @@ public class ExtensiveIntegrationTest {
 		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
 			id = tx
 					.streamResources(TYPE_ABSENCE)
-					.filter(a -> a.getString(BAG_RELATIONS, PARAM_EMPLOYEE).equals(employeeId))
+					.filter(a -> a.getRelationId(PARAM_EMPLOYEE).equals(employeeId))
 					.findFirst()
 					.orElseThrow()
 					.getId();

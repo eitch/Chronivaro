@@ -2,7 +2,6 @@ package ch.atexxi.chronivaro.core.service;
 
 import ch.atexxi.chronivaro.core.model.ChronivaroAuditHelper;
 import ch.atexxi.chronivaro.core.model.ChronivaroModelHelper;
-import li.strolch.model.ParameterBag;
 import li.strolch.model.Resource;
 import li.strolch.persistence.api.StrolchTransaction;
 import li.strolch.service.api.AbstractService;
@@ -13,7 +12,6 @@ import li.strolch.utils.dbc.DBC;
 import java.time.ZonedDateTime;
 
 import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
-import static li.strolch.agent.api.StrolchAgent.getUniqueId;
 
 public class AddVacationCorrectionService
 		extends AbstractService<AddVacationCorrectionService.AddVacationCorrectionArgument, ServiceResult> {
@@ -27,16 +25,14 @@ public class AddVacationCorrectionService
 		try (StrolchTransaction tx = openArgOrUserTx(arg)) {
 			Resource employee = ChronivaroModelHelper.getEmployee(tx, arg.employeeId);
 
-			Resource entry = new Resource(getUniqueId(), "Vacation Correction " + arg.employeeId,
-					TYPE_VACATION_ACCOUNT_ENTRY);
-			entry.addParameterBag(new ParameterBag(BAG_PARAMETERS, "Parameters", "Parameters"));
-			entry.addParameterBag(new ParameterBag(BAG_RELATIONS, "Relations", "Relations"));
+			Resource entry = tx.getResourceTemplate(TYPE_VACATION_ACCOUNT_ENTRY, true);
+			entry.setName("Vacation Correction " + arg.employeeId);
 
 			ZonedDateTime now = ZonedDateTime.now(ChronivaroModelHelper.getEmployeeTimezone(employee));
 
-			entry.setString(BAG_RELATIONS, PARAM_EMPLOYEE, arg.employeeId);
-			entry.setDate(PARAM_DATE, now);
+			entry.setRelation(PARAM_EMPLOYEE, employee);
 			entry.setString(PARAM_VACATION_TYPE, VACATION_CORRECTION);
+			entry.setDate(PARAM_DATE, now);
 			entry.setInteger(PARAM_VALUE, arg.value);
 			entry.setString(PARAM_COMMENT, arg.comment);
 			entry.setString(PARAM_CREATED_BY, tx.getCertificate().getUsername());

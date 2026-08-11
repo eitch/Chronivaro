@@ -7,7 +7,6 @@ import li.strolch.service.api.ServiceArgument;
 import li.strolch.service.api.ServiceResult;
 
 import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
-import static li.strolch.agent.api.StrolchAgent.getUniqueId;
 
 public class CreateLocationService extends AbstractService<CreateLocationService.LocationArgument, ServiceResult> {
 
@@ -16,13 +15,12 @@ public class CreateLocationService extends AbstractService<CreateLocationService
 		String timeZone = arg.timezone == null || arg.timezone.isEmpty() ? getAgent().getTimezone() : arg.timezone;
 
 		try (StrolchTransaction tx = openArgOrUserTx(arg)) {
-			Resource location = new Resource(getUniqueId(), arg.name, TYPE_LOCATION);
-			location.addParameterBag(new li.strolch.model.ParameterBag(BAG_PARAMETERS, "Parameters", "Parameters"));
-			location.addParameterBag(new li.strolch.model.ParameterBag(BAG_RELATIONS, "Relations", "Relations"));
+			Resource location = tx.getResourceTemplate(TYPE_LOCATION, true);
+			location.setName(arg.name);
+			location.setRelation(PARAM_HOLIDAY_CALENDAR,
+					tx.getResourceBy(TYPE_HOLIDAY_CALENDAR, arg.holidayCalendarId, true));
 			location.setString(PARAM_NAME, arg.name);
 			location.setString(PARAM_TIMEZONE, timeZone);
-			if (arg.holidayCalendarId != null)
-				location.setString(BAG_RELATIONS, PARAM_HOLIDAY_CALENDAR, arg.holidayCalendarId);
 			tx.add(location);
 			tx.commitOnClose();
 		}

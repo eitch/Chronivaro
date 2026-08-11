@@ -3,7 +3,6 @@ package ch.atexxi.chronivaro.core;
 import ch.atexxi.chronivaro.core.model.WorkEntryHelper;
 import ch.atexxi.chronivaro.core.service.StartTimerService;
 import ch.atexxi.chronivaro.core.service.StopTimerService;
-import li.strolch.model.ParameterBag;
 import li.strolch.model.Resource;
 import li.strolch.persistence.api.StrolchTransaction;
 import li.strolch.privilege.model.Certificate;
@@ -19,8 +18,7 @@ import java.time.ZonedDateTime;
 import java.util.List;
 
 import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 public class WorkEntryServiceTest {
 
@@ -46,9 +44,9 @@ public class WorkEntryServiceTest {
 		String employeeId = "emp2";
 
 		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
-			Resource employee = new Resource(employeeId, "Jane Doe", TYPE_EMPLOYEE);
-			employee.addParameterBag(new ParameterBag(BAG_PARAMETERS, "Parameters", "Parameters"));
-			employee.addParameterBag(new ParameterBag(BAG_RELATIONS, "Relations", "Relations"));
+			Resource employee = tx.getResourceTemplate(TYPE_EMPLOYEE, true);
+			employee.setId(employeeId);
+			employee.setName("Jane Doe");
 			employee.setBoolean(PARAM_ACTIVE, true);
 			employee.setDate(PARAM_JOIN_DATE, ZonedDateTime.parse("2026-01-01T00:00:00Z"));
 			tx.add(employee);
@@ -77,7 +75,7 @@ public class WorkEntryServiceTest {
 			assertTrue(WorkEntryHelper.findActiveWorkEntry(tx, employeeId).isEmpty());
 			List<Resource> entries = tx
 					.streamResources(TYPE_WORK_ENTRY)
-					.filter(e -> e.getString(BAG_RELATIONS, PARAM_EMPLOYEE).equals(employeeId))
+					.filter(e -> e.getRelationId(PARAM_EMPLOYEE).equals(employeeId))
 					.toList();
 			assertEquals(1, entries.size());
 			assertTrue(entries.getFirst().hasParameter(PARAM_END));
@@ -88,12 +86,12 @@ public class WorkEntryServiceTest {
 	public void shouldNotStartTimerTwice() {
 		String employeeId = "emp1";
 		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
-			Resource e1 = new Resource(employeeId, "Emp 1", TYPE_EMPLOYEE);
-			e1.addParameterBag(new ParameterBag(BAG_PARAMETERS, "Parameters", "Parameters"));
-			e1.addParameterBag(new ParameterBag(BAG_RELATIONS, "Relations", "Relations"));
+			Resource e1 = tx.getResourceTemplate(TYPE_EMPLOYEE, true);
+			e1.setId(employeeId);
+			e1.setName("Emp 1");
 			e1.setBoolean(PARAM_ACTIVE, true);
-			e1.setString(BAG_RELATIONS, PARAM_PRIMARY_TEAM, "team1");
-			e1.setString(BAG_PARAMETERS, PARAM_LOCATION, "loc1");
+			e1.setRelationId(PARAM_PRIMARY_TEAM, "team1");
+			e1.setRelationId(PARAM_LOCATION, "loc1");
 			e1.setDate(PARAM_JOIN_DATE, ZonedDateTime.now());
 			tx.add(e1);
 			tx.commitOnClose();
@@ -106,7 +104,7 @@ public class WorkEntryServiceTest {
 
 		ServiceResult result2 = serviceHandler.doService(certificate, new StartTimerService(),
 				new StringArgument(employeeId));
-		assertTrue(!result2.isOk());
+		assertFalse(result2.isOk());
 		assertTrue(result2.getMessage().contains("An active work entry already exists"));
 	}
 }

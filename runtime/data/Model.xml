@@ -5,13 +5,13 @@
         <ParameterBag Id="parameters" Name="Parameters" Type="Parameters">
             <Parameter Id="personalNumber" Name="Personal Number" Type="String" Value=""/>
             <Parameter Id="displayName" Name="Display Name" Type="String" Value=""/>
-            <Parameter Id="location" Name="Location" Type="String" Value=""/>
             <Parameter Id="timezone" Name="Timezone" Type="String" Value="Europe/Zurich"/>
             <Parameter Id="joinDate" Name="Join Date" Type="Date" Value="1970-01-01T00:00:00.000+01:00"/>
             <Parameter Id="exitDate" Name="Exit Date" Type="Date" Value="9999-12-31T23:59:59.999+01:00"/>
             <Parameter Id="active" Name="Active" Type="Boolean" Value="true"/>
         </ParameterBag>
         <ParameterBag Id="relations" Name="Relations" Type="Relations">
+            <Parameter Id="location" Name="Location" Type="String" Value=""/>
             <Parameter Id="primaryTeam" Name="Primary Team" Type="String" Value=""/>
             <Parameter Id="user" Name="User" Type="String" Value=""/>
         </ParameterBag>

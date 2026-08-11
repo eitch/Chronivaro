@@ -3,7 +3,6 @@ package ch.atexxi.chronivaro.core;
 import ch.atexxi.chronivaro.core.model.VacationHelper;
 import ch.atexxi.chronivaro.core.service.ApproveAbsenceService;
 import ch.atexxi.chronivaro.core.service.RequestAbsenceService;
-import li.strolch.model.ParameterBag;
 import li.strolch.model.Resource;
 import li.strolch.persistence.api.StrolchTransaction;
 import li.strolch.privilege.model.Certificate;
@@ -16,7 +15,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.time.ZonedDateTime;
-import java.util.UUID;
 
 import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
 import static org.junit.Assert.assertEquals;
@@ -46,33 +44,31 @@ public class AbsenceServiceTest {
 		String employeeId = "emp4";
 
 		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
-			Resource employee = new Resource(employeeId, "Jane Doe", TYPE_EMPLOYEE);
-			employee.addParameterBag(new ParameterBag(BAG_PARAMETERS, "Parameters", "Parameters"));
-			employee.addParameterBag(new ParameterBag(BAG_RELATIONS, "Relations", "Relations"));
+			Resource employee = tx.getResourceTemplate(TYPE_EMPLOYEE, true);
+			employee.setId(employeeId);
+			employee.setName("Jane Doe");
 			employee.setBoolean(PARAM_ACTIVE, true);
 			employee.setDate(PARAM_JOIN_DATE, ZonedDateTime.parse("2026-01-01T00:00:00Z"));
 			tx.add(employee);
 
-			Resource schedule = new Resource(UUID.randomUUID().toString(), "Schedule",
-					TYPE_EMPLOYMENT_SCHEDULE_VERSION);
-			schedule.addParameterBag(new ParameterBag(BAG_PARAMETERS, "Parameters", "Parameters"));
-			schedule.addParameterBag(new ParameterBag(BAG_RELATIONS, "Relations", "Relations"));
-			schedule.setString(BAG_RELATIONS, PARAM_EMPLOYEE, employeeId);
+			Resource schedule = tx.getResourceTemplate(TYPE_EMPLOYMENT_SCHEDULE_VERSION, true);
+			schedule.setName("Schedule");
+			schedule.setRelation(PARAM_EMPLOYEE, employee);
 			schedule.setDate(PARAM_VALID_FROM, ZonedDateTime.parse("2026-01-01T00:00:00Z"));
 			schedule.setInteger(PARAM_DAILY_TARGET_MINUTES + "Monday", 480);
 			tx.add(schedule);
 
-			Resource absenceType = new Resource("vacation", "Vacation", TYPE_ABSENCE_TYPE);
-			absenceType.addParameterBag(new ParameterBag(BAG_PARAMETERS, "Parameters", "Parameters"));
+			Resource absenceType = tx.getResourceTemplate(TYPE_ABSENCE_TYPE, true);
+			absenceType.setId("vacation");
+			absenceType.setName("Vacation");
 			absenceType.setString(PARAM_CODE, "VACATION");
 			absenceType.setBoolean(PARAM_REDUCE_VACATION_CREDIT, true);
 			tx.add(absenceType);
 
 			// Add initial vacation entitlement
-			Resource entry = new Resource(UUID.randomUUID().toString(), "Entitlement", TYPE_VACATION_ACCOUNT_ENTRY);
-			entry.addParameterBag(new ParameterBag(BAG_PARAMETERS, "Parameters", "Parameters"));
-			entry.addParameterBag(new ParameterBag(BAG_RELATIONS, "Relations", "Relations"));
-			entry.setString(BAG_RELATIONS, PARAM_EMPLOYEE, employeeId);
+			Resource entry = tx.getResourceTemplate(TYPE_VACATION_ACCOUNT_ENTRY, true);
+			entry.setName("Entitlement");
+			entry.setRelation(PARAM_EMPLOYEE, employee);
 			entry.setDate(PARAM_DATE, ZonedDateTime.parse("2026-01-01T00:00:00Z"));
 			entry.setString(PARAM_VACATION_TYPE, VACATION_ENTITLEMENT);
 			entry.setInteger(PARAM_VALUE, 20 * 480); // 20 days

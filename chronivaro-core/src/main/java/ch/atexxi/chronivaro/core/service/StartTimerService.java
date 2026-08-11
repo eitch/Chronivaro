@@ -2,7 +2,6 @@ package ch.atexxi.chronivaro.core.service;
 
 import ch.atexxi.chronivaro.core.model.ChronivaroModelHelper;
 import ch.atexxi.chronivaro.core.model.WorkEntryHelper;
-import li.strolch.model.ParameterBag;
 import li.strolch.model.Resource;
 import li.strolch.persistence.api.StrolchTransaction;
 import li.strolch.service.StringArgument;
@@ -11,7 +10,6 @@ import li.strolch.service.api.ServiceResult;
 import li.strolch.utils.dbc.DBC;
 
 import java.time.ZonedDateTime;
-import java.util.UUID;
 
 import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
 
@@ -32,10 +30,9 @@ public class StartTimerService extends AbstractService<StringArgument, ServiceRe
 			String username = tx.getCertificate().getUsername();
 
 			Resource workEntry = tx.getResourceTemplate(TYPE_WORK_ENTRY, true);
-			workEntry.setId(UUID.randomUUID().toString());
 			workEntry.setName("Timer " + now);
 
-			workEntry.setString(BAG_RELATIONS, PARAM_EMPLOYEE, employee.getId());
+			workEntry.setRelation(PARAM_EMPLOYEE, employee);
 			workEntry.setDate(PARAM_START, now);
 			workEntry.setString(PARAM_SOURCE, SOURCE_TIMER);
 			workEntry.setString(PARAM_CREATED_BY, username);

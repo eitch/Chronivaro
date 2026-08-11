@@ -7,6 +7,7 @@ import li.strolch.persistence.api.StrolchTransaction;
 import li.strolch.service.api.AbstractService;
 import li.strolch.service.api.ServiceArgument;
 import li.strolch.service.api.ServiceResult;
+
 import java.time.ZonedDateTime;
 
 import java.util.List;
@@ -46,10 +47,8 @@ public class PresenceService extends AbstractService<PresenceService.PresenceArg
 		try (StrolchTransaction tx = openArgOrUserTx(arg)) {
 			List<PresenceInfo> presenceInfos = tx
 					.streamResources(TYPE_EMPLOYEE)
-					.filter(e -> arg.teamId == null || e.getString(BAG_RELATIONS, PARAM_PRIMARY_TEAM).equals(arg.teamId))
-					.filter(e -> arg.locationId == null || e
-							.getString(BAG_PARAMETERS, PARAM_LOCATION)
-							.equals(arg.locationId))
+					.filter(e -> arg.teamId == null || e.getRelationId(PARAM_PRIMARY_TEAM).equals(arg.teamId))
+					.filter(e -> arg.locationId == null || e.getRelationId(PARAM_LOCATION).equals(arg.locationId))
 					.filter(e -> e.getBoolean(PARAM_ACTIVE))
 					.map(e -> {
 						Optional<Resource> activeEntry = WorkEntryHelper.findActiveWorkEntry(tx, e.getId());
@@ -71,24 +70,20 @@ public class PresenceService extends AbstractService<PresenceService.PresenceArg
 		ZonedDateTime from = now.toLocalDate().atStartOfDay(now.getZone());
 		ZonedDateTime to = from.plusDays(1).minusNanos(1);
 
-		return WorkEntryHelper
-				.findWorkEntries(tx, employee.getId(), from, to)
-				.stream()
-				.mapToInt(entry -> {
-					ZonedDateTime start = entry.getDate(PARAM_START);
-					ZonedDateTime end = entry.getDate(PARAM_END);
-					if (end.getYear() == 1970)
-						end = ZonedDateTime.now(start.getZone());
+		return WorkEntryHelper.findWorkEntries(tx, employee.getId(), from, to).stream().mapToInt(entry -> {
+			ZonedDateTime start = entry.getDate(PARAM_START);
+			ZonedDateTime end = entry.getDate(PARAM_END);
+			if (end.getYear() == 1970)
+				end = ZonedDateTime.now(start.getZone());
 
-					ZonedDateTime effectiveStart = start.isBefore(from) ? from : start;
-					ZonedDateTime effectiveEnd = end.isAfter(to) ? to : end;
+			ZonedDateTime effectiveStart = start.isBefore(from) ? from : start;
+			ZonedDateTime effectiveEnd = end.isAfter(to) ? to : end;
 
-					if (effectiveEnd.isBefore(effectiveStart))
-						return 0;
+			if (effectiveEnd.isBefore(effectiveStart))
+				return 0;
 
-					return (int) java.time.Duration.between(effectiveStart, effectiveEnd).toMinutes();
-				})
-				.sum();
+			return (int) java.time.Duration.between(effectiveStart, effectiveEnd).toMinutes();
+		}).sum();
 	}
 
 	@Override

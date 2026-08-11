@@ -12,8 +12,6 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 
 import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
-import static li.strolch.agent.api.StrolchAgent.getUniqueId;
-import static li.strolch.model.StrolchModelConstants.BAG_RELATIONS;
 
 public class CreateHolidayService extends AbstractService<CreateHolidayService.HolidayArgument, ServiceResult> {
 
@@ -29,8 +27,8 @@ public class CreateHolidayService extends AbstractService<CreateHolidayService.H
 
 			boolean exists = tx
 					.streamResources(TYPE_HOLIDAY)
-					.filter(h -> h.hasParameter(BAG_RELATIONS, PARAM_HOLIDAY_CALENDAR) && h
-							.getString(BAG_RELATIONS, PARAM_HOLIDAY_CALENDAR)
+					.filter(h -> h.hasRelation(PARAM_HOLIDAY_CALENDAR) && h
+							.getRelationId(PARAM_HOLIDAY_CALENDAR)
 							.equals(arg.holidayCalendarId))
 					.anyMatch(h -> h.hasParameter(PARAM_DATE) && h.getDate(PARAM_DATE).equals(date));
 
@@ -38,10 +36,10 @@ public class CreateHolidayService extends AbstractService<CreateHolidayService.H
 				return ServiceResult.error("Holiday already exists for date " + arg.date);
 			}
 
-			Resource holiday = new Resource(getUniqueId(), arg.name, TYPE_HOLIDAY);
-			holiday.addParameterBag(new li.strolch.model.ParameterBag(BAG_PARAMETERS, "Parameters", "Parameters"));
-			holiday.addParameterBag(new li.strolch.model.ParameterBag(BAG_RELATIONS, "Relations", "Relations"));
-			holiday.setString(BAG_RELATIONS, PARAM_HOLIDAY_CALENDAR, arg.holidayCalendarId);
+			Resource holiday = tx.getResourceTemplate(TYPE_HOLIDAY, true);
+			holiday.setName(arg.name);
+			holiday.setRelation(PARAM_HOLIDAY_CALENDAR,
+					tx.getResourceBy(TYPE_HOLIDAY_CALENDAR, arg.holidayCalendarId, true));
 			holiday.setDate(PARAM_DATE, date);
 			holiday.setString(PARAM_NAME, arg.name);
 			holiday.setDouble(PARAM_CREDIT_FACTOR, arg.creditFactor == 0.0 ? 1.0 : arg.creditFactor);

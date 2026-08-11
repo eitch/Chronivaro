@@ -7,8 +7,8 @@ import li.strolch.service.StringArgument;
 import li.strolch.service.api.AbstractService;
 import li.strolch.service.api.ServiceResult;
 
-import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
-import static li.strolch.model.StrolchModelConstants.BAG_RELATIONS;
+import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.PARAM_LOCATION;
+import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.TYPE_EMPLOYEE;
 
 public class RemoveLocationService extends AbstractService<StringArgument, ServiceResult> {
 
@@ -19,9 +19,7 @@ public class RemoveLocationService extends AbstractService<StringArgument, Servi
 
 			boolean employeeReferencing = tx
 					.streamResources(TYPE_EMPLOYEE)
-					.anyMatch(e -> e.hasParameter(BAG_RELATIONS, PARAM_LOCATION) && e
-							.getString(BAG_RELATIONS, PARAM_LOCATION)
-							.equals(arg.value));
+					.anyMatch(e -> e.hasRelation(PARAM_LOCATION) && e.getRelationId(PARAM_LOCATION).equals(arg.value));
 
 			if (employeeReferencing) {
 				return ServiceResult.error("Location is still referenced by an employee!");

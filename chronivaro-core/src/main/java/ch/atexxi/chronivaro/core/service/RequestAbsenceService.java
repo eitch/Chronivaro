@@ -1,7 +1,6 @@
 package ch.atexxi.chronivaro.core.service;
 
 import ch.atexxi.chronivaro.core.model.AbsenceHelper;
-import li.strolch.model.ParameterBag;
 import li.strolch.model.Resource;
 import li.strolch.persistence.api.StrolchTransaction;
 import li.strolch.service.api.AbstractService;
@@ -10,7 +9,6 @@ import li.strolch.service.api.ServiceResult;
 import li.strolch.utils.dbc.DBC;
 
 import java.time.ZonedDateTime;
-import java.util.UUID;
 
 import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
 
@@ -39,12 +37,11 @@ public class RequestAbsenceService
 		try (StrolchTransaction tx = openArgOrUserTx(arg)) {
 			Resource absenceType = AbsenceHelper.getAbsenceType(tx, arg.absenceTypeCode);
 
-			Resource absence = new Resource(UUID.randomUUID().toString(), "Absence " + arg.start, TYPE_ABSENCE);
-			absence.addParameterBag(new ParameterBag(BAG_PARAMETERS, "Parameters", "Parameters"));
-			absence.addParameterBag(new ParameterBag(BAG_RELATIONS, "Relations", "Relations"));
+			Resource absence = tx.getResourceTemplate(TYPE_ABSENCE, true);
+			absence.setName("Absence " + arg.start);
 
-			absence.setString(BAG_RELATIONS, PARAM_EMPLOYEE, arg.employeeId);
-			absence.setString(BAG_RELATIONS, PARAM_ABSENCE_TYPE, absenceType.getId());
+			absence.setRelation(PARAM_EMPLOYEE, tx.getResourceBy(TYPE_EMPLOYEE, arg.employeeId, true));
+			absence.setRelation(PARAM_ABSENCE_TYPE, absenceType);
 			absence.setDate(PARAM_START, arg.start);
 			absence.setDate(PARAM_END, arg.end);
 			absence.setString(PARAM_DURATION_TYPE, arg.durationType);

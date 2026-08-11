@@ -14,13 +14,13 @@ public class ChronivaroMapper {
 	}
 
 	public static WorkEntryDto toDto(Resource workEntry) {
-		return new WorkEntryDto(workEntry.getId(), workEntry.getString(BAG_RELATIONS, PARAM_EMPLOYEE),
+		return new WorkEntryDto(workEntry.getId(), workEntry.getRelationId(PARAM_EMPLOYEE),
 				workEntry.getDate(PARAM_START), workEntry.getDate(PARAM_END), workEntry.getString(PARAM_SOURCE),
 				workEntry.getString(PARAM_COMMENT), workEntry.getString(PARAM_CREATED_BY));
 	}
 
 	public static AbsenceDto toDto(Resource absence, String absenceTypeCode) {
-		return new AbsenceDto(absence.getId(), absence.getString(BAG_RELATIONS, PARAM_EMPLOYEE), absenceTypeCode,
+		return new AbsenceDto(absence.getId(), absence.getRelationId(PARAM_EMPLOYEE), absenceTypeCode,
 				absence.getDate(PARAM_START), absence.getDate(PARAM_END), absence.getString(PARAM_DURATION_TYPE),
 				absence.hasParameter(PARAM_DAY_PART) ? absence.getString(PARAM_DAY_PART) : null,
 				absence.hasParameter(PARAM_MINUTES) ? absence.getInteger(PARAM_MINUTES) : null,
@@ -53,7 +53,7 @@ public class ChronivaroMapper {
 
 	public static LocationDto locationToDto(Resource location) {
 		return new LocationDto(location.getId(), location.getString(PARAM_NAME), location.getString(PARAM_TIMEZONE),
-				location.getString(BAG_RELATIONS, PARAM_HOLIDAY_CALENDAR));
+				location.getRelationId(PARAM_HOLIDAY_CALENDAR));
 	}
 
 	public static AbsenceTypeDto absenceTypeToDto(Resource type) {
@@ -65,12 +65,12 @@ public class ChronivaroMapper {
 
 	public static EmployeeDto employeeToDto(Resource employee) {
 		return new EmployeeDto(employee.getId(), employee.getString(PARAM_PERSONAL_NUMBER),
-				employee.getString(PARAM_DISPLAY_NAME), employee.getString(BAG_RELATIONS, PARAM_TEAM),
-				employee.getString(BAG_RELATIONS, PARAM_LOCATION), employee.getString(PARAM_TIMEZONE),
+				employee.getString(PARAM_DISPLAY_NAME), employee.getRelationId(PARAM_TEAM),
+				employee.getRelationId(PARAM_LOCATION), employee.getString(PARAM_TIMEZONE),
 				employee.getDate(PARAM_JOIN_DATE).toLocalDate(),
 				employee.hasParameter(PARAM_EXIT_DATE) && employee.getDate(PARAM_EXIT_DATE) != null ?
 						employee.getDate(PARAM_EXIT_DATE).toLocalDate() : null, employee.getBoolean(PARAM_ACTIVE),
-				employee.getString(BAG_RELATIONS, PARAM_USER));
+				employee.getRelationId(PARAM_USER));
 	}
 
 	public static HolidayCalendarDto holidayCalendarToDto(Resource calendar) {
@@ -78,7 +78,7 @@ public class ChronivaroMapper {
 	}
 
 	public static HolidayDto holidayToDto(Resource holiday) {
-		return new HolidayDto(holiday.getId(), holiday.getString(BAG_RELATIONS, PARAM_HOLIDAY_CALENDAR),
+		return new HolidayDto(holiday.getId(), holiday.getRelationId(PARAM_HOLIDAY_CALENDAR),
 				holiday.getDate(PARAM_DATE).toLocalDate(), holiday.getString(PARAM_NAME),
 				holiday.getDouble(PARAM_CREDIT_FACTOR));
 	}

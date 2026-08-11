@@ -44,9 +44,9 @@ public class PeriodLifecycleServiceTest {
 	public void shouldTransitionPeriodLifecycle() {
 		String periodId = "period_202608";
 		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
-			Resource period = new Resource(periodId, "Period 2026-08", TYPE_TIME_PERIOD);
-			period.addParameterBag(new ParameterBag(BAG_PARAMETERS, "Parameters", "Parameters"));
-			period.addParameterBag(new ParameterBag(BAG_RELATIONS, "Relations", "Relations"));
+			Resource period = tx.getResourceTemplate(TYPE_TIME_PERIOD, true);
+			period.setId(periodId);
+			period.setName("Period 2026-08");
 			period.setString(PARAM_STATE, STATE_OPEN);
 			tx.add(period);
 			tx.commitOnClose();

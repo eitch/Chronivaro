@@ -11,7 +11,7 @@ public class VacationHelper {
 	public static int getVacationBalance(StrolchTransaction tx, String employeeId, ZonedDateTime at) {
 		return tx
 				.streamResources(TYPE_VACATION_ACCOUNT_ENTRY)
-				.filter(e -> e.getString(BAG_RELATIONS, PARAM_EMPLOYEE).equals(employeeId))
+				.filter(e -> e.getRelationId(PARAM_EMPLOYEE).equals(employeeId))
 				.filter(e -> !e.getDate(PARAM_DATE).isAfter(at))
 				.mapToInt(e -> e.getInteger(PARAM_VALUE))
 				.sum();

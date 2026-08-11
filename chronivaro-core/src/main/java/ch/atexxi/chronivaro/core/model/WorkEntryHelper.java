@@ -14,7 +14,7 @@ public class WorkEntryHelper {
 	public static Optional<Resource> findActiveWorkEntry(StrolchTransaction tx, String employeeId) {
 		return tx
 				.streamResources(TYPE_WORK_ENTRY)
-				.filter(e -> e.getString(BAG_RELATIONS, PARAM_EMPLOYEE).equals(employeeId))
+				.filter(e -> e.getRelationId(PARAM_EMPLOYEE).equals(employeeId))
 				.filter(e -> !e.hasParameter(PARAM_END) || e.getDate(PARAM_END).getYear() == 1970)
 				.findFirst();
 	}
@@ -23,7 +23,7 @@ public class WorkEntryHelper {
 			ZonedDateTime to) {
 		return tx
 				.streamResources(TYPE_WORK_ENTRY)
-				.filter(e -> e.getString(BAG_RELATIONS, PARAM_EMPLOYEE).equals(employeeId))
+				.filter(e -> e.getRelationId(PARAM_EMPLOYEE).equals(employeeId))
 				.filter(e -> {
 					ZonedDateTime start = e.getDate(PARAM_START);
 					ZonedDateTime end = e.getDate(PARAM_END);
@@ -40,7 +40,7 @@ public class WorkEntryHelper {
 			ZonedDateTime end, String excludeId) {
 		List<Resource> existing = tx
 				.streamResources(TYPE_WORK_ENTRY)
-				.filter(e -> e.getString(BAG_RELATIONS, PARAM_EMPLOYEE).equals(employeeId))
+				.filter(e -> e.getRelationId(PARAM_EMPLOYEE).equals(employeeId))
 				.filter(e -> !e.getId().equals(excludeId))
 				.filter(e -> {
 					ZonedDateTime s = e.getDate(PARAM_START);

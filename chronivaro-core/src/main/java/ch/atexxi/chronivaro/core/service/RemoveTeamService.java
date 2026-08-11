@@ -7,8 +7,8 @@ import li.strolch.service.StringArgument;
 import li.strolch.service.api.AbstractService;
 import li.strolch.service.api.ServiceResult;
 
-import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
-import static li.strolch.model.StrolchModelConstants.BAG_RELATIONS;
+import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.PARAM_TEAM;
+import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.TYPE_EMPLOYEE;
 
 public class RemoveTeamService extends AbstractService<StringArgument, ServiceResult> {
 
@@ -19,9 +19,7 @@ public class RemoveTeamService extends AbstractService<StringArgument, ServiceRe
 
 			boolean employeeReferencing = tx
 					.streamResources(TYPE_EMPLOYEE)
-					.anyMatch(e -> e.hasParameter(BAG_RELATIONS, PARAM_TEAM) && e
-							.getString(BAG_RELATIONS, PARAM_TEAM)
-							.equals(arg.value));
+					.anyMatch(e -> e.hasRelation(PARAM_TEAM) && e.getRelationId(PARAM_TEAM).equals(arg.value));
 
 			if (employeeReferencing) {
 				return ServiceResult.error("Team is still referenced by an employee!");

@@ -43,9 +43,9 @@ public class CreateScheduleServiceTest {
 		String employeeId = "emp-create-schedule";
 
 		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
-			Resource employee = new Resource(employeeId, "Schedule Emp", TYPE_EMPLOYEE);
-			employee.addParameterBag(new ParameterBag(BAG_PARAMETERS, "Parameters", "Parameters"));
-			employee.addParameterBag(new ParameterBag(BAG_RELATIONS, "Relations", "Relations"));
+			Resource employee = tx.getResourceTemplate(TYPE_EMPLOYEE, true);
+			employee.setId(employeeId);
+			employee.setName("Schedule Emp");
 			employee.setBoolean(PARAM_ACTIVE, true);
 			tx.add(employee);
 			tx.commitOnClose();
@@ -70,7 +70,7 @@ public class CreateScheduleServiceTest {
 		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
 			List<Resource> schedules = tx
 					.streamResources(TYPE_EMPLOYMENT_SCHEDULE_VERSION)
-					.filter(s -> s.getString(BAG_RELATIONS, PARAM_EMPLOYEE).equals(employeeId))
+					.filter(s -> s.getRelationId(PARAM_EMPLOYEE).equals(employeeId))
 					.toList();
 			assertEquals(1, schedules.size());
 			Resource schedule = schedules.getFirst();

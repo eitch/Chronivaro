@@ -2,7 +2,6 @@ package ch.atexxi.chronivaro.core;
 
 import ch.atexxi.chronivaro.core.model.HolidayHelper;
 import ch.atexxi.chronivaro.core.model.ScheduleHelper;
-import li.strolch.model.ParameterBag;
 import li.strolch.model.Resource;
 import li.strolch.persistence.api.StrolchTransaction;
 import li.strolch.privilege.model.Certificate;
@@ -39,26 +38,33 @@ public class ScheduleHelperTest {
 	@Test
 	public void shouldCalculateTargetMinutes() {
 		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
+			// Create Holiday Calendar
+			Resource calendar = tx.getResourceTemplate(TYPE_HOLIDAY_CALENDAR, true);
+			calendar.setId("cal1");
+			calendar.setName("Calendar 1");
+			tx.add(calendar);
+
 			// Create Location
-			Resource location = new Resource("loc1", "Location 1", TYPE_LOCATION);
-			location.addParameterBag(new ParameterBag(BAG_RELATIONS, "Relations", "Relations"));
-			location.setString(BAG_RELATIONS, PARAM_HOLIDAY_CALENDAR, "cal1");
+			Resource location = tx.getResourceTemplate(TYPE_LOCATION, true);
+			location.setId("loc1");
+			location.setName("Location 1");
+			location.setRelation(PARAM_HOLIDAY_CALENDAR, calendar);
 			tx.add(location);
 
 			// Create Employee
-			Resource employee = new Resource("emp1", "John Doe", TYPE_EMPLOYEE);
-			employee.addParameterBag(new ParameterBag(BAG_PARAMETERS, "Parameters", "Parameters"));
-			employee.addParameterBag(new ParameterBag(BAG_RELATIONS, "Relations", "Relations"));
+			Resource employee = tx.getResourceTemplate(TYPE_EMPLOYEE, true);
+			employee.setId("emp1");
+			employee.setName("John Doe");
 			employee.setBoolean(PARAM_ACTIVE, true);
 			employee.setDate(PARAM_JOIN_DATE, ZonedDateTime.parse("2026-01-01T00:00:00Z"));
-			employee.setString(BAG_PARAMETERS, PARAM_LOCATION, "loc1");
+			employee.setRelationId(PARAM_LOCATION, "loc1");
 			tx.add(employee);
 
 			// Create Schedule Version
-			Resource schedule = new Resource("v1", "Schedule V1", TYPE_EMPLOYMENT_SCHEDULE_VERSION);
-			schedule.addParameterBag(new ParameterBag(BAG_PARAMETERS, "Parameters", "Parameters"));
-			schedule.addParameterBag(new ParameterBag(BAG_RELATIONS, "Relations", "Relations"));
-			schedule.setString(BAG_RELATIONS, PARAM_EMPLOYEE, "emp1");
+			Resource schedule = tx.getResourceTemplate(TYPE_EMPLOYMENT_SCHEDULE_VERSION, true);
+			schedule.setId("v1");
+			schedule.setName("Schedule V1");
+			schedule.setRelation(PARAM_EMPLOYEE, employee);
 			schedule.setDate(PARAM_VALID_FROM, ZonedDateTime.parse("2026-01-01T00:00:00Z"));
 			schedule.setInteger(PARAM_DAILY_TARGET_MINUTES + "Monday", 480);
 			schedule.setInteger(PARAM_DAILY_TARGET_MINUTES + "Tuesday", 480);
@@ -70,10 +76,10 @@ public class ScheduleHelperTest {
 			tx.add(schedule);
 
 			// Create Holiday
-			Resource holiday = new Resource("h1", "New Year", TYPE_HOLIDAY);
-			holiday.addParameterBag(new ParameterBag(BAG_RELATIONS, "Relations", "Relations"));
-			holiday.addParameterBag(new ParameterBag(BAG_PARAMETERS, "Parameters", "Parameters"));
-			holiday.setString(BAG_RELATIONS, PARAM_HOLIDAY_CALENDAR, "cal1");
+			Resource holiday = tx.getResourceTemplate(TYPE_HOLIDAY, true);
+			holiday.setId("h1");
+			holiday.setName("New Year");
+			holiday.setRelation(PARAM_HOLIDAY_CALENDAR, calendar);
 			holiday.setDate(PARAM_DATE, ZonedDateTime.parse("2026-01-01T00:00:00Z"));
 			holiday.setDouble(PARAM_CREDIT_FACTOR, 1.0);
 			tx.add(holiday);
