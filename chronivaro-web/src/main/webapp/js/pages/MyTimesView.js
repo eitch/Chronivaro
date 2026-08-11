@@ -66,7 +66,7 @@ export default class MyTimesView {
                     row.innerHTML = `
 						<td>${new Date(entry.start).toLocaleString()}</td>
 						<td>${entry.end ? new Date(entry.end).toLocaleString() : 'Running...'}</td>
-						<td>${entry.duration}</td>
+						<td>${entry.durationMinutes}</td>
 						<td>${entry.comment || ''}</td>
 					`;
                     tbody.appendChild(row);

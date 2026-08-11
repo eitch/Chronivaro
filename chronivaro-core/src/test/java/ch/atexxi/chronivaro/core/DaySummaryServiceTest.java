@@ -1,5 +1,7 @@
 package ch.atexxi.chronivaro.core;
 
+import ch.atexxi.chronivaro.core.model.ChronivaroModelHelper;
+import ch.atexxi.chronivaro.core.model.DayState;
 import ch.atexxi.chronivaro.core.model.DaySummary;
 import ch.atexxi.chronivaro.core.service.DaySummaryService;
 import li.strolch.model.Resource;
@@ -86,6 +88,7 @@ public class DaySummaryServiceTest {
 		assertEquals(ServiceResult.success().getState(), result.getState());
 
 		DaySummary summary = result.daySummary;
+		assertEquals(DayState.NOT_WORKING, summary.state());
 		assertEquals(480, summary.targetMinutes());
 		assertEquals(480, summary.actualMinutes());
 		assertEquals(0, summary.holidayMinutes());
@@ -99,7 +102,7 @@ public class DaySummaryServiceTest {
 	@Test
 	public void shouldCalculateDaySummaryWithActiveEntry() {
 		String employeeId = "emp4";
-		LocalDate date = LocalDate.of(2026, 2, 2); // Monday
+		LocalDate date = LocalDate.now(); // Today
 
 		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
 			Resource employee = tx.getResourceTemplate(TYPE_EMPLOYEE, true);
@@ -114,14 +117,16 @@ public class DaySummaryServiceTest {
 			schedule.setName("Schedule");
 			schedule.setRelation(PARAM_EMPLOYEE, employee);
 			schedule.setDate(PARAM_VALID_FROM, ZonedDateTime.parse("2026-01-01T00:00:00Z"));
-			schedule.setInteger(PARAM_DAILY_TARGET_MINUTES + "Monday", 480);
+			schedule.setInteger(PARAM_DAILY_TARGET_MINUTES + date.getDayOfWeek().name().substring(0, 1).toUpperCase()
+					+ date.getDayOfWeek().name().substring(1).toLowerCase(), 480);
 			tx.add(schedule);
 
-			// Active Work Entry: 08:00 - ...
+			// Active Work Entry: started 10 minutes ago
+			ZonedDateTime start = ZonedDateTime.now(ChronivaroModelHelper.getEmployeeTimezone(employee)).minusMinutes(10);
 			Resource e1 = tx.getResourceTemplate(TYPE_WORK_ENTRY, true);
 			e1.setName("E1");
 			e1.setRelation(PARAM_EMPLOYEE, employee);
-			e1.setDate(PARAM_START, ZonedDateTime.parse("2026-02-02T08:00:00+01:00[Europe/Zurich]"));
+			e1.setDate(PARAM_START, start);
 			e1.setDate(PARAM_END, ZonedDateTime.parse("1970-01-01T00:00:00+01:00"));
 			tx.add(e1);
 
@@ -137,9 +142,10 @@ public class DaySummaryServiceTest {
 		assertEquals(ServiceResult.success().getState(), result.getState());
 
 		DaySummary summary = result.daySummary;
+		assertEquals(DayState.WORKING, summary.state());
 		assertEquals(480, summary.targetMinutes());
-		// 08:00 to end of day (23:59:59...) -> 16 hours -> 960 minutes
-		assertEquals(960, summary.actualMinutes());
+		// started 10 minutes ago, so should be around 10 minutes
+		assertEquals(10, summary.actualMinutes());
 		assertEquals(1, summary.workEntries().size());
 		assertEquals("...", summary.workEntries().getFirst().end());
 	}

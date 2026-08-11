@@ -74,11 +74,17 @@ public class MonthSummaryService
 						.minusNanos(1);
 				List<Resource> entries = WorkEntryHelper.findWorkEntries(tx, arg.employeeId, from, to);
 				int actual = 0;
+				DayState state = DayState.NOT_WORKING;
 				for (Resource entry : entries) {
 					java.time.ZonedDateTime start = entry.getDate(PARAM_START);
 					java.time.ZonedDateTime end = entry.getDate(PARAM_END);
+					boolean isActive = end.getYear() == 1970;
+					if (isActive)
+						state = DayState.WORKING;
+
 					java.time.ZonedDateTime effectiveStart = start.isBefore(from) ? from : start;
-					java.time.ZonedDateTime effectiveEnd = (end == null || end.isAfter(to)) ? to : end;
+					java.time.ZonedDateTime now = java.time.ZonedDateTime.now(effectiveStart.getZone());
+					java.time.ZonedDateTime effectiveEnd = isActive ? (now.isBefore(to) ? now : to) : (end.isAfter(to) ? to : end);
 					if (effectiveEnd.isAfter(effectiveStart)) {
 						actual += (int) java.time.Duration.between(effectiveStart, effectiveEnd).toMinutes();
 					}
@@ -89,7 +95,7 @@ public class MonthSummaryService
 				totalHoliday += holiday;
 				totalAbsence += absence;
 
-				daySummaries.add(new DaySummary(date, target, actual, holiday, absence, List.of(), List.of()));
+				daySummaries.add(new DaySummary(date, state, target, actual, holiday, absence, List.of(), List.of()));
 			}
 
 			// TODO: Initial balance from previous period

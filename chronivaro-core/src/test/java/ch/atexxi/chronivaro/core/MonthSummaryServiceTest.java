@@ -1,0 +1,83 @@
+package ch.atexxi.chronivaro.core;
+
+import ch.atexxi.chronivaro.core.model.ChronivaroModelHelper;
+import ch.atexxi.chronivaro.core.model.DayState;
+import ch.atexxi.chronivaro.core.model.MonthSummary;
+import ch.atexxi.chronivaro.core.service.MonthSummaryService;
+import li.strolch.model.Resource;
+import li.strolch.persistence.api.StrolchTransaction;
+import li.strolch.privilege.model.Certificate;
+import li.strolch.service.api.ServiceHandler;
+import li.strolch.service.api.ServiceResult;
+import li.strolch.testbase.runtime.RuntimeMock;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.Test;
+
+import java.time.LocalDate;
+import java.time.YearMonth;
+import java.time.ZonedDateTime;
+
+import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
+import static org.junit.Assert.assertEquals;
+
+public class MonthSummaryServiceTest {
+
+	private static RuntimeMock runtimeMock;
+	private static Certificate certificate;
+
+	@BeforeClass
+	public static void beforeClass() {
+		runtimeMock = new RuntimeMock().mockRuntime("target/" + MonthSummaryServiceTest.class.getSimpleName(),
+				"src/test/resources");
+		runtimeMock.startContainer();
+		certificate = runtimeMock.login("admin", "admin");
+	}
+
+	@AfterClass
+	public static void afterClass() {
+		if (runtimeMock != null)
+			runtimeMock.destroyRuntime();
+	}
+
+	@Test
+	public void shouldCalculateMonthSummaryWithActiveEntry() {
+		String employeeId = "empMonth";
+		LocalDate today = LocalDate.now();
+		YearMonth yearMonth = YearMonth.from(today);
+
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
+			Resource employee = tx.getResourceTemplate(TYPE_EMPLOYEE, true);
+			employee.setId(employeeId);
+			employee.setName("Month Doe");
+			employee.setBoolean(PARAM_ACTIVE, true);
+			employee.setDate(PARAM_JOIN_DATE, ZonedDateTime.parse("2026-01-01T00:00:00Z"));
+			employee.setString(PARAM_TIMEZONE, "Europe/Zurich");
+			tx.add(employee);
+
+			// Active Work Entry: started 15 minutes ago
+			ZonedDateTime start = ZonedDateTime.now(ChronivaroModelHelper.getEmployeeTimezone(employee)).minusMinutes(15);
+			Resource e1 = tx.getResourceTemplate(TYPE_WORK_ENTRY, true);
+			e1.setName("E1");
+			e1.setRelation(PARAM_EMPLOYEE, employee);
+			e1.setDate(PARAM_START, start);
+			e1.setDate(PARAM_END, ZonedDateTime.parse("1970-01-01T00:00:00+01:00"));
+			tx.add(e1);
+
+			tx.commitOnClose();
+		}
+
+		ServiceHandler serviceHandler = runtimeMock.getServiceHandler();
+		MonthSummaryService.MonthSummaryArgument arg = new MonthSummaryService.MonthSummaryArgument();
+		arg.employeeId = employeeId;
+		arg.yearMonth = yearMonth;
+
+		MonthSummaryService.MonthSummaryResult result = serviceHandler.doService(certificate, new MonthSummaryService(), arg);
+		assertEquals(ServiceResult.success().getState(), result.getState());
+
+		MonthSummary summary = result.monthSummary;
+		assertEquals(15, summary.totalActualMinutes());
+		assertEquals(DayState.WORKING, summary.daySummaries().get(today.getDayOfMonth() - 1).state());
+		assertEquals(15, summary.daySummaries().get(today.getDayOfMonth() - 1).actualMinutes());
+	}
+}

@@ -5,6 +5,9 @@ import ch.atexxi.chronivaro.core.model.MonthSummary;
 import ch.atexxi.chronivaro.core.service.PresenceService;
 import li.strolch.model.Resource;
 
+import java.time.Duration;
+import java.time.ZonedDateTime;
+
 import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
 
 public class ChronivaroMapper {
@@ -14,9 +17,21 @@ public class ChronivaroMapper {
 	}
 
 	public static WorkEntryDto toDto(Resource workEntry) {
-		return new WorkEntryDto(workEntry.getId(), workEntry.getRelationId(PARAM_EMPLOYEE),
-				workEntry.getDate(PARAM_START), workEntry.getDate(PARAM_END), workEntry.getString(PARAM_SOURCE),
-				workEntry.getString(PARAM_COMMENT), workEntry.getString(PARAM_CREATED_BY));
+		ZonedDateTime start = workEntry.getDate(PARAM_START);
+		ZonedDateTime end = workEntry.getDate(PARAM_END);
+		boolean isActive = end.getYear() == 1970;
+
+		int durationMinutes;
+		if (isActive) {
+			durationMinutes = (int) Duration.between(start, ZonedDateTime.now(start.getZone())).toMinutes();
+			end = null;
+		} else {
+			durationMinutes = (int) Duration.between(start, end).toMinutes();
+		}
+
+		return new WorkEntryDto(workEntry.getId(), workEntry.getRelationId(PARAM_EMPLOYEE), start, end, durationMinutes,
+				workEntry.getString(PARAM_SOURCE), workEntry.getString(PARAM_COMMENT),
+				workEntry.getString(PARAM_CREATED_BY));
 	}
 
 	public static AbsenceDto toDto(Resource absence, String absenceTypeCode) {
@@ -28,16 +43,11 @@ public class ChronivaroMapper {
 	}
 
 	public static DaySummaryDto toDto(DaySummary summary) {
-		return new DaySummaryDto(summary.date(), summary.targetMinutes(), summary.actualMinutes(),
-				summary.holidayMinutes(), summary.absenceMinutes(), summary.getBalance(), summary
-				.workEntries()
-				.stream()
-				.map(e -> new WorkEntryRangeDto(e.id(), e.start(), e.end(), e.durationMinutes()))
-				.toList(), summary
-				.breaks()
-				.stream()
-				.map(b -> new BreakRangeDto(b.start(), b.end(), b.durationMinutes()))
-				.toList());
+		return new DaySummaryDto(summary.date(), summary.state().name(), summary.targetMinutes(),
+				summary.actualMinutes(), summary.holidayMinutes(), summary.absenceMinutes(), summary.getBalance(),
+				summary.workEntries().stream().map(e -> new WorkEntryRangeDto(e.id(), e.start(), e.end(), e.durationMinutes()))
+						.toList(),
+				summary.breaks().stream().map(b -> new BreakRangeDto(b.start(), b.end(), b.durationMinutes())).toList());
 	}
 
 	public static MonthSummaryDto toDto(MonthSummary summary) {

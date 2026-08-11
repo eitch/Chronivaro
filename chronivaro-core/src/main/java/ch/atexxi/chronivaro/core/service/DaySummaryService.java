@@ -58,6 +58,7 @@ public class DaySummaryService
 			List<WorkEntryRange> ranges = new ArrayList<>();
 			List<BreakRange> breaks = new ArrayList<>();
 			int actualMinutes = 0;
+			DayState state = DayState.NOT_WORKING;
 
 			DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
 
@@ -67,10 +68,13 @@ public class DaySummaryService
 				ZonedDateTime start = entry.getDate(PARAM_START);
 				ZonedDateTime end = entry.getDate(PARAM_END);
 				boolean isActive = end.getYear() == 1970;
+				if (isActive)
+					state = DayState.WORKING;
 
 				// Clip to day boundaries
 				ZonedDateTime effectiveStart = start.isBefore(from) ? from : start;
-				ZonedDateTime effectiveEnd = (isActive || end.isAfter(to)) ? to : end;
+				ZonedDateTime now = ZonedDateTime.now(effectiveStart.getZone());
+				ZonedDateTime effectiveEnd = isActive ? (now.isBefore(to) ? now : to) : (end.isAfter(to) ? to : end);
 
 				if (effectiveEnd.isBefore(effectiveStart))
 					continue;
@@ -91,7 +95,7 @@ public class DaySummaryService
 				lastEnd = end;
 			}
 
-			DaySummary summary = new DaySummary(arg.date, targetMinutes, actualMinutes, holidayMinutes, absenceMinutes,
+			DaySummary summary = new DaySummary(arg.date, state, targetMinutes, actualMinutes, holidayMinutes, absenceMinutes,
 					ranges, breaks);
 			return new DaySummaryResult(summary);
 		}

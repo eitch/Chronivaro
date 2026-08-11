@@ -40,8 +40,8 @@ export default class DashboardView {
                 statusSpan.textContent = summary.state;
                 statusSpan.className = summary.state === 'WORKING' ? 'status-working' : 'status-not-working';
 
-                workedSpan.textContent = `${summary.actualTime} min`;
-                requiredSpan.textContent = `${summary.targetTime} min`;
+                workedSpan.textContent = `${summary.actualMinutes} min`;
+                requiredSpan.textContent = `${summary.targetMinutes} min`;
                 balanceSpan.textContent = `${summary.balance} min`;
 
                 startBtn.disabled = summary.state === 'WORKING';
