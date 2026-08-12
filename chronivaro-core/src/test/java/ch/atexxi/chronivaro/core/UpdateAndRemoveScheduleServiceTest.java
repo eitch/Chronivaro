@@ -17,6 +17,7 @@ import org.junit.Test;
 import java.time.ZonedDateTime;
 import java.util.List;
 
+import static ch.atexxi.chronivaro.core.ChronivaroTestHelper.createEmployee;
 import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
 import static org.junit.Assert.*;
 
@@ -44,11 +45,7 @@ public class UpdateAndRemoveScheduleServiceTest {
 		String employeeId = "emp-update-schedule";
 
 		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
-			Resource employee = tx.getResourceTemplate(TYPE_EMPLOYEE, true);
-			employee.setId(employeeId);
-			employee.setName("Schedule Emp");
-			employee.setBoolean(PARAM_ACTIVE, true);
-			tx.add(employee);
+			createEmployee(tx, employeeId, "Schedule Emp", false);
 			tx.commitOnClose();
 		}
 
@@ -118,11 +115,7 @@ public class UpdateAndRemoveScheduleServiceTest {
 		String employeeId = "emp-remove-fail";
 
 		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
-			Resource employee = tx.getResourceTemplate(TYPE_EMPLOYEE, true);
-			employee.setId(employeeId);
-			employee.setName("Remove Fail Emp");
-			employee.setBoolean(PARAM_ACTIVE, true);
-			tx.add(employee);
+			createEmployee(tx, employeeId, "Remove Fail Emp", false);
 			tx.commitOnClose();
 		}
 
@@ -174,11 +167,7 @@ public class UpdateAndRemoveScheduleServiceTest {
 		String employeeId = "emp-version-update";
 
 		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
-			Resource employee = tx.getResourceTemplate(TYPE_EMPLOYEE, true);
-			employee.setId(employeeId);
-			employee.setName("Version Update Emp");
-			employee.setBoolean(PARAM_ACTIVE, true);
-			tx.add(employee);
+			createEmployee(tx, employeeId, "Version Update Emp", false);
 			tx.commitOnClose();
 		}
 
@@ -247,11 +236,7 @@ public class UpdateAndRemoveScheduleServiceTest {
 		String employeeId = "emp-current-schedule";
 
 		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
-			Resource employee = tx.getResourceTemplate(TYPE_EMPLOYEE, true);
-			employee.setId(employeeId);
-			employee.setName("Current Schedule Emp");
-			employee.setBoolean(PARAM_ACTIVE, true);
-			tx.add(employee);
+			createEmployee(tx, employeeId, "Current Schedule Emp", false);
 			tx.commitOnClose();
 		}
 

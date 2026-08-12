@@ -17,6 +17,7 @@ import org.junit.Test;
 import java.time.ZonedDateTime;
 import java.util.List;
 
+import static ch.atexxi.chronivaro.core.ChronivaroTestHelper.createEmployee;
 import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
 import static org.junit.Assert.*;
 
@@ -44,12 +45,7 @@ public class WorkEntryServiceTest {
 		String employeeId = "emp2";
 
 		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
-			Resource employee = tx.getResourceTemplate(TYPE_EMPLOYEE, true);
-			employee.setId(employeeId);
-			employee.setName("Jane Doe");
-			employee.setBoolean(PARAM_ACTIVE, true);
-			employee.setDate(PARAM_JOIN_DATE, ZonedDateTime.parse("2026-01-01T00:00:00Z"));
-			tx.add(employee);
+			createEmployee(tx, employeeId, "Jane Doe");
 			tx.commitOnClose();
 		}
 
@@ -86,14 +82,7 @@ public class WorkEntryServiceTest {
 	public void shouldNotStartTimerTwice() {
 		String employeeId = "emp1";
 		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
-			Resource e1 = tx.getResourceTemplate(TYPE_EMPLOYEE, true);
-			e1.setId(employeeId);
-			e1.setName("Emp 1");
-			e1.setBoolean(PARAM_ACTIVE, true);
-			e1.setRelationId(PARAM_PRIMARY_TEAM, "team1");
-			e1.setRelationId(PARAM_LOCATION, "loc1");
-			e1.setDate(PARAM_JOIN_DATE, ZonedDateTime.now());
-			tx.add(e1);
+			createEmployee(tx, employeeId, "Emp 1", ZonedDateTime.now());
 			tx.commitOnClose();
 		}
 

@@ -15,6 +15,7 @@ import org.junit.Test;
 import java.time.ZonedDateTime;
 import java.util.List;
 
+import static ch.atexxi.chronivaro.core.ChronivaroTestHelper.createEmployee;
 import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -42,11 +43,7 @@ public class ManualCorrectionServiceTest {
 	public void shouldAddVacationCorrection() {
 		String employeeId = "emp_vac";
 		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
-			Resource employee = tx.getResourceTemplate(TYPE_EMPLOYEE, true);
-			employee.setId(employeeId);
-			employee.setName("Vacation Employee");
-			employee.setBoolean(PARAM_ACTIVE, true);
-			tx.add(employee);
+			createEmployee(tx, employeeId, "Vacation Employee");
 			tx.commitOnClose();
 		}
 
@@ -86,11 +83,7 @@ public class ManualCorrectionServiceTest {
 		ZonedDateTime end = ZonedDateTime.parse("2026-08-08T12:00:00Z");
 
 		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
-			Resource employee = tx.getResourceTemplate(TYPE_EMPLOYEE, true);
-			employee.setId(employeeId);
-			employee.setName("Work Employee");
-			employee.setBoolean(PARAM_ACTIVE, true);
-			tx.add(employee);
+			Resource employee = createEmployee(tx, employeeId, "Work Employee");
 
 			Resource workEntry = tx.getResourceTemplate(TYPE_WORK_ENTRY, true);
 			workEntry.setId(workEntryId);

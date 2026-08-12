@@ -73,6 +73,7 @@ public class ScheduleHelperTest {
 			schedule.setInteger(PARAM_DAILY_TARGET_MINUTES + "Friday", 480);
 			schedule.setInteger(PARAM_DAILY_TARGET_MINUTES + "Saturday", 0);
 			schedule.setInteger(PARAM_DAILY_TARGET_MINUTES + "Sunday", 0);
+			employee.setRelation(PARAM_CURRENT_SCHEDULE, schedule);
 			tx.add(schedule);
 
 			// Create Holiday

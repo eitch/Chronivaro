@@ -16,6 +16,7 @@ import org.junit.Test;
 
 import java.time.ZonedDateTime;
 
+import static ch.atexxi.chronivaro.core.ChronivaroTestHelper.createEmployee;
 import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -44,19 +45,10 @@ public class AbsenceServiceTest {
 		String employeeId = "emp4";
 
 		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
-			Resource employee = tx.getResourceTemplate(TYPE_EMPLOYEE, true);
-			employee.setId(employeeId);
-			employee.setName("Jane Doe");
-			employee.setBoolean(PARAM_ACTIVE, true);
-			employee.setDate(PARAM_JOIN_DATE, ZonedDateTime.parse("2026-01-01T00:00:00Z"));
-			tx.add(employee);
-
-			Resource schedule = tx.getResourceTemplate(TYPE_EMPLOYMENT_SCHEDULE, true);
-			schedule.setName("Schedule");
-			schedule.setRelation(PARAM_EMPLOYEE, employee);
-			schedule.setDate(PARAM_VALID_FROM, ZonedDateTime.parse("2026-01-01T00:00:00Z"));
+			Resource employee = createEmployee(tx, employeeId, "Jane Doe");
+			Resource schedule = tx.readLock(tx.getResourceBy(TYPE_EMPLOYMENT_SCHEDULE, employee.getRelationId(PARAM_CURRENT_SCHEDULE), true));
 			schedule.setInteger(PARAM_DAILY_TARGET_MINUTES + "Monday", 480);
-			tx.add(schedule);
+			tx.update(schedule);
 
 			Resource absenceType = tx.getResourceTemplate(TYPE_ABSENCE_TYPE, true);
 			absenceType.setId("vacation");

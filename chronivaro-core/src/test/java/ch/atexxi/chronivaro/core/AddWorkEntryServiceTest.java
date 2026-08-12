@@ -15,6 +15,7 @@ import org.junit.Test;
 import java.time.ZonedDateTime;
 import java.util.List;
 
+import static ch.atexxi.chronivaro.core.ChronivaroTestHelper.createEmployee;
 import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -43,12 +44,7 @@ public class AddWorkEntryServiceTest {
 		String employeeId = "emp-add-work";
 
 		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
-			Resource employee = tx.getResourceTemplate(TYPE_EMPLOYEE, true);
-			employee.setId(employeeId);
-			employee.setName("Add Work Emp");
-			employee.setBoolean(PARAM_ACTIVE, true);
-			employee.setDate(PARAM_JOIN_DATE, ZonedDateTime.parse("2026-01-01T00:00:00Z"));
-			tx.add(employee);
+			createEmployee(tx, employeeId, "Add Work Emp");
 			tx.commitOnClose();
 		}
 

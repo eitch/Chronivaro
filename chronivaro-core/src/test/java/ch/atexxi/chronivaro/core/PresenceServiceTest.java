@@ -13,7 +13,8 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.time.ZonedDateTime;
-
+ 
+import static ch.atexxi.chronivaro.core.ChronivaroTestHelper.createEmployee;
 import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -50,24 +51,26 @@ public class PresenceServiceTest {
 			tx.add(team);
 
 			// Emp 1: Working
-			Resource e1 = tx.getResourceTemplate(TYPE_EMPLOYEE, true);
-			e1.setId("p-emp1");
-			e1.setName("Emp 1");
-			e1.setBoolean(PARAM_ACTIVE, true);
-			e1.setRelation(PARAM_PRIMARY_TEAM, team);
+			Resource e1 = createEmployee(tx, "p-emp1", "Emp 1", ZonedDateTime.now());
+			e1 = tx.readLock(e1);
 			e1.setRelationId(PARAM_LOCATION, locationId);
-			e1.setDate(PARAM_JOIN_DATE, ZonedDateTime.now());
-			tx.add(e1);
-
+			e1.setRelation(PARAM_PRIMARY_TEAM, team);
+			tx.update(e1);
+ 
+			Resource s1 = tx.readLock(tx.getResourceBy(TYPE_EMPLOYMENT_SCHEDULE, e1.getRelationId(PARAM_CURRENT_SCHEDULE), true));
+			s1.setInteger(PARAM_DAILY_TARGET_MINUTES + "Monday", 480);
+			tx.update(s1);
+ 
 			// Emp 2: Not working
-			Resource e2 = tx.getResourceTemplate(TYPE_EMPLOYEE, true);
-			e2.setId("p-emp2");
-			e2.setName("Emp 2");
-			e2.setBoolean(PARAM_ACTIVE, true);
-			e2.setRelation(PARAM_PRIMARY_TEAM, team);
+			Resource e2 = createEmployee(tx, "p-emp2", "Emp 2", ZonedDateTime.now());
+			e2 = tx.readLock(e2);
 			e2.setRelationId(PARAM_LOCATION, locationId);
-			e2.setDate(PARAM_JOIN_DATE, ZonedDateTime.now());
-			tx.add(e2);
+			e2.setRelation(PARAM_PRIMARY_TEAM, team);
+			tx.update(e2);
+ 
+			Resource s2 = tx.readLock(tx.getResourceBy(TYPE_EMPLOYMENT_SCHEDULE, e2.getRelationId(PARAM_CURRENT_SCHEDULE), true));
+			s2.setInteger(PARAM_DAILY_TARGET_MINUTES + "Monday", 480);
+			tx.update(s2);
 
 			tx.commitOnClose();
 		}

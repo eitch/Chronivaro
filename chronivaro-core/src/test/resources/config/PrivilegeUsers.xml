@@ -19,4 +19,24 @@
             <Role>StrolchAdmin</Role>
         </Roles>
     </User>
+    <User userId="employee" username="employee"
+          password="$PBKDF2WithHmacSHA512,10000,256$61646d696e$cb69962946617da006a2f95776d78b49e5ec7941d2bdb2d25cdb05f957f64344">
+        <Firstname>Employee</Firstname>
+        <Lastname>User</Lastname>
+        <State>ENABLED</State>
+        <Locale>en</Locale>
+        <Roles>
+            <Role>Employee</Role>
+        </Roles>
+    </User>
+    <User userId="supervisor" username="supervisor"
+          password="$PBKDF2WithHmacSHA512,10000,256$61646d696e$cb69962946617da006a2f95776d78b49e5ec7941d2bdb2d25cdb05f957f64344">
+        <Firstname>Supervisor</Firstname>
+        <Lastname>User</Lastname>
+        <State>ENABLED</State>
+        <Locale>en</Locale>
+        <Roles>
+            <Role>Supervisor</Role>
+        </Roles>
+    </User>
 </Users>

@@ -9,6 +9,7 @@
         </Privilege>
         <Privilege name="li.strolch.service.api.Service" policy="DefaultPrivilege">
             <AllAllowed>true</AllAllowed>
+            <Allow>ch.atexxi.chronivaro.core.service.UpdateConfigurationService</Allow>
         </Privilege>
         <Privilege name="AddResource" policy="DefaultPrivilege">
             <AllAllowed>true</AllAllowed>
@@ -24,6 +25,32 @@
         </Privilege>
         <Privilege name="li.strolch.privilege.handler.SystemAction" policy="DefaultPrivilege">
             <AllAllowed>true</AllAllowed>
+        </Privilege>
+    </Role>
+
+    <Role name="Employee">
+        <Privilege name="li.strolch.service.api.Service" policy="DefaultPrivilege">
+            <Allow>ch.atexxi.chronivaro.core.service.DaySummaryService</Allow>
+            <Allow>ch.atexxi.chronivaro.core.service.MonthSummaryService</Allow>
+            <Allow>ch.atexxi.chronivaro.core.service.RequestAbsenceService</Allow>
+            <Allow>ch.atexxi.chronivaro.core.service.StartTimerService</Allow>
+            <Allow>ch.atexxi.chronivaro.core.service.StopTimerService</Allow>
+        </Privilege>
+    </Role>
+
+    <Role name="Supervisor">
+        <Privilege name="li.strolch.service.api.Service" policy="DefaultPrivilege">
+            <Allow>ch.atexxi.chronivaro.core.service.ApproveAbsenceService</Allow>
+            <Allow>ch.atexxi.chronivaro.core.service.PresenceService</Allow>
+        </Privilege>
+    </Role>
+
+    <Role name="HR">
+        <Privilege name="li.strolch.service.api.Service" policy="DefaultPrivilege">
+            <Allow>ch.atexxi.chronivaro.core.service.ApproveAbsenceService</Allow>
+            <Allow>ch.atexxi.chronivaro.core.service.PresenceService</Allow>
+            <Allow>ch.atexxi.chronivaro.core.service.CreateEmployeeService</Allow>
+            <Allow>ch.atexxi.chronivaro.core.service.UpdateEmployeeService</Allow>
         </Privilege>
     </Role>
 </Roles>

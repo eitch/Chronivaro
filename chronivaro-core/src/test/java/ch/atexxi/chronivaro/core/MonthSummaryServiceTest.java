@@ -18,6 +18,7 @@ import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.ZonedDateTime;
 
+import static ch.atexxi.chronivaro.core.ChronivaroTestHelper.createEmployee;
 import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
 import static org.junit.Assert.assertEquals;
 
@@ -47,13 +48,10 @@ public class MonthSummaryServiceTest {
 		YearMonth yearMonth = YearMonth.from(today);
 
 		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
-			Resource employee = tx.getResourceTemplate(TYPE_EMPLOYEE, true);
-			employee.setId(employeeId);
-			employee.setName("Month Doe");
-			employee.setBoolean(PARAM_ACTIVE, true);
-			employee.setDate(PARAM_JOIN_DATE, ZonedDateTime.parse("2026-01-01T00:00:00Z"));
+			Resource employee = createEmployee(tx, employeeId, "Month Doe");
+			employee = tx.readLock(employee);
 			employee.setString(PARAM_TIMEZONE, "Europe/Zurich");
-			tx.add(employee);
+			tx.update(employee);
 
 			// Active Work Entry: started 15 minutes ago
 			ZonedDateTime start = ZonedDateTime.now(ChronivaroModelHelper.getEmployeeTimezone(employee)).minusMinutes(15);

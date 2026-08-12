@@ -17,6 +17,7 @@ import org.junit.Test;
 import java.time.LocalDate;
 import java.time.ZonedDateTime;
 
+import static ch.atexxi.chronivaro.core.ChronivaroTestHelper.createEmployee;
 import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
 import static org.junit.Assert.assertEquals;
 
@@ -45,20 +46,14 @@ public class DaySummaryServiceTest {
 		LocalDate date = LocalDate.of(2026, 2, 2); // Monday
 
 		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
-			Resource employee = tx.getResourceTemplate(TYPE_EMPLOYEE, true);
-			employee.setId(employeeId);
-			employee.setName("Jack Doe");
-			employee.setBoolean(PARAM_ACTIVE, true);
-			employee.setDate(PARAM_JOIN_DATE, ZonedDateTime.parse("2026-01-01T00:00:00Z"));
+			Resource employee = createEmployee(tx, employeeId, "Jack Doe");
+			employee = tx.readLock(employee);
 			employee.setString(PARAM_TIMEZONE, "Europe/Zurich");
-			tx.add(employee);
+			tx.update(employee);
 
-			Resource schedule = tx.getResourceTemplate(TYPE_EMPLOYMENT_SCHEDULE, true);
-			schedule.setName("Schedule");
-			schedule.setRelation(PARAM_EMPLOYEE, employee);
-			schedule.setDate(PARAM_VALID_FROM, ZonedDateTime.parse("2026-01-01T00:00:00Z"));
+			Resource schedule = tx.readLock(tx.getResourceBy(TYPE_EMPLOYMENT_SCHEDULE, employee.getRelationId(PARAM_CURRENT_SCHEDULE), true));
 			schedule.setInteger(PARAM_DAILY_TARGET_MINUTES + "Monday", 480);
-			tx.add(schedule);
+			tx.update(schedule);
 
 			// Work Entry 1: 08:00 - 12:00
 			Resource e1 = tx.getResourceTemplate(TYPE_WORK_ENTRY, true);
@@ -105,25 +100,19 @@ public class DaySummaryServiceTest {
 		LocalDate date = LocalDate.now(); // Today
 
 		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
-			Resource employee = tx.getResourceTemplate(TYPE_EMPLOYEE, true);
-			employee.setId(employeeId);
-			employee.setName("Jane Doe");
-			employee.setBoolean(PARAM_ACTIVE, true);
-			employee.setDate(PARAM_JOIN_DATE, ZonedDateTime.parse("2026-01-01T00:00:00Z"));
+			Resource employee = createEmployee(tx, employeeId, "Jane Doe");
+			employee = tx.readLock(employee);
 			employee.setString(PARAM_TIMEZONE, "Europe/Zurich");
-			tx.add(employee);
+			tx.update(employee);
 
-			Resource schedule = tx.getResourceTemplate(TYPE_EMPLOYMENT_SCHEDULE, true);
-			schedule.setName("Schedule");
-			schedule.setRelation(PARAM_EMPLOYEE, employee);
-			schedule.setDate(PARAM_VALID_FROM, ZonedDateTime.parse("2026-01-01T00:00:00Z"));
+			Resource schedule = tx.readLock(tx.getResourceBy(TYPE_EMPLOYMENT_SCHEDULE, employee.getRelationId(PARAM_CURRENT_SCHEDULE), true));
 			schedule.setInteger(
 					PARAM_DAILY_TARGET_MINUTES + date.getDayOfWeek().name().substring(0, 1).toUpperCase() + date
 							.getDayOfWeek()
 							.name()
 							.substring(1)
 							.toLowerCase(), 480);
-			tx.add(schedule);
+			tx.update(schedule);
 
 			// Active Work Entry: started 10 minutes ago
 			ZonedDateTime start = ZonedDateTime
@@ -162,21 +151,15 @@ public class DaySummaryServiceTest {
 		LocalDate date = LocalDate.of(2026, 2, 2); // Monday
 
 		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
-			Resource employee = tx.getResourceTemplate(TYPE_EMPLOYEE, true);
-			employee.setId(employeeId);
-			employee.setName("Fallback Doe");
-			employee.setBoolean(PARAM_ACTIVE, true);
-			employee.setDate(PARAM_JOIN_DATE, ZonedDateTime.parse("2026-01-01T00:00:00Z"));
+			Resource employee = createEmployee(tx, employeeId, "Fallback Doe");
+			employee = tx.readLock(employee);
 			employee.setString(PARAM_TIMEZONE, "Europe/Zurich");
-			tx.add(employee);
+			tx.update(employee);
 
-			Resource schedule = tx.getResourceTemplate(TYPE_EMPLOYMENT_SCHEDULE, true);
-			schedule.setName("Schedule");
-			schedule.setRelation(PARAM_EMPLOYEE, employee);
-			schedule.setDate(PARAM_VALID_FROM, ZonedDateTime.parse("2026-01-01T00:00:00Z"));
+			Resource schedule = tx.readLock(tx.getResourceBy(TYPE_EMPLOYMENT_SCHEDULE, employee.getRelationId(PARAM_CURRENT_SCHEDULE), true));
 			// Only set the general dailyTargetMinutes
 			schedule.setInteger(PARAM_DAILY_TARGET_MINUTES, 480);
-			tx.add(schedule);
+			tx.update(schedule);
 
 			tx.commitOnClose();
 		}
