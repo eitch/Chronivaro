@@ -1,5 +1,7 @@
 # Chronivaro – Refined Implementation Backlog
 
+See [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md) for the current status.
+
 Use the existing `docs/IMPLEMENTATION_SPECIFICATION.md` as the authoritative source.
 
 The backlog below contains functionality currently identified as missing.
@@ -58,7 +60,7 @@ Do not perform unrelated refactoring while implementing a backlog item.
 
 # Phase 1 – Foundations
 
-## 1. Business Roles and Permissions (✓ DONE)
+## 1. Business Roles and Permissions
 
 ### Goal
 
@@ -105,7 +107,7 @@ Add or update permission-related tests where practical.
 
 ---
 
-## 2. Localisation Resources (✓ DONE)
+## 2. Localisation Resources
 
 ### Goal
 
@@ -136,7 +138,7 @@ Do not move arbitrary internal/logging strings into resource bundles unless requ
 
 ---
 
-## 3. Global Configuration (✓ DONE)
+## 3. Global Configuration
 
 ### Goal
 
@@ -167,7 +169,7 @@ Do not invent configuration options.
 
 # Phase 2 – Absence Workflow
 
-## 4. Reject Absence (✓ DONE)
+## 4. Reject Absence
 
 ### Goal
 
