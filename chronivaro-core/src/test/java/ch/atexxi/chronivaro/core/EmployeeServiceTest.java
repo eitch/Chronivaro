@@ -6,6 +6,7 @@ import ch.atexxi.chronivaro.core.service.UpdateEmployeeService;
 import li.strolch.model.Resource;
 import li.strolch.persistence.api.StrolchTransaction;
 import li.strolch.privilege.model.Certificate;
+import li.strolch.privilege.model.UserRep;
 import li.strolch.service.StringArgument;
 import li.strolch.service.api.ServiceHandler;
 import li.strolch.service.api.ServiceResult;
@@ -59,13 +60,15 @@ public class EmployeeServiceTest {
 		// Create
 		CreateEmployeeService.EmployeeArgument createArg = new CreateEmployeeService.EmployeeArgument();
 		createArg.personalNumber = "123";
-		createArg.displayName = "Test Employee";
+		createArg.firstname = "Test";
+		createArg.lastname = "Employee";
+		createArg.birthdate = LocalDate.of(1990, 5, 20);
 		createArg.teamId = "team1";
 		createArg.locationId = "loc1";
 		createArg.timezone = "Europe/Zurich";
 		createArg.joinDate = LocalDate.of(2026, 1, 1);
 		createArg.active = true;
-		createArg.userId = "testuser";
+		createArg.username = "testuser";
 
 		ServiceResult createResult = serviceHandler.doService(certificate, new CreateEmployeeService(), createArg);
 		assertTrue(createResult.getMessage(), createResult.isOk());
@@ -79,27 +82,39 @@ public class EmployeeServiceTest {
 					.orElseThrow();
 			employeeId = employee.getId();
 			assertEquals("123", employee.getString(PARAM_PERSONAL_NUMBER));
-			assertEquals("Test Employee", employee.getString(PARAM_DISPLAY_NAME));
+			assertEquals("Test", employee.getString(PARAM_FIRSTNAME));
+			assertEquals("Employee", employee.getString(PARAM_LASTNAME));
+			assertEquals(LocalDate.of(1990, 5, 20), employee.getDate(PARAM_BIRTHDATE).toLocalDate());
 			assertTrue(employee.getBoolean(PARAM_ACTIVE));
+			assertNotNull(employee.getRelationId(PARAM_USER));
+
+			UserRep user = runtimeMock.getPrivilegeHandler().getPrivilegeHandler().getUser(certificate, "testuser");
+			assertNotNull(user);
+			assertEquals(user.getUserId(), employee.getRelationId(PARAM_USER));
+			assertEquals("Test", user.getFirstname());
+			assertEquals("Employee", user.getLastname());
 		}
 
 		// Update
 		CreateEmployeeService.UpdateEmployeeArgument updateArg = new CreateEmployeeService.UpdateEmployeeArgument();
 		updateArg.id = employeeId;
 		updateArg.personalNumber = "123";
-		updateArg.displayName = "Updated Employee";
+		updateArg.firstname = "Updated";
+		updateArg.lastname = "Employee";
+		updateArg.birthdate = LocalDate.of(1990, 5, 20);
 		updateArg.teamId = "team1";
 		updateArg.locationId = "loc1";
 		updateArg.timezone = "Europe/Zurich";
 		updateArg.joinDate = LocalDate.of(2026, 1, 1);
 		updateArg.active = true;
-		updateArg.userId = "testuser";
+		updateArg.username = "testuser";
 		ServiceResult updateResult = serviceHandler.doService(certificate, new UpdateEmployeeService(), updateArg);
 		assertTrue(updateResult.getMessage(), updateResult.isOk());
 
 		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
 			Resource employee = tx.getResourceBy(TYPE_EMPLOYEE, employeeId, true);
-			assertEquals("Updated Employee", employee.getString(PARAM_DISPLAY_NAME));
+			assertEquals("Updated", employee.getString(PARAM_FIRSTNAME));
+			assertEquals("Employee", employee.getString(PARAM_LASTNAME));
 		}
 
 		// Remove

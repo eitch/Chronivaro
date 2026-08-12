@@ -99,12 +99,14 @@ public class ExtensiveIntegrationTest {
 		// 2. Add Employee
 		CreateEmployeeService.EmployeeArgument createArg = new CreateEmployeeService.EmployeeArgument();
 		createArg.personalNumber = "EXT-001";
-		createArg.displayName = "Extensive Employee";
+		createArg.firstname = "Extensive";
+		createArg.lastname = "Employee";
+		createArg.birthdate = LocalDate.of(1990, 5, 20);
 		createArg.teamId = teamId;
 		createArg.locationId = locationId;
 		createArg.timezone = "Europe/Zurich";
 		createArg.joinDate = LocalDate.of(2026, 1, 1);
-		createArg.userId = certificate.getUserId();
+		createArg.username = "extensiveuser";
 		createArg.active = true;
 
 		assertTrue(serviceHandler.doService(certificate, new CreateEmployeeService(), createArg).isOk());

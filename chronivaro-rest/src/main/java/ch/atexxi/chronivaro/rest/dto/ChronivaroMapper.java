@@ -13,7 +13,8 @@ import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
 public class ChronivaroMapper {
 
 	public static PresenceDto toDto(PresenceService.PresenceInfo info) {
-		return new PresenceDto(info.employeeId(), info.displayName(), info.status(), info.minutesToday());
+		return new PresenceDto(info.employeeId(), info.firstname(), info.lastname(), info.status(),
+				info.minutesToday());
 	}
 
 	public static WorkEntryDto toDto(Resource workEntry) {
@@ -74,13 +75,15 @@ public class ChronivaroMapper {
 	}
 
 	public static EmployeeDto employeeToDto(Resource employee) {
+		String userId = employee.getRelationId(PARAM_USER);
 		return new EmployeeDto(employee.getId(), employee.getString(PARAM_PERSONAL_NUMBER),
-				employee.getString(PARAM_DISPLAY_NAME), employee.getRelationId(PARAM_TEAM),
+				employee.getString(PARAM_FIRSTNAME), employee.getString(PARAM_LASTNAME),
+				employee.getDate(PARAM_BIRTHDATE).toLocalDate(), employee.getRelationId(PARAM_TEAM),
 				employee.getRelationId(PARAM_LOCATION), employee.getString(PARAM_TIMEZONE),
 				employee.getDate(PARAM_JOIN_DATE).toLocalDate(),
 				employee.hasParameter(PARAM_EXIT_DATE) && employee.getDate(PARAM_EXIT_DATE) != null ?
 						employee.getDate(PARAM_EXIT_DATE).toLocalDate() : null, employee.getBoolean(PARAM_ACTIVE),
-				employee.getRelationId(PARAM_USER));
+				userId);
 	}
 
 	public static HolidayCalendarDto holidayCalendarToDto(Resource calendar) {

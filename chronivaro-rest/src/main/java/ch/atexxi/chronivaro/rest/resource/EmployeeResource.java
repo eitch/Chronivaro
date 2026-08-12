@@ -62,14 +62,16 @@ public class EmployeeResource {
 
 		CreateEmployeeService.EmployeeArgument arg = new CreateEmployeeService.EmployeeArgument();
 		arg.personalNumber = dto.personalNumber();
-		arg.displayName = dto.displayName();
+		arg.firstname = dto.firstname();
+		arg.lastname = dto.lastname();
+		arg.birthdate = dto.birthdate();
 		arg.teamId = dto.teamId();
 		arg.locationId = dto.locationId();
 		arg.timezone = dto.timezone();
 		arg.joinDate = dto.joinDate();
 		arg.exitDate = dto.exitDate();
 		arg.active = dto.active();
-		arg.userId = dto.userId();
+		arg.username = dto.username();
 
 		ServiceResult result = serviceHandler.doService(cert, new CreateEmployeeService(), arg);
 		return ResponseUtil.toResponse(result);
@@ -87,14 +89,16 @@ public class EmployeeResource {
 		CreateEmployeeService.UpdateEmployeeArgument arg = new CreateEmployeeService.UpdateEmployeeArgument();
 		arg.id = id;
 		arg.personalNumber = dto.personalNumber();
-		arg.displayName = dto.displayName();
+		arg.firstname = dto.firstname();
+		arg.lastname = dto.lastname();
+		arg.birthdate = dto.birthdate();
 		arg.teamId = dto.teamId();
 		arg.locationId = dto.locationId();
 		arg.timezone = dto.timezone();
 		arg.joinDate = dto.joinDate();
 		arg.exitDate = dto.exitDate();
 		arg.active = dto.active();
-		arg.userId = dto.userId();
+		arg.username = dto.username();
 
 		ServiceResult result = serviceHandler.doService(cert, new UpdateEmployeeService(), arg);
 		return ResponseUtil.toResponse(result);

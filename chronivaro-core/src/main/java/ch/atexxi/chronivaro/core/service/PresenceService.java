@@ -22,7 +22,8 @@ public class PresenceService extends AbstractService<PresenceService.PresenceArg
 		NOT_WORKING
 	}
 
-	public record PresenceInfo(String employeeId, String displayName, PresenceStatus status, int minutesToday) {
+	public record PresenceInfo(String employeeId, String firstname, String lastname, PresenceStatus status,
+							   int minutesToday) {
 	}
 
 	public static class PresenceArgument extends ServiceArgument {
@@ -57,7 +58,8 @@ public class PresenceService extends AbstractService<PresenceService.PresenceArg
 
 						int minutesToday = calculateMinutesToday(tx, e);
 
-						return new PresenceInfo(e.getId(), e.getString(PARAM_DISPLAY_NAME), status, minutesToday);
+						return new PresenceInfo(e.getId(), e.getString(PARAM_FIRSTNAME), e.getString(PARAM_LASTNAME),
+								status, minutesToday);
 					})
 					.toList();
 

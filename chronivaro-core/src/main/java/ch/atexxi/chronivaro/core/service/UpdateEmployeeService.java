@@ -19,9 +19,11 @@ public class UpdateEmployeeService
 			Resource employee = ChronivaroModelHelper.getEmployee(tx, arg.id);
 			ZoneId zoneId = ChronivaroModelHelper.getEmployeeTimezone(employee);
 
-			employee.setName(arg.displayName);
+			employee.setName(arg.firstname + " " + arg.lastname);
 			employee.setString(PARAM_PERSONAL_NUMBER, arg.personalNumber);
-			employee.setString(PARAM_DISPLAY_NAME, arg.displayName);
+			employee.setString(PARAM_FIRSTNAME, arg.firstname);
+			employee.setString(PARAM_LASTNAME, arg.lastname);
+			employee.setDate(PARAM_BIRTHDATE, arg.birthdate.atStartOfDay(zoneId));
 			employee.setRelationId(PARAM_PRIMARY_TEAM, arg.teamId);
 			employee.setRelationId(PARAM_LOCATION, arg.locationId);
 			employee.setString(PARAM_TIMEZONE, arg.timezone);
@@ -31,7 +33,6 @@ public class UpdateEmployeeService
 			else
 				employee.removeParameter(PARAM_EXIT_DATE);
 			employee.setBoolean(PARAM_ACTIVE, arg.active);
-			employee.setRelationId(PARAM_USER, arg.userId);
 			tx.update(employee);
 			tx.commitOnClose();
 		}

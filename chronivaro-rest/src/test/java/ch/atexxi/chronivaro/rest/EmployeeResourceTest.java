@@ -21,8 +21,8 @@ public class EmployeeResourceTest extends AbstractChronivaroRestfulTest {
 		String authToken = authenticate();
 
 		// Create
-		EmployeeDto newEmployee = new EmployeeDto(null, "PN001", "Test Employee", "team-1", "location-1",
-				"Europe/Zurich", LocalDate.of(2025, 1, 1), null, true, "admin");
+		EmployeeDto newEmployee = new EmployeeDto(null, "PN001", "Test", "Employee", LocalDate.of(1990, 5, 20),
+				"team-1", "location-1", "Europe/Zurich", LocalDate.of(2025, 1, 1), null, true, "test-user");
 		String json = ChronivaroRestHelper.createGson().toJson(newEmployee);
 
 		try (Response response = target()
@@ -47,7 +47,7 @@ public class EmployeeResourceTest extends AbstractChronivaroRestfulTest {
 					}.getType());
 			employeeId = employees
 					.stream()
-					.filter(e -> e.displayName().equals("Test Employee"))
+					.filter(e -> e.firstname().equals("Test"))
 					.findFirst()
 					.orElseThrow()
 					.id();
@@ -63,12 +63,14 @@ public class EmployeeResourceTest extends AbstractChronivaroRestfulTest {
 			EmployeeDto employee = ChronivaroRestHelper
 					.createGson()
 					.fromJson(response.readEntity(String.class), EmployeeDto.class);
-			assertEquals("Test Employee", employee.displayName());
+			assertEquals("Test", employee.firstname());
+			assertEquals("Employee", employee.lastname());
 		}
 
 		// Update
-		EmployeeDto updatedEmployee = new EmployeeDto(employeeId, "PN001", "Updated Test Employee", "team-1",
-				"location-1", "Europe/Zurich", LocalDate.of(2025, 1, 1), null, false, "admin");
+		EmployeeDto updatedEmployee = new EmployeeDto(employeeId, "PN001", "Updated", "Employee",
+				LocalDate.of(1990, 5, 20), "team-1", "location-1", "Europe/Zurich", LocalDate.of(2025, 1, 1), null,
+				false, "test-user");
 		String updatedJson = ChronivaroRestHelper.createGson().toJson(updatedEmployee);
 
 		try (Response response = target()
@@ -88,7 +90,8 @@ public class EmployeeResourceTest extends AbstractChronivaroRestfulTest {
 			EmployeeDto employee = ChronivaroRestHelper
 					.createGson()
 					.fromJson(response.readEntity(String.class), EmployeeDto.class);
-			assertEquals("Updated Test Employee", employee.displayName());
+			assertEquals("Updated", employee.firstname());
+			assertEquals("Employee", employee.lastname());
 			assertFalse(employee.active());
 		}
 

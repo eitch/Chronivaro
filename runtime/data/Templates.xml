@@ -4,7 +4,9 @@
     <Resource Id="Employee" Name="Template Employee" Type="Template">
         <ParameterBag Id="parameters" Name="Parameters" Type="Parameters">
             <Parameter Id="personalNumber" Name="Personal Number" Type="String" Value=""/>
-            <Parameter Id="displayName" Name="Display Name" Type="String" Value=""/>
+            <Parameter Id="firstname" Name="Firstname" Type="String" Value=""/>
+            <Parameter Id="lastname" Name="Lastname" Type="String" Value=""/>
+            <Parameter Id="birthdate" Name="Birthdate" Type="Date" Value="1970-01-01T00:00:00.000+01:00"/>
             <Parameter Id="timezone" Name="Timezone" Type="String" Value="Europe/Zurich"/>
             <Parameter Id="joinDate" Name="Join Date" Type="Date" Value="1970-01-01T00:00:00.000+01:00"/>
             <Parameter Id="exitDate" Name="Exit Date" Type="Date" Value="9999-12-31T23:59:59.999+01:00"/>

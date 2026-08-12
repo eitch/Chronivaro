@@ -21,7 +21,9 @@ public class ChronivaroConstants {
 	public static final String TYPE_GLOBAL_CONFIGURATION = "GlobalConfiguration";
 
 	public static final String PARAM_PERSONAL_NUMBER = "personalNumber";
-	public static final String PARAM_DISPLAY_NAME = "displayName";
+	public static final String PARAM_FIRSTNAME = "firstname";
+	public static final String PARAM_LASTNAME = "lastname";
+	public static final String PARAM_BIRTHDATE = "birthdate";
 	public static final String PARAM_PRIMARY_TEAM = "primaryTeam";
 	public static final String PARAM_LOCATION = "location";
 	public static final String PARAM_TIMEZONE = "timezone";
