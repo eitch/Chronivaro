@@ -258,9 +258,8 @@ public class UpdateAndRemoveScheduleServiceTest {
 		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
 			Resource employee = tx.getResourceBy(TYPE_EMPLOYEE, employeeId, true);
 			assertTrue("Employee should have currentSchedule relation", employee.hasRelation(PARAM_CURRENT_SCHEDULE));
-			String scheduleId = employee.getRelationId(PARAM_CURRENT_SCHEDULE);
 
-			Resource schedule = tx.getResourceBy(TYPE_EMPLOYMENT_SCHEDULE, scheduleId, true);
+			Resource schedule = tx.getResourceByRelation(employee, PARAM_CURRENT_SCHEDULE, true);
 			assertEquals(employeeId, schedule.getRelationId(PARAM_EMPLOYEE));
 		}
 

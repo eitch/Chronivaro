@@ -31,7 +31,7 @@ public class AbsenceResource {
 		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
 			List<Resource> absences = tx.streamResources(TYPE_ABSENCE).toList();
 			List<AbsenceDto> dtos = absences.stream().map(a -> {
-				Resource type = tx.getResourceBy(TYPE_ABSENCE_TYPE, a.getRelationId(PARAM_ABSENCE_TYPE));
+				Resource type = tx.getResourceByRelation(a, PARAM_ABSENCE_TYPE, true);
 				return ChronivaroMapper.toDto(a, type.getString(PARAM_CODE));
 			}).toList();
 			return Response.ok(ChronivaroRestHelper.createGson().toJson(dtos), MediaType.APPLICATION_JSON).build();

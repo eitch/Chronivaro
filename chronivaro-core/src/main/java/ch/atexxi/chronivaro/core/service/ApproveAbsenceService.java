@@ -30,7 +30,7 @@ public class ApproveAbsenceService extends AbstractService<StringArgument, Servi
 			tx.update(absence);
 
 			// If it's a vacation absence, create a vacation account entry
-			Resource absenceType = tx.getResourceBy(TYPE_ABSENCE_TYPE, absence.getRelationId(PARAM_ABSENCE_TYPE), true);
+			Resource absenceType = tx.getResourceByRelation(absence, PARAM_ABSENCE_TYPE, true);
 			if (absenceType.getBoolean(PARAM_REDUCE_VACATION_CREDIT)) {
 				String employeeId = absence.getRelationId(PARAM_EMPLOYEE);
 				LocalDate start = absence.getDate(PARAM_START).toLocalDate();

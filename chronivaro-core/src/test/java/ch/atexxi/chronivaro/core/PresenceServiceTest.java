@@ -57,7 +57,7 @@ public class PresenceServiceTest {
 			e1.setRelation(PARAM_PRIMARY_TEAM, team);
 			tx.update(e1);
  
-			Resource s1 = tx.readLock(tx.getResourceBy(TYPE_EMPLOYMENT_SCHEDULE, e1.getRelationId(PARAM_CURRENT_SCHEDULE), true));
+			Resource s1 = tx.readLock(tx.getResourceByRelation(e1, PARAM_CURRENT_SCHEDULE, true));
 			s1.setInteger(PARAM_DAILY_TARGET_MINUTES + "Monday", 480);
 			tx.update(s1);
  
@@ -68,7 +68,7 @@ public class PresenceServiceTest {
 			e2.setRelation(PARAM_PRIMARY_TEAM, team);
 			tx.update(e2);
  
-			Resource s2 = tx.readLock(tx.getResourceBy(TYPE_EMPLOYMENT_SCHEDULE, e2.getRelationId(PARAM_CURRENT_SCHEDULE), true));
+			Resource s2 = tx.readLock(tx.getResourceByRelation(e2, PARAM_CURRENT_SCHEDULE, true));
 			s2.setInteger(PARAM_DAILY_TARGET_MINUTES + "Monday", 480);
 			tx.update(s2);
 

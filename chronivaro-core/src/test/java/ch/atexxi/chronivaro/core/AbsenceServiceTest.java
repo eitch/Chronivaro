@@ -46,7 +46,7 @@ public class AbsenceServiceTest {
 
 		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
 			Resource employee = createEmployee(tx, employeeId, "Jane Doe");
-			Resource schedule = tx.readLock(tx.getResourceBy(TYPE_EMPLOYMENT_SCHEDULE, employee.getRelationId(PARAM_CURRENT_SCHEDULE), true));
+			Resource schedule = tx.getResourceByRelation(employee, PARAM_CURRENT_SCHEDULE, true);
 			schedule.setInteger(PARAM_DAILY_TARGET_MINUTES + "Monday", 480);
 			tx.update(schedule);
 

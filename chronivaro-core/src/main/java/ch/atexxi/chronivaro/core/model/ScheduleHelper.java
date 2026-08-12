@@ -23,7 +23,7 @@ public class ScheduleHelper {
 
 		Optional<Resource> version;
 		if (date.equals(LocalDate.now()) && employee.hasRelation(PARAM_CURRENT_SCHEDULE)) {
-			version = Optional.of(tx.getResourceBy(employee.getRelationP(PARAM_CURRENT_SCHEDULE), true));
+			version = Optional.of(tx.getResourceByRelation(employee, PARAM_CURRENT_SCHEDULE, true));
 		} else {
 			version = findScheduleVersion(tx, employeeId);
 		}

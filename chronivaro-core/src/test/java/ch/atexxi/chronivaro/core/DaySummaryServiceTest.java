@@ -51,7 +51,7 @@ public class DaySummaryServiceTest {
 			employee.setString(PARAM_TIMEZONE, "Europe/Zurich");
 			tx.update(employee);
 
-			Resource schedule = tx.readLock(tx.getResourceBy(TYPE_EMPLOYMENT_SCHEDULE, employee.getRelationId(PARAM_CURRENT_SCHEDULE), true));
+			Resource schedule = tx.readLock(tx.getResourceByRelation(employee, PARAM_CURRENT_SCHEDULE, true));
 			schedule.setInteger(PARAM_DAILY_TARGET_MINUTES + "Monday", 480);
 			tx.update(schedule);
 
@@ -105,7 +105,7 @@ public class DaySummaryServiceTest {
 			employee.setString(PARAM_TIMEZONE, "Europe/Zurich");
 			tx.update(employee);
 
-			Resource schedule = tx.readLock(tx.getResourceBy(TYPE_EMPLOYMENT_SCHEDULE, employee.getRelationId(PARAM_CURRENT_SCHEDULE), true));
+			Resource schedule = tx.readLock(tx.getResourceByRelation(employee, PARAM_CURRENT_SCHEDULE, true));
 			schedule.setInteger(
 					PARAM_DAILY_TARGET_MINUTES + date.getDayOfWeek().name().substring(0, 1).toUpperCase() + date
 							.getDayOfWeek()
@@ -156,7 +156,7 @@ public class DaySummaryServiceTest {
 			employee.setString(PARAM_TIMEZONE, "Europe/Zurich");
 			tx.update(employee);
 
-			Resource schedule = tx.readLock(tx.getResourceBy(TYPE_EMPLOYMENT_SCHEDULE, employee.getRelationId(PARAM_CURRENT_SCHEDULE), true));
+			Resource schedule = tx.readLock(tx.getResourceByRelation(employee, PARAM_CURRENT_SCHEDULE, true));
 			// Only set the general dailyTargetMinutes
 			schedule.setInteger(PARAM_DAILY_TARGET_MINUTES, 480);
 			tx.update(schedule);
