@@ -4,5 +4,5 @@ import java.time.LocalDate;
 
 public record EmployeeDto(String id, String personalNumber, String firstname, String lastname, LocalDate birthdate,
 						  String teamId, String locationId, String timezone, LocalDate joinDate, LocalDate exitDate,
-						  boolean active, String username) {
+						  boolean active, String userId, String username) {
 }

@@ -11,9 +11,10 @@
             <Parameter Id="joinDate" Name="Join Date" Type="Date" Value="1970-01-01T00:00:00.000+01:00"/>
             <Parameter Id="exitDate" Name="Exit Date" Type="Date" Value="9999-12-31T23:59:59.999+01:00"/>
             <Parameter Id="active" Name="Active" Type="Boolean" Value="true"/>
+            <Parameter Id="userId" Name="User ID" Type="String" Value=""/>
+            <Parameter Id="username" Name="Username" Type="String" Value=""/>
         </ParameterBag>
         <ParameterBag Id="relations" Name="Relations" Type="Relations">
-            <Parameter Id="user" Name="User" Type="String" Value=""/>
             <Parameter Id="location" Name="Location" Type="String" Interpretation="Resource-Ref" Uom="Location" Value=""/>
             <Parameter Id="primaryTeam" Name="Primary Team" Type="String" Interpretation="Resource-Ref" Uom="Team" Value=""/>
             <Parameter Id="currentSchedule" Name="Current Schedule" Type="String" Interpretation="Resource-Ref" Uom="EmploymentSchedule" Value=""/>

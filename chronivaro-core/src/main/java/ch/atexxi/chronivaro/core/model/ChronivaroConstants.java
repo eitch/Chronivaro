@@ -30,7 +30,8 @@ public class ChronivaroConstants {
 	public static final String PARAM_JOIN_DATE = "joinDate";
 	public static final String PARAM_EXIT_DATE = "exitDate";
 	public static final String PARAM_ACTIVE = "active";
-	public static final String PARAM_USER = "user";
+	public static final String PARAM_USER_ID = "userId";
+	public static final String PARAM_USERNAME = "username";
 	public static final String PARAM_EMPLOYEE = "employee";
 	public static final String PARAM_ABSENCE = "absence";
 	public static final String PARAM_TEAM = "team";

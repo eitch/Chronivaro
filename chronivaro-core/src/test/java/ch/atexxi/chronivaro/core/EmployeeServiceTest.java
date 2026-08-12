@@ -31,17 +31,6 @@ public class EmployeeServiceTest {
 				"src/test/resources");
 		runtimeMock.startContainer();
 		certificate = runtimeMock.login("admin", "admin");
-	}
-
-	@AfterClass
-	public static void afterClass() {
-		if (runtimeMock != null)
-			runtimeMock.destroyRuntime();
-	}
-
-	@Test
-	public void shouldCreateUpdateAndRemoveEmployee() {
-		ServiceHandler serviceHandler = runtimeMock.getServiceHandler();
 
 		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
 			Resource location = tx.getResourceTemplate(TYPE_LOCATION, true);
@@ -56,6 +45,19 @@ public class EmployeeServiceTest {
 
 			tx.commitOnClose();
 		}
+	}
+
+	@AfterClass
+	public static void afterClass() {
+		if (runtimeMock != null)
+			runtimeMock.destroyRuntime();
+	}
+
+	@Test
+	public void shouldCreateUpdateAndRemoveEmployee() {
+		ServiceHandler serviceHandler = runtimeMock.getServiceHandler();
+
+		String username = "testuser";
 
 		// Create
 		CreateEmployeeService.EmployeeArgument createArg = new CreateEmployeeService.EmployeeArgument();
@@ -68,7 +70,7 @@ public class EmployeeServiceTest {
 		createArg.timezone = "Europe/Zurich";
 		createArg.joinDate = LocalDate.of(2026, 1, 1);
 		createArg.active = true;
-		createArg.username = "testuser";
+		createArg.username = username;
 
 		ServiceResult createResult = serviceHandler.doService(certificate, new CreateEmployeeService(), createArg);
 		assertTrue(createResult.getMessage(), createResult.isOk());
@@ -86,11 +88,13 @@ public class EmployeeServiceTest {
 			assertEquals("Employee", employee.getString(PARAM_LASTNAME));
 			assertEquals(LocalDate.of(1990, 5, 20), employee.getDate(PARAM_BIRTHDATE).toLocalDate());
 			assertTrue(employee.getBoolean(PARAM_ACTIVE));
-			assertNotNull(employee.getRelationId(PARAM_USER));
+			assertNotNull(employee.getString(PARAM_USER_ID));
+			assertNotNull(employee.getString(PARAM_USERNAME));
 
-			UserRep user = runtimeMock.getPrivilegeHandler().getPrivilegeHandler().getUser(certificate, "testuser");
+			UserRep user = runtimeMock.getPrivilegeHandler().getPrivilegeHandler().getUser(certificate, username);
 			assertNotNull(user);
-			assertEquals(user.getUserId(), employee.getRelationId(PARAM_USER));
+			assertEquals(user.getUserId(), employee.getString(PARAM_USER_ID));
+			assertEquals(user.getUsername(), employee.getString(PARAM_USERNAME));
 			assertEquals("Test", user.getFirstname());
 			assertEquals("Employee", user.getLastname());
 		}
@@ -101,13 +105,13 @@ public class EmployeeServiceTest {
 		updateArg.personalNumber = "123";
 		updateArg.firstname = "Updated";
 		updateArg.lastname = "Employee";
-		updateArg.birthdate = LocalDate.of(1990, 5, 20);
+		updateArg.birthdate = null;
 		updateArg.teamId = "team1";
 		updateArg.locationId = "loc1";
 		updateArg.timezone = "Europe/Zurich";
 		updateArg.joinDate = LocalDate.of(2026, 1, 1);
 		updateArg.active = true;
-		updateArg.username = "testuser";
+		updateArg.username = username;
 		ServiceResult updateResult = serviceHandler.doService(certificate, new UpdateEmployeeService(), updateArg);
 		assertTrue(updateResult.getMessage(), updateResult.isOk());
 
@@ -115,6 +119,7 @@ public class EmployeeServiceTest {
 			Resource employee = tx.getResourceBy(TYPE_EMPLOYEE, employeeId, true);
 			assertEquals("Updated", employee.getString(PARAM_FIRSTNAME));
 			assertEquals("Employee", employee.getString(PARAM_LASTNAME));
+			assertFalse(employee.hasParameter(PARAM_BIRTHDATE));
 		}
 
 		// Remove
@@ -124,6 +129,35 @@ public class EmployeeServiceTest {
 
 		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
 			assertNull(tx.getResourceBy(TYPE_EMPLOYEE, employeeId));
+		}
+	}
+
+	@Test
+	public void shouldCreateEmployeeWithoutBirthdate() {
+		ServiceHandler serviceHandler = runtimeMock.getServiceHandler();
+
+		CreateEmployeeService.EmployeeArgument createArg = new CreateEmployeeService.EmployeeArgument();
+		createArg.personalNumber = "456";
+		createArg.firstname = "No";
+		createArg.lastname = "Birthdate";
+		createArg.birthdate = null;
+		createArg.teamId = "team1";
+		createArg.locationId = "loc1";
+		createArg.timezone = "Europe/Zurich";
+		createArg.joinDate = LocalDate.of(2026, 1, 1);
+		createArg.active = true;
+		createArg.username = "nobirthdate";
+
+		ServiceResult createResult = serviceHandler.doService(certificate, new CreateEmployeeService(), createArg);
+		assertTrue(createResult.getMessage(), createResult.isOk());
+
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
+			Resource employee = tx
+					.streamResources(TYPE_EMPLOYEE)
+					.filter(r -> r.getName().equals("No Birthdate"))
+					.findFirst()
+					.orElseThrow();
+			assertFalse(employee.hasParameter(PARAM_BIRTHDATE));
 		}
 	}
 }

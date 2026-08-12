@@ -1,7 +1,6 @@
 import EmployeeApi from '../api/EmployeeApi.js';
 import TeamApi from '../api/TeamApi.js';
 import LocationApi from '../api/LocationApi.js';
-import UserApi from '../api/UserApi.js';
 import NotificationDialog from '../utils/NotificationDialog.js';
 
 export default class EmployeesView {
@@ -21,6 +20,7 @@ export default class EmployeesView {
 				<thead>
 					<tr>
 						<th>ID</th>
+						<th>Username</th>
 						<th>Pers. Nr.</th>
 						<th>Firstname</th>
 						<th>Lastname</th>
@@ -32,7 +32,7 @@ export default class EmployeesView {
 					</tr>
 				</thead>
 				<tbody>
-					<tr><td colspan="9">Loading...</td></tr>
+					<tr><td colspan="10">Loading...</td></tr>
 				</tbody>
 			</table>
 
@@ -62,7 +62,7 @@ export default class EmployeesView {
 						</div>
 						<div class="form-group">
 							<label for="emp-birthdate">Birthdate:</label>
-							<input type="date" id="emp-birthdate" required>
+							<input type="date" id="emp-birthdate">
 						</div>
 						<div class="form-group">
 							<label for="emp-team">Team:</label>
@@ -138,10 +138,11 @@ export default class EmployeesView {
             try {
                 const employees = await EmployeeApi.getAll();
                 tbody.innerHTML = '';
-            				employees.forEach(emp => {
+                employees.forEach(emp => {
                     const row = document.createElement('tr');
                     row.innerHTML = `
 						<td>${emp.id}</td>
+						<td>${emp.username}</td>
 						<td>${emp.personalNumber}</td>
 						<td>${emp.firstname}</td>
 						<td>${emp.lastname}</td>
@@ -169,7 +170,7 @@ export default class EmployeesView {
                 });
             } catch (err) {
                 console.error(err);
-                tbody.innerHTML = `<tr><td colspan="9" class="error">${err.message}</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="10" class="error">${err.message}</td></tr>`;
             }
         };
 
@@ -193,8 +194,7 @@ export default class EmployeesView {
                     container.querySelector('#emp-timezone').value = emp.timezone;
                     container.querySelector('#emp-join-date').value = emp.joinDate;
                     container.querySelector('#emp-exit-date').value = emp.exitDate || '';
-                    container.querySelector('#emp-username-group').style.display = 'none';
-                    container.querySelector('#emp-username').required = false;
+                    container.querySelector('#emp-username').value = emp.username;
                     container.querySelector('#emp-active').checked = emp.active;
                     modal.style.display = 'block';
                 }

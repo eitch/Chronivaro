@@ -12,6 +12,7 @@ import li.strolch.service.api.ServiceResult;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -39,6 +40,8 @@ public class CreateEmployeeService extends AbstractService<CreateEmployeeService
 			employee.setString(PARAM_LASTNAME, arg.lastname);
 			if (arg.birthdate != null)
 				employee.setDate(PARAM_BIRTHDATE, arg.birthdate.atStartOfDay(zoneId));
+			else
+				employee.removeParameter(PARAM_BIRTHDATE);
 			employee.setRelation(PARAM_LOCATION, tx.getResourceBy(TYPE_LOCATION, arg.locationId, true));
 			employee.setString(PARAM_TIMEZONE, timeZone);
 			employee.setDate(PARAM_JOIN_DATE, arg.joinDate.atStartOfDay(zoneId));
@@ -46,8 +49,9 @@ public class CreateEmployeeService extends AbstractService<CreateEmployeeService
 				employee.setDate(PARAM_EXIT_DATE, arg.exitDate.atStartOfDay(zoneId));
 			employee.setBoolean(PARAM_ACTIVE, arg.active);
 
-			UserRep userRep = createUser(tx, arg);
-			employee.setRelationId(PARAM_USER, userRep.getUserId());
+			UserRep userRep = createOrUpdateUser(tx, arg);
+			employee.setString(PARAM_USER_ID, userRep.getUserId());
+			employee.setString(PARAM_USERNAME, userRep.getUsername());
 
 			tx.add(employee);
 			tx.commitOnClose();
@@ -55,13 +59,24 @@ public class CreateEmployeeService extends AbstractService<CreateEmployeeService
 		return ServiceResult.success();
 	}
 
-	private UserRep createUser(StrolchTransaction tx, EmployeeArgument arg) {
-		PrivilegeHandler privilegeHandler = getContainer().getPrivilegeHandler().getPrivilegeHandler();
+	static UserRep createOrUpdateUser(StrolchTransaction tx, EmployeeArgument arg) {
+		PrivilegeHandler privilegeHandler = tx.getContainer().getPrivilegeHandler().getPrivilegeHandler();
 		Map<String, String> properties = new HashMap<>();
-		properties.put(PrivilegeConstants.ORGANISATION, tx.getCertificate().getOrganisation());
+		String organisation = tx.getCertificate().getOrganisation();
+		if (organisation != null)
+			properties.put(PrivilegeConstants.ORGANISATION, organisation);
 		UserRep userRep = new UserRep(null, arg.username, arg.firstname, arg.lastname, ENABLED, null,
 				Set.of(ROLE_EMPLOYEE), tx.getCertificate().getLocale(), properties, null);
-		return privilegeHandler.addUser(tx.getCertificate(), userRep, null);
+		UserRep existingUser = privilegeHandler.getUser(tx.getCertificate(), userRep.getUsername());
+		if (existingUser == null) {
+			return privilegeHandler.addUser(tx.getCertificate(), userRep, null);
+		} else {
+			userRep.setUserId(existingUser.getUserId());
+			Set<String> roles = new HashSet<>(existingUser.getRoles());
+			roles.add(ROLE_EMPLOYEE);
+			userRep.setRoles(roles);
+			return privilegeHandler.updateUser(tx.getCertificate(), userRep, null);
+		}
 	}
 
 	@Override

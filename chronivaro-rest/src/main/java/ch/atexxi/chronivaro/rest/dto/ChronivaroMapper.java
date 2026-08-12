@@ -75,7 +75,6 @@ public class ChronivaroMapper {
 	}
 
 	public static EmployeeDto employeeToDto(Resource employee) {
-		String userId = employee.getRelationId(PARAM_USER);
 		return new EmployeeDto(employee.getId(), employee.getString(PARAM_PERSONAL_NUMBER),
 				employee.getString(PARAM_FIRSTNAME), employee.getString(PARAM_LASTNAME),
 				employee.hasParameter(PARAM_BIRTHDATE) ? employee.getDate(PARAM_BIRTHDATE).toLocalDate() : null,
@@ -84,7 +83,7 @@ public class ChronivaroMapper {
 				employee.getDate(PARAM_JOIN_DATE).toLocalDate(),
 				employee.hasParameter(PARAM_EXIT_DATE) && employee.getDate(PARAM_EXIT_DATE) != null ?
 						employee.getDate(PARAM_EXIT_DATE).toLocalDate() : null, employee.getBoolean(PARAM_ACTIVE),
-				userId);
+				employee.getString(PARAM_USER_ID), employee.getString(PARAM_USERNAME));
 	}
 
 	public static HolidayCalendarDto holidayCalendarToDto(Resource calendar) {

@@ -22,7 +22,8 @@ public class EmployeeResourceTest extends AbstractChronivaroRestfulTest {
 
 		// Create
 		EmployeeDto newEmployee = new EmployeeDto(null, "PN001", "Test", "Employee", LocalDate.of(1990, 5, 20),
-				"team-1", "location-1", "Europe/Zurich", LocalDate.of(2025, 1, 1), null, true, "test-user");
+				"team-1", "location-1", "Europe/Zurich", LocalDate.of(2025, 1, 1), null, true, "test-user-id",
+				"test-user");
 		String json = ChronivaroRestHelper.createGson().toJson(newEmployee);
 
 		try (Response response = target()
@@ -70,7 +71,7 @@ public class EmployeeResourceTest extends AbstractChronivaroRestfulTest {
 		// Update
 		EmployeeDto updatedEmployee = new EmployeeDto(employeeId, "PN001", "Updated", "Employee",
 				LocalDate.of(1990, 5, 20), "team-1", "location-1", "Europe/Zurich", LocalDate.of(2025, 1, 1), null,
-				false, "test-user");
+				false, "test-user-id", "test-user");
 		String updatedJson = ChronivaroRestHelper.createGson().toJson(updatedEmployee);
 
 		try (Response response = target()

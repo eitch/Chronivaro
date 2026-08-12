@@ -11,6 +11,8 @@ import java.time.YearMonth;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 
+import static li.strolch.utils.helper.StringHelper.isEmpty;
+
 public class ChronivaroRestHelper {
 
 	public static Gson createGson() {
@@ -18,9 +20,10 @@ public class ChronivaroRestHelper {
 				.registerTypeAdapter(LocalDate.class,
 						(JsonSerializer<LocalDate>) (src, typeOfSrc, context) -> new JsonPrimitive(
 								src.format(DateTimeFormatter.ISO_LOCAL_DATE)))
-				.registerTypeAdapter(LocalDate.class,
-						(JsonDeserializer<LocalDate>) (json, typeOfT, context) -> LocalDate.parse(json.getAsString(),
-								DateTimeFormatter.ISO_LOCAL_DATE))
+				.registerTypeAdapter(LocalDate.class, (JsonDeserializer<LocalDate>) (json, typeOfT, context) -> {
+					String s = json.getAsString();
+					return isEmpty(s) ? null : LocalDate.parse(s, DateTimeFormatter.ISO_LOCAL_DATE);
+				})
 				.registerTypeAdapter(YearMonth.class,
 						(JsonSerializer<YearMonth>) (src, typeOfSrc, context) -> new JsonPrimitive(src.toString()))
 				.registerTypeAdapter(YearMonth.class,

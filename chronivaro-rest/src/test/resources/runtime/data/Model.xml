@@ -54,9 +54,10 @@
             <Parameter Id="active" Name="Active" Type="Boolean" Value="true"/>
             <Parameter Id="joinDate" Name="Join Date" Type="Date" Value="2025-01-01T00:00:00.000+01:00"/>
             <Parameter Id="timezone" Name="Timezone" Type="String" Value="Europe/Zurich"/>
+            <Parameter Id="userId" Name="User ID" Type="String" Value="admin"/>
+            <Parameter Id="username" Name="Username" Type="String" Value="admin"/>
         </ParameterBag>
         <ParameterBag Id="relations" Name="Relations" Type="Relations">
-            <Parameter Id="user" Name="User" Type="String" Value="admin"/>
             <Parameter Id="location" Name="Location" Type="String" Interpretation="Resource-Ref" Uom="Location" Value="location-1"/>
             <Parameter Id="primaryTeam" Name="Primary Team" Type="String" Interpretation="Resource-Ref" Uom="Team" Value="team-1"/>
             <Parameter Id="currentSchedule" Name="Current Schedule" Type="String" Interpretation="Resource-Ref" Uom="EmploymentSchedule"
