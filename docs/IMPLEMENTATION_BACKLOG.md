@@ -65,8 +65,8 @@ Do not perform unrelated refactoring while implementing a backlog item.
 Implement the roles required by the specification:
 
 - `Employee`
-- `Vorgesetzter`
-- `Personaladministration`
+- `Supervisor`
+- `HR`
 - `Administrator`
 - `Leseberechtigter Benutzer`, if required by the specification
 
