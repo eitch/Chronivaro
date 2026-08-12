@@ -2,11 +2,14 @@ package ch.atexxi.chronivaro.core;
 
 import ch.atexxi.chronivaro.core.model.VacationHelper;
 import ch.atexxi.chronivaro.core.service.ApproveAbsenceService;
+import ch.atexxi.chronivaro.core.service.CancelAbsenceService;
 import ch.atexxi.chronivaro.core.service.RejectAbsenceService;
 import ch.atexxi.chronivaro.core.service.RequestAbsenceService;
 import li.strolch.model.Resource;
 import li.strolch.persistence.api.StrolchTransaction;
 import li.strolch.privilege.model.Certificate;
+import li.strolch.privilege.model.UserRep;
+import li.strolch.privilege.model.UserState;
 import li.strolch.service.StringArgument;
 import li.strolch.service.api.ServiceHandler;
 import li.strolch.service.api.ServiceResult;
@@ -16,9 +19,11 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.time.ZonedDateTime;
+import java.util.Locale;
 
 import static ch.atexxi.chronivaro.core.ChronivaroTestHelper.createEmployee;
 import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
+import static java.util.Collections.*;
 import static org.junit.Assert.*;
 
 public class AbsenceServiceTest {
@@ -32,6 +37,24 @@ public class AbsenceServiceTest {
 				"src/test/resources");
 		runtimeMock.startContainer();
 		certificate = runtimeMock.login("admin", "admin");
+
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
+			Resource vacation = tx.getResourceTemplate(TYPE_ABSENCE_TYPE, true);
+			vacation.setId("vacation");
+			vacation.setName("Vacation");
+			vacation.setString(PARAM_CODE, "VACATION");
+			vacation.setBoolean(PARAM_REDUCE_VACATION_CREDIT, true);
+			tx.add(vacation);
+
+			Resource sick = tx.getResourceTemplate(TYPE_ABSENCE_TYPE, true);
+			sick.setId("sick");
+			sick.setName("Sick");
+			sick.setString(PARAM_CODE, "SICK");
+			sick.setBoolean(PARAM_REDUCE_VACATION_CREDIT, false);
+			tx.add(sick);
+
+			tx.commitOnClose();
+		}
 	}
 
 	@AfterClass
@@ -49,13 +72,6 @@ public class AbsenceServiceTest {
 			Resource schedule = tx.getResourceByRelation(employee, PARAM_CURRENT_SCHEDULE, true);
 			schedule.setInteger(PARAM_DAILY_TARGET_MINUTES + "Monday", 480);
 			tx.update(schedule);
-
-			Resource absenceType = tx.getResourceTemplate(TYPE_ABSENCE_TYPE, true);
-			absenceType.setId("vacation");
-			absenceType.setName("Vacation");
-			absenceType.setString(PARAM_CODE, "VACATION");
-			absenceType.setBoolean(PARAM_REDUCE_VACATION_CREDIT, true);
-			tx.add(absenceType);
 
 			// Add initial vacation entitlement
 			Resource entry = tx.getResourceTemplate(TYPE_VACATION_ACCOUNT_ENTRY, true);
@@ -83,7 +99,10 @@ public class AbsenceServiceTest {
 
 		String absenceId;
 		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
-			Resource absence = tx.streamResources(TYPE_ABSENCE).findFirst().orElseThrow();
+			Resource absence = tx.streamResources(TYPE_ABSENCE)
+					.filter(a -> a.getRelationId(PARAM_EMPLOYEE).equals(employeeId))
+					.findFirst()
+					.orElseThrow();
 			absenceId = absence.getId();
 			assertEquals(STATE_SUBMITTED, absence.getString(PARAM_STATE));
 		}
@@ -110,13 +129,6 @@ public class AbsenceServiceTest {
 		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
 			createEmployee(tx, employeeId, "Jack Doe");
 
-			Resource absenceType = tx.getResourceTemplate(TYPE_ABSENCE_TYPE, true);
-			absenceType.setId("sick");
-			absenceType.setName("Sick");
-			absenceType.setString(PARAM_CODE, "SICK");
-			absenceType.setBoolean(PARAM_REDUCE_VACATION_CREDIT, false);
-			tx.add(absenceType);
-
 			tx.commitOnClose();
 		}
 
@@ -134,7 +146,8 @@ public class AbsenceServiceTest {
 
 		String absenceId;
 		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
-			Resource absence = tx.streamResources(TYPE_ABSENCE)
+			Resource absence = tx
+					.streamResources(TYPE_ABSENCE)
 					.filter(a -> a.getRelationId(PARAM_EMPLOYEE).equals(employeeId))
 					.findFirst()
 					.orElseThrow();
@@ -162,5 +175,107 @@ public class AbsenceServiceTest {
 		// Reject Absence - Invalid State (already rejected)
 		rejResult = serviceHandler.doService(certificate, new RejectAbsenceService(), rejArg);
 		assertFalse("Should fail if not in SUBMITTED state", rejResult.isOk());
+	}
+
+	@Test
+	public void shouldCancelOwnAbsence() {
+		String employeeId = "emp6";
+		String userId = "user6";
+		Certificate userCert;
+
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
+			Resource employee = createEmployee(tx, employeeId, "Jill Doe");
+			employee.setRelationId(PARAM_USER, userId);
+			tx.update(employee);
+
+			Resource schedule = tx.getResourceByRelation(employee, PARAM_CURRENT_SCHEDULE, true);
+			schedule.setInteger(PARAM_DAILY_TARGET_MINUTES + "Wednesday", 480);
+			tx.update(schedule);
+
+			// Add initial vacation entitlement
+			Resource entry = tx.getResourceTemplate(TYPE_VACATION_ACCOUNT_ENTRY, true);
+			entry.setName("Entitlement");
+			entry.setRelation(PARAM_EMPLOYEE, employee);
+			entry.setDate(PARAM_DATE, ZonedDateTime.parse("2026-01-01T00:00:00Z"));
+			entry.setString(PARAM_VACATION_TYPE, VACATION_ENTITLEMENT);
+			entry.setInteger(PARAM_VALUE, 20 * 480); // 20 days
+			tx.add(entry);
+
+			tx.commitOnClose();
+
+			UserRep userRep = new UserRep(null, userId, "Jill", "Doe", UserState.ENABLED, emptySet(),
+					singleton("Employee"), Locale.of("de", "CH"), emptyMap(), null);
+			runtimeMock.getPrivilegeHandler().getPrivilegeHandler().addUser(certificate, userRep, userId.toCharArray());
+			userCert = runtimeMock.login(userId, userId);
+		}
+
+		ServiceHandler serviceHandler = runtimeMock.getServiceHandler();
+
+		// 1. Request Absence (Submitted)
+		RequestAbsenceService.RequestAbsenceArgument reqArg = new RequestAbsenceService.RequestAbsenceArgument();
+		reqArg.employeeId = employeeId;
+		reqArg.absenceTypeCode = "VACATION";
+		reqArg.start = ZonedDateTime.parse("2026-04-01T00:00:00+02:00[Europe/Zurich]"); // Wednesday
+		reqArg.end = ZonedDateTime.parse("2026-04-01T23:59:59+02:00[Europe/Zurich]");
+		reqArg.durationType = DURATION_FULL_DAY;
+		ServiceResult reqResult = serviceHandler.doService(userCert, new RequestAbsenceService(), reqArg);
+		assertTrue(reqResult.getMessage(), reqResult.isOk());
+
+		String absenceId;
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
+			Resource absence = tx
+					.streamResources(TYPE_ABSENCE)
+					.filter(a -> a.getRelationId(PARAM_EMPLOYEE).equals(employeeId))
+					.findFirst()
+					.orElseThrow();
+			absenceId = absence.getId();
+		}
+
+		// 2. Cancel Absence (Self-service)
+		ServiceResult cancelResult = serviceHandler.doService(userCert, new CancelAbsenceService(),
+				new StringArgument(absenceId));
+		assertTrue(cancelResult.getMessage(), cancelResult.isOk());
+
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
+			Resource absence = tx.getResourceBy(TYPE_ABSENCE, absenceId, true);
+			assertEquals(STATE_CANCELLED, absence.getString(PARAM_STATE));
+		}
+
+		// 3. Request another one and Approve it
+		reqArg.start = ZonedDateTime.parse("2026-04-08T00:00:00+02:00[Europe/Zurich]");
+		reqArg.end = ZonedDateTime.parse("2026-04-08T23:59:59+02:00[Europe/Zurich]");
+		reqResult = serviceHandler.doService(userCert, new RequestAbsenceService(), reqArg);
+		assertTrue(reqResult.getMessage(), reqResult.isOk());
+
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
+			absenceId = tx
+					.streamResources(TYPE_ABSENCE)
+					.filter(a -> a.getRelationId(PARAM_EMPLOYEE).equals(employeeId))
+					.filter(a -> a.getString(PARAM_STATE).equals(STATE_SUBMITTED))
+					.findFirst()
+					.orElseThrow()
+					.getId();
+		}
+
+		serviceHandler.doService(certificate, new ApproveAbsenceService(), new StringArgument(absenceId));
+
+		// Check balance before cancellation
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
+			int balance = VacationHelper.getVacationBalance(tx, employeeId, ZonedDateTime.now());
+			assertEquals("Balance should be reduced by 1 day", (20 - 1) * 480, balance);
+		}
+
+		// 4. Cancel Approved Absence
+		cancelResult = serviceHandler.doService(userCert, new CancelAbsenceService(), new StringArgument(absenceId));
+		assertTrue(cancelResult.getMessage(), cancelResult.isOk());
+
+		// Check balance after cancellation
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
+			int balance = VacationHelper.getVacationBalance(tx, employeeId, ZonedDateTime.now());
+			assertEquals("Balance should be restored", 20 * 480, balance);
+
+			Resource absence = tx.getResourceBy(TYPE_ABSENCE, absenceId, true);
+			assertEquals(STATE_CANCELLED, absence.getString(PARAM_STATE));
+		}
 	}
 }

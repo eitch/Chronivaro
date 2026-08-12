@@ -26,6 +26,9 @@
         <Privilege name="li.strolch.privilege.handler.SystemAction" policy="DefaultPrivilege">
             <AllAllowed>true</AllAllowed>
         </Privilege>
+        <Privilege name="PrivilegeAddUser" policy="UserAccessPrivilege">
+            <AllAllowed>true</AllAllowed>
+        </Privilege>
     </Role>
 
     <Role name="Employee">
@@ -33,6 +36,7 @@
             <Allow>ch.atexxi.chronivaro.core.service.DaySummaryService</Allow>
             <Allow>ch.atexxi.chronivaro.core.service.MonthSummaryService</Allow>
             <Allow>ch.atexxi.chronivaro.core.service.RequestAbsenceService</Allow>
+            <Allow>ch.atexxi.chronivaro.core.service.CancelAbsenceService</Allow>
             <Allow>ch.atexxi.chronivaro.core.service.StartTimerService</Allow>
             <Allow>ch.atexxi.chronivaro.core.service.StopTimerService</Allow>
         </Privilege>

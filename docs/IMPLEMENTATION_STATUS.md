@@ -6,10 +6,9 @@
 - [x] Localisation Resources
 - [x] Global Configuration
 - [x] Reject Absence
+- [x] Cancel Own Absence
 
 ## In Progress
-
-- [ ] Cancel Own Absence
 
 ## Pending
 

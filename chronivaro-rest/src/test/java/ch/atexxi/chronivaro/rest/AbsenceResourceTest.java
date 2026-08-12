@@ -28,13 +28,7 @@ public class AbsenceResourceTest extends AbstractChronivaroRestfulTest {
 				.request(MediaType.APPLICATION_JSON)
 				.header("Authorization", authToken)
 				.post(null)) {
-			// Expect 404 if absence doesn't exist
-			int status = response.getStatus();
-			assertTrue(status == 200 || status == 404);
+			assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
 		}
-	}
-
-	private void assertTrue(boolean condition) {
-		org.junit.Assert.assertTrue(condition);
 	}
 }

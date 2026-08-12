@@ -9,13 +9,11 @@ import com.google.gson.reflect.TypeToken;
 import jakarta.ws.rs.client.Entity;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
-import li.strolch.service.StringResult;
 import org.junit.Test;
 
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.*;
 
 public class HolidayCalendarResourceTest extends AbstractChronivaroRestfulTest {
 
@@ -64,8 +62,9 @@ public class HolidayCalendarResourceTest extends AbstractChronivaroRestfulTest {
 				.header("Authorization", authToken)
 				.get()) {
 			assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
-			List<HolidayCalendarDto> calendars = ChronivaroRestHelper.createGson().fromJson(response.readEntity(String.class),
-					new TypeToken<List<HolidayCalendarDto>>() {
+			List<HolidayCalendarDto> calendars = ChronivaroRestHelper
+					.createGson()
+					.fromJson(response.readEntity(String.class), new TypeToken<List<HolidayCalendarDto>>() {
 					}.getType());
 			assertFalse(calendars.isEmpty());
 		}
@@ -78,8 +77,9 @@ public class HolidayCalendarResourceTest extends AbstractChronivaroRestfulTest {
 				.get()) {
 			assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
 			String json = response.readEntity(String.class);
-			List<HolidayDto> holidays = ChronivaroRestHelper.createGson().fromJson(json,
-					new TypeToken<List<HolidayDto>>() {
+			List<HolidayDto> holidays = ChronivaroRestHelper
+					.createGson()
+					.fromJson(json, new TypeToken<List<HolidayDto>>() {
 					}.getType());
 			assertFalse(holidays.isEmpty());
 			assertEquals("New Year", holidays.getFirst().name());
@@ -147,7 +147,8 @@ public class HolidayCalendarResourceTest extends AbstractChronivaroRestfulTest {
 				.header("Authorization", authToken)
 				.post(Entity.json(holiday2Json))) {
 			// This should fail with 400 Bad Request or similar
-			assertFalse("Should not allow duplicate holiday on same date", response.getStatus() == Response.Status.OK.getStatusCode());
+			assertNotEquals("Should not allow duplicate holiday on same date", response.getStatus(),
+					Response.Status.OK.getStatusCode());
 		}
 	}
 }

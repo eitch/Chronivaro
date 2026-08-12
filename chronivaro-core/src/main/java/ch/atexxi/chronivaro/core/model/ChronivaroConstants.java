@@ -110,4 +110,5 @@ public class ChronivaroConstants {
 	public static final String ROLE_EMPLOYEE = "Employee";
 	public static final String ROLE_SUPERVISOR = "Supervisor";
 	public static final String ROLE_HR = "HR";
+	public static final String ROLE_ADMIN = "StrolchAdmin";
 }

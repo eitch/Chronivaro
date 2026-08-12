@@ -241,7 +241,7 @@ Implemented in `RejectAbsenceService`. Added tests in `AbsenceServiceTest`.
 
 ---
 
-## 5. Cancel Own Absence
+## 5. Cancel Own Absence (✓ DONE)
 
 ### Goal
 
@@ -266,6 +266,10 @@ Tests must cover:
 - approved absence;
 - invalid status transition;
 - vacation-account side effects where applicable.
+
+### Verification
+
+Implemented in `CancelAbsenceService`. Added tests in `AbsenceServiceTest`. Balanced checked and verified.
 
 ---
 

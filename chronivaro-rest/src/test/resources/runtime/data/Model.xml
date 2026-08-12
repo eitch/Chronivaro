@@ -64,4 +64,49 @@
         </ParameterBag>
     </Resource>
 
+    <Resource Id="test-period-approve" Name="Test Period Approve" Type="TimePeriod">
+        <ParameterBag Id="parameters" Name="Parameters" Type="Parameters">
+            <Parameter Id="yearMonth" Name="Year Month" Type="String" Value="2025-01"/>
+            <Parameter Id="state" Name="State" Type="String" Value="SUBMITTED"/>
+        </ParameterBag>
+        <ParameterBag Id="relations" Name="Relations" Type="Relations">
+            <Parameter Id="employee" Name="Employee" Type="String" Interpretation="Resource-Ref" Uom="Employee" Value="admin_emp"/>
+        </ParameterBag>
+    </Resource>
+
+    <Resource Id="test-period-lock" Name="Test Period Lock" Type="TimePeriod">
+        <ParameterBag Id="parameters" Name="Parameters" Type="Parameters">
+            <Parameter Id="yearMonth" Name="Year Month" Type="String" Value="2025-01"/>
+            <Parameter Id="state" Name="State" Type="String" Value="APPROVED"/>
+        </ParameterBag>
+        <ParameterBag Id="relations" Name="Relations" Type="Relations">
+            <Parameter Id="employee" Name="Employee" Type="String" Interpretation="Resource-Ref" Uom="Employee" Value="admin_emp"/>
+        </ParameterBag>
+    </Resource>
+    
+    <Resource Id="vacation" Name="Vacation" Type="AbsenceType">
+        <ParameterBag Id="parameters" Name="Parameters" Type="Parameters">
+            <Parameter Id="code" Name="Code" Type="String" Value="V"/>
+            <Parameter Id="name" Name="Name" Type="String" Value="Vacation"/>
+            <Parameter Id="countAsTargetTime" Name="Count As Target Time" Type="Boolean" Value="false"/>
+            <Parameter Id="reduceVacationCredit" Name="Reduce Vacation Credit" Type="Boolean" Value="true"/>
+            <Parameter Id="paid" Name="Paid" Type="Boolean" Value="true"/>
+            <Parameter Id="approvalRequired" Name="Approval Required" Type="Boolean" Value="true"/>
+            <Parameter Id="durationTypes" Name="Duration Types" Type="StringList" Value="FULL_DAY,HALF_DAY,HOURS"/>
+        </ParameterBag>
+    </Resource>
+
+    <Resource Id="test-absence" Name="Test Absence" Type="Absence">
+        <ParameterBag Id="parameters" Name="Parameters" Type="Parameters">
+            <Parameter Id="start" Name="Start" Type="Date" Value="2025-01-01T08:00:00.000+01:00"/>
+            <Parameter Id="end" Name="End" Type="Date" Value="2025-01-01T17:00:00.000+01:00"/>
+            <Parameter Id="durationType" Name="Duration Type" Type="String" Value="FULL_DAY"/>
+            <Parameter Id="state" Name="State" Type="String" Value="SUBMITTED"/>
+        </ParameterBag>
+        <ParameterBag Id="relations" Name="Relations" Type="Relations">
+            <Parameter Id="employee" Name="Employee" Type="String" Interpretation="Resource-Ref" Uom="Employee" Value="admin_emp"/>
+            <Parameter Id="absenceType" Name="Absence Type" Type="String" Interpretation="Resource-Ref" Uom="AbsenceType" Value="vacation"/>
+        </ParameterBag>
+    </Resource>
+
 </StrolchModel>
