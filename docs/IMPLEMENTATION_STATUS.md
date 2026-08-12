@@ -12,12 +12,12 @@
 
 ## Pending
 
+- [ ] Presence Status
 - [ ] Employee Absence Self-Service
 - [ ] Personal Absence UI
 - [ ] Period Workflow
 - [ ] Administrative Audit Coverage
 - [ ] Vacation Account UI
-- [ ] Presence Status
 - [ ] Supervisor Approvals
 - [ ] Reporting
 - [ ] Global Configuration REST/UI
