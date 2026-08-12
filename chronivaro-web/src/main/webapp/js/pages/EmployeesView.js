@@ -22,7 +22,9 @@ export default class EmployeesView {
 					<tr>
 						<th>ID</th>
 						<th>Pers. Nr.</th>
-						<th>Name</th>
+						<th>Firstname</th>
+						<th>Lastname</th>
+						<th>Birthdate</th>
 						<th>Team</th>
 						<th>Location</th>
 						<th>Active</th>
@@ -30,7 +32,7 @@ export default class EmployeesView {
 					</tr>
 				</thead>
 				<tbody>
-					<tr><td colspan="7">Loading...</td></tr>
+					<tr><td colspan="9">Loading...</td></tr>
 				</tbody>
 			</table>
 
@@ -38,6 +40,10 @@ export default class EmployeesView {
 				<div class="modal-content">
 					<h3 id="modal-title">Add Employee</h3>
 					<form id="employee-form">
+						<div class="form-group" id="emp-username-group">
+							<label for="emp-username">Username:</label>
+							<input type="text" id="emp-username" required>
+						</div>
 						<div class="form-group" id="emp-id-group">
 							<label for="emp-id">ID:</label>
 							<input type="text" id="emp-id" required>
@@ -47,8 +53,16 @@ export default class EmployeesView {
 							<input type="text" id="emp-pers-nr" required>
 						</div>
 						<div class="form-group">
-							<label for="emp-name">Display Name:</label>
-							<input type="text" id="emp-name" required>
+							<label for="emp-firstname">Firstname:</label>
+							<input type="text" id="emp-firstname" required>
+						</div>
+						<div class="form-group">
+							<label for="emp-lastname">Lastname:</label>
+							<input type="text" id="emp-lastname" required>
+						</div>
+						<div class="form-group">
+							<label for="emp-birthdate">Birthdate:</label>
+							<input type="date" id="emp-birthdate" required>
 						</div>
 						<div class="form-group">
 							<label for="emp-team">Team:</label>
@@ -71,10 +85,6 @@ export default class EmployeesView {
 							<input type="date" id="emp-exit-date">
 						</div>
 						<div class="form-group">
-							<label for="emp-user">User:</label>
-							<select id="emp-user" required></select>
-						</div>
-						<div class="form-group">
 							<label><input type="checkbox" id="emp-active" checked> Active</label>
 						</div>
 						<div class="actions">
@@ -94,15 +104,21 @@ export default class EmployeesView {
         const closeBtn = container.querySelector('#close-modal');
         const teamSelect = container.querySelector('#emp-team');
         const locationSelect = container.querySelector('#emp-location');
-        const userSelect = container.querySelector('#emp-user');
+        const usernameInput = container.querySelector('#emp-username');
+        const personalNumberInput = container.querySelector('#emp-pers-nr');
+
+        usernameInput.addEventListener('input', () => {
+            if (!editingId) {
+                personalNumberInput.value = usernameInput.value;
+            }
+        });
 
         let editingId = null;
 
         const loadOptions = async () => {
-            const [teams, locations, users] = await Promise.all([
+            const [teams, locations] = await Promise.all([
                 TeamApi.getAll(),
-                LocationApi.getAll(),
-                UserApi.getUsers()
+                LocationApi.getAll()
             ]);
 
             if (teams.length === 0) {
@@ -116,24 +132,20 @@ export default class EmployeesView {
             } else {
                 locationSelect.innerHTML = locations.map(l => `<option value="${l.id}">${l.name}</option>`).join('');
             }
-
-            if (users.length === 0) {
-                userSelect.innerHTML = '<option value="">No users available</option>';
-            } else {
-                userSelect.innerHTML = users.map(u => `<option value="${u.userId}">${u.username} (${u.firstname} ${u.lastname})</option>`).join('');
-            }
         };
 
         const refresh = async () => {
             try {
                 const employees = await EmployeeApi.getAll();
                 tbody.innerHTML = '';
-                employees.forEach(emp => {
+            				employees.forEach(emp => {
                     const row = document.createElement('tr');
                     row.innerHTML = `
 						<td>${emp.id}</td>
 						<td>${emp.personalNumber}</td>
-						<td>${emp.displayName}</td>
+						<td>${emp.firstname}</td>
+						<td>${emp.lastname}</td>
+						<td>${emp.birthdate}</td>
 						<td>${emp.teamId}</td>
 						<td>${emp.locationId}</td>
 						<td>${emp.active ? 'Yes' : 'No'}</td>
@@ -157,7 +169,7 @@ export default class EmployeesView {
                 });
             } catch (err) {
                 console.error(err);
-                tbody.innerHTML = `<tr><td colspan="7" class="error">${err.message}</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="9" class="error">${err.message}</td></tr>`;
             }
         };
 
@@ -173,13 +185,16 @@ export default class EmployeesView {
                     container.querySelector('#emp-id').value = emp.id;
                     container.querySelector('#emp-id').disabled = true;
                     container.querySelector('#emp-pers-nr').value = emp.personalNumber;
-                    container.querySelector('#emp-name').value = emp.displayName;
+                    container.querySelector('#emp-firstname').value = emp.firstname;
+                    container.querySelector('#emp-lastname').value = emp.lastname;
+                    container.querySelector('#emp-birthdate').value = emp.birthdate;
                     container.querySelector('#emp-team').value = emp.teamId;
                     container.querySelector('#emp-location').value = emp.locationId;
                     container.querySelector('#emp-timezone').value = emp.timezone;
                     container.querySelector('#emp-join-date').value = emp.joinDate;
                     container.querySelector('#emp-exit-date').value = emp.exitDate || '';
-                    container.querySelector('#emp-user').value = emp.userId;
+                    container.querySelector('#emp-username-group').style.display = 'none';
+                    container.querySelector('#emp-username').required = false;
                     container.querySelector('#emp-active').checked = emp.active;
                     modal.style.display = 'block';
                 }
@@ -206,6 +221,9 @@ export default class EmployeesView {
             form.reset();
             container.querySelector('#emp-id-group').style.display = 'none';
             container.querySelector('#emp-id').required = false;
+            container.querySelector('#emp-username-group').style.display = 'block';
+            container.querySelector('#emp-username').required = true;
+            container.querySelector('#emp-username').value = '';
             container.querySelector('#emp-timezone').value = Intl.DateTimeFormat().resolvedOptions().timeZone || 'Europe/Zurich';
             container.querySelector('#emp-active').checked = true;
             modal.style.display = 'block';
@@ -219,13 +237,15 @@ export default class EmployeesView {
             e.preventDefault();
             const emp = {
                 personalNumber: container.querySelector('#emp-pers-nr').value,
-                displayName: container.querySelector('#emp-name').value,
+                firstname: container.querySelector('#emp-firstname').value,
+                lastname: container.querySelector('#emp-lastname').value,
+                birthdate: container.querySelector('#emp-birthdate').value,
                 teamId: container.querySelector('#emp-team').value,
                 locationId: container.querySelector('#emp-location').value,
                 timezone: container.querySelector('#emp-timezone').value,
                 joinDate: container.querySelector('#emp-join-date').value,
                 exitDate: container.querySelector('#emp-exit-date').value || null,
-                userId: container.querySelector('#emp-user').value,
+                username: container.querySelector('#emp-username').value,
                 active: container.querySelector('#emp-active').checked
             };
 

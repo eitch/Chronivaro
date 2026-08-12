@@ -78,7 +78,8 @@ public class ChronivaroMapper {
 		String userId = employee.getRelationId(PARAM_USER);
 		return new EmployeeDto(employee.getId(), employee.getString(PARAM_PERSONAL_NUMBER),
 				employee.getString(PARAM_FIRSTNAME), employee.getString(PARAM_LASTNAME),
-				employee.getDate(PARAM_BIRTHDATE).toLocalDate(), employee.getRelationId(PARAM_TEAM),
+				employee.hasParameter(PARAM_BIRTHDATE) ? employee.getDate(PARAM_BIRTHDATE).toLocalDate() : null,
+				employee.getRelationId(PARAM_PRIMARY_TEAM),
 				employee.getRelationId(PARAM_LOCATION), employee.getString(PARAM_TIMEZONE),
 				employee.getDate(PARAM_JOIN_DATE).toLocalDate(),
 				employee.hasParameter(PARAM_EXIT_DATE) && employee.getDate(PARAM_EXIT_DATE) != null ?

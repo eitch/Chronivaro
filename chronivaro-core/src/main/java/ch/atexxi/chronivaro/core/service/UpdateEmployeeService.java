@@ -23,7 +23,10 @@ public class UpdateEmployeeService
 			employee.setString(PARAM_PERSONAL_NUMBER, arg.personalNumber);
 			employee.setString(PARAM_FIRSTNAME, arg.firstname);
 			employee.setString(PARAM_LASTNAME, arg.lastname);
-			employee.setDate(PARAM_BIRTHDATE, arg.birthdate.atStartOfDay(zoneId));
+			if (arg.birthdate != null)
+				employee.setDate(PARAM_BIRTHDATE, arg.birthdate.atStartOfDay(zoneId));
+			else
+				employee.removeParameter(PARAM_BIRTHDATE);
 			employee.setRelationId(PARAM_PRIMARY_TEAM, arg.teamId);
 			employee.setRelationId(PARAM_LOCATION, arg.locationId);
 			employee.setString(PARAM_TIMEZONE, arg.timezone);

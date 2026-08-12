@@ -2,6 +2,7 @@ package ch.atexxi.chronivaro.core.service;
 
 import li.strolch.model.Resource;
 import li.strolch.persistence.api.StrolchTransaction;
+import li.strolch.privilege.base.PrivilegeConstants;
 import li.strolch.privilege.handler.PrivilegeHandler;
 import li.strolch.privilege.model.UserRep;
 import li.strolch.service.api.AbstractService;
@@ -10,6 +11,8 @@ import li.strolch.service.api.ServiceResult;
 
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 
 import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
@@ -34,7 +37,8 @@ public class CreateEmployeeService extends AbstractService<CreateEmployeeService
 			employee.setString(PARAM_PERSONAL_NUMBER, arg.personalNumber);
 			employee.setString(PARAM_FIRSTNAME, arg.firstname);
 			employee.setString(PARAM_LASTNAME, arg.lastname);
-			employee.setDate(PARAM_BIRTHDATE, arg.birthdate.atStartOfDay(zoneId));
+			if (arg.birthdate != null)
+				employee.setDate(PARAM_BIRTHDATE, arg.birthdate.atStartOfDay(zoneId));
 			employee.setRelation(PARAM_LOCATION, tx.getResourceBy(TYPE_LOCATION, arg.locationId, true));
 			employee.setString(PARAM_TIMEZONE, timeZone);
 			employee.setDate(PARAM_JOIN_DATE, arg.joinDate.atStartOfDay(zoneId));
@@ -53,8 +57,10 @@ public class CreateEmployeeService extends AbstractService<CreateEmployeeService
 
 	private UserRep createUser(StrolchTransaction tx, EmployeeArgument arg) {
 		PrivilegeHandler privilegeHandler = getContainer().getPrivilegeHandler().getPrivilegeHandler();
+		Map<String, String> properties = new HashMap<>();
+		properties.put(PrivilegeConstants.ORGANISATION, tx.getCertificate().getOrganisation());
 		UserRep userRep = new UserRep(null, arg.username, arg.firstname, arg.lastname, ENABLED, null,
-				Set.of(ROLE_EMPLOYEE), tx.getCertificate().getLocale(), null, null);
+				Set.of(ROLE_EMPLOYEE), tx.getCertificate().getLocale(), properties, null);
 		return privilegeHandler.addUser(tx.getCertificate(), userRep, null);
 	}
 

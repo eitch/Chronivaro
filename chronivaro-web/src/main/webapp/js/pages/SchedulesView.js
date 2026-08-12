@@ -149,7 +149,7 @@ export default class SchedulesView {
         const refresh = async () => {
             try {
                 const employee = await EmployeeApi.get(employeeId);
-                employeeNameHeader.innerText = `Schedules for ${employee.displayName}`;
+                employeeNameHeader.innerText = `Schedules for ${employee.firstname} ${employee.lastname}`;
 
                 const schedules = await ScheduleApi.getAll(employeeId);
                 tbody.innerHTML = '';
