@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<StrolchModel>
+<StrolchModel xmlns="https://strolch.li/schema/StrolchModel.xsd">
 
     <IncludeFile file="../../../../runtime/data/Templates.xml"/>
 
@@ -16,14 +16,38 @@
 
     <Resource Id="location-1" Name="Zurich" Type="Location">
         <ParameterBag Id="parameters" Name="Parameters" Type="Parameters">
+            <Parameter Id="name" Name="Name" Type="String" Value=""/>
             <Parameter Id="timezone" Name="Timezone" Type="String" Value="Europe/Zurich"/>
         </ParameterBag>
         <ParameterBag Id="relations" Name="Relations" Type="Relations">
-            <Parameter Id="HolidayCalendar" Name="Holiday Calendar" Type="String" Value="calendar-1"/>
+            <Parameter Id="holidayCalendar" Name="Holiday Calendar" Type="String" Interpretation="Resource-Ref" Uom="HolidayCalendar" Value="calendar-1"/>
         </ParameterBag>
     </Resource>
 
-    <Resource Id="team-1" Name="Engineering" Type="Team"/>
+    <Resource Id="team-1" Name="Engineering" Type="Team">
+        <ParameterBag Id="parameters" Name="Parameters" Type="Parameters">
+            <Parameter Id="name" Name="Name" Type="String" Value=""/>
+        </ParameterBag>
+    </Resource>
+
+    <Resource Id="schedAdmin_emp" Name="Standard Monday-Friday 8h" Type="EmploymentSchedule">
+        <ParameterBag Id="parameters" Name="Parameters" Type="Parameters">
+            <Parameter Id="name" Name="Name" Type="String" Value="Standard Monday-Friday 8h"/>
+            <Parameter Id="validFrom" Name="Valid From" Type="Date" Value="1970-01-01T00:00:00.000+01:00"/>
+            <Parameter Id="validTo" Name="Valid To" Type="Date" Value="9999-12-31T23:59:59.999+01:00"/>
+            <Parameter Id="dailyTargetMinutesMonday" Name="Daily Target Minutes Monday" Type="Integer" Value="480"/>
+            <Parameter Id="dailyTargetMinutesTuesday" Name="Daily Target Minutes Tuesday" Type="Integer" Value="480"/>
+            <Parameter Id="dailyTargetMinutesWednesday" Name="Daily Target Minutes Wednesday" Type="Integer" Value="480"/>
+            <Parameter Id="dailyTargetMinutesThursday" Name="Daily Target Minutes Thursday" Type="Integer" Value="480"/>
+            <Parameter Id="dailyTargetMinutesFriday" Name="Daily Target Minutes Friday" Type="Integer" Value="480"/>
+            <Parameter Id="dailyTargetMinutesSaturday" Name="Daily Target Minutes Saturday" Type="Integer" Value="0"/>
+            <Parameter Id="dailyTargetMinutesSunday" Name="Daily Target Minutes Sunday" Type="Integer" Value="0"/>
+        </ParameterBag>
+        <ParameterBag Id="relations" Name="Relations" Type="Relations">
+            <Parameter Id="employee" Name="Employee" Type="String" Interpretation="Resource-Ref" Uom="Employee" Value="admin_emp"/>
+        </ParameterBag>
+    </Resource>
+
 
     <Resource Id="admin_emp" Name="Admin User" Type="Employee">
         <ParameterBag Id="parameters" Name="Parameters" Type="Parameters">
@@ -33,8 +57,10 @@
         </ParameterBag>
         <ParameterBag Id="relations" Name="Relations" Type="Relations">
             <Parameter Id="user" Name="User" Type="String" Value="admin"/>
-            <Parameter Id="location" Name="Location" Type="String" Value="location-1"/>
-            <Parameter Id="primaryTeam" Name="Primary Team" Type="String" Value="team-1"/>
+            <Parameter Id="location" Name="Location" Type="String" Interpretation="Resource-Ref" Uom="Location" Value="location-1"/>
+            <Parameter Id="primaryTeam" Name="Primary Team" Type="String" Interpretation="Resource-Ref" Uom="Team" Value="team-1"/>
+            <Parameter Id="currentSchedule" Name="Current Schedule" Type="String" Interpretation="Resource-Ref" Uom="EmploymentSchedule"
+                       Value="schedAdmin_emp"/>
         </ParameterBag>
     </Resource>
 

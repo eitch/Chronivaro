@@ -3,5 +3,11 @@
 
     <IncludeFile file="../../../../runtime/data/Templates.xml"/>
 
+    <Resource Id="configuration" Name="Global Configuration" Type="GlobalConfiguration">
+        <ParameterBag Id="parameters" Name="Parameters" Type="Parameters">
+            <Parameter Id="weeklyTargetMinutes" Name="Global Weekly Target Minutes" Type="Integer" Value="2520"/>
+        </ParameterBag>
+    </Resource>
+
 </StrolchModel>
 
