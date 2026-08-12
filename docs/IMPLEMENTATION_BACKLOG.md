@@ -1,6 +1,6 @@
 # Chronivaro – Refined Implementation Backlog
 
-Use the existing `docs/Chronivaro-Implementierungsspezifikation.md` as the authoritative source.
+Use the existing `docs/IMPLEMENTATION_SPECIFICATION.md` as the authoritative source.
 
 The backlog below contains functionality currently identified as missing.
 
@@ -596,7 +596,7 @@ After all backlog tasks are complete:
 2. Run `mvn verify` from the project root.
 3. Verify that no module contains compilation errors.
 4. Search for TODOs introduced during implementation.
-5. Compare the completed application against `Chronivaro-Implementierungsspezifikation.md` again.
+5. Compare the completed application against `IMPLEMENTATION_SPECIFICATION.md` again.
 6. Produce a new gap analysis.
 7. Do **not** automatically implement newly discovered gaps.
 
