@@ -36,6 +36,7 @@
     <Role name="Supervisor">
         <Privilege name="li.strolch.service.api.Service" policy="DefaultPrivilege">
             <Allow>ch.atexxi.chronivaro.core.service.ApproveAbsenceService</Allow>
+            <Allow>ch.atexxi.chronivaro.core.service.RejectAbsenceService</Allow>
             <Allow>ch.atexxi.chronivaro.core.service.PresenceService</Allow>
         </Privilege>
     </Role>
@@ -43,6 +44,7 @@
     <Role name="HR">
         <Privilege name="li.strolch.service.api.Service" policy="DefaultPrivilege">
             <Allow>ch.atexxi.chronivaro.core.service.ApproveAbsenceService</Allow>
+            <Allow>ch.atexxi.chronivaro.core.service.RejectAbsenceService</Allow>
             <Allow>ch.atexxi.chronivaro.core.service.PresenceService</Allow>
             <Allow>ch.atexxi.chronivaro.core.service.CreateEmployeeService</Allow>
             <Allow>ch.atexxi.chronivaro.core.service.UpdateEmployeeService</Allow>

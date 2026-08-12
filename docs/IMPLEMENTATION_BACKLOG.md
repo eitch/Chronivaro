@@ -167,7 +167,7 @@ Do not invent configuration options.
 
 # Phase 2 – Absence Workflow
 
-## 4. Reject Absence
+## 4. Reject Absence (✓ DONE)
 
 ### Goal
 
@@ -195,6 +195,10 @@ Tests must cover at least:
 - invalid source state;
 - unauthorised user;
 - supervisor acting on an employee outside their permitted scope.
+
+### Verification
+
+Implemented in `RejectAbsenceService`. Added tests in `AbsenceServiceTest`.
 
 ---
 
