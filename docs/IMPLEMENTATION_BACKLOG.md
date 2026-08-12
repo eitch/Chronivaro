@@ -35,6 +35,43 @@ All changes must compile and all affected tests must pass before continuing.
 
 Use the existing module names from the repository. Do not invent or rename modules.
 
+The backlog is a hypothesis.
+
+The specification defines the required behaviour, and the repository
+represents the current implementation.
+
+Always verify a backlog item against both before changing code.
+
+Implement exactly one logical task at a time.
+
+If a task requires changes to more than approximately 8–10 production files
+or spans multiple unrelated concepts, stop before implementation and split
+the task into smaller backlog items.
+
+Inspect the existing implementation before creating new abstractions.
+
+Reuse established project patterns.
+
+Do not duplicate functionality that already exists.
+
+Do not perform unrelated refactoring.
+
+Do not invent requirements that are not present in the specification.
+
+Enforce business rules and authorisation in the appropriate backend/domain
+layer, not only in REST or UI code.
+
+Add or update tests for every behavioural change.
+
+Run the relevant tests before marking a task complete.
+
+If new missing functionality is discovered, add it to the backlog instead of
+automatically expanding the current task.
+
+Update the backlog after completing or reclassifying a task.
+
+Stop after completing and verifying the current task.
+
 ### Source of Truth
 
 The backlog is a hypothesis. The specification is the requirement and the
