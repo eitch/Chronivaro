@@ -13,6 +13,7 @@
             <Parameter Id="active" Name="Active" Type="Boolean" Value="true"/>
             <Parameter Id="userId" Name="User ID" Type="String" Value=""/>
             <Parameter Id="username" Name="Username" Type="String" Value=""/>
+            <Parameter Id="email" Name="Email" Type="String" Value=""/>
         </ParameterBag>
         <ParameterBag Id="relations" Name="Relations" Type="Relations">
             <Parameter Id="location" Name="Location" Type="String" Interpretation="Resource-Ref" Uom="Location" Value=""/>

@@ -38,6 +38,10 @@ public class UpdateEmployeeService
 			else
 				employee.removeParameter(PARAM_EXIT_DATE);
 			employee.setBoolean(PARAM_ACTIVE, arg.active);
+			if (arg.email != null && !arg.email.isBlank())
+				employee.setString(PARAM_EMAIL, arg.email);
+			else
+				employee.removeParameter(PARAM_EMAIL);
 			tx.update(employee);
 
 			UserRep userRep = createOrUpdateUser(tx, arg);

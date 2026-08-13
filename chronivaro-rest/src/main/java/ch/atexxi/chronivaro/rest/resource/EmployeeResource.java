@@ -72,6 +72,7 @@ public class EmployeeResource {
 		arg.exitDate = dto.exitDate();
 		arg.active = dto.active();
 		arg.username = dto.username();
+		arg.email = dto.email();
 
 		ServiceResult result = serviceHandler.doService(cert, new CreateEmployeeService(), arg);
 		return ResponseUtil.toResponse(result);
@@ -98,6 +99,7 @@ public class EmployeeResource {
 		arg.joinDate = dto.joinDate();
 		arg.exitDate = dto.exitDate();
 		arg.active = dto.active();
+		arg.email = dto.email();
 		arg.username = dto.username();
 
 		ServiceResult result = serviceHandler.doService(cert, new UpdateEmployeeService(), arg);
@@ -185,6 +187,17 @@ public class EmployeeResource {
 				.fromJson(data, AddVacationCorrectionService.AddVacationCorrectionArgument.class);
 		arg.employeeId = id;
 		ServiceResult result = serviceHandler.doService(cert, new AddVacationCorrectionService(), arg);
+		return ResponseUtil.toResponse(result);
+	}
+
+	@POST
+	@Path("{id}/register")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response initiateRegistration(@Context HttpServletRequest request, @PathParam("id") String id) {
+		Certificate cert = (Certificate) request.getAttribute(StrolchRestfulConstants.STROLCH_CERTIFICATE);
+		ServiceHandler serviceHandler = ChronivaroRestHelper.getServiceHandler();
+		ServiceResult result = serviceHandler.doService(cert, new InitiateEmployeeRegistrationService(),
+				new StringArgument(id));
 		return ResponseUtil.toResponse(result);
 	}
 }

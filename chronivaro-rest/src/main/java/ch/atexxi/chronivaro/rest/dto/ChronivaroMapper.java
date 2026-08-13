@@ -83,7 +83,7 @@ public class ChronivaroMapper {
 				employee.getDate(PARAM_JOIN_DATE).toLocalDate(),
 				employee.hasParameter(PARAM_EXIT_DATE) && employee.getDate(PARAM_EXIT_DATE) != null ?
 						employee.getDate(PARAM_EXIT_DATE).toLocalDate() : null, employee.getBoolean(PARAM_ACTIVE),
-				employee.getString(PARAM_USER_ID), employee.getString(PARAM_USERNAME));
+				employee.getString(PARAM_USER_ID), employee.getString(PARAM_USERNAME), employee.getString(PARAM_EMAIL));
 	}
 
 	public static HolidayCalendarDto holidayCalendarToDto(Resource calendar) {

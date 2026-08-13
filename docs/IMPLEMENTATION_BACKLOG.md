@@ -275,7 +275,7 @@ Implemented in `CancelAbsenceService`. Added tests in `AbsenceServiceTest`. Bala
 
 # Phase 3 – User Management & Registration
 
-## 6. Implement InitiateEmployeeRegistrationService
+## 6. Implement InitiateEmployeeRegistrationService (✓ DONE)
 
 ### Goal
 Implement a service to initiate the password set process for an employee.
@@ -294,7 +294,7 @@ Implement a service to initiate the password set process for an employee.
 
 ---
 
-## 7. Expose Registration REST Endpoint
+## 7. Expose Registration REST Endpoint (✓ DONE)
 
 ### Goal
 Expose the registration initiation service via a REST endpoint.
@@ -308,7 +308,7 @@ Add `POST /employees/{id}/register` to `EmployeeResource`.
 
 ---
 
-## 8. Add Registration Action to UI
+## 8. Add Registration Action to UI (✓ DONE)
 
 ### Goal
 Add a button to the Employees view to trigger the registration process.

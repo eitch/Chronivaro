@@ -48,6 +48,10 @@ public class CreateEmployeeService extends AbstractService<CreateEmployeeService
 			if (arg.exitDate != null)
 				employee.setDate(PARAM_EXIT_DATE, arg.exitDate.atStartOfDay(zoneId));
 			employee.setBoolean(PARAM_ACTIVE, arg.active);
+			if (arg.email != null && !arg.email.isBlank())
+				employee.setString(PARAM_EMAIL, arg.email);
+			else
+				employee.removeParameter(PARAM_EMAIL);
 
 			UserRep userRep = createOrUpdateUser(tx, arg);
 			employee.setString(PARAM_USER_ID, userRep.getUserId());
@@ -65,6 +69,8 @@ public class CreateEmployeeService extends AbstractService<CreateEmployeeService
 		String organisation = tx.getCertificate().getOrganisation();
 		if (organisation != null)
 			properties.put(PrivilegeConstants.ORGANISATION, organisation);
+		if (arg.email != null && !arg.email.isBlank())
+			properties.put(PrivilegeConstants.EMAIL, arg.email);
 		UserRep userRep = new UserRep(null, arg.username, arg.firstname, arg.lastname, ENABLED, null,
 				Set.of(ROLE_EMPLOYEE), tx.getCertificate().getLocale(), properties, null);
 		UserRep existingUser = privilegeHandler.getUser(tx.getCertificate(), userRep.getUsername());
@@ -101,6 +107,7 @@ public class CreateEmployeeService extends AbstractService<CreateEmployeeService
 		public LocalDate exitDate;
 		public boolean active;
 		public String username;
+		public String email;
 	}
 
 	public static class UpdateEmployeeArgument extends EmployeeArgument {

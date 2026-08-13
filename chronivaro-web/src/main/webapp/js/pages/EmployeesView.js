@@ -44,6 +44,10 @@ export default class EmployeesView {
 							<label for="emp-username">Username:</label>
 							<input type="text" id="emp-username" required>
 						</div>
+						<div class="form-group">
+							<label for="emp-email">Email:</label>
+							<input type="email" id="emp-email">
+						</div>
 						<div class="form-group" id="emp-id-group">
 							<label for="emp-id">ID:</label>
 							<input type="text" id="emp-id" required>
@@ -152,6 +156,7 @@ export default class EmployeesView {
 						<td>${emp.active ? 'Yes' : 'No'}</td>
 						<td>
 							<button class="ghost edit-btn" data-id="${emp.id}">Edit</button>
+							<button class="ghost register-btn" data-id="${emp.id}">Register</button>
 							<button class="ghost schedules-btn" data-id="${emp.id}">Schedules</button>
 							<button class="secondary delete-btn" data-id="${emp.id}">Delete</button>
 						</td>
@@ -161,6 +166,9 @@ export default class EmployeesView {
 
                 container.querySelectorAll('.edit-btn').forEach(btn => {
                     btn.addEventListener('click', () => editEmployee(btn.dataset.id));
+                });
+                container.querySelectorAll('.register-btn').forEach(btn => {
+                    btn.addEventListener('click', () => registerEmployee(btn.dataset.id));
                 });
                 container.querySelectorAll('.schedules-btn').forEach(btn => {
                     btn.addEventListener('click', () => this.app.navigate('schedules', {employeeId: btn.dataset.id}));
@@ -195,11 +203,23 @@ export default class EmployeesView {
                     container.querySelector('#emp-join-date').value = emp.joinDate;
                     container.querySelector('#emp-exit-date').value = emp.exitDate || '';
                     container.querySelector('#emp-username').value = emp.username;
+                    container.querySelector('#emp-email').value = emp.email || '';
                     container.querySelector('#emp-active').checked = emp.active;
                     modal.style.display = 'block';
                 }
             } catch (err) {
                 NotificationDialog.error(err.message);
+            }
+        };
+
+        const registerEmployee = async (id) => {
+            if (await NotificationDialog.confirm(`Are you sure you want to initiate registration for employee ${id}?`)) {
+                try {
+                    await EmployeeApi.register(id);
+                    NotificationDialog.info('Registration initiated successfully.');
+                } catch (err) {
+                    NotificationDialog.error(err.message);
+                }
             }
         };
 
@@ -246,6 +266,7 @@ export default class EmployeesView {
                 joinDate: container.querySelector('#emp-join-date').value,
                 exitDate: container.querySelector('#emp-exit-date').value || null,
                 username: container.querySelector('#emp-username').value,
+                email: container.querySelector('#emp-email').value,
                 active: container.querySelector('#emp-active').checked
             };
 

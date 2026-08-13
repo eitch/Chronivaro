@@ -20,4 +20,8 @@ export default class EmployeeApi {
     static async remove(id) {
         return await Rest.delete(`rest/chronivaro/v1/admin/employees/${id}`);
     }
+
+    static async register(id) {
+        return await Rest.post(`rest/chronivaro/v1/admin/employees/${id}/register`);
+    }
 }

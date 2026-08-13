@@ -7,12 +7,12 @@
 - [x] Global Configuration
 - [x] Reject Absence
 - [x] Cancel Own Absence
+- [x] User Management & Registration
 
 ## In Progress
 
 ## Pending
 
-- [ ] User Management & Registration
 - [ ] Presence Status
 - [ ] Employee Absence Self-Service
 - [ ] Personal Absence UI

@@ -13,6 +13,7 @@
             <Parameter name="secretKey" value="secret-key"/>
             <Parameter name="secretSalt" value="secret-key"/>
             <Parameter name="persistSessions" value="true"/>
+            <Parameter name="allowPasswordReset" value="true"/>
             <Parameter name="autoPersistOnUserChangesData" value="false"/>
         </Parameters>
         <EncryptionHandler class="li.strolch.privilege.handler.DefaultEncryptionHandler">

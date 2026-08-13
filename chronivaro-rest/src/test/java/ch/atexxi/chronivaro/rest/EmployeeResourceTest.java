@@ -23,7 +23,7 @@ public class EmployeeResourceTest extends AbstractChronivaroRestfulTest {
 		// Create
 		EmployeeDto newEmployee = new EmployeeDto(null, "PN001", "Test", "Employee", LocalDate.of(1990, 5, 20),
 				"team-1", "location-1", "Europe/Zurich", LocalDate.of(2025, 1, 1), null, true, "test-user-id",
-				"test-user");
+				"test-user", "test@atexxi.ch");
 		String json = ChronivaroRestHelper.createGson().toJson(newEmployee);
 
 		try (Response response = target()
@@ -71,7 +71,7 @@ public class EmployeeResourceTest extends AbstractChronivaroRestfulTest {
 		// Update
 		EmployeeDto updatedEmployee = new EmployeeDto(employeeId, "PN001", "Updated", "Employee",
 				LocalDate.of(1990, 5, 20), "team-1", "location-1", "Europe/Zurich", LocalDate.of(2025, 1, 1), null,
-				false, "test-user-id", "test-user");
+				false, "test-user-id", "test-user", "test@atexxi.ch");
 		String updatedJson = ChronivaroRestHelper.createGson().toJson(updatedEmployee);
 
 		try (Response response = target()
@@ -153,6 +153,18 @@ public class EmployeeResourceTest extends AbstractChronivaroRestfulTest {
 				.request(MediaType.APPLICATION_JSON)
 				.header("Authorization", authToken)
 				.post(Entity.json(json))) {
+			assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+		}
+	}
+	@Test
+	public void shouldInitiateRegistration() {
+		String authToken = authenticate();
+
+		try (Response response = target()
+				.path("chronivaro/v1/admin/employees/admin_emp/register")
+				.request(MediaType.APPLICATION_JSON)
+				.header("Authorization", authToken)
+				.post(Entity.json(""))) {
 			assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
 		}
 	}
