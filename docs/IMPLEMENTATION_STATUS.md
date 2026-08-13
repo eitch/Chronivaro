@@ -12,6 +12,7 @@
 
 ## Pending
 
+- [ ] User Management & Registration
 - [ ] Presence Status
 - [ ] Employee Absence Self-Service
 - [ ] Personal Absence UI

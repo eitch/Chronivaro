@@ -376,6 +376,18 @@ Datenschutzregel: Benutzer ohne besondere Berechtigung sehen keine Abwesenheitsg
 5. Nach Genehmigung wird die Periode gesperrt.
 6. Eine Wiederöffnung erfordert Berechtigung und Begründung.
 
+### 9.5 Mitarbeiter-Registrierung
+
+Um neuen Mitarbeitern den Zugriff auf Chronivaro zu ermöglichen, wird ein administrativer Registrierungsprozess bereitgestellt.
+
+1. Ein Administrator wählt in der Mitarbeiterliste die Aktion "Registrieren" für einen bestimmten Mitarbeiter aus.
+2. Das System identifiziert den verknüpften Strolch-Benutzer anhand der `userId` und `username`.
+3. Das System löst eine Strolch-Challenge (`Usage.SET_PASSWORD`) für diesen Benutzer aus.
+4. Die Challenge wird über den konfigurierten `UserChallengeHandler` (z. B. Konsole oder E-Mail) an den Mitarbeiter übermittelt.
+5. Der Mitarbeiter verwendet den erhaltenen Link/Code, um sein initiales Passwort festzulegen und sich anschliessend anzumelden.
+
+Dieser Prozess nutzt den Standard-Strolch-Mechanismus zur Passwortinitialisierung und stellt sicher, dass keine Passwörter manuell durch Administratoren vergeben oder per Klartext-E-Mail versendet werden müssen.
+
 ## 10. Validierungen
 
 ### 10.1 Blockierende Fehler
@@ -488,6 +500,7 @@ Die UI wird mit HTML, CSS und Vanilla JavaScript umgesetzt. Es wird kein Fronten
    - CSV-Export
 8. **Administration**
    - Mitarbeiter und Teams
+   - Registrierungsprozess auslösen
    - Arbeitspläne
    - Standorte und Feiertage
    - Abwesenheitsarten
@@ -616,6 +629,7 @@ GET    /reports/absences
 
 ```text
 GET/POST/PUT /employees
+POST         /employees/{id}/register
 GET/POST/PUT /teams
 GET/POST/PUT /locations
 GET/POST/PUT /holiday-calendars

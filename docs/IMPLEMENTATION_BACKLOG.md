@@ -273,7 +273,53 @@ Implemented in `CancelAbsenceService`. Added tests in `AbsenceServiceTest`. Bala
 
 ---
 
-## 6. Expose Employee Absence Self-Service
+# Phase 3 – User Management & Registration
+
+## 6. Implement InitiateEmployeeRegistrationService
+
+### Goal
+Implement a service to initiate the password set process for an employee.
+
+### Business Rules
+- Find the linked Strolch user using `userId` and `username` from the employee resource.
+- Use `PrivilegeHandler.initiateChallengeFor(Usage.SET_PASSWORD, username, source)` to trigger the registration challenge.
+- The service should be restricted to administrators.
+- The action should be audited.
+
+### Acceptance Criteria
+- Challenge is successfully initiated for a valid employee.
+- Fails if the employee has no linked user.
+- Fails if the user is not found in Strolch.
+- Fails if the acting user lacks administrative privileges.
+
+---
+
+## 7. Expose Registration REST Endpoint
+
+### Goal
+Expose the registration initiation service via a REST endpoint.
+
+### Work
+Add `POST /employees/{id}/register` to `EmployeeResource`.
+
+### Rules
+- Requires administrative privileges.
+- Delegates to `InitiateEmployeeRegistrationService`.
+
+---
+
+## 8. Add Registration Action to UI
+
+### Goal
+Add a button to the Employees view to trigger the registration process.
+
+### Work
+- Update `EmployeeApi.js` to include `register(id)`.
+- Update `EmployeesView.js` to add a "Register" button in the employee list actions.
+- Show success/failure notification upon completion.
+
+---
+## 9. Expose Employee Absence Self-Service
 
 ### Goal
 
@@ -304,7 +350,7 @@ REST resources must delegate business rules to Core services.
 
 ---
 
-## 7. Personal Absence UI
+## 10. Personal Absence UI
 
 ### Goal
 
@@ -332,9 +378,9 @@ A calendar view is optional unless explicitly required by the specification.
 
 ---
 
-# Phase 3 – Period Workflow
+# Phase 4 – Period Workflow
 
-## 8. Reject Submitted Period
+## 11. Reject Submitted Period
 
 ### Goal
 
@@ -354,7 +400,7 @@ Cover successful and invalid state transitions, missing comment and authorisatio
 
 ---
 
-## 9. Reopen Closed Period
+## 12. Reopen Closed Period
 
 ### Goal
 
@@ -378,9 +424,9 @@ Tests cover:
 
 ---
 
-## 10. Period REST Operations
+## 13. Period REST Operations
 
-Expose the Core operations from Tasks 8 and 9 using the existing `PeriodResource`.
+Expose the Core operations from Tasks 11 and 12 using the existing `PeriodResource`.
 
 Do not duplicate workflow validation in REST.
 
@@ -388,9 +434,9 @@ Add only endpoints required by the specification.
 
 ---
 
-# Phase 4 – Administrative Audit Coverage
+# Phase 5 – Administrative Audit Coverage
 
-## 11. Audit Employee Updates
+## 14. Audit Employee Updates
 
 Update `UpdateEmployeeService` to use the existing Chronivaro/Strolch audit mechanism consistently.
 
@@ -407,13 +453,13 @@ Avoid audit entries for no-op updates if the existing project convention does so
 
 ---
 
-## 12. Audit Team Updates
+## 15. Audit Team Updates
 
 Apply the same rules to `UpdateTeamService`.
 
 ---
 
-## 13. Audit Schedule Updates
+## 16. Audit Schedule Updates
 
 Apply the same rules to `UpdateScheduleService`.
 
@@ -421,9 +467,9 @@ Schedule history must remain consistent with effective-date behaviour defined in
 
 ---
 
-# Phase 5 – Vacation Account UI
+# Phase 6 – Vacation Account UI
 
-## 14. Vacation Account REST Verification
+## 17. Vacation Account REST Verification
 
 Before implementing UI, verify whether an endpoint already provides:
 
@@ -443,7 +489,7 @@ Values returned by the API come from the existing vacation-account domain logic.
 
 ---
 
-## 15. Vacation Account UI
+## 18. Vacation Account UI
 
 Create the employee-facing vacation view.
 
@@ -460,9 +506,9 @@ No balance calculations should be performed independently by JavaScript.
 
 ---
 
-# Phase 6 – Presence Status
+# Phase 7 – Presence Status
 
-## 16. Presence Status Core Query
+## 19. Presence Status Core Query
 
 Before implementing the dashboard, verify that the backend can determine the presence state required by the specification.
 
@@ -483,7 +529,7 @@ Tests cover representative cases such as:
 
 ---
 
-## 17. Presence Status REST Endpoint
+## 20. Presence Status REST Endpoint
 
 Expose the presence query through a read-only REST endpoint.
 
@@ -491,7 +537,7 @@ Return only information the authenticated user is permitted to see.
 
 ---
 
-## 18. Presence Status UI
+## 21. Presence Status UI
 
 Implement the "Who is working?" view.
 
@@ -501,9 +547,9 @@ The frontend must not infer presence independently from raw time entries.
 
 ---
 
-# Phase 7 – Supervisor Approvals
+# Phase 8 – Supervisor Approvals
 
-## 19. Approval Queue Query
+## 22. Approval Queue Query
 
 Verify or implement a Core query that returns approval-relevant items for the current supervisor's permitted team(s).
 
@@ -511,7 +557,7 @@ Avoid loading all employees and filtering only in JavaScript.
 
 ---
 
-## 20. Approval REST API
+## 23. Approval REST API
 
 Expose pending:
 
@@ -524,7 +570,7 @@ Ensure the authenticated supervisor's scope is applied server-side.
 
 ---
 
-## 21. Supervisor Approval UI
+## 24. Supervisor Approval UI
 
 Create `ApprovalsView.js` using existing UI conventions.
 
@@ -540,9 +586,9 @@ Group by team only if team information already exists and this improves the exis
 
 ---
 
-# Phase 8 – Reporting
+# Phase 9 – Reporting
 
-## 22. Time Balance Report Query
+## 25. Time Balance Report Query
 
 Implement or complete a Core reporting query for Soll/Ist values.
 
@@ -558,7 +604,7 @@ Test calculations independently from REST and CSV.
 
 ---
 
-## 23. Absence Report Query
+## 26. Absence Report Query
 
 Implement the corresponding structured Core query for absence reporting.
 
@@ -566,7 +612,7 @@ Reuse existing absence data and permission scope.
 
 ---
 
-## 24. Reporting REST API
+## 27. Reporting REST API
 
 Create or complete `ReportResource`.
 
@@ -583,9 +629,9 @@ JSON must be supported.
 
 ---
 
-## 25. CSV Serialisation
+## 28. CSV Serialisation
 
-Add CSV output based on the structured report results from Tasks 22 and 23.
+Add CSV output based on the structured report results from Tasks 25 and 26.
 
 Do not duplicate report calculations in the CSV implementation.
 
@@ -603,7 +649,7 @@ Add tests for:
 
 ---
 
-## 26. Reporting UI
+## 29. Reporting UI
 
 Create the reporting view.
 
@@ -613,9 +659,9 @@ The UI must consume the report API and must not recreate Soll/Ist calculations.
 
 ---
 
-# Phase 9 – Global Configuration REST/UI
+# Phase 10 – Global Configuration REST/UI
 
-## 27. Configuration REST API
+## 30. Configuration REST API
 
 Expose the Core configuration from Task 3.
 
@@ -625,7 +671,7 @@ Enforce administrative permissions in Core and REST.
 
 ---
 
-## 28. Configuration Administration UI
+## 31. Configuration Administration UI
 
 Create an administration view for the configurable values defined in the specification.
 
@@ -634,6 +680,9 @@ Do not expose internal configuration values not intended for users.
 Validate input server-side.
 
 ---
+
+---
+
 
 # Final Verification
 
