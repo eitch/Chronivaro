@@ -176,7 +176,7 @@ Regeln:
 - Pro Mitarbeiter ist höchstens eine laufende Buchung erlaubt.
 - Das Ende muss nach dem Start liegen.
 - Überlappende Buchungen sind nicht erlaubt.
-- Buchungen dürfen über Mitternacht reichen.
+- Buchungen müssen am selben Tag starten und enden. Falls eine Arbeit über Mitternacht hinausgeht, muss sie um 24:00 Uhr des Starttages beendet werden und eine neue Buchung für den Folgetag auf dem entsprechenden `WorkDay` erstellt werden.
 - Ein `WorkEntry` bildet ausschliesslich einen tatsächlich gearbeiteten Zeitblock ab.
 - Pausen werden nicht als eigene Entität erfasst. Eine Unterbrechung ergibt sich aus der zeitlichen Lücke zwischen zwei Arbeitsblöcken.
 - Direkte Tageszeiteingaben werden intern als separate manuelle Tagesbuchung oder als klar gekennzeichnete Dauerbuchung abgebildet; beide Erfassungsarten dürfen nicht zu einer Doppelzählung führen.
@@ -371,6 +371,11 @@ Datenschutzregel: Benutzer ohne besondere Berechtigung sehen keine Abwesenheitsg
 4. System prüft im aktuellen `WorkDay`, dass keine Buchung läuft.
 5. System erstellt einen offenen `WorkEntry` und verknüpft ihn mit dem `WorkDay`.
 6. Beim Stoppen wird der laufende `WorkEntry` im `WorkDay` beendet.
+   a. Falls das Enddatum dem Startdatum entspricht, wird die Buchung normal beendet.
+   b. Falls das Enddatum nach dem Startdatum liegt:
+      i. Die Buchung wird am Starttag um 24:00 Uhr beendet.
+      ii. Falls das Enddatum genau der Folgetag ist (Arbeit über Mitternacht), wird für die restliche Zeit eine neue Buchung auf dem `WorkDay` des Folgetages erstellt.
+      iii. Falls das Enddatum mehr als einen Tag nach dem Startdatum liegt (vergessener Timer), wird die restliche Zeit verworfen.
 7. Beginnt der Mitarbeiter später erneut zu arbeiten, startet er einen neuen `WorkEntry` innerhalb desselben `WorkDay`.
 8. Die Zeit zwischen zwei Arbeitsblöcken wird nur im Report als Unterbruch dargestellt und nicht als Pause gespeichert.
 
@@ -431,7 +436,7 @@ Dieser Prozess nutzt den Standard-Strolch-Mechanismus zur Passwortinitialisierun
 
 - Soll-Arbeitstag ohne Buchung oder Abwesenheit
 - ungewöhnlich lange Arbeitszeit
-- Arbeit über Mitternacht
+- Arbeit über Mitternacht (wird automatisch in zwei Buchungen aufgeteilt)
 - Arbeit an einem Feiertag oder arbeitsfreien Tag
 - negativer Ferien- oder Zeitsaldo
 
@@ -836,7 +841,7 @@ Mindestens folgende Fälle:
 - Krankheit an einem Arbeitstag
 - Abwesenheit an einem freien Tag
 - Ferien über Wochenende und Feiertag
-- Arbeit über Mitternacht
+- Arbeit über Mitternacht (automatische Aufteilung und Timer-Verlust nach mehrtägiger Pause)
 - Sommer-/Winterzeitwechsel
 - überlappende Zeitbuchungen
 - korrekte Ableitung von Unterbrüchen zwischen mehreren Arbeitsblöcken
