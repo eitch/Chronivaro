@@ -355,9 +355,50 @@ Refactored `StopTimerService` and `WorkEntryHelper`. Updated `WorkEntrySameDayTe
 
 ---
 
-# Phase 4 – User Management & Registration
+# Phase 4 – Presence Status
 
-## 9. Implement InitiateEmployeeRegistrationService
+## 9. Presence Status Core Query
+
+Before implementing the dashboard, verify that the backend can determine the presence state required by the specification.
+
+Reuse existing work-entry and absence information.
+
+Define the output using the presence states already specified by Chronivaro.
+
+Do not invent additional privacy settings or status values.
+
+### Acceptance Criteria
+
+Tests cover representative cases such as:
+
+- currently working;
+- absence;
+- scheduled non-working day;
+- ambiguous/no data if such a state exists in the specification.
+
+---
+
+## 10. Presence Status REST Endpoint
+
+Expose the presence query through a read-only REST endpoint.
+
+Return only information the authenticated user is permitted to see.
+
+---
+
+## 11. Presence Status UI
+
+Implement the "Who is working?" view.
+
+Use the exact status semantics defined by the backend.
+
+The frontend must not infer presence independently from raw time entries.
+
+---
+
+# Phase 5 – User Management & Registration
+
+## 12. Implement InitiateEmployeeRegistrationService
 
 ### Goal
 Implement a service to initiate the password set process for an employee.
@@ -376,7 +417,7 @@ Implement a service to initiate the password set process for an employee.
 
 ---
 
-## 10. Expose Registration REST Endpoint (✓ DONE)
+## 13. Expose Registration REST Endpoint (✓ DONE)
 
 ### Goal
 Expose the registration initiation service via a REST endpoint.
@@ -390,7 +431,7 @@ Add `POST /employees/{id}/register` to `EmployeeResource`.
 
 ---
 
-## 11. Add Registration Action to UI (✓ DONE)
+## 14. Add Registration Action to UI (✓ DONE)
 
 ### Goal
 Add a button to the Employees view to trigger the registration process.
@@ -401,7 +442,7 @@ Add a button to the Employees view to trigger the registration process.
 - Show success/failure notification upon completion.
 
 ---
-## 12. Expose Employee Absence Self-Service (✓ DONE)
+## 15. Expose Employee Absence Self-Service (✓ DONE)
 
 ### Goal
 Expose the completed Core absence functionality through REST.
@@ -435,7 +476,7 @@ Implemented `UpdateAbsenceService`. Added endpoints to `ChronivaroResource`. Add
 
 ---
 
-## 13. Personal Absence UI
+## 16. Personal Absence UI
 
 ### Goal
 Implement the employee-facing absence view using the REST endpoints from Task 12.
@@ -462,9 +503,9 @@ A calendar view is optional unless explicitly required by the specification.
 
 ---
 
-# Phase 4 – Period Workflow
+# Phase 6 – Period Workflow
 
-## 14. Period Auto-Generation
+## 17. Period Auto-Generation
 
 ### Goal
 Implement logic to automatically generate `TimePeriod` resources for the upcoming month for all active employees, as required by the specification (Section 6.10).
@@ -481,7 +522,7 @@ Implement logic to automatically generate `TimePeriod` resources for the upcomin
 
 ---
 
-## 15. Reject Submitted Period
+## 18. Reject Submitted Period
 
 ### Goal
 Allow an authorised supervisor to reject a submitted period.
@@ -500,7 +541,7 @@ Cover successful and invalid state transitions, missing comment and authorisatio
 
 ---
 
-## 15. Reopen Closed Period
+## 19. Reopen Closed Period
 
 ### Goal
 Allow authorised HR/administrative users to reopen a closed period.
@@ -523,7 +564,7 @@ Tests cover:
 
 ---
 
-## 16. Period REST Operations
+## 20. Period REST Operations
 
 Expose the Core operations from Tasks 14 and 15 using the existing `PeriodResource`.
 
@@ -533,9 +574,9 @@ Add only endpoints required by the specification.
 
 ---
 
-# Phase 5 – Administrative Audit Coverage
+# Phase 7 – Administrative Audit Coverage
 
-## 17. Audit Employee Updates
+## 21. Audit Employee Updates
 
 Update `UpdateEmployeeService` to use the existing Chronivaro/Strolch audit mechanism consistently.
 
@@ -552,13 +593,13 @@ Avoid audit entries for no-op updates if the existing project convention does so
 
 ---
 
-## 18. Audit Team Updates
+## 22. Audit Team Updates
 
 Apply the same rules to `UpdateTeamService`.
 
 ---
 
-## 19. Audit Schedule Updates
+## 23. Audit Schedule Updates
 
 Apply the same rules to `UpdateScheduleService`.
 
@@ -566,9 +607,9 @@ Schedule history must remain consistent with effective-date behaviour defined in
 
 ---
 
-# Phase 6 – Employment Schedule Historization
+# Phase 8 – Employment Schedule Historization
 
-## 20. Historical Schedule Lookup
+## 24. Historical Schedule Lookup
 
 ### Goal
 Fix the limitation where only the "current" schedule is retrieved, failing to find the correct version for historical dates (Specification Section 6.2, Rules 139, 140).
@@ -584,7 +625,7 @@ Fix the limitation where only the "current" schedule is retrieved, failing to fi
 
 ---
 
-## 21. Schedule Overlap Prevention
+## 25. Schedule Overlap Prevention
 
 ### Goal
 Prevent the creation of overlapping `EmploymentScheduleVersion` resources.
@@ -597,9 +638,9 @@ Prevent the creation of overlapping `EmploymentScheduleVersion` resources.
 
 ---
 
-# Phase 7 – Vacation Account Management
+# Phase 9 – Vacation Account Management
 
-## 22. Automated Vacation Entitlement Engine
+## 26. Automated Vacation Entitlement Engine
 
 ### Goal
 Implement automated booking of yearly vacation entitlement according to the specification (Section 6.7).
@@ -615,7 +656,7 @@ Implement automated booking of yearly vacation entitlement according to the spec
 
 ---
 
-## 23. Vacation Account REST Verification
+## 27. Vacation Account REST Verification
 
 Before implementing UI, verify whether an endpoint already provides:
 
@@ -635,7 +676,7 @@ Values returned by the API come from the existing vacation-account domain logic.
 
 ---
 
-## 21. Vacation Account UI
+## 28. Vacation Account UI
 
 Create the employee-facing vacation view.
 
@@ -652,50 +693,9 @@ No balance calculations should be performed independently by JavaScript.
 
 ---
 
-# Phase 8 – Presence Status
+# Phase 10 – Supervisor Approvals
 
-## 22. Presence Status Core Query
-
-Before implementing the dashboard, verify that the backend can determine the presence state required by the specification.
-
-Reuse existing work-entry and absence information.
-
-Define the output using the presence states already specified by Chronivaro.
-
-Do not invent additional privacy settings or status values.
-
-### Acceptance Criteria
-
-Tests cover representative cases such as:
-
-- currently working;
-- absence;
-- scheduled non-working day;
-- ambiguous/no data if such a state exists in the specification.
-
----
-
-## 23. Presence Status REST Endpoint
-
-Expose the presence query through a read-only REST endpoint.
-
-Return only information the authenticated user is permitted to see.
-
----
-
-## 24. Presence Status UI
-
-Implement the "Who is working?" view.
-
-Use the exact status semantics defined by the backend.
-
-The frontend must not infer presence independently from raw time entries.
-
----
-
-# Phase 9 – Supervisor Approvals
-
-## 25. Approval Queue Query
+## 29. Approval Queue Query
 
 Verify or implement a Core query that returns approval-relevant items for the current supervisor's permitted team(s).
 
@@ -703,7 +703,7 @@ Avoid loading all employees and filtering only in JavaScript.
 
 ---
 
-## 26. Approval REST API
+## 30. Approval REST API
 
 Expose pending:
 
@@ -716,7 +716,7 @@ Ensure the authenticated supervisor's scope is applied server-side.
 
 ---
 
-## 27. Supervisor Approval UI
+## 31. Supervisor Approval UI
 
 Create `ApprovalsView.js` using existing UI conventions.
 
@@ -732,9 +732,9 @@ Group by team only if team information already exists and this improves the exis
 
 ---
 
-# Phase 10 – Reporting
+# Phase 11 – Reporting
 
-## 28. Time Balance Report Query
+## 32. Time Balance Report Query
 
 Implement or complete a Core reporting query for Soll/Ist values.
 
@@ -750,7 +750,7 @@ Test calculations independently from REST and CSV.
 
 ---
 
-## 29. Absence Report Query
+## 33. Absence Report Query
 
 Implement the corresponding structured Core query for absence reporting.
 
@@ -758,7 +758,7 @@ Reuse existing absence data and permission scope.
 
 ---
 
-## 30. Reporting REST API
+## 34. Reporting REST API
 
 Create or complete `ReportResource`.
 
@@ -775,7 +775,7 @@ JSON must be supported.
 
 ---
 
-## 31. CSV Serialisation
+## 35. CSV Serialisation
 
 Add CSV output based on the structured report results from Tasks 28 and 29.
 
@@ -795,7 +795,7 @@ Add tests for:
 
 ---
 
-## 32. Reporting UI
+## 36. Reporting UI
 
 Create the reporting view.
 
@@ -805,9 +805,9 @@ The UI must consume the report API and must not recreate Soll/Ist calculations.
 
 ---
 
-# Phase 11 – Global Configuration REST/UI
+# Phase 12 – Global Configuration REST/UI
 
-## 33. Configuration REST API
+## 37. Configuration REST API
 
 Expose the Core configuration from Task 3.
 
@@ -817,7 +817,7 @@ Enforce administrative permissions in Core and REST.
 
 ---
 
-## 34. Configuration Administration UI
+## 38. Configuration Administration UI
 
 Create an administration view for the configurable values defined in the specification.
 
