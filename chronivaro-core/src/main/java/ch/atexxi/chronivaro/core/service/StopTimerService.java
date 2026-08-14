@@ -1,48 +1,84 @@
 package ch.atexxi.chronivaro.core.service;
 
 import ch.atexxi.chronivaro.core.model.ChronivaroModelHelper;
+import ch.atexxi.chronivaro.core.model.ScheduleHelper;
 import ch.atexxi.chronivaro.core.model.WorkDayHelper;
 import ch.atexxi.chronivaro.core.model.WorkEntryHelper;
 import li.strolch.model.Resource;
 import li.strolch.persistence.api.StrolchTransaction;
-import li.strolch.service.StringArgument;
 import li.strolch.service.api.AbstractService;
+import li.strolch.service.api.ServiceArgument;
 import li.strolch.service.api.ServiceResult;
 import li.strolch.utils.dbc.DBC;
 
+import java.time.LocalTime;
 import java.time.ZonedDateTime;
 import java.util.Optional;
 
 import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
 
-public class StopTimerService extends AbstractService<StringArgument, ServiceResult> {
+public class StopTimerService extends AbstractService<StopTimerService.StopTimerArgument, ServiceResult> {
 
 	@Override
-	protected ServiceResult internalDoService(StringArgument arg) throws Exception {
-		DBC.PRE.assertNotEmpty("employeeId must be set", arg.value);
+	protected ServiceResult internalDoService(StopTimerArgument arg) throws Exception {
+		DBC.PRE.assertNotEmpty("employeeId must be set", arg.employeeId);
 
 		try (StrolchTransaction tx = openArgOrUserTx(arg)) {
-			Resource employee = ChronivaroModelHelper.getEmployee(tx, arg.value);
-			ZonedDateTime now = ZonedDateTime.now(ChronivaroModelHelper.getEmployeeTimezone(employee));
+			Resource employee = ChronivaroModelHelper.getEmployee(tx, arg.employeeId);
+			ZonedDateTime now = arg.time != null ? arg.time : ZonedDateTime.now(ChronivaroModelHelper.getEmployeeTimezone(employee));
 
-			Resource workDay = WorkDayHelper.getOrCreateWorkDay(tx, employee, now);
-
-			Optional<Resource> activeEntry = WorkDayHelper.findActiveWorkEntry(tx, workDay);
-			if (activeEntry.isEmpty()) {
+			Optional<Resource> activeEntryOpt = WorkEntryHelper.findActiveWorkEntry(tx, arg.employeeId);
+			if (activeEntryOpt.isEmpty()) {
 				throw new IllegalStateException("No active work entry found for this employee!");
 			}
 
-			Resource workEntry = activeEntry.get().getClone();
+			Resource workEntry = activeEntryOpt.get();
+			ZonedDateTime start = workEntry.getDate(PARAM_START);
 
-			if (now.isBefore(workEntry.getDate(PARAM_START))) {
+			if (now.isBefore(start)) {
 				throw new IllegalStateException("Stop time cannot be before start time!");
 			}
 
-			workEntry.setDate(PARAM_END, now);
+			if (start.toLocalDate().equals(now.toLocalDate())) {
+				// Same day, just update
+				Resource workEntryClone = workEntry.getClone();
+				workEntryClone.setDate(PARAM_END, now);
+				WorkEntryHelper.validateNoOverlap(tx, arg.employeeId, start, now, workEntryClone.getId());
+				tx.update(workEntryClone);
+			} else if (now.toLocalDate().equals(start.toLocalDate().plusDays(1))) {
+				// Next day carry-over
+				ZonedDateTime midnight = start.toLocalDate().plusDays(1).atStartOfDay(start.getZone());
 
-			WorkEntryHelper.validateNoOverlap(tx, arg.value, workEntry.getDate(PARAM_START), now, workEntry.getId());
+				// 1. Close current entry at midnight
+				Resource workEntryClone = workEntry.getClone();
+				workEntryClone.setDate(PARAM_END, midnight);
+				tx.update(workEntryClone);
 
-			tx.update(workEntry);
+				// 2. Create new WorkEntry on the next day
+				Resource workDay = WorkDayHelper.getOrCreateWorkDay(tx, employee, now);
+				Resource nextWorkEntry = tx.getResourceTemplate(TYPE_WORK_ENTRY, true);
+				nextWorkEntry.setName("WorkEntry " + midnight);
+				nextWorkEntry.setRelation(PARAM_EMPLOYEE, employee);
+				nextWorkEntry.setRelation(PARAM_WORK_DAY, workDay);
+				nextWorkEntry.setDate(PARAM_START, midnight);
+				nextWorkEntry.setDate(PARAM_END, now);
+				nextWorkEntry.setString(PARAM_SOURCE, SOURCE_TIMER);
+				nextWorkEntry.setString(PARAM_CREATED_BY, tx.getCertificate().getUsername());
+				
+				Resource scheduleVersion = ScheduleHelper.findScheduleVersion(tx, arg.employeeId).orElseThrow();
+				nextWorkEntry.setRelation(PARAM_SCHEDULE, scheduleVersion);
+
+				tx.add(nextWorkEntry);
+				workDay.addRelation(PARAM_WORK_ENTRIES, nextWorkEntry);
+				tx.update(workDay);
+			} else {
+				// Forgotten timer (more than one day), cap at midnight of start day
+				ZonedDateTime midnight = start.toLocalDate().plusDays(1).atStartOfDay(start.getZone());
+				Resource workEntryClone = workEntry.getClone();
+				workEntryClone.setDate(PARAM_END, midnight);
+				tx.update(workEntryClone);
+			}
+
 			tx.commitOnClose();
 		}
 
@@ -50,12 +86,24 @@ public class StopTimerService extends AbstractService<StringArgument, ServiceRes
 	}
 
 	@Override
-	public StringArgument getArgumentInstance() {
-		return new StringArgument();
+	public StopTimerArgument getArgumentInstance() {
+		return new StopTimerArgument();
 	}
 
 	@Override
 	public ServiceResult getResultInstance() {
 		return new ServiceResult();
+	}
+
+	public static class StopTimerArgument extends ServiceArgument {
+		public String employeeId;
+		public ZonedDateTime time;
+
+		public StopTimerArgument() {
+		}
+
+		public StopTimerArgument(String employeeId) {
+			this.employeeId = employeeId;
+		}
 	}
 }

@@ -73,7 +73,7 @@ public class TimerWorkDayTest {
 		}
 
 		// 2. Stop Timer
-		ServiceResult stopResult1 = serviceHandler.doService(certificate, new StopTimerService(), new StringArgument(employeeId));
+		ServiceResult stopResult1 = serviceHandler.doService(certificate, new StopTimerService(), new StopTimerService.StopTimerArgument(employeeId));
 		assertTrue(stopResult1.getMessage(), stopResult1.isOk());
 
 		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {

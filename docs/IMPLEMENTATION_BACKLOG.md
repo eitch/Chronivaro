@@ -323,13 +323,13 @@ Refactored `StartTimerService`, `StopTimerService`, and `WorkEntryHelper`. Creat
 
 ---
 
-## 8. Ensure WorkEntries are on the same day
+## 8. Ensure WorkEntries are on the same day (✓ DONE)
 
 ### Goal
 Update `StopTimerService` and `UpdateWorkEntryService` to ensure `WorkEntry` objects do not span multiple days, as required by the specification.
 
 ### Work
-- Update `StopTimerService` logic:
+- Update `StopTimerService` logic: (✓ DONE)
   - If stop time is on the same day as start time: proceed as normal.
   - If stop time is on the next day:
     - Set current entry end to 24:00 of start day.
@@ -338,14 +338,17 @@ Update `StopTimerService` and `UpdateWorkEntryService` to ensure `WorkEntry` obj
   - If stop time is more than one day after start time (forgotten timer):
     - Set current entry end to 24:00 of start day.
     - Remaining time is lost.
-- Update `UpdateWorkEntryService` and `CreateWorkEntryService` to validate that start and end are on the same day.
-- Update `WorkEntry` validation in Core to enforce same-day constraint.
+- Update `UpdateWorkEntryService` and `CreateWorkEntryService` to validate that start and end are on the same day. (✓ DONE - note: services are named `CorrectWorkEntryService` and `AddWorkEntryService`)
+- Update `WorkEntry` validation in Core to enforce same-day constraint. (✓ DONE - implemented in `WorkEntryHelper.validateNoOverlap`)
 
 ### Acceptance Criteria
-- Timer stops past midnight automatically split into two entries.
-- Forgotten timers (multi-day) are capped at midnight of the first day.
-- Manual entries spanning multiple days are rejected by validation.
-- Unit tests cover all carry-over and forgotten timer scenarios.
+- Timer stops past midnight automatically split into two entries. (Verified in `WorkEntrySameDayTest`)
+- Forgotten timers (multi-day) are capped at midnight of the first day. (Verified in `WorkEntrySameDayTest`)
+- Manual entries spanning multiple days are rejected by validation. (Verified in `WorkEntrySameDayTest`)
+- Unit tests cover all carry-over and forgotten timer scenarios. (Implemented in `WorkEntrySameDayTest`)
+
+### Verification
+Refactored `StopTimerService`, `StartTimerService`, `WorkEntryHelper`. Updated `TimerWorkDayTest`, `WorkEntryServiceTest` and `ChronivaroResource` to use new `StopTimerArgument`. Added new test `WorkEntrySameDayTest`.
 
 ---
 

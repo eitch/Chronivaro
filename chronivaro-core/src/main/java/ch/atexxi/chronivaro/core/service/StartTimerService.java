@@ -29,7 +29,7 @@ public class StartTimerService extends AbstractService<StringArgument, ServiceRe
 
 			Resource workDay = WorkDayHelper.getOrCreateWorkDay(tx, employee, now);
 
-			if (WorkDayHelper.findActiveWorkEntry(tx, workDay).isPresent()) {
+			if (WorkEntryHelper.findActiveWorkEntry(tx, arg.value).isPresent()) {
 				throw new IllegalStateException("An active work entry already exists for this employee!");
 			}
 

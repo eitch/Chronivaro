@@ -11,6 +11,7 @@
 - [x] WorkDay Implementation
 - [x] Refactor Timer Logic for WorkDay
 - [x] Employee Absence Self-Service
+- [x] Ensure WorkEntries are on the same day
 
 ## In Progress
 

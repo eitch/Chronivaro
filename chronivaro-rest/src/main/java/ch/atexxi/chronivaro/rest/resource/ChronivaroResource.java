@@ -253,7 +253,7 @@ public class ChronivaroResource {
 			employeeId = employee.get().getId();
 		}
 
-		StringArgument arg = new StringArgument(employeeId);
+		StopTimerService.StopTimerArgument arg = new StopTimerService.StopTimerArgument(employeeId);
 		ServiceResult result = serviceHandler.doService(cert, new StopTimerService(), arg);
 		return ResponseUtil.toResponse(result);
 	}

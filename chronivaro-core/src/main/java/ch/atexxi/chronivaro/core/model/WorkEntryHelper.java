@@ -67,6 +67,10 @@ public class WorkEntryHelper {
 	public static void validateNoOverlap(StrolchTransaction tx, String employeeId, ZonedDateTime start,
 			ZonedDateTime end, String excludeId) {
 
+		if (end != null && end.getYear() != 1970 && !start.toLocalDate().equals(end.toLocalDate())) {
+			throw new IllegalArgumentException("Work entry cannot span multiple days!");
+		}
+
 		// Overlap validation needs to check current day and previous day for shifts spanning midnight
 		LocalDate fromDate = start.toLocalDate().minusDays(1);
 		LocalDate toDate = (end == null) ? start.toLocalDate() : end.toLocalDate();

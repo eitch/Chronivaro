@@ -62,7 +62,7 @@ public class WorkEntryServiceTest {
 		}
 
 		// Stop Timer
-		StringArgument stopArg = new StringArgument(employeeId);
+		StopTimerService.StopTimerArgument stopArg = new StopTimerService.StopTimerArgument(employeeId);
 		ServiceResult stopResult = serviceHandler.doService(certificate, new StopTimerService(), stopArg);
 		assertTrue(stopResult.getMessage(), stopResult.isOk());
 
