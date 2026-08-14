@@ -326,29 +326,32 @@ Refactored `StartTimerService`, `StopTimerService`, and `WorkEntryHelper`. Creat
 ## 8. Ensure WorkEntries are on the same day (✓ DONE)
 
 ### Goal
-Update `StopTimerService` and `UpdateWorkEntryService` to ensure `WorkEntry` objects do not span multiple days, as required by the specification.
+Update `StopTimerService` and `UpdateWorkEntryService` to ensure `WorkEntry` objects do not span multiple days, as required by the specification. Handle forgotten timers by capping them at the time needed to reach the daily target.
 
 ### Work
 - Update `StopTimerService` logic: (✓ DONE)
   - If stop time is on the same day as start time: proceed as normal.
-  - If stop time is on the next day:
+  - If stop time is on the next day (midnight split):
     - Set current entry end to 24:00 of start day.
     - Create a new `WorkDay` for the next day if it doesn't exist.
     - Create a new `WorkEntry` on the next `WorkDay` starting at 00:00 and ending at the original stop time.
   - If stop time is more than one day after start time (forgotten timer):
-    - Set current entry end to 24:00 of start day.
+    - Calculate remaining time to reach the day's target (Sollzeit).
+    - Set current entry end to `Startzeit + max(0, Sollzeit - bisherige_Istzeit)`.
+    - Ensure end time does not exceed 24:00.
+    - Add comment "Timer vergessen - auf Sollzeit begrenzt".
     - Remaining time is lost.
-- Update `UpdateWorkEntryService` and `CreateWorkEntryService` to validate that start and end are on the same day. (✓ DONE - note: services are named `CorrectWorkEntryService` and `AddWorkEntryService`)
+- Update `UpdateWorkEntryService` and `CreateWorkEntryService` to validate that start and end are on the same day. (✓ DONE - services are named `CorrectWorkEntryService` and `AddWorkEntryService`)
 - Update `WorkEntry` validation in Core to enforce same-day constraint. (✓ DONE - implemented in `WorkEntryHelper.validateNoOverlap`)
 
 ### Acceptance Criteria
 - Timer stops past midnight automatically split into two entries. (Verified in `WorkEntrySameDayTest`)
-- Forgotten timers (multi-day) are capped at midnight of the first day. (Verified in `WorkEntrySameDayTest`)
+- Forgotten timers (multi-day) are capped at the time the daily target is reached. (Verified in `WorkEntrySameDayTest`)
 - Manual entries spanning multiple days are rejected by validation. (Verified in `WorkEntrySameDayTest`)
 - Unit tests cover all carry-over and forgotten timer scenarios. (Implemented in `WorkEntrySameDayTest`)
 
 ### Verification
-Refactored `StopTimerService`, `StartTimerService`, `WorkEntryHelper`. Updated `TimerWorkDayTest`, `WorkEntryServiceTest` and `ChronivaroResource` to use new `StopTimerArgument`. Added new test `WorkEntrySameDayTest`.
+Refactored `StopTimerService` and `WorkEntryHelper`. Updated `WorkEntrySameDayTest` with comprehensive cases for midnight splits and forgotten timer capping logic. Verified that `AddWorkEntryService` and `CorrectWorkEntryService` correctly enforce the same-day constraint through `WorkEntryHelper`.
 
 ---
 

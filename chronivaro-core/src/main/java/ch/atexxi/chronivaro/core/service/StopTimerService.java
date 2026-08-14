@@ -72,10 +72,25 @@ public class StopTimerService extends AbstractService<StopTimerService.StopTimer
 				workDay.addRelation(PARAM_WORK_ENTRIES, nextWorkEntry);
 				tx.update(workDay);
 			} else {
-				// Forgotten timer (more than one day), cap at midnight of start day
+				// Forgotten timer (more than one day)
+				// Cap at daily target, but no later than midnight
+				int targetMinutes = ScheduleHelper.getTargetMinutes(tx, arg.employeeId, start.toLocalDate());
+				int currentMinutes = tx.getResourcesByRelation(WorkDayHelper.getOrCreateWorkDay(tx, employee, start), PARAM_WORK_ENTRIES, true)
+						.stream()
+						.filter(we -> we.hasParameter(PARAM_END) && we.getDate(PARAM_END).getYear() != 1970)
+						.mapToInt(we -> (int) (we.getDate(PARAM_END).toEpochSecond() - we.getDate(PARAM_START).toEpochSecond()) / 60)
+						.sum();
+
+				int remainingMinutes = Math.max(0, targetMinutes - currentMinutes);
+				ZonedDateTime end = start.plusMinutes(remainingMinutes);
+
 				ZonedDateTime midnight = start.toLocalDate().plusDays(1).atStartOfDay(start.getZone());
+				if (end.isAfter(midnight))
+					end = midnight;
+
 				Resource workEntryClone = workEntry.getClone();
-				workEntryClone.setDate(PARAM_END, midnight);
+				workEntryClone.setDate(PARAM_END, end);
+				workEntryClone.setString(PARAM_COMMENT, "Timer vergessen - auf Sollzeit begrenzt");
 				tx.update(workEntryClone);
 			}
 

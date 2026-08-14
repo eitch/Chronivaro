@@ -373,13 +373,28 @@ Datenschutzregel: Benutzer ohne besondere Berechtigung sehen keine Abwesenheitsg
 6. Beim Stoppen wird der laufende `WorkEntry` im `WorkDay` beendet.
    a. Falls das Enddatum dem Startdatum entspricht, wird die Buchung normal beendet.
    b. Falls das Enddatum nach dem Startdatum liegt:
-      i. Die Buchung wird am Starttag um 24:00 Uhr beendet.
-      ii. Falls das Enddatum genau der Folgetag ist (Arbeit über Mitternacht), wird für die restliche Zeit eine neue Buchung auf dem `WorkDay` des Folgetages erstellt.
-      iii. Falls das Enddatum mehr als einen Tag nach dem Startdatum liegt (vergessener Timer), wird die restliche Zeit verworfen.
+      i. Falls das Enddatum genau der Folgetag ist (Arbeit über Mitternacht):
+         - Die Buchung wird am Starttag um 24:00 Uhr beendet.
+         - Für die restliche Zeit wird eine neue Buchung auf dem `WorkDay` des Folgetages erstellt.
+      ii. Falls das Enddatum mehr als einen Tag nach dem Startdatum liegt (vergessener Timer):
+         - Die Buchung wird auf den Zeitpunkt beendet, an dem das Tagessoll (Sollzeit) erreicht wird.
+         - Berechnung: `Endzeit = Startzeit + max(0, Sollzeit - bisherige_Istzeit_des_Tages)`.
+         - Die Endzeit wird auf maximal 24:00 Uhr des Starttages begrenzt.
+         - Die restliche Zeit wird verworfen.
+         - Der `WorkEntry` wird automatisch mit einem Kommentar "Timer vergessen - auf Sollzeit begrenzt" versehen.
 7. Beginnt der Mitarbeiter später erneut zu arbeiten, startet er einen neuen `WorkEntry` innerhalb desselben `WorkDay`.
 8. Die Zeit zwischen zwei Arbeitsblöcken wird nur im Report als Unterbruch dargestellt und nicht als Pause gespeichert.
 
-### 9.2 Manuelle Zeitkorrektur
+### 9.2 Logik für vergessene Timer (Edge Cases)
+
+Um eine konsistente Behandlung von vergessenen Timern zu gewährleisten, gilt folgende detaillierte Logik:
+
+- **Sollzeit bereits erreicht:** Falls die Summe der bereits abgeschlossenen `WorkEntries` des Tages die Sollzeit bereits erreicht oder überschreitet, wird der vergessene Timer auf seine Startzeit gesetzt (Dauer 0).
+- **Startzeit nach Sollzeit-Erreichung:** Startet ein Mitarbeiter einen Timer, obwohl das Soll bereits erfüllt ist, und vergisst diesen, wird er ebenfalls auf die Startzeit gesetzt.
+- **Sollzeit-Erreichung nach Mitternacht:** Da ein `WorkEntry` niemals über Mitternacht hinausgehen darf, wird die automatische Beendung spätestens auf 24:00 Uhr des Starttages gesetzt, auch wenn das Soll damit noch nicht erreicht ist.
+- **Mehrfache vergessene Timer:** Sollte ein Mitarbeiter nacheinander mehrere Timer vergessen (extremer Ausnahmefall), wird jeder einzelne gemäss der obigen "Auffüll-Logik" behandelt, bis das Tagessoll erreicht ist.
+
+### 9.3 Manuelle Zeitkorrektur
 
 1. Benutzer öffnet einen Tag.
 2. Benutzer ergänzt, ändert oder entfernt eine Buchung.
@@ -387,7 +402,7 @@ Datenschutzregel: Benutzer ohne besondere Berechtigung sehen keine Abwesenheitsg
 4. Bei einer bereits genehmigten oder gesperrten Periode ist die Änderung nur nach Wiederöffnung möglich.
 5. Änderung wird protokolliert.
 
-### 9.3 Abwesenheitsantrag
+### 9.4 Abwesenheitsantrag
 
 1. Mitarbeiter erfasst Art, Zeitraum und Dauer.
 2. System berechnet die betroffenen Sollminuten als Vorschau.
@@ -396,7 +411,7 @@ Datenschutzregel: Benutzer ohne besondere Berechtigung sehen keine Abwesenheitsg
 5. Bei Ferien wird nach Genehmigung eine Ferienkontobuchung erstellt.
 6. Stornierung oder Änderung erzeugt eine entsprechende Gegenbuchung; bestehende Kontobuchungen werden nicht still überschrieben.
 
-### 9.4 Monatsabschluss
+### 9.5 Monatsabschluss
 
 1. Mitarbeiter prüft die Monatsübersicht.
 2. System zeigt Fehler und Warnungen.
@@ -405,7 +420,7 @@ Datenschutzregel: Benutzer ohne besondere Berechtigung sehen keine Abwesenheitsg
 5. Nach Genehmigung wird die Periode gesperrt.
 6. Eine Wiederöffnung erfordert Berechtigung und Begründung.
 
-### 9.5 Mitarbeiter-Registrierung
+### 9.6 Mitarbeiter-Registrierung
 
 Um neuen Mitarbeitern den Zugriff auf Chronivaro zu ermöglichen, wird ein administrativer Registrierungsprozess bereitgestellt.
 
@@ -841,7 +856,7 @@ Mindestens folgende Fälle:
 - Krankheit an einem Arbeitstag
 - Abwesenheit an einem freien Tag
 - Ferien über Wochenende und Feiertag
-- Arbeit über Mitternacht (automatische Aufteilung und Timer-Verlust nach mehrtägiger Pause)
+- Arbeit über Mitternacht (automatische Aufteilung und Begrenzung auf Sollzeit bei vergessenem Timer)
 - Sommer-/Winterzeitwechsel
 - überlappende Zeitbuchungen
 - korrekte Ableitung von Unterbrüchen zwischen mehreren Arbeitsblöcken

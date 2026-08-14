@@ -160,7 +160,7 @@ public class WorkEntrySameDayTest {
 		ServiceResult stopResult = serviceHandler.doService(certificate, new StopTimerService(), stopArg);
 		assertTrue(stopResult.getMessage(), stopResult.isOk());
 
-		// Verify entry is capped at midnight
+		// Verify entry is capped at midnight (because start is 22:00 and target is 0 by default)
 		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
 			List<Resource> workEntries = tx.streamResources(TYPE_WORK_ENTRY)
 					.filter(we -> we.getRelationId(PARAM_EMPLOYEE).equals(employeeId))
@@ -169,7 +169,186 @@ public class WorkEntrySameDayTest {
 			assertEquals(1, workEntries.size());
 			Resource entry = workEntries.get(0);
 			assertEquals(start, entry.getDate(PARAM_START));
-			assertEquals(start.toLocalDate().plusDays(1).atStartOfDay(start.getZone()), entry.getDate(PARAM_END));
+			// Since target is 0, start + 0 = start.
+			assertEquals(start, entry.getDate(PARAM_END));
+			assertEquals("Timer vergessen - auf Sollzeit begrenzt", entry.getString(PARAM_COMMENT));
+		}
+	}
+
+	@Test
+	public void shouldCapForgottenTimerAtDailyTarget() {
+		String employeeId = "forgotten-timer-target-test";
+		LocalDate startDay = LocalDate.now().minusDays(2);
+		ZonedDateTime start = ZonedDateTime.of(startDay, LocalTime.of(8, 0), ZoneId.systemDefault());
+		ZonedDateTime stop = start.plusDays(2); // 2 days later
+
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
+			Resource employee = createEmployee(tx, employeeId, "Forgotten Timer Target Test");
+			Resource schedule = tx.getResourceByRelation(employee, PARAM_CURRENT_SCHEDULE, true);
+			schedule.setInteger(PARAM_DAILY_TARGET_MINUTES, 480); // 8 hours
+			tx.update(schedule);
+			tx.commitOnClose();
+		}
+
+		ServiceHandler serviceHandler = runtimeMock.getServiceHandler();
+
+		// Manually create an active entry to simulate timer started 2 days ago at 08:00
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
+			Resource employee = tx.getResourceBy(TYPE_EMPLOYEE, employeeId, true);
+			Resource workDay = WorkDayHelper.getOrCreateWorkDay(tx, employee, start);
+			Resource workEntry = tx.getResourceTemplate(TYPE_WORK_ENTRY, true);
+			workEntry.setId(employeeId + "-forgotten-target");
+			workEntry.setRelation(PARAM_EMPLOYEE, employee);
+			workEntry.setRelation(PARAM_WORK_DAY, workDay);
+			workEntry.setDate(PARAM_START, start);
+			workEntry.setString(PARAM_SOURCE, SOURCE_TIMER);
+			tx.add(workEntry);
+			workDay.addRelation(PARAM_WORK_ENTRIES, workEntry);
+			tx.update(workDay);
+
+			employee.setRelationId(PARAM_CURRENT_WORK_DAY, workDay.getId());
+			tx.update(employee);
+			tx.commitOnClose();
+		}
+
+		// Stop timer 2 days later
+		StopTimerService.StopTimerArgument stopArg = new StopTimerService.StopTimerArgument(employeeId);
+		stopArg.time = stop;
+		ServiceResult stopResult = serviceHandler.doService(certificate, new StopTimerService(), stopArg);
+		assertTrue(stopResult.getMessage(), stopResult.isOk());
+
+		// Verify entry is capped at 08:00 + 8 hours = 16:00
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
+			List<Resource> workEntries = tx.streamResources(TYPE_WORK_ENTRY)
+					.filter(we -> we.getRelationId(PARAM_EMPLOYEE).equals(employeeId))
+					.toList();
+
+			assertEquals(1, workEntries.size());
+			Resource entry = workEntries.get(0);
+			assertEquals(start, entry.getDate(PARAM_START));
+			ZonedDateTime expectedEnd = start.plusHours(8);
+			assertEquals("End time should be capped at daily target", expectedEnd, entry.getDate(PARAM_END));
+			assertEquals("Timer vergessen - auf Sollzeit begrenzt", entry.getString(PARAM_COMMENT));
+		}
+	}
+
+	@Test
+	public void shouldCapForgottenTimerAtMidnightWhenTargetBeyondMidnight() {
+		String employeeId = "forgotten-timer-midnight-test";
+		LocalDate startDay = LocalDate.now().minusDays(2);
+		ZonedDateTime start = ZonedDateTime.of(startDay, LocalTime.of(22, 0), ZoneId.systemDefault());
+		ZonedDateTime stop = start.plusDays(2); // 2 days later
+
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
+			Resource employee = createEmployee(tx, employeeId, "Forgotten Timer Midnight Test");
+			Resource schedule = tx.getResourceByRelation(employee, PARAM_CURRENT_SCHEDULE, true);
+			schedule.setInteger(PARAM_DAILY_TARGET_MINUTES, 480); // 8 hours
+			tx.update(schedule);
+			tx.commitOnClose();
+		}
+
+		ServiceHandler serviceHandler = runtimeMock.getServiceHandler();
+
+		// Manually create an active entry at 22:00
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
+			Resource employee = tx.getResourceBy(TYPE_EMPLOYEE, employeeId, true);
+			Resource workDay = WorkDayHelper.getOrCreateWorkDay(tx, employee, start);
+			Resource workEntry = tx.getResourceTemplate(TYPE_WORK_ENTRY, true);
+			workEntry.setId(employeeId + "-forgotten-midnight");
+			workEntry.setRelation(PARAM_EMPLOYEE, employee);
+			workEntry.setRelation(PARAM_WORK_DAY, workDay);
+			workEntry.setDate(PARAM_START, start);
+			workEntry.setString(PARAM_SOURCE, SOURCE_TIMER);
+			tx.add(workEntry);
+			workDay.addRelation(PARAM_WORK_ENTRIES, workEntry);
+			tx.update(workDay);
+
+			employee.setRelationId(PARAM_CURRENT_WORK_DAY, workDay.getId());
+			tx.update(employee);
+			tx.commitOnClose();
+		}
+
+		// Stop timer 2 days later
+		StopTimerService.StopTimerArgument stopArg = new StopTimerService.StopTimerArgument(employeeId);
+		stopArg.time = stop;
+		ServiceResult stopResult = serviceHandler.doService(certificate, new StopTimerService(), stopArg);
+		assertTrue(stopResult.getMessage(), stopResult.isOk());
+
+		// Verify entry is capped at midnight, not 06:00 (22:00 + 8h)
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
+			List<Resource> workEntries = tx.streamResources(TYPE_WORK_ENTRY)
+					.filter(we -> we.getRelationId(PARAM_EMPLOYEE).equals(employeeId))
+					.toList();
+
+			assertEquals(1, workEntries.size());
+			Resource entry = workEntries.get(0);
+			assertEquals(start, entry.getDate(PARAM_START));
+			ZonedDateTime expectedEnd = startDay.plusDays(1).atStartOfDay(start.getZone());
+			assertEquals("End time should be capped at midnight", expectedEnd, entry.getDate(PARAM_END));
+			assertEquals("Timer vergessen - auf Sollzeit begrenzt", entry.getString(PARAM_COMMENT));
+		}
+	}
+
+	@Test
+	public void shouldSetDurationZeroWhenTargetAlreadyReached() {
+		String employeeId = "forgotten-timer-zero-test";
+		LocalDate startDay = LocalDate.now().minusDays(2);
+		ZonedDateTime start1 = ZonedDateTime.of(startDay, LocalTime.of(8, 0), ZoneId.systemDefault());
+		ZonedDateTime end1 = start1.plusHours(9); // 9 hours worked, target is 8
+		ZonedDateTime start2 = ZonedDateTime.of(startDay, LocalTime.of(18, 0), ZoneId.systemDefault());
+		ZonedDateTime stop = start1.plusDays(2); // 2 days later
+
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
+			Resource employee = createEmployee(tx, employeeId, "Forgotten Timer Zero Test");
+			Resource schedule = tx.getResourceByRelation(employee, PARAM_CURRENT_SCHEDULE, true);
+			schedule.setInteger(PARAM_DAILY_TARGET_MINUTES, 480); // 8 hours
+			tx.update(schedule);
+			tx.commitOnClose();
+		}
+
+		ServiceHandler serviceHandler = runtimeMock.getServiceHandler();
+
+		// Manually create one finished entry (9h) and one active entry (started at 18:00)
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
+			Resource employee = tx.getResourceBy(TYPE_EMPLOYEE, employeeId, true);
+			Resource workDay = WorkDayHelper.getOrCreateWorkDay(tx, employee, start1);
+
+			Resource we1 = tx.getResourceTemplate(TYPE_WORK_ENTRY, true);
+			we1.setId(employeeId + "-finished");
+			we1.setRelation(PARAM_EMPLOYEE, employee);
+			we1.setRelation(PARAM_WORK_DAY, workDay);
+			we1.setDate(PARAM_START, start1);
+			we1.setDate(PARAM_END, end1);
+			tx.add(we1);
+			workDay.addRelation(PARAM_WORK_ENTRIES, we1);
+
+			Resource we2 = tx.getResourceTemplate(TYPE_WORK_ENTRY, true);
+			we2.setId(employeeId + "-forgotten-zero");
+			we2.setRelation(PARAM_EMPLOYEE, employee);
+			we2.setRelation(PARAM_WORK_DAY, workDay);
+			we2.setDate(PARAM_START, start2);
+			we2.setString(PARAM_SOURCE, SOURCE_TIMER);
+			tx.add(we2);
+			workDay.addRelation(PARAM_WORK_ENTRIES, we2);
+
+			tx.update(workDay);
+			employee.setRelationId(PARAM_CURRENT_WORK_DAY, workDay.getId());
+			tx.update(employee);
+			tx.commitOnClose();
+		}
+
+		// Stop timer 2 days later
+		StopTimerService.StopTimerArgument stopArg = new StopTimerService.StopTimerArgument(employeeId);
+		stopArg.time = stop;
+		ServiceResult stopResult = serviceHandler.doService(certificate, new StopTimerService(), stopArg);
+		assertTrue(stopResult.getMessage(), stopResult.isOk());
+
+		// Verify entry is capped at start time (duration 0)
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
+			Resource entry = tx.getResourceBy(TYPE_WORK_ENTRY, employeeId + "-forgotten-zero", true);
+			assertEquals(start2, entry.getDate(PARAM_START));
+			assertEquals(start2, entry.getDate(PARAM_END));
+			assertEquals("Timer vergessen - auf Sollzeit begrenzt", entry.getString(PARAM_COMMENT));
 		}
 	}
 }
