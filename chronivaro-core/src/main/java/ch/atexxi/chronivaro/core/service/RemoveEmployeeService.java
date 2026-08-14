@@ -18,7 +18,7 @@ public class RemoveEmployeeService extends AbstractService<StringArgument, Servi
 			Resource employee = ChronivaroModelHelper.getEmployee(tx, arg.value);
 
 			// cascading remove related data
-			String[] types = {TYPE_WORK_ENTRY, TYPE_ABSENCE, TYPE_VACATION_ACCOUNT_ENTRY, TYPE_TIME_PERIOD,
+			String[] types = {TYPE_WORK_DAY, TYPE_WORK_ENTRY, TYPE_ABSENCE, TYPE_VACATION_ACCOUNT_ENTRY, TYPE_TIME_PERIOD,
 					TYPE_EMPLOYMENT_SCHEDULE};
 
 			for (String type : types) {

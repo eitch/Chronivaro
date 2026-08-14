@@ -275,45 +275,51 @@ Implemented in `CancelAbsenceService`. Added tests in `AbsenceServiceTest`. Bala
 
 # Phase 3 – WorkDay & Timer Refactoring
 
-## 6. Implement WorkDay Domain Entity
+## 6. Implement WorkDay Domain Entity (✓ DONE)
 
 ### Goal
 Implement the `WorkDay` entity as described in the specification to improve performance and data handling.
 
 ### Work
-- Create `WorkDay` resource template.
-- Add `currentWorkDayId` to `Employee` resource.
-- Update `WorkEntry` to reference `WorkDay` instead of `Employee`.
+- Create `WorkDay` resource template. (Implemented in `Templates.xml`)
+- Add `currentWorkDayId` to `Employee` resource. (Implemented in `Templates.xml`)
+- Update `WorkEntry` to reference `WorkDay`. (Added `workDay` relation to `WorkEntry`)
 
 ### Business Rules
-- A `WorkDay` is created for each calendar day a user works.
-- It references the active `EmploymentScheduleVersion`.
-- It serves as a container for all `WorkEntry` objects of that day.
+- A `WorkDay` is created for each calendar day a user works. (To be handled in Task 7)
+- It references the active `EmploymentScheduleVersion`. (Implemented in `WorkDay` template)
+- It serves as a container for all `WorkEntry` objects of that day. (WorkEntry now points to WorkDay)
 
 ### Acceptance Criteria
-- `WorkDay` can be created and persisted.
-- `Employee` correctly references the current `WorkDay`.
-- `WorkEntry` is correctly associated with a `WorkDay`.
+- `WorkDay` can be created and persisted. (Verified in `WorkDayTest`)
+- `Employee` correctly references the current `WorkDay`. (Verified in `WorkDayTest`)
+- `WorkEntry` is correctly associated with a `WorkDay`. (Verified in `WorkDayTest`)
+
+### Verification
+Implemented in `Templates.xml` and `ChronivaroConstants.java`. Added verification test `WorkDayTest`. Fixed pre-existing `CompleteRegistrationTest` failure.
 
 ---
 
-## 7. Refactor Timer Logic for WorkDay
+## 7. Refactor Timer Logic for WorkDay (✓ DONE)
 
 ### Goal
 Update the start/stop timer logic to use the new `WorkDay` entity.
 
 ### Work
-- Update `StartTimerService` to:
+- Update `StartTimerService` to: (✓ DONE)
   - Check if `currentWorkDayId` exists and matches today's date.
   - Create a new `WorkDay` if necessary, capturing the current schedule.
   - Update `Employee.currentWorkDayId`.
   - Create `WorkEntry` within the context of the `WorkDay`.
-- Update `StopTimerService` to find the active entry via the `WorkDay`.
+- Update `StopTimerService` to find the active entry via the `WorkDay`. (✓ DONE)
 
 ### Acceptance Criteria
-- Starting the timer for a new day creates a `WorkDay`.
-- Starting the timer for the same day reuses the existing `WorkDay`.
-- No full scans of all `WorkEntry` objects are needed to find active entries.
+- Starting the timer for a new day creates a `WorkDay`. (Verified in `TimerWorkDayTest`)
+- Starting the timer for the same day reuses the existing `WorkDay`. (Verified in `TimerWorkDayTest`)
+- No full scans of all `WorkEntry` objects are needed to find active entries. (Optimized in `WorkEntryHelper` and timer services)
+
+### Verification
+Refactored `StartTimerService`, `StopTimerService`, and `WorkEntryHelper`. Created `WorkDayHelper`. Added integration test `TimerWorkDayTest`.
 
 ---
 
@@ -361,12 +367,13 @@ Add a button to the Employees view to trigger the registration process.
 - Show success/failure notification upon completion.
 
 ---
-## 9. Expose Employee Absence Self-Service
+## 9. Expose Employee Absence Self-Service (✓ DONE)
 
 ### Goal
 
 Expose the completed Core absence functionality through REST.
 
+### Work
 Implement or complete:
 
 ```text
@@ -389,6 +396,9 @@ REST resources must delegate business rules to Core services.
 - Attempted cross-user access is impossible through these endpoints.
 - Validation errors use the project's existing REST error conventions.
 - REST integration tests are added where the project already uses them.
+
+### Verification
+Implemented `UpdateAbsenceService`. Added endpoints to `ChronivaroResource`. Added tests in `UpdateAbsenceServiceTest`.
 
 ---
 

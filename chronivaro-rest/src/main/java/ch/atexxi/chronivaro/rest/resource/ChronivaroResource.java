@@ -27,6 +27,7 @@ import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
 import static li.strolch.rest.StrolchRestfulConstants.STROLCH_CERTIFICATE;
 import static li.strolch.rest.StrolchRestfulConstants.STROLCH_REMOTE_IP;
 
@@ -66,7 +67,7 @@ public class ChronivaroResource {
 		Certificate cert = (Certificate) request.getAttribute(STROLCH_CERTIFICATE);
 		String employeeId;
 		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
-			Optional<Resource> employee = ChronivaroModelHelper.findEmployeeByUser(tx, cert.getUserId());
+			Optional<Resource> employee = ChronivaroModelHelper.findEmployeeByUser(tx, cert.getUsername());
 			if (employee.isEmpty())
 				return Response.status(Response.Status.NOT_FOUND).build();
 			employeeId = employee.get().getId();
@@ -93,7 +94,7 @@ public class ChronivaroResource {
 
 		String employeeId;
 		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
-			Optional<Resource> employee = ChronivaroModelHelper.findEmployeeByUser(tx, cert.getUserId());
+			Optional<Resource> employee = ChronivaroModelHelper.findEmployeeByUser(tx, cert.getUsername());
 			if (employee.isEmpty())
 				return Response.status(Response.Status.NOT_FOUND).build();
 			employeeId = employee.get().getId();
@@ -128,6 +129,31 @@ public class ChronivaroResource {
 		return ResponseUtil.toResponse(result);
 	}
 
+	@GET
+	@Path("me/absences")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response getMyAbsences(@Context HttpServletRequest request) {
+		Certificate cert = (Certificate) request.getAttribute(STROLCH_CERTIFICATE);
+		String employeeId;
+		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
+			Optional<Resource> employee = ChronivaroModelHelper.findEmployeeByUser(tx, cert.getUsername());
+			if (employee.isEmpty())
+				return Response.status(Response.Status.NOT_FOUND).build();
+			employeeId = employee.get().getId();
+		}
+
+		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
+			List<Resource> absences = tx.streamResources(TYPE_ABSENCE)
+					.filter(a -> a.getRelationId(PARAM_EMPLOYEE).equals(employeeId))
+					.toList();
+			List<AbsenceDto> dtos = absences.stream().map(a -> {
+				Resource type = tx.getResourceByRelation(a, PARAM_ABSENCE_TYPE, true);
+				return ChronivaroMapper.toDto(a, type.getString(PARAM_CODE));
+			}).toList();
+			return Response.ok(ChronivaroRestHelper.createGson().toJson(dtos), MediaType.APPLICATION_JSON).build();
+		}
+	}
+
 	@POST
 	@Path("me/absences")
 	@Consumes(MediaType.APPLICATION_JSON)
@@ -139,7 +165,7 @@ public class ChronivaroResource {
 
 		String employeeId;
 		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
-			Optional<Resource> employee = ChronivaroModelHelper.findEmployeeByUser(tx, cert.getUserId());
+			Optional<Resource> employee = ChronivaroModelHelper.findEmployeeByUser(tx, cert.getUsername());
 			if (employee.isEmpty())
 				return Response.status(Response.Status.NOT_FOUND).build();
 			employeeId = employee.get().getId();
@@ -158,6 +184,39 @@ public class ChronivaroResource {
 		ServiceResult result = serviceHandler.doService(cert, new RequestAbsenceService(), arg);
 		return ResponseUtil.toResponse(result);
 	}
+	
+	@PUT
+	@Path("me/absences/{id}")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response updateAbsence(@Context HttpServletRequest request, @PathParam("id") String id, String data) {
+		Certificate cert = (Certificate) request.getAttribute(STROLCH_CERTIFICATE);
+		ServiceHandler serviceHandler = ChronivaroRestHelper.getServiceHandler();
+		AbsenceDto dto = ChronivaroRestHelper.createGson().fromJson(data, AbsenceDto.class);
+
+		UpdateAbsenceService.UpdateAbsenceArgument arg = new UpdateAbsenceService.UpdateAbsenceArgument();
+		arg.absenceId = id;
+		arg.absenceTypeCode = dto.absenceTypeCode();
+		arg.start = dto.start();
+		arg.end = dto.end();
+		arg.durationType = dto.durationType();
+		arg.dayPart = dto.dayPart();
+		arg.minutes = dto.minutes();
+		arg.comment = dto.comment();
+
+		ServiceResult result = serviceHandler.doService(cert, new UpdateAbsenceService(), arg);
+		return ResponseUtil.toResponse(result);
+	}
+
+	@POST
+	@Path("me/absences/{id}/cancel")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response cancelAbsence(@Context HttpServletRequest request, @PathParam("id") String id) {
+		Certificate cert = (Certificate) request.getAttribute(STROLCH_CERTIFICATE);
+		ServiceHandler serviceHandler = ChronivaroRestHelper.getServiceHandler();
+		ServiceResult result = serviceHandler.doService(cert, new CancelAbsenceService(), new StringArgument(id));
+		return ResponseUtil.toResponse(result);
+	}
 
 	@POST
 	@Path("me/timer/start")
@@ -168,7 +227,7 @@ public class ChronivaroResource {
 
 		String employeeId;
 		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
-			Optional<Resource> employee = ChronivaroModelHelper.findEmployeeByUser(tx, cert.getUserId());
+			Optional<Resource> employee = ChronivaroModelHelper.findEmployeeByUser(tx, cert.getUsername());
 			if (employee.isEmpty())
 				return Response.status(Response.Status.NOT_FOUND).build();
 			employeeId = employee.get().getId();
@@ -188,7 +247,7 @@ public class ChronivaroResource {
 
 		String employeeId;
 		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
-			Optional<Resource> employee = ChronivaroModelHelper.findEmployeeByUser(tx, cert.getUserId());
+			Optional<Resource> employee = ChronivaroModelHelper.findEmployeeByUser(tx, cert.getUsername());
 			if (employee.isEmpty())
 				return Response.status(Response.Status.NOT_FOUND).build();
 			employeeId = employee.get().getId();
@@ -242,7 +301,7 @@ public class ChronivaroResource {
 
 		String employeeId;
 		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
-			Optional<Resource> employee = ChronivaroModelHelper.findEmployeeByUser(tx, cert.getUserId());
+			Optional<Resource> employee = ChronivaroModelHelper.findEmployeeByUser(tx, cert.getUsername());
 			if (employee.isEmpty())
 				return Response.status(Response.Status.NOT_FOUND).build();
 			employeeId = employee.get().getId();
@@ -271,7 +330,7 @@ public class ChronivaroResource {
 
 		String employeeId;
 		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
-			Optional<Resource> employee = ChronivaroModelHelper.findEmployeeByUser(tx, cert.getUserId());
+			Optional<Resource> employee = ChronivaroModelHelper.findEmployeeByUser(tx, cert.getUsername());
 			if (employee.isEmpty())
 				return Response.status(Response.Status.NOT_FOUND).build();
 			employeeId = employee.get().getId();

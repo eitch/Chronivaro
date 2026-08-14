@@ -18,6 +18,7 @@ import java.time.ZonedDateTime;
 import java.util.List;
 
 import static ch.atexxi.chronivaro.core.ChronivaroTestHelper.createEmployee;
+import static ch.atexxi.chronivaro.core.ChronivaroTestHelper.createWorkEntry;
 import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
 import static org.junit.Assert.*;
 
@@ -146,12 +147,9 @@ public class UpdateAndRemoveScheduleServiceTest {
 
 		// Create Work Entry within schedule period
 		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
-			Resource workEntry = tx.getResourceTemplate(TYPE_WORK_ENTRY, true);
-			workEntry.setId("we-fail-remove");
-			workEntry.setRelationId(PARAM_EMPLOYEE, employeeId);
-			workEntry.setDate(PARAM_START, ZonedDateTime.parse("2026-01-15T08:00:00+01:00[Europe/Zurich]"));
-			workEntry.setDate(PARAM_END, ZonedDateTime.parse("2026-01-15T12:00:00+01:00[Europe/Zurich]"));
-			tx.add(workEntry);
+			Resource employee = tx.getResourceBy(TYPE_EMPLOYEE, employeeId, true);
+			createWorkEntry(tx, employee, ZonedDateTime.parse("2026-01-15T08:00:00+01:00[Europe/Zurich]"),
+					ZonedDateTime.parse("2026-01-15T12:00:00+01:00[Europe/Zurich]"));
 			tx.commitOnClose();
 		}
 

@@ -2,6 +2,7 @@ package ch.atexxi.chronivaro.core.service;
 
 import ch.atexxi.chronivaro.core.model.ChronivaroAuditHelper;
 import ch.atexxi.chronivaro.core.model.ScheduleHelper;
+import ch.atexxi.chronivaro.core.model.WorkDayHelper;
 import ch.atexxi.chronivaro.core.model.WorkEntryHelper;
 import li.strolch.model.Resource;
 import li.strolch.persistence.api.StrolchTransaction;
@@ -38,6 +39,19 @@ public class CorrectWorkEntryService
 			}
 
 			WorkEntryHelper.validateNoOverlap(tx, employeeId, arg.start, arg.end, workEntry.getId());
+
+			if (!arg.start.toLocalDate().equals(oldStart.toLocalDate())) {
+				Resource employee = tx.getResourceBy(TYPE_EMPLOYEE, employeeId, true);
+				Resource oldWorkDay = tx.getResourceBy(TYPE_WORK_DAY, workEntry.getRelationId(PARAM_WORK_DAY), true);
+				Resource newWorkDay = WorkDayHelper.getOrCreateWorkDay(tx, employee, arg.start);
+
+				oldWorkDay.getStringListP(BAG_RELATIONS, PARAM_WORK_ENTRIES).removeValue(workEntry.getId());
+				newWorkDay.addRelation(PARAM_WORK_ENTRIES, workEntry);
+				workEntry.setRelation(PARAM_WORK_DAY, newWorkDay);
+
+				tx.update(oldWorkDay);
+				tx.update(newWorkDay);
+			}
 
 			workEntry.setDate(PARAM_START, arg.start);
 			workEntry.setDate(PARAM_END, arg.end);

@@ -1,5 +1,6 @@
 package ch.atexxi.chronivaro.core;
 
+import ch.atexxi.chronivaro.core.model.WorkDayHelper;
 import li.strolch.model.Resource;
 import li.strolch.persistence.api.StrolchTransaction;
 
@@ -61,5 +62,32 @@ public class ChronivaroTestHelper {
 
 		tx.add(employee);
 		return employee;
+	}
+	public static Resource createAbsenceType(StrolchTransaction tx, String code, String name) {
+		Resource absenceType = tx.getResourceTemplate(TYPE_ABSENCE_TYPE, true);
+		absenceType.setId(code);
+		absenceType.setName(name);
+		absenceType.setString(PARAM_CODE, code);
+		absenceType.setBoolean(PARAM_ACTIVE, true);
+		tx.add(absenceType);
+		return absenceType;
+	}
+
+	public static Resource createWorkEntry(StrolchTransaction tx, Resource employee, ZonedDateTime start,
+			ZonedDateTime end) {
+		Resource workDay = WorkDayHelper.getOrCreateWorkDay(tx, employee, start);
+		Resource workEntry = tx.getResourceTemplate(TYPE_WORK_ENTRY, true);
+		workEntry.setId(tx.getAgent().getUniqueId());
+		workEntry.setName("WorkEntry " + start);
+		workEntry.setRelation(PARAM_EMPLOYEE, employee);
+		workEntry.setRelation(PARAM_WORK_DAY, workDay);
+		workEntry.setDate(PARAM_START, start);
+		workEntry.setDate(PARAM_END, end);
+
+		tx.add(workEntry);
+		workDay.addRelation(PARAM_WORK_ENTRIES, workEntry);
+		tx.update(workDay);
+
+		return workEntry;
 	}
 }

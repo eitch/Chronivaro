@@ -76,13 +76,21 @@ public class CompleteRegistrationTest {
 		assertTrue(createResult.getMessage(), createResult.isOk());
 
 		String employeeId;
-		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
 			Resource employee = tx
 					.streamResources(TYPE_EMPLOYEE)
 					.filter(r -> r.getName().equals("RegComplete User"))
 					.findFirst()
 					.orElseThrow();
 			employeeId = employee.getId();
+
+			Resource schedule = tx.getResourceTemplate(TYPE_EMPLOYMENT_SCHEDULE, true);
+			schedule.setId("sched_" + employeeId);
+			schedule.setName("Schedule " + employeeId);
+			schedule.setRelationId(PARAM_EMPLOYEE, employeeId);
+			tx.add(schedule);
+
+			tx.commitOnClose();
 		}
 
 		// Initiate Registration

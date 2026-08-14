@@ -19,6 +19,7 @@
             <Parameter Id="location" Name="Location" Type="String" Interpretation="Resource-Ref" Uom="Location" Value=""/>
             <Parameter Id="primaryTeam" Name="Primary Team" Type="String" Interpretation="Resource-Ref" Uom="Team" Value=""/>
             <Parameter Id="currentSchedule" Name="Current Schedule" Type="String" Interpretation="Resource-Ref" Uom="EmploymentSchedule" Value=""/>
+            <Parameter Id="currentWorkDay" Name="Current Work Day" Type="String" Interpretation="Resource-Ref" Uom="WorkDay" Value=""/>
         </ParameterBag>
     </Resource>
 
@@ -33,6 +34,18 @@
         <ParameterBag Id="relations" Name="Relations" Type="Relations">
             <Parameter Id="employee" Name="Employee" Type="String" Interpretation="Resource-Ref" Uom="Employee" Value=""/>
             <Parameter Id="schedule" Name="Schedule" Type="String" Interpretation="Resource-Ref" Uom="EmploymentSchedule" Value=""/>
+            <Parameter Id="workDay" Name="Work Day" Type="String" Interpretation="Resource-Ref" Uom="WorkDay" Value=""/>
+        </ParameterBag>
+    </Resource>
+
+    <Resource Id="WorkDay" Name="Template Work Day" Type="Template">
+        <ParameterBag Id="parameters" Name="Parameters" Type="Parameters">
+            <Parameter Id="date" Name="Date" Type="Date" Value="1970-01-01T00:00:00.000+01:00"/>
+        </ParameterBag>
+        <ParameterBag Id="relations" Name="Relations" Type="Relations">
+            <Parameter Id="employee" Name="Employee" Type="String" Interpretation="Resource-Ref" Uom="Employee" Value=""/>
+            <Parameter Id="schedule" Name="Schedule" Type="String" Interpretation="Resource-Ref" Uom="EmploymentSchedule" Value=""/>
+            <Parameter Id="workEntries" Name="Work Entries" Type="StringList" Interpretation="Resource-Ref" Uom="WorkEntry" Value=""/>
         </ParameterBag>
     </Resource>
 

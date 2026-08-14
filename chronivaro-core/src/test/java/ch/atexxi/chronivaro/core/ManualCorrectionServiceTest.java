@@ -16,6 +16,7 @@ import java.time.ZonedDateTime;
 import java.util.List;
 
 import static ch.atexxi.chronivaro.core.ChronivaroTestHelper.createEmployee;
+import static ch.atexxi.chronivaro.core.ChronivaroTestHelper.createWorkEntry;
 import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -78,23 +79,18 @@ public class ManualCorrectionServiceTest {
 	@Test
 	public void shouldCorrectWorkEntry() {
 		String employeeId = "emp_work";
-		String workEntryId = "work1";
 		ZonedDateTime start = ZonedDateTime.parse("2026-08-08T08:00:00Z");
 		ZonedDateTime end = ZonedDateTime.parse("2026-08-08T12:00:00Z");
 
+		String workEntryId;
 		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
 			Resource employee = createEmployee(tx, employeeId, "Work Employee");
-
-			Resource workEntry = tx.getResourceTemplate(TYPE_WORK_ENTRY, true);
-			workEntry.setId(workEntryId);
-			workEntry.setName("Work Entry");
-			workEntry.setRelation(PARAM_EMPLOYEE, employee);
-			workEntry.setDate(PARAM_START, start);
-			workEntry.setDate(PARAM_END, end);
-			tx.add(workEntry);
-
+			Resource workEntry = createWorkEntry(tx, employee, start, end);
+			workEntryId = workEntry.getId();
 			tx.commitOnClose();
 		}
+
+		final String finalWorkEntryId = workEntryId;
 
 		ServiceHandler serviceHandler = runtimeMock.getServiceHandler();
 		CorrectWorkEntryService.CorrectWorkEntryArgument arg = new CorrectWorkEntryService.CorrectWorkEntryArgument();
@@ -117,7 +113,7 @@ public class ManualCorrectionServiceTest {
 					.streamResources(TYPE_AUDIT_EVENT)
 					.filter(e -> e.getString(PARAM_ELEMENT_TYPE).equals(TYPE_WORK_ENTRY) && e
 							.getString(PARAM_ELEMENT_ID)
-							.equals(workEntryId))
+							.equals(finalWorkEntryId))
 					.toList();
 			assertEquals(2, audits.size());
 		}

@@ -19,6 +19,7 @@ import java.time.YearMonth;
 import java.time.ZonedDateTime;
 
 import static ch.atexxi.chronivaro.core.ChronivaroTestHelper.createEmployee;
+import static ch.atexxi.chronivaro.core.ChronivaroTestHelper.createWorkEntry;
 import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
 import static org.junit.Assert.assertEquals;
 
@@ -55,12 +56,7 @@ public class MonthSummaryServiceTest {
 
 			// Active Work Entry: started 15 minutes ago
 			ZonedDateTime start = ZonedDateTime.now(ChronivaroModelHelper.getEmployeeTimezone(employee)).minusMinutes(15);
-			Resource e1 = tx.getResourceTemplate(TYPE_WORK_ENTRY, true);
-			e1.setName("E1");
-			e1.setRelation(PARAM_EMPLOYEE, employee);
-			e1.setDate(PARAM_START, start);
-			e1.setDate(PARAM_END, ZonedDateTime.parse("1970-01-01T00:00:00+01:00"));
-			tx.add(e1);
+			createWorkEntry(tx, employee, start, ZonedDateTime.parse("1970-01-01T00:00:00+01:00"));
 
 			tx.commitOnClose();
 		}

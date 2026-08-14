@@ -8,12 +8,14 @@
 - [x] Reject Absence
 - [x] Cancel Own Absence
 - [x] User Management & Registration
+- [x] WorkDay Implementation
+- [x] Refactor Timer Logic for WorkDay
+- [x] Employee Absence Self-Service
 
 ## In Progress
 
 ## Pending
 
-- [ ] WorkDay Implementation
 - [ ] Presence Status
 - [ ] Employee Absence Self-Service
 - [ ] Personal Absence UI

@@ -1,6 +1,7 @@
 package ch.atexxi.chronivaro.core.service;
 
 import ch.atexxi.chronivaro.core.model.ScheduleHelper;
+import ch.atexxi.chronivaro.core.model.WorkDayHelper;
 import ch.atexxi.chronivaro.core.model.WorkEntryHelper;
 import li.strolch.model.Resource;
 import li.strolch.persistence.api.StrolchTransaction;
@@ -27,10 +28,14 @@ public class AddWorkEntryService extends AbstractService<AddWorkEntryService.Add
 
 			WorkEntryHelper.validateNoOverlap(tx, arg.employeeId, arg.start, arg.end, null);
 
+			Resource employee = tx.getResourceBy(TYPE_EMPLOYEE, arg.employeeId, true);
+			Resource workDay = WorkDayHelper.getOrCreateWorkDay(tx, employee, arg.start);
+
 			Resource workEntry = tx.getResourceTemplate(TYPE_WORK_ENTRY, true);
 			workEntry.setName("WorkEntry " + arg.start);
 
-			workEntry.setRelation(PARAM_EMPLOYEE, tx.getResourceBy(TYPE_EMPLOYEE, arg.employeeId, true));
+			workEntry.setRelation(PARAM_EMPLOYEE, employee);
+			workEntry.setRelation(PARAM_WORK_DAY, workDay);
 			workEntry.setDate(PARAM_START, arg.start);
 			workEntry.setDate(PARAM_END, arg.end);
 			workEntry.setString(PARAM_SOURCE, SOURCE_MANUAL);
@@ -42,6 +47,9 @@ public class AddWorkEntryService extends AbstractService<AddWorkEntryService.Add
 			workEntry.setRelation(PARAM_SCHEDULE, scheduleVersion);
 
 			tx.add(workEntry);
+			workDay.addRelation(PARAM_WORK_ENTRIES, workEntry);
+			tx.update(workDay);
+
 			tx.commitOnClose();
 		}
 

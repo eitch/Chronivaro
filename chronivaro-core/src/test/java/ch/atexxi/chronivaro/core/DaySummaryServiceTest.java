@@ -18,6 +18,7 @@ import java.time.LocalDate;
 import java.time.ZonedDateTime;
 
 import static ch.atexxi.chronivaro.core.ChronivaroTestHelper.createEmployee;
+import static ch.atexxi.chronivaro.core.ChronivaroTestHelper.createWorkEntry;
 import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
 import static org.junit.Assert.assertEquals;
 
@@ -56,20 +57,12 @@ public class DaySummaryServiceTest {
 			tx.update(schedule);
 
 			// Work Entry 1: 08:00 - 12:00
-			Resource e1 = tx.getResourceTemplate(TYPE_WORK_ENTRY, true);
-			e1.setName("E1");
-			e1.setRelation(PARAM_EMPLOYEE, employee);
-			e1.setDate(PARAM_START, ZonedDateTime.parse("2026-02-02T08:00:00+01:00[Europe/Zurich]"));
-			e1.setDate(PARAM_END, ZonedDateTime.parse("2026-02-02T12:00:00+01:00[Europe/Zurich]"));
-			tx.add(e1);
+			createWorkEntry(tx, employee, ZonedDateTime.parse("2026-02-02T08:00:00+01:00[Europe/Zurich]"),
+					ZonedDateTime.parse("2026-02-02T12:00:00+01:00[Europe/Zurich]"));
 
 			// Work Entry 2: 13:00 - 17:00
-			Resource e2 = tx.getResourceTemplate(TYPE_WORK_ENTRY, true);
-			e2.setName("E2");
-			e2.setRelation(PARAM_EMPLOYEE, employee);
-			e2.setDate(PARAM_START, ZonedDateTime.parse("2026-02-02T13:00:00+01:00[Europe/Zurich]"));
-			e2.setDate(PARAM_END, ZonedDateTime.parse("2026-02-02T17:00:00+01:00[Europe/Zurich]"));
-			tx.add(e2);
+			createWorkEntry(tx, employee, ZonedDateTime.parse("2026-02-02T13:00:00+01:00[Europe/Zurich]"),
+					ZonedDateTime.parse("2026-02-02T17:00:00+01:00[Europe/Zurich]"));
 
 			tx.commitOnClose();
 		}
@@ -118,12 +111,7 @@ public class DaySummaryServiceTest {
 			ZonedDateTime start = ZonedDateTime
 					.now(ChronivaroModelHelper.getEmployeeTimezone(employee))
 					.minusMinutes(10);
-			Resource e1 = tx.getResourceTemplate(TYPE_WORK_ENTRY, true);
-			e1.setName("E1");
-			e1.setRelation(PARAM_EMPLOYEE, employee);
-			e1.setDate(PARAM_START, start);
-			e1.setDate(PARAM_END, ZonedDateTime.parse("1970-01-01T00:00:00+01:00"));
-			tx.add(e1);
+			createWorkEntry(tx, employee, start, ZonedDateTime.parse("1970-01-01T00:00:00+01:00"));
 
 			tx.commitOnClose();
 		}
