@@ -464,7 +464,24 @@ A calendar view is optional unless explicitly required by the specification.
 
 # Phase 4 – Period Workflow
 
-## 14. Reject Submitted Period
+## 14. Period Auto-Generation
+
+### Goal
+Implement logic to automatically generate `TimePeriod` resources for the upcoming month for all active employees, as required by the specification (Section 6.10).
+
+### Work
+- Create a background task or a service `GeneratePeriodsService`.
+- Iterate through all active employees.
+- Create `TimePeriod` resources for the next month if they do not exist.
+
+### Acceptance Criteria
+- Authorized users can trigger period generation.
+- Periods are correctly associated with employees and the target month.
+- Duplicate periods are not created.
+
+---
+
+## 15. Reject Submitted Period
 
 ### Goal
 Allow an authorised supervisor to reject a submitted period.
@@ -549,9 +566,56 @@ Schedule history must remain consistent with effective-date behaviour defined in
 
 ---
 
-# Phase 6 – Vacation Account UI
+# Phase 6 – Employment Schedule Historization
 
-## 20. Vacation Account REST Verification
+## 20. Historical Schedule Lookup
+
+### Goal
+Fix the limitation where only the "current" schedule is retrieved, failing to find the correct version for historical dates (Specification Section 6.2, Rules 139, 140).
+
+### Work
+- Update `ScheduleHelper.findScheduleVersion` to retrieve the version active at a specific `LocalDate`.
+- Ensure `getTargetMinutes` uses this historical lookup.
+- Update `WorkDayHelper.getOrCreateWorkDay` to use the version active on the WorkDay's date.
+
+### Acceptance Criteria
+- `findScheduleVersion(tx, employeeId, date)` returns the version active at `date`.
+- Calculations for historical days use the target minutes from the version active at that time.
+
+---
+
+## 21. Schedule Overlap Prevention
+
+### Goal
+Prevent the creation of overlapping `EmploymentScheduleVersion` resources.
+
+### Work
+- Update `CreateScheduleService` to validate that new versions do not overlap with existing ones for the same employee.
+
+### Acceptance Criteria
+- Service fails with a clear error if an overlap is detected.
+
+---
+
+# Phase 7 – Vacation Account Management
+
+## 22. Automated Vacation Entitlement Engine
+
+### Goal
+Implement automated booking of yearly vacation entitlement according to the specification (Section 6.7).
+
+### Work
+- Create a service or background task to calculate and book yearly entitlement.
+- Entitlement must be based on the employee's employment rate and age/seniority if specified.
+- Handle vacation expiry dates and carry-over rules.
+
+### Acceptance Criteria
+- Employees receive yearly entitlement entries automatically.
+- Expiry and carry-over are handled according to business rules.
+
+---
+
+## 23. Vacation Account REST Verification
 
 Before implementing UI, verify whether an endpoint already provides:
 
@@ -588,7 +652,7 @@ No balance calculations should be performed independently by JavaScript.
 
 ---
 
-# Phase 7 – Presence Status
+# Phase 8 – Presence Status
 
 ## 22. Presence Status Core Query
 
@@ -629,7 +693,7 @@ The frontend must not infer presence independently from raw time entries.
 
 ---
 
-# Phase 8 – Supervisor Approvals
+# Phase 9 – Supervisor Approvals
 
 ## 25. Approval Queue Query
 
@@ -668,7 +732,7 @@ Group by team only if team information already exists and this improves the exis
 
 ---
 
-# Phase 9 – Reporting
+# Phase 10 – Reporting
 
 ## 28. Time Balance Report Query
 
@@ -741,7 +805,7 @@ The UI must consume the report API and must not recreate Soll/Ist calculations.
 
 ---
 
-# Phase 10 – Global Configuration REST/UI
+# Phase 11 – Global Configuration REST/UI
 
 ## 33. Configuration REST API
 

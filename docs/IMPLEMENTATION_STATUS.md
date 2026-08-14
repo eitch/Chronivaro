@@ -12,17 +12,20 @@
 - [x] Refactor Timer Logic for WorkDay
 - [x] Employee Absence Self-Service
 - [x] Ensure WorkEntries are on the same day
+- [x] Presence Status (MVP 4.1.9)
+- [x] Holiday Calendar (MVP 4.1.3)
 
 ## In Progress
 
+- [ ] Employment Schedule Historization (MVP 4.1.2 / 6.2)
+- [ ] Vacation Account Management (MVP 4.1.8 / 6.7)
+- [ ] Period Workflow (MVP 4.1.11 / 6.10)
+
 ## Pending
 
-- [ ] Presence Status
-- [ ] Employee Absence Self-Service
-- [ ] Personal Absence UI
-- [ ] Period Workflow
 - [ ] Administrative Audit Coverage
-- [ ] Vacation Account UI
-- [ ] Supervisor Approvals
-- [ ] Reporting
+- [ ] Reporting (MVP 4.1.10 / 4.1.12 / 4.1.14)
 - [ ] Global Configuration REST/UI
+- [ ] Supervisor Approvals UI
+- [ ] Vacation Account UI
+- [ ] Personal Absence UI
