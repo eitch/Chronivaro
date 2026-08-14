@@ -34,16 +34,26 @@ class ChronivaroApp {
         this.route();
     }
 
-    route() {
-        let hash = window.location.hash.substring(1) || 'dashboard';
+	route() {
+		let hash = window.location.hash.substring(1) || 'dashboard';
 
-        if (!AuthApi.isLoggedIn() && hash !== 'login' && !hash.startsWith('complete-registration')) {
-            this.navigate('login');
-            return;
-        }
+		if (!AuthApi.isLoggedIn() && hash !== 'login' && !hash.startsWith('complete-registration')) {
+			this.navigate('login');
+			return;
+		}
 
-        this.showView(hash);
-    }
+		this.updateNavigation();
+		this.showView(hash);
+	}
+
+	updateNavigation() {
+		const roles = AuthApi.getRoles();
+		this.nav.querySelectorAll('li[data-roles]').forEach(li => {
+			const requiredRoles = li.getAttribute('data-roles').split(',');
+			const hasRole = requiredRoles.some(role => roles.includes(role));
+			li.style.display = hasRole ? 'block' : 'none';
+		});
+	}
 
     navigate(page, params) {
         if (params) {
