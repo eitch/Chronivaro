@@ -6,11 +6,13 @@ import li.strolch.persistence.api.StrolchTransaction;
 import li.strolch.privilege.handler.PrivilegeHandler;
 import li.strolch.privilege.model.Usage;
 import li.strolch.privilege.model.UserRep;
+import li.strolch.search.ResourceSearch;
 import li.strolch.service.StringArgument;
 import li.strolch.service.api.AbstractService;
 import li.strolch.service.api.ServiceResult;
 
 import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
+import static li.strolch.search.ExpressionsSupport.relationParam;
 
 public class InitiateEmployeeRegistrationService extends AbstractService<StringArgument, ServiceResult> {
 
@@ -19,6 +21,14 @@ public class InitiateEmployeeRegistrationService extends AbstractService<StringA
 		try (StrolchTransaction tx = openArgOrUserTx(arg)) {
 
 			Resource employee = tx.getResourceBy(TYPE_EMPLOYEE, arg.value, true);
+
+			boolean hasSchedule = new ResourceSearch()
+					.types(TYPE_EMPLOYMENT_SCHEDULE)
+					.where(relationParam(PARAM_EMPLOYEE).isEqualTo(employee.getId()))
+					.search(tx)
+					.isNotEmpty();
+			if (!hasSchedule)
+				return ServiceResult.error("Employee has no schedule defined!");
 
 			String username = employee.getString(PARAM_USERNAME);
 			if (username == null || username.isBlank())

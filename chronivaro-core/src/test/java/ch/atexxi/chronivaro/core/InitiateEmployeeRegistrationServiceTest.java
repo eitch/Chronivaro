@@ -88,6 +88,21 @@ public class InitiateEmployeeRegistrationServiceTest {
 		// Initiate Registration
 		ServiceResult regResult = serviceHandler.doService(certificate, new InitiateEmployeeRegistrationService(),
 				new StringArgument(employeeId));
+		assertTrue("Registration should fail without schedule", regResult.isNok());
+
+		// Add Schedule
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
+			Resource schedule = tx.getResourceTemplate(TYPE_EMPLOYMENT_SCHEDULE, true);
+			schedule.setId("sched1");
+			schedule.setName("Schedule for " + employeeId);
+			schedule.setRelationId(PARAM_EMPLOYEE, employeeId);
+			tx.add(schedule);
+			tx.commitOnClose();
+		}
+
+		// Initiate Registration again - should succeed
+		regResult = serviceHandler.doService(certificate, new InitiateEmployeeRegistrationService(),
+				new StringArgument(employeeId));
 		assertTrue(regResult.getMessage(), regResult.isOk());
 	}
 }
