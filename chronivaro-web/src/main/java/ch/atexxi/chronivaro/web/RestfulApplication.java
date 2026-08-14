@@ -3,8 +3,6 @@ package ch.atexxi.chronivaro.web;
 import ch.atexxi.chronivaro.rest.ChronivaroRestfulClasses;
 import jakarta.ws.rs.ApplicationPath;
 import li.strolch.rest.RestfulStrolchComponent;
-import li.strolch.rest.StrolchRestfulExceptionMapper;
-import li.strolch.rest.filters.*;
 import org.glassfish.jersey.logging.LoggingFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.ServerProperties;
@@ -29,17 +27,11 @@ public class RestfulApplication extends ResourceConfig {
 		}
 
 		// filters
-		register(LogRequestFilter.class);
-		register(AccessControlResponseFilter.class);
-		register(AuthenticationRequestFilter.class);
-		register(AuthenticationResponseFilter.class);
-		register(HttpCacheResponseFilter.class);
-
 		// log exceptions and return them as plain text to the caller
-		register(StrolchRestfulExceptionMapper.class);
-
 		// the JSON generated is in UTF-8
-		register(CharsetResponseFilter.class);
+		for (Class<?> clazz : ChronivaroRestfulClasses.getProviderClasses()) {
+			register(clazz);
+		}
 
 		RestfulStrolchComponent restfulComponent = RestfulStrolchComponent.getInstance();
 		if (restfulComponent.isRestLoggingEntity()) {

@@ -11,9 +11,11 @@ import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import li.strolch.agent.api.StrolchAgent;
 import li.strolch.model.Resource;
 import li.strolch.persistence.api.StrolchTransaction;
 import li.strolch.privilege.model.Certificate;
+import li.strolch.rest.RestfulStrolchComponent;
 import li.strolch.rest.helper.ResponseUtil;
 import li.strolch.service.StringArgument;
 import li.strolch.service.api.ServiceHandler;
@@ -26,6 +28,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static li.strolch.rest.StrolchRestfulConstants.STROLCH_CERTIFICATE;
+import static li.strolch.rest.StrolchRestfulConstants.STROLCH_REMOTE_IP;
 
 @Path("chronivaro/v1")
 public class ChronivaroResource {
@@ -203,6 +206,30 @@ public class ChronivaroResource {
 		Certificate cert = (Certificate) request.getAttribute(STROLCH_CERTIFICATE);
 		ServiceHandler serviceHandler = ChronivaroRestHelper.getServiceHandler();
 		ServiceResult result = serviceHandler.doService(cert, new SubmitPeriodService(), new StringArgument(id));
+		return ResponseUtil.toResponse(result);
+	}
+
+	@POST
+	@Path("complete-registration")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response completeRegistration(@Context HttpServletRequest request, String data) {
+		CompleteRegistrationService.CompleteRegistrationArgument arg = ChronivaroRestHelper
+				.createGson()
+				.fromJson(data, CompleteRegistrationService.CompleteRegistrationArgument.class);
+		arg.source = (String) request.getAttribute(STROLCH_REMOTE_IP);
+
+		StrolchAgent agent = RestfulStrolchComponent.getInstance().getAgent();
+		ServiceResult result;
+		try {
+			result = agent.runAsAgentWithResult(ctx -> {
+				ServiceHandler serviceHandler = agent.getComponent(ServiceHandler.class);
+				return serviceHandler.doService(ctx.getCertificate(), new CompleteRegistrationService(), arg);
+			});
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+
 		return ResponseUtil.toResponse(result);
 	}
 

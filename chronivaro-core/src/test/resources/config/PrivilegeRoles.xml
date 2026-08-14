@@ -26,6 +26,9 @@
         <Privilege name="li.strolch.privilege.handler.SystemAction" policy="DefaultPrivilege">
             <AllAllowed>true</AllAllowed>
         </Privilege>
+        <Privilege name="PrivilegeAction" policy="DefaultPrivilege">
+            <AllAllowed>true</AllAllowed>
+        </Privilege>
         <Privilege name="PrivilegeAddUser" policy="UserAccessPrivilege">
             <AllAllowed>true</AllAllowed>
         </Privilege>

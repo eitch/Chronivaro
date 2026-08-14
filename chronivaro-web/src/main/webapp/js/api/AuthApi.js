@@ -12,6 +12,14 @@ export default class AuthApi {
         return result;
     }
 
+    static async completeRegistration(username, challenge, password) {
+        return await Rest.post('rest/chronivaro/v1/complete-registration', {
+            username,
+            challenge,
+            password
+        });
+    }
+
     static logout() {
         localStorage.removeItem('authToken');
         // We could call the logout endpoint too if needed

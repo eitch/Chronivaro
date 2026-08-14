@@ -29,7 +29,7 @@ public class InitiateEmployeeRegistrationService extends AbstractService<StringA
 			if (user == null)
 				return ServiceResult.error("Linked user " + username + " not found in Strolch!");
 
-			privilegeHandler.initiateChallengeFor(Usage.SET_PASSWORD, username, "Chronivaro");
+			privilegeHandler.initiateChallengeFor(Usage.SET_PASSWORD, username, "unknown");
 
 			ChronivaroAuditHelper.audit(tx, TYPE_EMPLOYEE, employee.getId(), "registrationInitiated", null, username);
 

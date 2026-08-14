@@ -32,6 +32,9 @@
             <Allow>ch.atexxi.chronivaro.core.service.StartTimerService</Allow>
             <Allow>ch.atexxi.chronivaro.core.service.StopTimerService</Allow>
         </Privilege>
+        <Privilege name="PrivilegeSetUserPassword" policy="DefaultPrivilege">
+            <AllAllowed>true</AllAllowed>
+        </Privilege>
     </Role>
 
     <Role name="Supervisor">

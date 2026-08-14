@@ -29,7 +29,7 @@
                 <Parameter name="rolesXmlFile" value="PrivilegeRoles.xml"/>
             </Parameters>
         </PersistenceHandler>
-        <UserChallengeHandler class="li.strolch.privilege.handler.MailUserChallengeHandler"/>
+        <UserChallengeHandler class="ch.atexxi.chronivaro.core.TestUserChallengeHandler"/>
     </Container>
     <Policies>
         <Policy name="DefaultPrivilege" class="li.strolch.privilege.policy.DefaultPrivilege"/>

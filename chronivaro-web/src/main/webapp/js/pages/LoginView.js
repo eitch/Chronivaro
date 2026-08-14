@@ -22,6 +22,9 @@ export default class LoginView {
 				</div>
 				<div id="login-error" class="error" style="display: none;"></div>
 				<button type="submit">Login</button>
+				<div style="margin-top: 1rem; text-align: center;">
+					<a href="#complete-registration">Complete Registration</a>
+				</div>
 			</form>
 		`;
 

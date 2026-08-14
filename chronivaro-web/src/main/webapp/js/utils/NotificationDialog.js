@@ -32,6 +32,10 @@ export default class NotificationDialog {
         return this.show(message, 'Error');
     }
 
+    static info(message) {
+        return this.show(message, 'Info');
+    }
+
     static confirm(message, title = 'Confirm') {
         const dialog = document.createElement('div');
         dialog.className = 'notification-dialog-overlay';

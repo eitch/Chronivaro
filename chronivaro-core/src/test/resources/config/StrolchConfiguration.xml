@@ -32,6 +32,12 @@
             <api>li.strolch.service.api.ServiceHandler</api>
             <impl>li.strolch.service.api.DefaultServiceHandler</impl>
         </Component>
+        
+        <Component>
+            <name>SessionHandler</name>
+            <api>li.strolch.runtime.sessions.StrolchSessionHandler</api>
+            <impl>li.strolch.runtime.sessions.DefaultStrolchSessionHandler</impl>
+        </Component>
 
     </env>
 </StrolchConfiguration>

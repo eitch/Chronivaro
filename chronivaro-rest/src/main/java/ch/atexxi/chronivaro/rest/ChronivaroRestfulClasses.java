@@ -1,7 +1,9 @@
 package ch.atexxi.chronivaro.rest;
 
+import ch.atexxi.chronivaro.rest.providers.ChronivaroAuthenticationRequestFilter;
 import ch.atexxi.chronivaro.rest.resource.*;
 import li.strolch.rest.StrolchRestfulClasses;
+import li.strolch.rest.filters.AuthenticationRequestFilter;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -23,6 +25,9 @@ public class ChronivaroRestfulClasses {
 	}
 
 	public static Set<Class<?>> getProviderClasses() {
-		return StrolchRestfulClasses.getProviderClasses();
+		Set<Class<?>> providerClasses = new HashSet<>(StrolchRestfulClasses.getProviderClasses());
+		providerClasses.remove(AuthenticationRequestFilter.class);
+		providerClasses.add(ChronivaroAuthenticationRequestFilter.class);
+		return providerClasses;
 	}
 }

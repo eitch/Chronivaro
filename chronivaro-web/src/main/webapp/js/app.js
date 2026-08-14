@@ -8,6 +8,7 @@ import LocationsView from './pages/LocationsView.js';
 import AbsenceTypesView from './pages/AbsenceTypesView.js';
 import HolidayCalendarsView from './pages/HolidayCalendarsView.js';
 import SchedulesView from './pages/SchedulesView.js';
+import CompleteRegistrationView from './pages/CompleteRegistrationView.js';
 
 class ChronivaroApp {
     constructor() {
@@ -36,7 +37,7 @@ class ChronivaroApp {
     route() {
         let hash = window.location.hash.substring(1) || 'dashboard';
 
-        if (!AuthApi.isLoggedIn() && hash !== 'login') {
+        if (!AuthApi.isLoggedIn() && hash !== 'login' && !hash.startsWith('complete-registration')) {
             this.navigate('login');
             return;
         }
@@ -67,7 +68,7 @@ class ChronivaroApp {
         }
 
         this.appContainer.innerHTML = '';
-        this.nav.style.display = viewName === 'login' ? 'none' : 'block';
+        this.nav.style.display = (viewName === 'login' || viewName === 'complete-registration') ? 'none' : 'block';
 
         // Update active nav link
         document.querySelectorAll('.nav-link').forEach(link => {
@@ -105,6 +106,9 @@ class ChronivaroApp {
                 break;
             case 'schedules':
                 view = new SchedulesView(this);
+                break;
+            case 'complete-registration':
+                view = new CompleteRegistrationView(this);
                 break;
             default:
                 this.appContainer.innerHTML = `<h2>404</h2><p>View ${viewName} not found.</p>`;
