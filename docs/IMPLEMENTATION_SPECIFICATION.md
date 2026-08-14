@@ -120,6 +120,7 @@ Pflichtattribute:
 | `entryDate` | Eintrittsdatum |
 | `exitDate` | optionales Austrittsdatum |
 | `active` | fachlicher Aktivstatus |
+| `currentWorkDayId` | Referenz auf den aktuellen `WorkDay` |
 
 ### 6.2 EmploymentScheduleVersion – versionierter Arbeitsplan
 
@@ -140,12 +141,30 @@ Regeln:
 - Vergangene Versionen dürfen nur mit entsprechender Berechtigung korrigiert werden.
 - Pensum und Wochentagsverteilung sind getrennt zu speichern, damit beispielsweise ein 80-%-Pensum auf vier oder fünf Tage verteilt werden kann.
 
-### 6.3 WorkEntry – Arbeitszeitbuchung
+### 6.3 WorkDay – Arbeitstag
+
+Ein `WorkDay` fasst alle Arbeitszeitbuchungen eines Mitarbeiters für einen Kalendertag zusammen und referenziert den zum Zeitpunkt der Erstellung gültigen Arbeitsplan.
+
+| Attribut | Beschreibung |
+| --- | --- |
+| `workDayId` | eindeutige ID |
+| `employeeId` | Mitarbeiter |
+| `date` | Kalendertag |
+| `scheduleId` | Referenz auf die zum Startzeitpunkt aktive `EmploymentScheduleVersion` |
+| `workEntryIds` | Liste der zugehörigen `WorkEntry`-Referenzen |
+
+Regeln:
+
+- Pro Mitarbeiter und Datum existiert maximal ein `WorkDay`.
+- Der `WorkDay` wird beim ersten Starten der Arbeit für ein neues Datum automatisch erstellt.
+- Er dient als Einstiegspunkt für die Suche nach aktiven Buchungen und vereinfacht die Auswertung grosser Datenmengen.
+
+### 6.4 WorkEntry – Arbeitszeitbuchung
 
 | Attribut | Beschreibung |
 | --- | --- |
 | `workEntryId` | eindeutige ID |
-| `employeeId` | Mitarbeiter |
+| `workDayId` | Referenz auf den zugehörigen `WorkDay` |
 | `start` | Startzeitpunkt |
 | `end` | Endzeitpunkt; bei laufender Buchung leer |
 | `source` | beispielsweise `TIMER`, `MANUAL`, `IMPORT`, `ADMIN` |
@@ -162,7 +181,7 @@ Regeln:
 - Pausen werden nicht als eigene Entität erfasst. Eine Unterbrechung ergibt sich aus der zeitlichen Lücke zwischen zwei Arbeitsblöcken.
 - Direkte Tageszeiteingaben werden intern als separate manuelle Tagesbuchung oder als klar gekennzeichnete Dauerbuchung abgebildet; beide Erfassungsarten dürfen nicht zu einer Doppelzählung führen.
 
-### 6.4 AbsenceType – Abwesenheitsart
+### 6.5 AbsenceType – Abwesenheitsart
 
 Konfigurierbare Beispiele:
 
@@ -191,7 +210,7 @@ Konfigurierbare Beispiele:
 | `visibleOnPublicStatus` | ob der genaue Typ sichtbar sein darf; standardmässig `false` |
 | `active` | für neue Erfassungen verfügbar |
 
-### 6.5 Absence – Abwesenheit
+### 6.6 Absence – Abwesenheit
 
 | Attribut | Beschreibung |
 | --- | --- |
@@ -218,7 +237,7 @@ Regeln:
 - Arbeitszeit und genehmigte Abwesenheit am gleichen Zeitpunkt beziehungsweise für dieselben angerechneten Minuten sind zu validieren.
 - Mehrtägige Abwesenheiten werden bei der Berechnung pro Kalendertag aufgelöst.
 
-### 6.6 VacationAccountEntry – Ferienkontobuchung
+### 6.7 VacationAccountEntry – Ferienkontobuchung
 
 Das Ferienguthaben wird als Journal geführt und nicht als veränderbarer Einzelwert.
 
@@ -235,7 +254,7 @@ Das Ferienguthaben wird als Journal geführt und nicht als veränderbarer Einzel
 
 Ferien werden intern in Minuten geführt. Die UI darf das Guthaben zusätzlich in Tagen anzeigen. Für die Darstellung in Tagen ist eine eindeutig definierte Bezugs-Sollzeit erforderlich.
 
-### 6.7 HolidayCalendar und Holiday
+### 6.8 HolidayCalendar und Holiday
 
 | Attribut | Beschreibung |
 | --- | --- |
@@ -247,7 +266,7 @@ Ferien werden intern in Minuten geführt. Die UI darf das Guthaben zusätzlich i
 
 Der Standort eines Mitarbeiters bestimmt standardmässig den Feiertagskalender. Eine individuelle Übersteuerung bleibt möglich.
 
-### 6.8 TimePeriod – Abschlussperiode
+### 6.9 TimePeriod – Abschlussperiode
 
 | Attribut | Beschreibung |
 | --- | --- |
@@ -261,7 +280,7 @@ Der Standort eines Mitarbeiters bestimmt standardmässig den Feiertagskalender. 
 | `comment` | Kommentar oder Ablehnungsgrund |
 | `calculationSnapshot` | optionaler unveränderlicher Abschlussstand |
 
-### 6.9 AuditEvent – Änderungsprotokoll
+### 6.10 AuditEvent – Änderungsprotokoll
 
 Mindestens zu protokollieren:
 
@@ -344,11 +363,16 @@ Datenschutzregel: Benutzer ohne besondere Berechtigung sehen keine Abwesenheitsg
 ### 9.1 Arbeitstag starten und stoppen
 
 1. Mitarbeiter startet die Arbeit.
-2. System prüft, dass keine Buchung läuft.
-3. System erstellt einen offenen `WorkEntry`.
-4. Beim Stoppen wird der laufende `WorkEntry` beendet.
-5. Beginnt der Mitarbeiter später erneut zu arbeiten, startet er einen neuen `WorkEntry`.
-6. Die Zeit zwischen zwei Arbeitsblöcken wird nur im Report als Unterbruch dargestellt und nicht als Pause gespeichert.
+2. System prüft, ob für das heutige Datum bereits ein `WorkDay` beim Mitarbeiter referenziert wird.
+3. Falls kein `WorkDay` existiert oder das Datum des referenzierten `WorkDay` nicht dem aktuellen Datum entspricht:
+   a. System erstellt einen neuen `WorkDay` für das aktuelle Datum.
+   b. System ermittelt die aktuell gültige `EmploymentScheduleVersion` und referenziert diese im `WorkDay`.
+   c. System aktualisiert die `currentWorkDayId` beim Mitarbeiter.
+4. System prüft im aktuellen `WorkDay`, dass keine Buchung läuft.
+5. System erstellt einen offenen `WorkEntry` und verknüpft ihn mit dem `WorkDay`.
+6. Beim Stoppen wird der laufende `WorkEntry` im `WorkDay` beendet.
+7. Beginnt der Mitarbeiter später erneut zu arbeiten, startet er einen neuen `WorkEntry` innerhalb desselben `WorkDay`.
+8. Die Zeit zwischen zwei Arbeitsblöcken wird nur im Report als Unterbruch dargestellt und nicht als Pause gespeichert.
 
 ### 9.2 Manuelle Zeitkorrektur
 

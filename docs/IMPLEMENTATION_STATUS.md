@@ -13,6 +13,7 @@
 
 ## Pending
 
+- [ ] WorkDay Implementation
 - [ ] Presence Status
 - [ ] Employee Absence Self-Service
 - [ ] Personal Absence UI

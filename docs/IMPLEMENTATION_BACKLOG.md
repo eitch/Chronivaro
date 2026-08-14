@@ -273,9 +273,51 @@ Implemented in `CancelAbsenceService`. Added tests in `AbsenceServiceTest`. Bala
 
 ---
 
-# Phase 3 – User Management & Registration
+# Phase 3 – WorkDay & Timer Refactoring
 
-## 6. Implement InitiateEmployeeRegistrationService (✓ DONE)
+## 6. Implement WorkDay Domain Entity
+
+### Goal
+Implement the `WorkDay` entity as described in the specification to improve performance and data handling.
+
+### Work
+- Create `WorkDay` resource template.
+- Add `currentWorkDayId` to `Employee` resource.
+- Update `WorkEntry` to reference `WorkDay` instead of `Employee`.
+
+### Business Rules
+- A `WorkDay` is created for each calendar day a user works.
+- It references the active `EmploymentScheduleVersion`.
+- It serves as a container for all `WorkEntry` objects of that day.
+
+### Acceptance Criteria
+- `WorkDay` can be created and persisted.
+- `Employee` correctly references the current `WorkDay`.
+- `WorkEntry` is correctly associated with a `WorkDay`.
+
+---
+
+## 7. Refactor Timer Logic for WorkDay
+
+### Goal
+Update the start/stop timer logic to use the new `WorkDay` entity.
+
+### Work
+- Update `StartTimerService` to:
+  - Check if `currentWorkDayId` exists and matches today's date.
+  - Create a new `WorkDay` if necessary, capturing the current schedule.
+  - Update `Employee.currentWorkDayId`.
+  - Create `WorkEntry` within the context of the `WorkDay`.
+- Update `StopTimerService` to find the active entry via the `WorkDay`.
+
+### Acceptance Criteria
+- Starting the timer for a new day creates a `WorkDay`.
+- Starting the timer for the same day reuses the existing `WorkDay`.
+- No full scans of all `WorkEntry` objects are needed to find active entries.
+
+---
+
+# Phase 4 – User Management & Registration
 
 ### Goal
 Implement a service to initiate the password set process for an employee.
