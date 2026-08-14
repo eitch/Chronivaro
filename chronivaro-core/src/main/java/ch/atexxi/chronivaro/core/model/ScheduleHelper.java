@@ -16,17 +16,45 @@ public class ScheduleHelper {
 		return Optional.ofNullable(tx.getResourceByRelation(employee, PARAM_CURRENT_SCHEDULE, true));
 	}
 
+	public static Optional<Resource> findScheduleVersion(StrolchTransaction tx, String employeeId, LocalDate date) {
+		Optional<Resource> version = tx.streamResources(TYPE_EMPLOYMENT_SCHEDULE)
+				.filter(r -> r.getRelationId(PARAM_EMPLOYEE).equals(employeeId))
+				.filter(r -> {
+					LocalDate from = r.getDate(PARAM_VALID_FROM).toLocalDate();
+					if (date.isBefore(from))
+						return false;
+
+					if (r.hasParameter(PARAM_VALID_TO)) {
+						LocalDate to = r.getDate(PARAM_VALID_TO).toLocalDate();
+						return !date.isAfter(to);
+					}
+
+					return true;
+				})
+				.findFirst();
+
+		if (version.isEmpty()) {
+			Resource employee = tx.getResourceBy(TYPE_EMPLOYEE, employeeId, true);
+			if (employee.hasRelation(PARAM_CURRENT_SCHEDULE)) {
+				Resource current = tx.getResourceByRelation(employee, PARAM_CURRENT_SCHEDULE, true);
+				LocalDate from = current.getDate(PARAM_VALID_FROM).toLocalDate();
+				if (!date.isBefore(from)) {
+					if (!current.hasParameter(PARAM_VALID_TO) || !date.isAfter(current.getDate(PARAM_VALID_TO).toLocalDate())) {
+						return Optional.of(current);
+					}
+				}
+			}
+		}
+
+		return version;
+	}
+
 	public static int getTargetMinutes(StrolchTransaction tx, String employeeId, LocalDate date) {
 		Resource employee = ChronivaroModelHelper.getEmployee(tx, employeeId);
 		if (!ChronivaroModelHelper.isEmployeeActive(employee, date))
 			return 0;
 
-		Optional<Resource> version;
-		if (date.equals(LocalDate.now()) && employee.hasRelation(PARAM_CURRENT_SCHEDULE)) {
-			version = Optional.of(tx.getResourceByRelation(employee, PARAM_CURRENT_SCHEDULE, true));
-		} else {
-			version = findScheduleVersion(tx, employeeId);
-		}
+		Optional<Resource> version = findScheduleVersion(tx, employeeId, date);
 
 		if (version.isEmpty())
 			return 0;

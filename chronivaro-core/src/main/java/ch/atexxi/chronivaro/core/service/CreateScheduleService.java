@@ -16,6 +16,8 @@ public class CreateScheduleService
 	@Override
 	protected ServiceResult internalDoService(CreateScheduleArgument arg) throws Exception {
 		try (StrolchTransaction tx = openArgOrUserTx(arg)) {
+			validateNoOverlap(tx, arg);
+
 			Resource schedule = tx.getResourceTemplate(TYPE_EMPLOYMENT_SCHEDULE, true);
 			schedule.setName("Schedule for " + arg.employeeId);
 
@@ -38,6 +40,30 @@ public class CreateScheduleService
 		}
 
 		return ServiceResult.success();
+	}
+
+	private void validateNoOverlap(StrolchTransaction tx, CreateScheduleArgument arg) {
+		tx.streamResources(TYPE_EMPLOYMENT_SCHEDULE)
+				.filter(r -> r.getRelationId(PARAM_EMPLOYEE).equals(arg.employeeId))
+				.forEach(r -> {
+					ZonedDateTime from = r.getDate(PARAM_VALID_FROM);
+					ZonedDateTime to = r.hasParameter(PARAM_VALID_TO) ? r.getDate(PARAM_VALID_TO) : null;
+
+					// Overlap if:
+					// arg.from <= r.to AND arg.to >= r.from
+					// (null 'to' means infinity)
+
+					boolean overlaps = true;
+					if (to != null && arg.validFrom.isAfter(to))
+						overlaps = false;
+					if (arg.validTo != null && arg.validTo.isBefore(from))
+						overlaps = false;
+
+					if (overlaps) {
+						throw new IllegalArgumentException(
+								"New schedule version overlaps with existing version " + r.getId() + " (" + from + " - " + (to == null ? "open" : to) + ")");
+					}
+				});
 	}
 
 	private void updateEmployeeCurrentSchedule(StrolchTransaction tx, String employeeId, Resource schedule,

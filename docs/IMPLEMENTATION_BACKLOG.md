@@ -357,7 +357,7 @@ Refactored `StopTimerService` and `WorkEntryHelper`. Updated `WorkEntrySameDayTe
 
 # Phase 4 – Presence Status
 
-## 9. Presence Status Core Query
+## 9. Presence Status Core Query [✓ DONE]
 
 Before implementing the dashboard, verify that the backend can determine the presence state required by the specification.
 
@@ -378,7 +378,7 @@ Tests cover representative cases such as:
 
 ---
 
-## 10. Presence Status REST Endpoint
+## 10. Presence Status REST Endpoint [✓ DONE]
 
 Expose the presence query through a read-only REST endpoint.
 
@@ -386,7 +386,7 @@ Return only information the authenticated user is permitted to see.
 
 ---
 
-## 11. Presence Status UI
+## 11. Presence Status UI [✓ DONE]
 
 Implement the "Who is working?" view.
 
@@ -609,7 +609,7 @@ Schedule history must remain consistent with effective-date behaviour defined in
 
 # Phase 8 – Employment Schedule Historization
 
-## 24. Historical Schedule Lookup
+## 24. Historical Schedule Lookup (DONE)
 
 ### Goal
 Fix the limitation where only the "current" schedule is retrieved, failing to find the correct version for historical dates (Specification Section 6.2, Rules 139, 140).
@@ -625,7 +625,7 @@ Fix the limitation where only the "current" schedule is retrieved, failing to fi
 
 ---
 
-## 25. Schedule Overlap Prevention
+## 25. Schedule Overlap Prevention (DONE)
 
 ### Goal
 Prevent the creation of overlapping `EmploymentScheduleVersion` resources.

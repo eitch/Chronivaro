@@ -13,11 +13,12 @@
 - [x] Employee Absence Self-Service
 - [x] Ensure WorkEntries are on the same day
 - [x] Presence Status (MVP 4.1.9)
+- [x] Who is working? Dashboard (Phase 4)
 - [x] Holiday Calendar (MVP 4.1.3)
+- [x] Employment Schedule Historization (MVP 4.1.2 / 6.2)
 
 ## In Progress
 
-- [ ] Employment Schedule Historization (MVP 4.1.2 / 6.2)
 - [ ] Vacation Account Management (MVP 4.1.8 / 6.7)
 - [ ] Period Workflow (MVP 4.1.11 / 6.10)
 

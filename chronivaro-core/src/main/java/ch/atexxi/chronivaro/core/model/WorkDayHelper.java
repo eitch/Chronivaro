@@ -44,8 +44,8 @@ public class WorkDayHelper {
 		workDay.setDate(PARAM_DATE, date.atStartOfDay(now.getZone()));
 		workDay.setRelation(PARAM_EMPLOYEE, employee);
 
-		Resource scheduleVersion = ScheduleHelper.findScheduleVersion(tx, employee.getId())
-				.orElseThrow(() -> new IllegalStateException("No schedule version found for employee " + employee.getId()));
+		Resource scheduleVersion = ScheduleHelper.findScheduleVersion(tx, employee.getId(), date)
+				.orElseThrow(() -> new IllegalStateException("No schedule version found for employee " + employee.getId() + " on " + date));
 		workDay.setRelation(PARAM_SCHEDULE, scheduleVersion);
 
 		tx.add(workDay);

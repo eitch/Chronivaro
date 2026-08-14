@@ -1,6 +1,7 @@
 import AuthApi from './api/AuthApi.js';
 import LoginView from './pages/LoginView.js';
 import DashboardView from './pages/DashboardView.js';
+import PresenceView from './pages/PresenceView.js';
 import MyTimesView from './pages/MyTimesView.js';
 import EmployeesView from './pages/EmployeesView.js';
 import TeamsView from './pages/TeamsView.js';
@@ -95,6 +96,9 @@ class ChronivaroApp {
                 break;
             case 'dashboard':
                 view = new DashboardView(this);
+                break;
+            case 'presence':
+                view = new PresenceView(this);
                 break;
             case 'my-times':
                 view = new MyTimesView(this);
