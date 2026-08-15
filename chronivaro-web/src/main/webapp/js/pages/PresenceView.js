@@ -28,7 +28,7 @@ export default class PresenceView {
 		const presenceList = container.querySelector('#presence-list');
 
 		const loadFilters = async () => {
-			const teams = await TeamApi.getTeams();
+			const teams = await TeamApi.getAll();
 			teams.forEach(t => {
 				const opt = document.createElement('option');
 				opt.value = t.id;
@@ -37,7 +37,7 @@ export default class PresenceView {
 				teamFilter.appendChild(opt);
 			});
 
-			const locations = await LocationApi.getLocations();
+			const locations = await LocationApi.getAll();
 			locations.forEach(l => {
 				const opt = document.createElement('option');
 				opt.value = l.id;
