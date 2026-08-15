@@ -1,10 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Users>
+    <User userId="agent" username="agent">
+        <Firstname>Strolch Agent</Firstname>
+        <Lastname>System User</Lastname>
+        <State>SYSTEM</State>
+        <Locale>de</Locale>
+        <Roles>
+            <Role>agent</Role>
+        </Roles>
+        <Properties>
+            <Property name="organisation" value="MyCompany"/>
+        </Properties>
+    </User>
     <User userId="1" username="admin" password="$PBKDF2WithHmacSHA512,10000,256$61646d696e$cb69962946617da006a2f95776d78b49e5ec7941d2bdb2d25cdb05f957f64344">
         <Firstname>Admin</Firstname>
         <Lastname>Admin</Lastname>
         <State>ENABLED</State>
-        <Locale>en_CH</Locale>
+        <Locale>de</Locale>
         <Roles>
             <Role>Administrator</Role>
             <Role>PrivilegeAdmin</Role>
@@ -13,16 +25,22 @@
             <Property name="organisation" value="MyCompany"/>
         </Properties>
     </User>
-    <User userId="agent" username="agent">
-        <Firstname>Strolch Agent</Firstname>
-        <Lastname>System User</Lastname>
-        <State>SYSTEM</State>
-        <Locale>en_CH</Locale>
+    <User userId="666872618952" username="jill" password="$PBKDF2WithHmacSHA512,10000,256$4260f19c64c9ead7219be761aa7dc6fc0c928b1cbb0652b73b674b251eabc929$d0b76bea884f156c6430f4da7bcc9718465ca623f774f54f8e32e20028fe5113">
+        <Firstname>Jill</Firstname>
+        <Lastname>Someone</Lastname>
+        <State>ENABLED</State>
+        <Locale>und</Locale>
         <Roles>
-            <Role>agent</Role>
+            <Role>Employee</Role>
         </Roles>
         <Properties>
+            <Property name="email" value="jill@example.com"/>
             <Property name="organisation" value="MyCompany"/>
         </Properties>
+        <History>
+            <FirstLogin>2026-08-15T22:35:58.804+02:00</FirstLogin>
+            <LastLogin>2026-08-15T22:44:28.14+02:00</LastLogin>
+            <LastPasswordChange>2026-08-15T22:43:28.194+02:00</LastPasswordChange>
+        </History>
     </User>
 </Users>
