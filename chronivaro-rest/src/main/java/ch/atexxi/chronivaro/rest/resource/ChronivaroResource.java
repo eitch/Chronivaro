@@ -67,7 +67,7 @@ public class ChronivaroResource {
 		Certificate cert = (Certificate) request.getAttribute(STROLCH_CERTIFICATE);
 		String employeeId;
 		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
-			Optional<Resource> employee = ChronivaroModelHelper.findEmployeeByUser(tx, cert.getUsername());
+			Optional<Resource> employee = ChronivaroModelHelper.findEmployeeByUser(tx, cert.getUserId());
 			if (employee.isEmpty())
 				return Response.status(Response.Status.NOT_FOUND).build();
 			employeeId = employee.get().getId();
@@ -94,7 +94,7 @@ public class ChronivaroResource {
 
 		String employeeId;
 		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
-			Optional<Resource> employee = ChronivaroModelHelper.findEmployeeByUser(tx, cert.getUsername());
+			Optional<Resource> employee = ChronivaroModelHelper.findEmployeeByUser(tx, cert.getUserId());
 			if (employee.isEmpty())
 				return Response.status(Response.Status.NOT_FOUND).build();
 			employeeId = employee.get().getId();
@@ -136,14 +136,15 @@ public class ChronivaroResource {
 		Certificate cert = (Certificate) request.getAttribute(STROLCH_CERTIFICATE);
 		String employeeId;
 		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
-			Optional<Resource> employee = ChronivaroModelHelper.findEmployeeByUser(tx, cert.getUsername());
+			Optional<Resource> employee = ChronivaroModelHelper.findEmployeeByUser(tx, cert.getUserId());
 			if (employee.isEmpty())
 				return Response.status(Response.Status.NOT_FOUND).build();
 			employeeId = employee.get().getId();
 		}
 
 		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
-			List<Resource> absences = tx.streamResources(TYPE_ABSENCE)
+			List<Resource> absences = tx
+					.streamResources(TYPE_ABSENCE)
 					.filter(a -> a.getRelationId(PARAM_EMPLOYEE).equals(employeeId))
 					.toList();
 			List<AbsenceDto> dtos = absences.stream().map(a -> {
@@ -165,7 +166,7 @@ public class ChronivaroResource {
 
 		String employeeId;
 		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
-			Optional<Resource> employee = ChronivaroModelHelper.findEmployeeByUser(tx, cert.getUsername());
+			Optional<Resource> employee = ChronivaroModelHelper.findEmployeeByUser(tx, cert.getUserId());
 			if (employee.isEmpty())
 				return Response.status(Response.Status.NOT_FOUND).build();
 			employeeId = employee.get().getId();
@@ -184,7 +185,7 @@ public class ChronivaroResource {
 		ServiceResult result = serviceHandler.doService(cert, new RequestAbsenceService(), arg);
 		return ResponseUtil.toResponse(result);
 	}
-	
+
 	@PUT
 	@Path("me/absences/{id}")
 	@Consumes(MediaType.APPLICATION_JSON)
@@ -227,7 +228,7 @@ public class ChronivaroResource {
 
 		String employeeId;
 		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
-			Optional<Resource> employee = ChronivaroModelHelper.findEmployeeByUser(tx, cert.getUsername());
+			Optional<Resource> employee = ChronivaroModelHelper.findEmployeeByUser(tx, cert.getUserId());
 			if (employee.isEmpty())
 				return Response.status(Response.Status.NOT_FOUND).build();
 			employeeId = employee.get().getId();
@@ -247,7 +248,7 @@ public class ChronivaroResource {
 
 		String employeeId;
 		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
-			Optional<Resource> employee = ChronivaroModelHelper.findEmployeeByUser(tx, cert.getUsername());
+			Optional<Resource> employee = ChronivaroModelHelper.findEmployeeByUser(tx, cert.getUserId());
 			if (employee.isEmpty())
 				return Response.status(Response.Status.NOT_FOUND).build();
 			employeeId = employee.get().getId();
@@ -301,7 +302,7 @@ public class ChronivaroResource {
 
 		String employeeId;
 		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
-			Optional<Resource> employee = ChronivaroModelHelper.findEmployeeByUser(tx, cert.getUsername());
+			Optional<Resource> employee = ChronivaroModelHelper.findEmployeeByUser(tx, cert.getUserId());
 			if (employee.isEmpty())
 				return Response.status(Response.Status.NOT_FOUND).build();
 			employeeId = employee.get().getId();
@@ -330,7 +331,7 @@ public class ChronivaroResource {
 
 		String employeeId;
 		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
-			Optional<Resource> employee = ChronivaroModelHelper.findEmployeeByUser(tx, cert.getUsername());
+			Optional<Resource> employee = ChronivaroModelHelper.findEmployeeByUser(tx, cert.getUserId());
 			if (employee.isEmpty())
 				return Response.status(Response.Status.NOT_FOUND).build();
 			employeeId = employee.get().getId();

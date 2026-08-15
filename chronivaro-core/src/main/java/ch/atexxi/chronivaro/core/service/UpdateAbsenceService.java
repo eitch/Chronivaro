@@ -43,7 +43,7 @@ public class UpdateAbsenceService extends AbstractService<UpdateAbsenceService.U
 			
 			// Authorization: Only own absence or Supervisor/HR/Admin
 			if (!tx.getPrivilegeContext().hasRole(ROLE_HR) && !tx.getPrivilegeContext().hasRole(ROLE_ADMIN)) {
-				Optional<Resource> currentEmployee = ChronivaroModelHelper.findEmployeeByUser(tx, tx.getCertificate().getUsername());
+				Optional<Resource> currentEmployee = ChronivaroModelHelper.findEmployeeByUser(tx, tx.getCertificate().getUserId());
 				if (currentEmployee.isPresent() && currentEmployee.get().getId().equals(employee.getId())) {
 					// Self-service: allowed
 				} else {
