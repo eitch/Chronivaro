@@ -9,6 +9,7 @@ import LocationsView from './pages/LocationsView.js';
 import AbsenceTypesView from './pages/AbsenceTypesView.js';
 import HolidayCalendarsView from './pages/HolidayCalendarsView.js';
 import SchedulesView from './pages/SchedulesView.js';
+import ScheduleTemplatesView from './pages/ScheduleTemplatesView.js';
 import CompleteRegistrationView from './pages/CompleteRegistrationView.js';
 
 class ChronivaroApp {
@@ -36,7 +37,17 @@ class ChronivaroApp {
     }
 
 	route() {
-		let hash = window.location.hash.substring(1) || 'dashboard';
+		let hash = window.location.hash.substring(1);
+		if (!hash || hash === 'dashboard') {
+			const roles = AuthApi.getRoles();
+			if (roles.includes('Employee')) {
+				hash = 'dashboard';
+			} else if (roles.includes('Supervisor') || roles.includes('HR') || roles.includes('Administrator')) {
+				hash = 'presence';
+			} else {
+				hash = 'dashboard';
+			}
+		}
 
 		if (!AuthApi.isLoggedIn() && hash !== 'login' && !hash.startsWith('complete-registration')) {
 			this.navigate('login');
@@ -117,6 +128,9 @@ class ChronivaroApp {
                 break;
             case 'holiday-calendars':
                 view = new HolidayCalendarsView(this);
+                break;
+            case 'schedule-templates':
+                view = new ScheduleTemplatesView(this);
                 break;
             case 'schedules':
                 view = new SchedulesView(this);

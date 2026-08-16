@@ -38,7 +38,7 @@ export default class LoginView {
 
             try {
                 await AuthApi.login(username, password);
-                this.app.navigate('dashboard');
+                this.app.navigate('');
             } catch (err) {
                 errorDiv.textContent = err.message;
                 errorDiv.style.display = 'block';
