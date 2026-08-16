@@ -71,7 +71,8 @@ public class MonthSummaryServiceTest {
 
 		MonthSummary summary = result.monthSummary;
 		assertEquals(15, summary.totalActualMinutes());
-		assertEquals(DayState.WORKING, summary.daySummaries().get(today.getDayOfMonth() - 1).state());
+		assertEquals(DayState.WORKING.name(), summary.daySummaries().get(today.getDayOfMonth() - 1).state());
+		assertEquals(DayState.WORKING.getLabel(), summary.daySummaries().get(today.getDayOfMonth() - 1).stateLabel());
 		assertEquals(15, summary.daySummaries().get(today.getDayOfMonth() - 1).actualMinutes());
 	}
 }

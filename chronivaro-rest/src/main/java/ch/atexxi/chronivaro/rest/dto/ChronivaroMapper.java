@@ -13,7 +13,7 @@ import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
 public class ChronivaroMapper {
 
 	public static PresenceDto toDto(PresenceService.PresenceInfo info) {
-		return new PresenceDto(info.employeeId(), info.firstname(), info.lastname(), info.status(),
+		return new PresenceDto(info.employeeId(), info.firstname(), info.lastname(), info.status(), info.statusLabel(),
 				info.minutesToday(), info.absenceTypeCode(), info.absenceTypeName(), info.isOff());
 	}
 
@@ -44,11 +44,17 @@ public class ChronivaroMapper {
 	}
 
 	public static DaySummaryDto toDto(DaySummary summary) {
-		return new DaySummaryDto(summary.date(), summary.state().name(), summary.targetMinutes(),
+		return new DaySummaryDto(summary.date(), summary.state(), summary.stateLabel(), summary.targetMinutes(),
 				summary.actualMinutes(), summary.holidayMinutes(), summary.absenceMinutes(), summary.getBalance(),
-				summary.workEntries().stream().map(e -> new WorkEntryRangeDto(e.id(), e.start(), e.end(), e.durationMinutes()))
-						.toList(),
-				summary.breaks().stream().map(b -> new BreakRangeDto(b.start(), b.end(), b.durationMinutes())).toList());
+				summary
+						.workEntries()
+						.stream()
+						.map(e -> new WorkEntryRangeDto(e.id(), e.start(), e.end(), e.durationMinutes()))
+						.toList(), summary
+				.breaks()
+				.stream()
+				.map(b -> new BreakRangeDto(b.start(), b.end(), b.durationMinutes()))
+				.toList());
 	}
 
 	public static MonthSummaryDto toDto(MonthSummary summary) {
@@ -78,9 +84,8 @@ public class ChronivaroMapper {
 		return new EmployeeDto(employee.getId(), employee.getString(PARAM_PERSONAL_NUMBER),
 				employee.getString(PARAM_FIRSTNAME), employee.getString(PARAM_LASTNAME),
 				employee.hasParameter(PARAM_BIRTHDATE) ? employee.getDate(PARAM_BIRTHDATE).toLocalDate() : null,
-				employee.getRelationId(PARAM_PRIMARY_TEAM),
-				employee.getRelationId(PARAM_LOCATION), employee.getString(PARAM_TIMEZONE),
-				employee.getDate(PARAM_JOIN_DATE).toLocalDate(),
+				employee.getRelationId(PARAM_PRIMARY_TEAM), employee.getRelationId(PARAM_LOCATION),
+				employee.getString(PARAM_TIMEZONE), employee.getDate(PARAM_JOIN_DATE).toLocalDate(),
 				employee.hasParameter(PARAM_EXIT_DATE) && employee.getDate(PARAM_EXIT_DATE) != null ?
 						employee.getDate(PARAM_EXIT_DATE).toLocalDate() : null, employee.getBoolean(PARAM_ACTIVE),
 				employee.getString(PARAM_USER_ID), employee.getString(PARAM_USERNAME), employee.getString(PARAM_EMAIL));

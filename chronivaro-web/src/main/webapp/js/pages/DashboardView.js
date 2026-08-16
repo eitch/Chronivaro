@@ -14,7 +14,7 @@ export default class DashboardView {
         container.innerHTML = `
 			<h2>Dashboard</h2>
 			<div id="status-container">
-				<p>Current Status: <span id="presence-status">Loading...</span></p>
+				<p><span id="presence-status">Loading...</span></p>
 				<div id="timer-controls">
 					<button id="start-timer" disabled>Start</button>
 					<button id="stop-timer" disabled>Stop</button>
@@ -38,7 +38,7 @@ export default class DashboardView {
         const refresh = async () => {
             try {
                 const summary = await WorkEntryApi.getDaySummary(new Date());
-                statusSpan.textContent = summary.state;
+                statusSpan.textContent = summary.stateLabel;
                 statusSpan.className = summary.state === 'WORKING' ? 'status-working' : 'status-not-working';
 
                 workedSpan.textContent = Format.duration(summary.actualMinutes);

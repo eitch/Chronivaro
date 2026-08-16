@@ -23,12 +23,23 @@ public class PresenceService extends AbstractService<PresenceService.PresenceArg
 	public static final String PRIVILEGE_GET_ABSENCE_REASON = "li.strolch.chronivaro.privilege.GetAbsenceReason";
 
 	public enum PresenceStatus {
-		WORKING,
-		NOT_WORKING
+		WORKING("Working"),
+		NOT_WORKING("Not working");
+
+		private final String label;
+
+		PresenceStatus(String label) {
+			this.label = label;
+		}
+
+		public String getLabel() {
+			return this.label;
+		}
 	}
 
 	public record PresenceInfo(String employeeId, String firstname, String lastname, PresenceStatus status,
-							   int minutesToday, String absenceTypeCode, String absenceTypeName, boolean isOff) {
+							   String statusLabel, int minutesToday, String absenceTypeCode, String absenceTypeName,
+							   boolean isOff) {
 	}
 
 	public static class PresenceArgument extends ServiceArgument {
@@ -89,7 +100,8 @@ public class PresenceService extends AbstractService<PresenceService.PresenceArg
 						}
 
 						return new PresenceInfo(e.getId(), e.getString(PARAM_FIRSTNAME), e.getString(PARAM_LASTNAME),
-								status, minutesToday, absenceTypeCode, absenceTypeName, isOff);
+								status, status.getLabel(), minutesToday, absenceTypeCode, absenceTypeName,
+								isOff);
 					})
 					.toList();
 

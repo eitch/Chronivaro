@@ -84,7 +84,8 @@ public class MonthSummaryService
 
 					java.time.ZonedDateTime effectiveStart = start.isBefore(from) ? from : start;
 					java.time.ZonedDateTime now = java.time.ZonedDateTime.now(effectiveStart.getZone());
-					java.time.ZonedDateTime effectiveEnd = isActive ? (now.isBefore(to) ? now : to) : (end.isAfter(to) ? to : end);
+					java.time.ZonedDateTime effectiveEnd = isActive ? (now.isBefore(to) ? now : to) :
+							(end.isAfter(to) ? to : end);
 					if (effectiveEnd.isAfter(effectiveStart)) {
 						actual += (int) java.time.Duration.between(effectiveStart, effectiveEnd).toMinutes();
 					}
@@ -95,7 +96,9 @@ public class MonthSummaryService
 				totalHoliday += holiday;
 				totalAbsence += absence;
 
-				daySummaries.add(new DaySummary(date, state, target, actual, holiday, absence, List.of(), List.of()));
+				daySummaries.add(
+						new DaySummary(date, state, state.getLabel(), target, actual, holiday, absence, List.of(),
+								List.of()));
 			}
 
 			// TODO: Initial balance from previous period

@@ -46,9 +46,7 @@ public class DaySummaryService
 		try (StrolchTransaction tx = openArgOrUserTx(arg)) {
 			Resource employee = ChronivaroModelHelper.getEmployee(tx, arg.employeeId);
 			ZonedDateTime from = arg.date.atStartOfDay(ChronivaroModelHelper.getEmployeeTimezone(employee));
-			ZonedDateTime to = arg.date
-					.plusDays(1)
-					.atStartOfDay(ChronivaroModelHelper.getEmployeeTimezone(employee));
+			ZonedDateTime to = arg.date.plusDays(1).atStartOfDay(ChronivaroModelHelper.getEmployeeTimezone(employee));
 
 			int targetMinutes = ScheduleHelper.getTargetMinutes(tx, arg.employeeId, arg.date);
 			int holidayMinutes = HolidayHelper.getHolidayMinutes(tx, arg.employeeId, arg.date);
@@ -95,8 +93,8 @@ public class DaySummaryService
 				lastEnd = end;
 			}
 
-			DaySummary summary = new DaySummary(arg.date, state, targetMinutes, actualMinutes, holidayMinutes, absenceMinutes,
-					ranges, breaks);
+			DaySummary summary = new DaySummary(arg.date, state, state.getLabel(), targetMinutes, actualMinutes,
+					holidayMinutes, absenceMinutes, ranges, breaks);
 			return new DaySummaryResult(summary);
 		}
 	}

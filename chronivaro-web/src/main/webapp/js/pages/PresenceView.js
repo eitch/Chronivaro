@@ -64,7 +64,7 @@ export default class PresenceView {
 					card.className = 'presence-card';
 					
 					let statusClass = info.status === 'WORKING' ? 'status-working' : 'status-not-working';
-					let statusText = info.status === 'WORKING' ? 'WORKING' : 'NOT WORKING';
+					let statusText = info.statusLabel;
 					
 					let extraInfo = '';
 					if (info.absenceTypeCode) {
