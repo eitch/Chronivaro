@@ -37,59 +37,61 @@ export default class EmployeesView {
 			</table>
 
 			<div id="employee-modal" class="modal">
-				<div class="modal-content">
+				<div class="modal-content wide">
 					<h3 id="modal-title">Add Employee</h3>
 					<form id="employee-form">
-						<div class="form-group" id="emp-username-group">
-							<label for="emp-username">Username:</label>
-							<input type="text" id="emp-username" required>
-						</div>
-						<div class="form-group">
-							<label for="emp-email">Email:</label>
-							<input type="email" id="emp-email">
-						</div>
-						<div class="form-group" id="emp-id-group">
-							<label for="emp-id">ID:</label>
-							<input type="text" id="emp-id" required>
-						</div>
-						<div class="form-group">
-							<label for="emp-pers-nr">Personal Number:</label>
-							<input type="text" id="emp-pers-nr" required>
-						</div>
-						<div class="form-group">
-							<label for="emp-firstname">Firstname:</label>
-							<input type="text" id="emp-firstname" required>
-						</div>
-						<div class="form-group">
-							<label for="emp-lastname">Lastname:</label>
-							<input type="text" id="emp-lastname" required>
-						</div>
-						<div class="form-group">
-							<label for="emp-birthdate">Birthdate:</label>
-							<input type="date" id="emp-birthdate">
-						</div>
-						<div class="form-group">
-							<label for="emp-team">Team:</label>
-							<select id="emp-team" required></select>
-						</div>
-						<div class="form-group">
-							<label for="emp-location">Location:</label>
-							<select id="emp-location" required></select>
-						</div>
-						<div class="form-group">
-							<label for="emp-timezone">Timezone:</label>
-							<input type="text" id="emp-timezone" required placeholder="Europe/Zurich">
-						</div>
-						<div class="form-group">
-							<label for="emp-join-date">Join Date:</label>
-							<input type="date" id="emp-join-date" required>
-						</div>
-						<div class="form-group">
-							<label for="emp-exit-date">Exit Date:</label>
-							<input type="date" id="emp-exit-date">
-						</div>
-						<div class="form-group">
-							<label><input type="checkbox" id="emp-active" checked> Active</label>
+						<div class="form-grid">
+							<div class="form-group" id="emp-username-group">
+								<label for="emp-username">Username:</label>
+								<input type="text" id="emp-username" required>
+							</div>
+							<div class="form-group">
+								<label for="emp-email">Email:</label>
+								<input type="email" id="emp-email">
+							</div>
+							<div class="form-group" id="emp-id-group">
+								<label for="emp-id">ID:</label>
+								<input type="text" id="emp-id" required>
+							</div>
+							<div class="form-group">
+								<label for="emp-pers-nr">Personal Number:</label>
+								<input type="text" id="emp-pers-nr" required>
+							</div>
+							<div class="form-group">
+								<label for="emp-firstname">Firstname:</label>
+								<input type="text" id="emp-firstname" required>
+							</div>
+							<div class="form-group">
+								<label for="emp-lastname">Lastname:</label>
+								<input type="text" id="emp-lastname" required>
+							</div>
+							<div class="form-group">
+								<label for="emp-birthdate">Birthdate:</label>
+								<input type="date" id="emp-birthdate">
+							</div>
+							<div class="form-group">
+								<label for="emp-team">Team:</label>
+								<select id="emp-team" required></select>
+							</div>
+							<div class="form-group">
+								<label for="emp-location">Location:</label>
+								<select id="emp-location" required></select>
+							</div>
+							<div class="form-group">
+								<label for="emp-timezone">Timezone:</label>
+								<input type="text" id="emp-timezone" required placeholder="Europe/Zurich">
+							</div>
+							<div class="form-group">
+								<label for="emp-join-date">Join Date:</label>
+								<input type="date" id="emp-join-date" required>
+							</div>
+							<div class="form-group">
+								<label for="emp-exit-date">Exit Date:</label>
+								<input type="date" id="emp-exit-date">
+							</div>
+							<div class="form-group full-width">
+								<label><input type="checkbox" id="emp-active" checked> Active</label>
+							</div>
 						</div>
 						<div class="actions">
 							<button type="submit">Save</button>
@@ -155,13 +157,28 @@ export default class EmployeesView {
 						<td>${emp.locationId}</td>
 						<td>${emp.active ? 'Yes' : 'No'}</td>
 						<td>
-							<button class="ghost edit-btn" data-id="${emp.id}">Edit</button>
-							<button class="ghost register-btn" data-id="${emp.id}">Register</button>
-							<button class="ghost schedules-btn" data-id="${emp.id}">Schedules</button>
-							<button class="secondary delete-btn" data-id="${emp.id}">Delete</button>
+							<div class="dropdown">
+								<button class="ghost dropdown-toggle" data-id="${emp.id}">Actions</button>
+								<div class="dropdown-content">
+									<button class="edit-btn" data-id="${emp.id}">Edit</button>
+									<button class="register-btn" data-id="${emp.id}">Register</button>
+									<button class="schedules-btn" data-id="${emp.id}">Schedules</button>
+									<button class="delete-btn" data-id="${emp.id}">Delete</button>
+								</div>
+							</div>
 						</td>
 					`;
                     tbody.appendChild(row);
+                });
+
+                container.querySelectorAll('.dropdown-toggle').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        container.querySelectorAll('.dropdown').forEach(d => {
+                            if (d !== btn.parentElement) d.classList.remove('show');
+                        });
+                        btn.parentElement.classList.toggle('show');
+                    });
                 });
 
                 container.querySelectorAll('.edit-btn').forEach(btn => {
@@ -285,6 +302,11 @@ export default class EmployeesView {
         });
 
         refresh();
+
+        document.addEventListener('click', () => {
+            container.querySelectorAll('.dropdown').forEach(d => d.classList.remove('show'));
+        });
+
         return container;
     }
 }
