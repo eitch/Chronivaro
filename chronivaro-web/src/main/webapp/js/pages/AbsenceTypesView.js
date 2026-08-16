@@ -17,7 +17,6 @@ export default class AbsenceTypesView {
 			<table id="absence-types-table">
 				<thead>
 					<tr>
-						<th>ID</th>
 						<th>Code</th>
 						<th>Name</th>
 						<th>Paid</th>
@@ -26,7 +25,7 @@ export default class AbsenceTypesView {
 					</tr>
 				</thead>
 				<tbody>
-					<tr><td colspan="6">Loading...</td></tr>
+					<tr><td colspan="5">Loading...</td></tr>
 				</tbody>
 			</table>
 
@@ -85,8 +84,7 @@ export default class AbsenceTypesView {
                 tbody.innerHTML = '';
                 types.forEach(type => {
                     const row = document.createElement('tr');
-                    row.innerHTML = `
-						<td>${type.id}</td>
+               					row.innerHTML = `
 						<td>${type.code}</td>
 						<td>${type.name}</td>
 						<td>${type.paid ? 'Yes' : 'No'}</td>
@@ -107,7 +105,7 @@ export default class AbsenceTypesView {
                 });
             } catch (err) {
                 console.error(err);
-                tbody.innerHTML = `<tr><td colspan="6" class="error">${err.message}</td></tr>`;
+            				tbody.innerHTML = `<tr><td colspan="5" class="error">${err.message}</td></tr>`;
             }
         };
 

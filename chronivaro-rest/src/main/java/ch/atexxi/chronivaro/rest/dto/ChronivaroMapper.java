@@ -4,6 +4,7 @@ import ch.atexxi.chronivaro.core.model.DaySummary;
 import ch.atexxi.chronivaro.core.model.MonthSummary;
 import ch.atexxi.chronivaro.core.service.PresenceService;
 import li.strolch.model.Resource;
+import li.strolch.persistence.api.StrolchTransaction;
 
 import java.time.Duration;
 import java.time.ZonedDateTime;
@@ -69,9 +70,16 @@ public class ChronivaroMapper {
 		return new TeamDto(team.getId(), team.getString(PARAM_NAME));
 	}
 
-	public static LocationDto locationToDto(Resource location) {
+	public static LocationDto locationToDto(StrolchTransaction tx, Resource location) {
+		String holidayCalendarId = location.getRelationId(PARAM_HOLIDAY_CALENDAR);
+		String holidayCalendarName = null;
+		if (holidayCalendarId != null) {
+			Resource calendar = tx.getResourceBy(TYPE_HOLIDAY_CALENDAR, holidayCalendarId);
+			if (calendar != null)
+				holidayCalendarName = calendar.getName();
+		}
 		return new LocationDto(location.getId(), location.getString(PARAM_NAME), location.getString(PARAM_TIMEZONE),
-				location.getRelationId(PARAM_HOLIDAY_CALENDAR));
+				holidayCalendarId, holidayCalendarName);
 	}
 
 	public static AbsenceTypeDto absenceTypeToDto(Resource type) {
@@ -81,12 +89,28 @@ public class ChronivaroMapper {
 				type.getStringList(PARAM_DURATION_TYPES), type.getBoolean(PARAM_ACTIVE));
 	}
 
-	public static EmployeeDto employeeToDto(Resource employee) {
+	public static EmployeeDto employeeToDto(StrolchTransaction tx, Resource employee) {
+		String teamId = employee.getRelationId(PARAM_PRIMARY_TEAM);
+		String teamName = null;
+		if (teamId != null) {
+			Resource team = tx.getResourceBy(TYPE_TEAM, teamId);
+			if (team != null)
+				teamName = team.getName();
+		}
+
+		String locationId = employee.getRelationId(PARAM_LOCATION);
+		String locationName = null;
+		if (locationId != null) {
+			Resource location = tx.getResourceBy(TYPE_LOCATION, locationId);
+			if (location != null)
+				locationName = location.getName();
+		}
+
 		return new EmployeeDto(employee.getId(), employee.getString(PARAM_PERSONAL_NUMBER),
 				employee.getString(PARAM_FIRSTNAME), employee.getString(PARAM_LASTNAME),
-				employee.hasParameter(PARAM_BIRTHDATE) ? employee.getDate(PARAM_BIRTHDATE).toLocalDate() : null,
-				employee.getRelationId(PARAM_PRIMARY_TEAM), employee.getRelationId(PARAM_LOCATION),
-				employee.getString(PARAM_TIMEZONE), employee.getDate(PARAM_JOIN_DATE).toLocalDate(),
+				employee.hasParameter(PARAM_BIRTHDATE) ? employee.getDate(PARAM_BIRTHDATE).toLocalDate() : null, teamId,
+				teamName, locationId, locationName, employee.getString(PARAM_TIMEZONE),
+				employee.getDate(PARAM_JOIN_DATE).toLocalDate(),
 				employee.hasParameter(PARAM_EXIT_DATE) && employee.getDate(PARAM_EXIT_DATE) != null ?
 						employee.getDate(PARAM_EXIT_DATE).toLocalDate() : null, employee.getBoolean(PARAM_ACTIVE),
 				employee.getString(PARAM_USER_ID), employee.getString(PARAM_USERNAME), employee.getString(PARAM_EMAIL),

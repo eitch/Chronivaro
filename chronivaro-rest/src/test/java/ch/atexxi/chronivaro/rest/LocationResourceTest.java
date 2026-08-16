@@ -20,7 +20,7 @@ public class LocationResourceTest extends AbstractChronivaroRestfulTest {
 		String authToken = authenticate();
 
 		// Create
-		LocationDto newLocation = new LocationDto(null, "Test Location", "Europe/Zurich", "calendar-1");
+		LocationDto newLocation = new LocationDto(null, "Test Location", "Europe/Zurich", "calendar-1", "calendar-1");
 		String json = ChronivaroRestHelper.createGson().toJson(newLocation);
 
 		try (Response response = target()
@@ -53,7 +53,7 @@ public class LocationResourceTest extends AbstractChronivaroRestfulTest {
 
 		// Update
 		LocationDto updatedLocation = new LocationDto(locationId, "Updated Test Location", "Europe/Zurich",
-				"calendar-2");
+				"calendar-2", "calendar-2");
 		String updatedJson = ChronivaroRestHelper.createGson().toJson(updatedLocation);
 
 		try (Response response = target()

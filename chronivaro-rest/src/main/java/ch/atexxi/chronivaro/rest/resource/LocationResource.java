@@ -3,7 +3,6 @@ package ch.atexxi.chronivaro.rest.resource;
 import ch.atexxi.chronivaro.core.service.CreateLocationService;
 import ch.atexxi.chronivaro.core.service.RemoveLocationService;
 import ch.atexxi.chronivaro.core.service.UpdateLocationService;
-import ch.atexxi.chronivaro.rest.dto.ChronivaroMapper;
 import ch.atexxi.chronivaro.rest.dto.LocationDto;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.ws.rs.*;
@@ -22,6 +21,7 @@ import li.strolch.service.api.ServiceResult;
 import java.util.List;
 
 import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.TYPE_LOCATION;
+import static ch.atexxi.chronivaro.rest.dto.ChronivaroMapper.locationToDto;
 
 @Path("chronivaro/v1/admin/locations")
 public class LocationResource {
@@ -32,7 +32,7 @@ public class LocationResource {
 		Certificate cert = (Certificate) request.getAttribute(StrolchRestfulConstants.STROLCH_CERTIFICATE);
 		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
 			List<Resource> locations = tx.streamResources(TYPE_LOCATION).toList();
-			List<LocationDto> dtos = locations.stream().map(ChronivaroMapper::locationToDto).toList();
+			List<LocationDto> dtos = locations.stream().map(l -> locationToDto(tx, l)).toList();
 			return Response.ok(ChronivaroRestHelper.createGson().toJson(dtos), MediaType.APPLICATION_JSON).build();
 		}
 	}

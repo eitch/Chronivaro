@@ -22,6 +22,7 @@ import li.strolch.service.api.ServiceResult;
 import java.util.List;
 
 import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
+import static ch.atexxi.chronivaro.rest.dto.ChronivaroMapper.employeeToDto;
 
 @Path("chronivaro/v1/admin/employees")
 public class EmployeeResource {
@@ -32,7 +33,7 @@ public class EmployeeResource {
 		Certificate cert = (Certificate) request.getAttribute(StrolchRestfulConstants.STROLCH_CERTIFICATE);
 		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
 			List<Resource> employees = tx.streamResources(TYPE_EMPLOYEE).toList();
-			List<EmployeeDto> dtos = employees.stream().map(ChronivaroMapper::employeeToDto).toList();
+			List<EmployeeDto> dtos = employees.stream().map(e -> employeeToDto(tx, e)).toList();
 			return Response.ok(ChronivaroRestHelper.createGson().toJson(dtos), MediaType.APPLICATION_JSON).build();
 		}
 	}
@@ -47,7 +48,7 @@ public class EmployeeResource {
 			if (employee == null)
 				return Response.status(Response.Status.NOT_FOUND).build();
 			return Response
-					.ok(ChronivaroRestHelper.createGson().toJson(ChronivaroMapper.employeeToDto(employee)),
+					.ok(ChronivaroRestHelper.createGson().toJson(employeeToDto(tx, employee)),
 							MediaType.APPLICATION_JSON)
 					.build();
 		}
@@ -82,8 +83,10 @@ public class EmployeeResource {
 
 		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
 			Resource employee = tx.getResourceBy(TYPE_EMPLOYEE, result.getValue(), true);
-			return Response.ok(ChronivaroRestHelper.createGson().toJson(ChronivaroMapper.employeeToDto(employee)),
-					MediaType.APPLICATION_JSON).build();
+			return Response
+					.ok(ChronivaroRestHelper.createGson().toJson(employeeToDto(tx, employee)),
+							MediaType.APPLICATION_JSON)
+					.build();
 		}
 	}
 

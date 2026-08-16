@@ -17,13 +17,12 @@ export default class TeamsView {
 			<table id="teams-table">
 				<thead>
 					<tr>
-						<th>ID</th>
 						<th>Name</th>
 						<th>Actions</th>
 					</tr>
 				</thead>
 				<tbody>
-					<tr><td colspan="3">Loading...</td></tr>
+					<tr><td colspan="2">Loading...</td></tr>
 				</tbody>
 			</table>
 
@@ -63,8 +62,7 @@ export default class TeamsView {
                 tbody.innerHTML = '';
                 teams.forEach(team => {
                     const row = document.createElement('tr');
-                    row.innerHTML = `
-						<td>${team.id}</td>
+               					row.innerHTML = `
 						<td>${team.name}</td>
 						<td>
 							<button class="ghost edit-btn" data-id="${team.id}">Edit</button>
@@ -82,7 +80,7 @@ export default class TeamsView {
                 });
             } catch (err) {
                 console.error(err);
-                tbody.innerHTML = `<tr><td colspan="3" class="error">${err.message}</td></tr>`;
+            				tbody.innerHTML = `<tr><td colspan="2" class="error">${err.message}</td></tr>`;
             }
         };
 

@@ -18,7 +18,6 @@ export default class LocationsView {
 			<table id="locations-table">
 				<thead>
 					<tr>
-						<th>ID</th>
 						<th>Name</th>
 						<th>Timezone</th>
 						<th>Holiday Calendar</th>
@@ -26,7 +25,7 @@ export default class LocationsView {
 					</tr>
 				</thead>
 				<tbody>
-					<tr><td colspan="5">Loading...</td></tr>
+					<tr><td colspan="4">Loading...</td></tr>
 				</tbody>
 			</table>
 
@@ -90,11 +89,10 @@ export default class LocationsView {
                 tbody.innerHTML = '';
                 locations.forEach(loc => {
                     const row = document.createElement('tr');
-                    row.innerHTML = `
-						<td>${loc.id}</td>
+               					row.innerHTML = `
 						<td>${loc.name}</td>
 						<td>${loc.timezone}</td>
-						<td>${loc.holidayCalendarId || ''}</td>
+						<td>${loc.holidayCalendarName || ''}</td>
 						<td>
 							<button class="ghost edit-btn" data-id="${loc.id}">Edit</button>
 							<button class="secondary delete-btn" data-id="${loc.id}">Delete</button>
@@ -111,7 +109,7 @@ export default class LocationsView {
                 });
             } catch (err) {
                 console.error(err);
-                tbody.innerHTML = `<tr><td colspan="5" class="error">${err.message}</td></tr>`;
+            				tbody.innerHTML = `<tr><td colspan="4" class="error">${err.message}</td></tr>`;
             }
         };
 

@@ -21,7 +21,6 @@ export default class EmployeesView {
 			<table id="employees-table">
 				<thead>
 					<tr>
-						<th>ID</th>
 						<th>Username</th>
 						<th>Pers. Nr.</th>
 						<th>Firstname</th>
@@ -34,7 +33,7 @@ export default class EmployeesView {
 					</tr>
 				</thead>
 				<tbody>
-					<tr><td colspan="10">Loading...</td></tr>
+					<tr><td colspan="9">Loading...</td></tr>
 				</tbody>
 			</table>
 
@@ -166,15 +165,14 @@ export default class EmployeesView {
                 tbody.innerHTML = '';
                 employees.forEach(emp => {
                     const row = document.createElement('tr');
-                    row.innerHTML = `
-						<td>${emp.id}</td>
+               					row.innerHTML = `
 						<td>${emp.username}</td>
 						<td>${emp.personalNumber}</td>
 						<td>${emp.firstname}</td>
 						<td>${emp.lastname}</td>
 						<td>${emp.birthdate}</td>
-						<td>${emp.teamId}</td>
-						<td>${emp.locationId}</td>
+						<td>${emp.teamName || ''}</td>
+						<td>${emp.locationName || ''}</td>
 						<td>${emp.active ? 'Yes' : 'No'}</td>
 						<td>
 							<div class="dropdown">
@@ -215,7 +213,7 @@ export default class EmployeesView {
                 });
             } catch (err) {
                 console.error(err);
-                tbody.innerHTML = `<tr><td colspan="10" class="error">${err.message}</td></tr>`;
+            				tbody.innerHTML = `<tr><td colspan="9" class="error">${err.message}</td></tr>`;
             }
         };
 
