@@ -39,7 +39,13 @@ export default class DashboardView {
             try {
                 const summary = await WorkEntryApi.getDaySummary(new Date());
                 statusSpan.textContent = summary.stateLabel;
-                statusSpan.className = summary.state === 'WORKING' ? 'status-working' : 'status-not-working';
+                if (summary.state === 'WORKING') {
+                    statusSpan.className = 'status-working';
+                } else if (summary.isOff) {
+                    statusSpan.className = 'status-off-duty';
+                } else {
+                    statusSpan.className = 'status-not-working';
+                }
 
                 workedSpan.textContent = Format.duration(summary.actualMinutes);
                 requiredSpan.textContent = Format.duration(summary.targetMinutes);

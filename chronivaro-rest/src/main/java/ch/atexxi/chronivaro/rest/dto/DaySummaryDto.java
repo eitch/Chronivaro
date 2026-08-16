@@ -7,6 +7,6 @@ import java.time.LocalDate;
 import java.util.List;
 
 public record DaySummaryDto(LocalDate date, DayState state, String stateLabel, int targetMinutes, int actualMinutes, int holidayMinutes,
-							int absenceMinutes, int balance, List<WorkEntryRangeDto> workEntries,
+							int absenceMinutes, boolean isOff, int balance, List<WorkEntryRangeDto> workEntries,
 							List<BreakRangeDto> breaks) {
 }

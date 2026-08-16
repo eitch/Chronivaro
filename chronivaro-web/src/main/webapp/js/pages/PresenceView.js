@@ -89,7 +89,12 @@ export default class PresenceView {
 							const card = document.createElement('div');
 							card.className = 'presence-card';
 							
-							let statusClass = info.status === 'WORKING' ? 'status-working' : 'status-not-working';
+							let statusClass = 'status-not-working';
+							if (info.status === 'WORKING') {
+								statusClass = 'status-working';
+							} else if (info.isOff) {
+								statusClass = 'status-off-duty';
+							}
 							let statusText = info.statusLabel;
 							
 							let extraInfo = '';

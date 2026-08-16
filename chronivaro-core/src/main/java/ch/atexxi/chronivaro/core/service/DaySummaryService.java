@@ -94,7 +94,7 @@ public class DaySummaryService
 			}
 
 			DaySummary summary = new DaySummary(arg.date, state, state.getLabel(), targetMinutes, actualMinutes,
-					holidayMinutes, absenceMinutes, ranges, breaks);
+					holidayMinutes, absenceMinutes, targetMinutes == 0, ranges, breaks);
 			return new DaySummaryResult(summary);
 		}
 	}

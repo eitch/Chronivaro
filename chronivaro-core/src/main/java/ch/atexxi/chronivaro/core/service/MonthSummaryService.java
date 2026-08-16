@@ -97,8 +97,8 @@ public class MonthSummaryService
 				totalAbsence += absence;
 
 				daySummaries.add(
-						new DaySummary(date, state, state.getLabel(), target, actual, holiday, absence, List.of(),
-								List.of()));
+						new DaySummary(date, state, state.getLabel(), target, actual, holiday, absence, target == 0,
+								List.of(), List.of()));
 			}
 
 			// TODO: Initial balance from previous period
