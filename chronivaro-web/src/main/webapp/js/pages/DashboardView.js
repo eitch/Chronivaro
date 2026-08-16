@@ -14,6 +14,7 @@ export default class DashboardView {
         container.innerHTML = `
 			<h2>Dashboard</h2>
 			<div id="status-container">
+			<p><span id="off-duty-badge" class="hidden">Off-duty</span></p>
 				<p><span id="presence-status">Loading...</span></p>
 				<div id="timer-controls">
 					<button id="start-timer" disabled>Start</button>
@@ -29,6 +30,7 @@ export default class DashboardView {
 		`;
 
         const statusSpan = container.querySelector('#presence-status');
+        const offDutyBadge = container.querySelector('#off-duty-badge');
         const startBtn = container.querySelector('#start-timer');
         const stopBtn = container.querySelector('#stop-timer');
         const workedSpan = container.querySelector('#worked-time');
@@ -41,10 +43,13 @@ export default class DashboardView {
                 statusSpan.textContent = summary.stateLabel;
                 if (summary.state === 'WORKING') {
                     statusSpan.className = 'status-working';
+                    offDutyBadge.className = 'hidden';
                 } else if (summary.isOff) {
                     statusSpan.className = 'status-off-duty';
+                    offDutyBadge.className = 'off-duty-badge';
                 } else {
                     statusSpan.className = 'status-not-working';
+                    offDutyBadge.className = 'hidden';
                 }
 
                 workedSpan.textContent = Format.duration(summary.actualMinutes);
