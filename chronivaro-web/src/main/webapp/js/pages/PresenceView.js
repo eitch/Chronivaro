@@ -13,23 +13,35 @@ export default class PresenceView {
 		const container = document.createElement('div');
 		container.id = 'presence-view';
 		container.innerHTML = `
-			<h2>Who is working?</h2>
-			<div class="filters">
-				<label>Team: <select id="team-filter"><option value="">All</option></select></label>
-				<label>Location: <select id="location-filter"><option value="">All</option></select></label>
+			<div class="view-header">
+				<h2>Who is working?</h2>
+				<button id="settings-toggle" class="icon-button" title="Settings">⚙️</button>
+			</div>
+			<div id="settings-menu" class="settings-menu hidden">
+				<div class="filters">
+					<label>Team: <select id="team-filter"><option value="">All</option></select></label>
+					<label>Location: <select id="location-filter"><option value="">All</option></select></label>
+				</div>
 			</div>
 			<div id="presence-list" class="presence-list">
 				<p>Loading presence data...</p>
 			</div>
 		`;
 
+		const settingsToggle = container.querySelector('#settings-toggle');
+		const settingsMenu = container.querySelector('#settings-menu');
 		const teamFilter = container.querySelector('#team-filter');
 		const locationFilter = container.querySelector('#location-filter');
 		const presenceList = container.querySelector('#presence-list');
 
+		settingsToggle.addEventListener('click', () => {
+			settingsMenu.classList.toggle('hidden');
+		});
+
+		let allTeams = [];
 		const loadFilters = async () => {
-			const teams = await TeamApi.getAll();
-			teams.forEach(t => {
+			allTeams = await TeamApi.getAll();
+			allTeams.forEach(t => {
 				const opt = document.createElement('option');
 				opt.value = t.id;
 				opt.textContent = t.name;
@@ -53,37 +65,54 @@ export default class PresenceView {
 				const locationId = locationFilter.value;
 				const presenceInfos = await PresenceApi.getPresence(teamId, locationId);
 
-				if (presenceInfos.length === 0) {
+				if (presenceInfos.length === 0 && allTeams.length === 0) {
 					presenceList.innerHTML = '<p>No employees found matching the filters.</p>';
 					return;
 				}
 
-				presenceList.innerHTML = '';
-				presenceInfos.forEach(info => {
-					const card = document.createElement('div');
-					card.className = 'presence-card';
-					
-					let statusClass = info.status === 'WORKING' ? 'status-working' : 'status-not-working';
-					let statusText = info.statusLabel;
-					
-					let extraInfo = '';
-					if (info.absenceTypeCode) {
-						extraInfo = `<span class="presence-absence">(${info.absenceTypeName})</span>`;
-					} else if (info.isOff) {
-						extraInfo = '<span class="presence-off">(Off-duty)</span>';
-					}
+				const teamsToShow = teamId ? allTeams.filter(t => t.id === teamId) : allTeams;
 
-					card.innerHTML = `
-						<div class="presence-info">
-							<span class="presence-name">${info.firstname} ${info.lastname}</span>
-							<span class="presence-status ${statusClass}">${statusText}</span>
-							${extraInfo}
-						</div>
-						<div class="presence-stats">
-							Today: ${Format.duration(info.minutesToday)}
-						</div>
-					`;
-					presenceList.appendChild(card);
+				presenceList.innerHTML = '';
+				teamsToShow.forEach(team => {
+					const teamGroup = document.createElement('div');
+					teamGroup.className = 'presence-team-group';
+					teamGroup.innerHTML = `<h3>${team.name}</h3>`;
+					
+					const teamEmployees = presenceInfos.filter(info => info.teamId === team.id);
+					if (teamEmployees.length === 0) {
+						const noEmployees = document.createElement('p');
+						noEmployees.className = 'no-employees';
+						noEmployees.textContent = 'No employees present.';
+						teamGroup.appendChild(noEmployees);
+					} else {
+						teamEmployees.forEach(info => {
+							const card = document.createElement('div');
+							card.className = 'presence-card';
+							
+							let statusClass = info.status === 'WORKING' ? 'status-working' : 'status-not-working';
+							let statusText = info.statusLabel;
+							
+							let extraInfo = '';
+							if (info.absenceTypeCode) {
+								extraInfo = `<span class="presence-absence">(${info.absenceTypeName})</span>`;
+							} else if (info.isOff) {
+								extraInfo = '<span class="presence-off">(Off-duty)</span>';
+							}
+
+							card.innerHTML = `
+								<div class="presence-info">
+									<span class="presence-name">${info.firstname} ${info.lastname}</span>
+									<span class="presence-status ${statusClass}">${statusText}</span>
+									${extraInfo}
+								</div>
+								<div class="presence-stats">
+									Today: ${Format.duration(info.minutesToday)}
+								</div>
+							`;
+							teamGroup.appendChild(card);
+						});
+					}
+					presenceList.appendChild(teamGroup);
 				});
 			} catch (err) {
 				console.error(err);

@@ -72,7 +72,7 @@ public class CreateEmployeeService extends AbstractService<CreateEmployeeService
 		if (arg.email != null && !arg.email.isBlank())
 			properties.put(PrivilegeConstants.EMAIL, arg.email);
 		UserRep userRep = new UserRep(null, arg.username, arg.firstname, arg.lastname, ENABLED, null,
-				Set.of(ROLE_EMPLOYEE), tx.getCertificate().getLocale(), properties, null);
+				Set.of(ROLE_EMPLOYEE, ROLE_MODEL_ACCESSOR), tx.getCertificate().getLocale(), properties, null);
 		UserRep existingUser = privilegeHandler.getUser(tx.getCertificate(), userRep.getUsername());
 		if (existingUser == null) {
 			return privilegeHandler.addUser(tx.getCertificate(), userRep, null);
@@ -80,6 +80,7 @@ public class CreateEmployeeService extends AbstractService<CreateEmployeeService
 			userRep.setUserId(existingUser.getUserId());
 			Set<String> roles = new HashSet<>(existingUser.getRoles());
 			roles.add(ROLE_EMPLOYEE);
+			roles.add(ROLE_MODEL_ACCESSOR);
 			userRep.setRoles(roles);
 			return privilegeHandler.updateUser(tx.getCertificate(), userRep, null);
 		}

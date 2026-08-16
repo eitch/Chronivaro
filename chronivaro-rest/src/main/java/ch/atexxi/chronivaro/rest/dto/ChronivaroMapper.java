@@ -13,8 +13,9 @@ import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
 public class ChronivaroMapper {
 
 	public static PresenceDto toDto(PresenceService.PresenceInfo info) {
-		return new PresenceDto(info.employeeId(), info.firstname(), info.lastname(), info.status(), info.statusLabel(),
-				info.minutesToday(), info.absenceTypeCode(), info.absenceTypeName(), info.isOff());
+		return new PresenceDto(info.employeeId(), info.firstname(), info.lastname(), info.teamId(), info.teamName(),
+				info.status(), info.statusLabel(), info.minutesToday(), info.absenceTypeCode(), info.absenceTypeName(),
+				info.isOff());
 	}
 
 	public static WorkEntryDto toDto(Resource workEntry) {

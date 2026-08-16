@@ -92,7 +92,7 @@ public class WorkEntrySameDayTest {
 			workDay.addRelation(PARAM_WORK_ENTRIES, workEntry);
 			tx.update(workDay);
 
-			employee.setRelationId(PARAM_CURRENT_WORK_DAY, workDay.getId());
+			employee.setRelation(PARAM_CURRENT_WORK_DAY, workDay);
 			tx.update(employee);
 			tx.commitOnClose();
 		}
@@ -149,7 +149,7 @@ public class WorkEntrySameDayTest {
 			workDay.addRelation(PARAM_WORK_ENTRIES, workEntry);
 			tx.update(workDay);
 
-			employee.setRelationId(PARAM_CURRENT_WORK_DAY, workDay.getId());
+			employee.setRelation(PARAM_CURRENT_WORK_DAY, workDay);
 			tx.update(employee);
 			tx.commitOnClose();
 		}
@@ -206,7 +206,7 @@ public class WorkEntrySameDayTest {
 			workDay.addRelation(PARAM_WORK_ENTRIES, workEntry);
 			tx.update(workDay);
 
-			employee.setRelationId(PARAM_CURRENT_WORK_DAY, workDay.getId());
+			employee.setRelation(PARAM_CURRENT_WORK_DAY, workDay);
 			tx.update(employee);
 			tx.commitOnClose();
 		}
@@ -263,7 +263,7 @@ public class WorkEntrySameDayTest {
 			workDay.addRelation(PARAM_WORK_ENTRIES, workEntry);
 			tx.update(workDay);
 
-			employee.setRelationId(PARAM_CURRENT_WORK_DAY, workDay.getId());
+			employee.setRelation(PARAM_CURRENT_WORK_DAY, workDay);
 			tx.update(employee);
 			tx.commitOnClose();
 		}
@@ -332,7 +332,7 @@ public class WorkEntrySameDayTest {
 			workDay.addRelation(PARAM_WORK_ENTRIES, we2);
 
 			tx.update(workDay);
-			employee.setRelationId(PARAM_CURRENT_WORK_DAY, workDay.getId());
+			employee.setRelation(PARAM_CURRENT_WORK_DAY, workDay);
 			tx.update(employee);
 			tx.commitOnClose();
 		}

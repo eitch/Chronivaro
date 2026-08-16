@@ -128,7 +128,7 @@ public class PresenceServiceTest {
 				.filter(i -> i.employeeId().equals("p-emp1"))
 				.findFirst()
 				.orElseThrow();
-		assertEquals(PresenceService.PresenceStatus.WORKING.name(), info1.status());
+		assertEquals(PresenceService.PresenceStatus.WORKING, info1.status());
 		assertEquals(PresenceService.PresenceStatus.WORKING.getLabel(), info1.statusLabel());
 		assertTrue(info1.minutesToday() >= 0);
 		assertNull(info1.absenceTypeCode());
@@ -144,7 +144,7 @@ public class PresenceServiceTest {
 				.filter(i -> i.employeeId().equals("p-emp2"))
 				.findFirst()
 				.orElseThrow();
-		assertEquals(PresenceService.PresenceStatus.NOT_WORKING.name(), info2.status());
+		assertEquals(PresenceService.PresenceStatus.NOT_WORKING, info2.status());
 		assertEquals(PresenceService.PresenceStatus.NOT_WORKING.getLabel(), info2.statusLabel());
 		assertEquals(0, info2.minutesToday());
 		assertNull(info2.absenceTypeCode());
@@ -155,7 +155,7 @@ public class PresenceServiceTest {
 				.filter(i -> i.employeeId().equals("p-emp3"))
 				.findFirst()
 				.orElseThrow();
-		assertEquals(PresenceService.PresenceStatus.NOT_WORKING.name(), info3.status());
+		assertEquals(PresenceService.PresenceStatus.NOT_WORKING, info3.status());
 		assertEquals(PresenceService.PresenceStatus.NOT_WORKING.getLabel(), info3.statusLabel());
 		assertEquals("VACATION", info3.absenceTypeCode());
 		assertEquals("Vacation", info3.absenceTypeName());

@@ -76,7 +76,7 @@ public class DaySummaryServiceTest {
 		assertEquals(ServiceResult.success().getState(), result.getState());
 
 		DaySummary summary = result.daySummary;
-		assertEquals(DayState.NOT_WORKING.name(), summary.state());
+		assertEquals(DayState.NOT_WORKING, summary.state());
 		assertEquals(DayState.NOT_WORKING.getLabel(), summary.stateLabel());
 		assertEquals(480, summary.targetMinutes());
 		assertEquals(480, summary.actualMinutes());
@@ -126,7 +126,7 @@ public class DaySummaryServiceTest {
 		assertEquals(ServiceResult.success().getState(), result.getState());
 
 		DaySummary summary = result.daySummary;
-		assertEquals(DayState.WORKING.name(), summary.state());
+		assertEquals(DayState.WORKING, summary.state());
 		assertEquals(DayState.WORKING.getLabel(), summary.stateLabel());
 		assertEquals(480, summary.targetMinutes());
 		// started 10 minutes ago, so should be around 10 minutes

@@ -115,6 +115,7 @@ public class ChronivaroConstants {
 	public static final String VACATION_CORRECTION = "CORRECTION";
 	public static final String VACATION_EXPIRY = "EXPIRY";
 
+	public static final String ROLE_MODEL_ACCESSOR = "ModelAccessor";
 	public static final String ROLE_EMPLOYEE = "Employee";
 	public static final String ROLE_SUPERVISOR = "Supervisor";
 	public static final String ROLE_HR = "HR";

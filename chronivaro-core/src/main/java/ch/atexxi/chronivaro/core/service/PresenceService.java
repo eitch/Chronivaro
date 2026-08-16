@@ -37,9 +37,9 @@ public class PresenceService extends AbstractService<PresenceService.PresenceArg
 		}
 	}
 
-	public record PresenceInfo(String employeeId, String firstname, String lastname, PresenceStatus status,
-							   String statusLabel, int minutesToday, String absenceTypeCode, String absenceTypeName,
-							   boolean isOff) {
+	public record PresenceInfo(String employeeId, String firstname, String lastname, String teamId, String teamName,
+							   PresenceStatus status, String statusLabel, int minutesToday, String absenceTypeCode,
+							   String absenceTypeName, boolean isOff) {
 	}
 
 	public static class PresenceArgument extends ServiceArgument {
@@ -99,9 +99,13 @@ public class PresenceService extends AbstractService<PresenceService.PresenceArg
 							}
 						}
 
+						String teamId = e.getRelationId(PARAM_PRIMARY_TEAM);
+						Resource team = tx.getResourceBy(TYPE_TEAM, teamId, true);
+						String teamName = team.getName();
+
 						return new PresenceInfo(e.getId(), e.getString(PARAM_FIRSTNAME), e.getString(PARAM_LASTNAME),
-								status, status.getLabel(), minutesToday, absenceTypeCode, absenceTypeName,
-								isOff);
+								teamId, teamName, status, status.getLabel(), minutesToday, absenceTypeCode,
+								absenceTypeName, isOff);
 					})
 					.toList();
 

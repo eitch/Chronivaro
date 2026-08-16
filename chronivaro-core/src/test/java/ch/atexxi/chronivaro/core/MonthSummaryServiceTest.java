@@ -20,7 +20,7 @@ import java.time.ZonedDateTime;
 
 import static ch.atexxi.chronivaro.core.ChronivaroTestHelper.createEmployee;
 import static ch.atexxi.chronivaro.core.ChronivaroTestHelper.createWorkEntry;
-import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
+import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.PARAM_TIMEZONE;
 import static org.junit.Assert.assertEquals;
 
 public class MonthSummaryServiceTest {
@@ -55,7 +55,9 @@ public class MonthSummaryServiceTest {
 			tx.update(employee);
 
 			// Active Work Entry: started 15 minutes ago
-			ZonedDateTime start = ZonedDateTime.now(ChronivaroModelHelper.getEmployeeTimezone(employee)).minusMinutes(15);
+			ZonedDateTime start = ZonedDateTime
+					.now(ChronivaroModelHelper.getEmployeeTimezone(employee))
+					.minusMinutes(15);
 			createWorkEntry(tx, employee, start, ZonedDateTime.parse("1970-01-01T00:00:00+01:00"));
 
 			tx.commitOnClose();
@@ -66,12 +68,13 @@ public class MonthSummaryServiceTest {
 		arg.employeeId = employeeId;
 		arg.yearMonth = yearMonth;
 
-		MonthSummaryService.MonthSummaryResult result = serviceHandler.doService(certificate, new MonthSummaryService(), arg);
+		MonthSummaryService.MonthSummaryResult result = serviceHandler.doService(certificate, new MonthSummaryService(),
+				arg);
 		assertEquals(ServiceResult.success().getState(), result.getState());
 
 		MonthSummary summary = result.monthSummary;
 		assertEquals(15, summary.totalActualMinutes());
-		assertEquals(DayState.WORKING.name(), summary.daySummaries().get(today.getDayOfMonth() - 1).state());
+		assertEquals(DayState.WORKING, summary.daySummaries().get(today.getDayOfMonth() - 1).state());
 		assertEquals(DayState.WORKING.getLabel(), summary.daySummaries().get(today.getDayOfMonth() - 1).stateLabel());
 		assertEquals(15, summary.daySummaries().get(today.getDayOfMonth() - 1).actualMinutes());
 	}

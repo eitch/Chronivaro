@@ -121,7 +121,7 @@ public class EmployeeResourceTest extends AbstractChronivaroRestfulTest {
 
 		String json = """
 				{
-				  "validFrom": "2025-01-01T00:00:00+01:00",
+				  "validFrom": "2027-01-01T00:00:00+01:00",
 				  "monday": 480,
 				  "tuesday": 480,
 				  "wednesday": 480,

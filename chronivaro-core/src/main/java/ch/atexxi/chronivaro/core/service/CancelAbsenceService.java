@@ -4,6 +4,7 @@ import ch.atexxi.chronivaro.core.model.AbsenceHelper;
 import ch.atexxi.chronivaro.core.model.ChronivaroModelHelper;
 import ch.atexxi.chronivaro.core.model.ScheduleHelper;
 import li.strolch.model.Resource;
+import li.strolch.persistence.api.Operation;
 import li.strolch.persistence.api.StrolchTransaction;
 import li.strolch.service.StringArgument;
 import li.strolch.service.api.AbstractService;
@@ -42,7 +43,7 @@ public class CancelAbsenceService extends AbstractService<StringArgument, Servic
 					// Self-service: allowed
 				} else {
 					// Not self-service, check for supervisor privilege
-					tx.assertHasPrivilege("UpdateResource", employee.getType());
+					tx.assertHasPrivilege(Operation.UPDATE, employee);
 				}
 			}
 

@@ -662,3 +662,52 @@ tr:hover {
     border: 1px solid var(--border-color);
     background-color: white;
 }
+
+.hidden {
+    display: none !important;
+}
+
+.view-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.view-header h2 {
+    margin: 0;
+}
+
+.settings-menu {
+    margin-bottom: 2rem;
+}
+
+.presence-team-group {
+    margin-bottom: 3rem;
+}
+
+.presence-team-group h3 {
+    border-bottom: 2px solid var(--primary-color);
+    padding-bottom: 0.5rem;
+    margin-bottom: 1.5rem;
+    color: var(--primary-color);
+}
+
+.no-employees {
+    font-style: italic;
+    color: var(--text-muted);
+}
+
+.icon-button {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 50%;
+    transition: background-color 0.2s;
+}
+
+.icon-button:hover {
+    background-color: var(--border-color);
+}

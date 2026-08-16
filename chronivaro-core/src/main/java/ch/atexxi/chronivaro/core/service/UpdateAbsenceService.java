@@ -3,6 +3,7 @@ package ch.atexxi.chronivaro.core.service;
 import ch.atexxi.chronivaro.core.model.AbsenceHelper;
 import ch.atexxi.chronivaro.core.model.ChronivaroModelHelper;
 import li.strolch.model.Resource;
+import li.strolch.persistence.api.Operation;
 import li.strolch.persistence.api.StrolchTransaction;
 import li.strolch.service.api.AbstractService;
 import li.strolch.service.api.ServiceArgument;
@@ -47,7 +48,7 @@ public class UpdateAbsenceService extends AbstractService<UpdateAbsenceService.U
 				if (currentEmployee.isPresent() && currentEmployee.get().getId().equals(employee.getId())) {
 					// Self-service: allowed
 				} else {
-					tx.assertHasPrivilege("UpdateResource", employee.getType());
+					tx.assertHasPrivilege(Operation.UPDATE, employee);
 				}
 			}
 

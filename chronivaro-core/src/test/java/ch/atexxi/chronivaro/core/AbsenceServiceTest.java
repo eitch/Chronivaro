@@ -20,10 +20,12 @@ import org.junit.Test;
 
 import java.time.ZonedDateTime;
 import java.util.Locale;
+import java.util.Set;
 
 import static ch.atexxi.chronivaro.core.ChronivaroTestHelper.createEmployee;
 import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
-import static java.util.Collections.*;
+import static java.util.Collections.emptyMap;
+import static java.util.Collections.emptySet;
 import static org.junit.Assert.*;
 
 public class AbsenceServiceTest {
@@ -99,7 +101,8 @@ public class AbsenceServiceTest {
 
 		String absenceId;
 		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
-			Resource absence = tx.streamResources(TYPE_ABSENCE)
+			Resource absence = tx
+					.streamResources(TYPE_ABSENCE)
 					.filter(a -> a.getRelationId(PARAM_EMPLOYEE).equals(employeeId))
 					.findFirst()
 					.orElseThrow();
@@ -205,7 +208,7 @@ public class AbsenceServiceTest {
 			tx.commitOnClose();
 
 			UserRep userRep = new UserRep(null, userId, "Jill", "Doe", UserState.ENABLED, emptySet(),
-					singleton("Employee"), Locale.of("de", "CH"), emptyMap(), null);
+					Set.of(ROLE_EMPLOYEE, ROLE_MODEL_ACCESSOR), Locale.of("de", "CH"), emptyMap(), null);
 			runtimeMock.getPrivilegeHandler().getPrivilegeHandler().addUser(certificate, userRep, userId.toCharArray());
 			userCert = runtimeMock.login(userId, userId);
 		}

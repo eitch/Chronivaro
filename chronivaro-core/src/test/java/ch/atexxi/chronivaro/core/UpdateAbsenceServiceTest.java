@@ -1,6 +1,5 @@
 package ch.atexxi.chronivaro.core;
 
-import ch.atexxi.chronivaro.core.model.AbsenceHelper;
 import ch.atexxi.chronivaro.core.service.RequestAbsenceService;
 import ch.atexxi.chronivaro.core.service.UpdateAbsenceService;
 import li.strolch.model.Resource;
@@ -17,11 +16,14 @@ import org.junit.Test;
 
 import java.time.ZonedDateTime;
 import java.util.Locale;
+import java.util.Set;
 
 import static ch.atexxi.chronivaro.core.ChronivaroTestHelper.createEmployee;
 import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
-import static java.util.Collections.*;
-import static org.junit.Assert.*;
+import static java.util.Collections.emptyMap;
+import static java.util.Collections.emptySet;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class UpdateAbsenceServiceTest {
 
@@ -67,9 +69,11 @@ public class UpdateAbsenceServiceTest {
 
 		String absenceId;
 		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
-			Resource absence = tx.streamResources(TYPE_ABSENCE)
+			Resource absence = tx
+					.streamResources(TYPE_ABSENCE)
 					.filter(a -> a.getRelationId(PARAM_EMPLOYEE).equals(employeeId))
-					.findFirst().orElseThrow();
+					.findFirst()
+					.orElseThrow();
 			absenceId = absence.getId();
 			assertEquals("Initial comment", absence.getString(PARAM_COMMENT));
 		}
@@ -101,12 +105,12 @@ public class UpdateAbsenceServiceTest {
 			employee.setString(PARAM_USER_ID, userId);
 			employee.setString(PARAM_USERNAME, "jill-upd");
 			tx.update(employee);
-			
+
 			ChronivaroTestHelper.createAbsenceType(tx, "VACATION2", "Vacation 2");
 			tx.commitOnClose();
 
 			UserRep userRep = new UserRep(null, userId, "Jill", "Doe", UserState.ENABLED, emptySet(),
-					singleton("Employee"), Locale.of("de", "CH"), emptyMap(), null);
+					Set.of(ROLE_EMPLOYEE, ROLE_MODEL_ACCESSOR), Locale.of("de", "CH"), emptyMap(), null);
 			runtimeMock.getPrivilegeHandler().getPrivilegeHandler().addUser(certificate, userRep, userId.toCharArray());
 			userCert = runtimeMock.login(userId, userId);
 		}
@@ -127,9 +131,11 @@ public class UpdateAbsenceServiceTest {
 
 		String absenceId;
 		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
-			Resource absence = tx.streamResources(TYPE_ABSENCE)
+			Resource absence = tx
+					.streamResources(TYPE_ABSENCE)
 					.filter(a -> a.getRelationId(PARAM_EMPLOYEE).equals(employeeId))
-					.findFirst().orElseThrow();
+					.findFirst()
+					.orElseThrow();
 			absenceId = absence.getId();
 		}
 

@@ -27,6 +27,7 @@
         <Locale>en</Locale>
         <Roles>
             <Role>Employee</Role>
+            <Role>ModelAccessor</Role>
         </Roles>
     </User>
     <User userId="supervisor" username="supervisor"
@@ -37,6 +38,7 @@
         <Locale>en</Locale>
         <Roles>
             <Role>Supervisor</Role>
+            <Role>ModelAccessor</Role>
         </Roles>
     </User>
 </Users>

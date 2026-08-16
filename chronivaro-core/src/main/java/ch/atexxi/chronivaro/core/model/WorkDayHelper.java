@@ -32,7 +32,7 @@ public class WorkDayHelper {
 
 		if (existingWorkDay.isPresent()) {
 			Resource workDay = existingWorkDay.get();
-			employee.setRelationId(PARAM_CURRENT_WORK_DAY, workDay.getId());
+			employee.setRelation(PARAM_CURRENT_WORK_DAY, workDay);
 			tx.update(employee);
 			return workDay;
 		}
@@ -50,7 +50,7 @@ public class WorkDayHelper {
 
 		tx.add(workDay);
 
-		employee.setRelationId(PARAM_CURRENT_WORK_DAY, workDay.getId());
+		employee.setRelation(PARAM_CURRENT_WORK_DAY, workDay);
 		tx.update(employee);
 
 		return workDay;
