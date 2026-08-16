@@ -516,10 +516,14 @@ tr:hover {
     text-align: center;
 }
 
+#status-container p {
+    margin-bottom: 0;
+}
+
 #presence-status {
     font-size: 2.5rem;
     font-weight: 800;
-    margin: 1rem 0;
+    margin: 1rem 0 0;
     display: inline-block;
     padding: 0.5rem 1.5rem;
     border-radius: 0.5rem;
@@ -745,49 +749,49 @@ tr:hover {
 
 /* Dropdown Menu */
 .dropdown {
-	position: relative;
-	display: inline-block;
+    position: relative;
+    display: inline-block;
 }
 
 .dropdown-content {
-	display: none;
-	position: absolute;
-	right: 0;
-	background-color: var(--card-bg);
-	min-width: 160px;
-	box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
-	z-index: 10;
-	border-radius: 4px;
-	border: 1px solid var(--border-color);
+    display: none;
+    position: absolute;
+    right: 0;
+    background-color: var(--card-bg);
+    min-width: 160px;
+    box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+    z-index: 10;
+    border-radius: 4px;
+    border: 1px solid var(--border-color);
 }
 
 .dropdown-content button {
-	color: var(--text-color);
-	padding: 10px 16px;
-	text-decoration: none;
-	display: block;
-	width: 100%;
-	text-align: left;
-	border: none;
-	background: none;
-	cursor: pointer;
-	font-size: 0.875rem;
+    color: var(--text-color);
+    padding: 10px 16px;
+    text-decoration: none;
+    display: block;
+    width: 100%;
+    text-align: left;
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-size: 0.875rem;
 }
 
 .dropdown-content button:hover {
-	background-color: #f1f5f9;
+    background-color: #f1f5f9;
 }
 
 .dropdown-content button.delete-btn {
-	color: var(--error-color);
+    color: var(--error-color);
 }
 
 .dropdown-content button.delete-btn:hover {
-	background-color: #fee2e2;
+    background-color: #fee2e2;
 }
 
 .dropdown.show .dropdown-content {
-	display: block;
+    display: block;
 }
 
 .dropdown-toggle::after {

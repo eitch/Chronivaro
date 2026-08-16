@@ -14,8 +14,8 @@ export default class DashboardView {
         container.innerHTML = `
 			<h2>Dashboard</h2>
 			<div id="status-container">
-			<p><span id="off-duty-badge" class="hidden">Off-duty</span></p>
 				<p><span id="presence-status">Loading...</span></p>
+				<p><span id="off-duty-badge" class="hidden">Off-duty</span></p>
 				<div id="timer-controls">
 					<button id="start-timer" disabled>Start</button>
 					<button id="stop-timer" disabled>Stop</button>
