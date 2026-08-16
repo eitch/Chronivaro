@@ -8,6 +8,7 @@
         <Locale>en</Locale>
         <Roles>
             <Role>StrolchAdmin</Role>
+            <Role>ModelAccessor</Role>
         </Roles>
         <Properties>
             <Property name="realm" value="strolch"/>
@@ -20,6 +21,7 @@
         <Locale>en</Locale>
         <Roles>
             <Role>StrolchAdmin</Role>
+            <Role>ModelAccessor</Role>
         </Roles>
         <Properties>
             <Property name="realm" value="strolch"/>

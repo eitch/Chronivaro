@@ -1,6 +1,8 @@
 import EmployeeApi from '../api/EmployeeApi.js';
 import TeamApi from '../api/TeamApi.js';
 import LocationApi from '../api/LocationApi.js';
+import ScheduleApi from '../api/ScheduleApi.js';
+import ScheduleTemplateApi from '../api/ScheduleTemplateApi.js';
 import NotificationDialog from '../utils/NotificationDialog.js';
 
 export default class EmployeesView {
@@ -93,6 +95,18 @@ export default class EmployeesView {
 								<label><input type="checkbox" id="emp-active" checked> Active</label>
 							</div>
 						</div>
+						<div id="schedule-section">
+							<hr>
+							<h3>Initial Schedule</h3>
+							<div class="form-grid">
+								<div class="form-group">
+									<label for="sched-template">Apply Template:</label>
+									<select id="sched-template" required>
+										<option value="">-- Select Template --</option>
+									</select>
+								</div>
+							</div>
+						</div>
 						<div class="actions">
 							<button type="submit">Save</button>
 							<button type="button" id="close-modal">Cancel</button>
@@ -110,6 +124,7 @@ export default class EmployeesView {
         const closeBtn = container.querySelector('#close-modal');
         const teamSelect = container.querySelector('#emp-team');
         const locationSelect = container.querySelector('#emp-location');
+        const templateSelect = container.querySelector('#sched-template');
         const usernameInput = container.querySelector('#emp-username');
         const personalNumberInput = container.querySelector('#emp-pers-nr');
 
@@ -122,9 +137,10 @@ export default class EmployeesView {
         let editingId = null;
 
         const loadOptions = async () => {
-            const [teams, locations] = await Promise.all([
+            const [teams, locations, templates] = await Promise.all([
                 TeamApi.getAll(),
-                LocationApi.getAll()
+                LocationApi.getAll(),
+                ScheduleTemplateApi.getAll()
             ]);
 
             if (teams.length === 0) {
@@ -138,6 +154,10 @@ export default class EmployeesView {
             } else {
                 locationSelect.innerHTML = locations.map(l => `<option value="${l.id}">${l.name}</option>`).join('');
             }
+
+            templateSelect.innerHTML = '<option value="">-- Select Template --</option>' +
+                templates.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+            templateSelect.templates = templates;
         };
 
         const refresh = async () => {
@@ -222,6 +242,7 @@ export default class EmployeesView {
                     container.querySelector('#emp-username').value = emp.username;
                     container.querySelector('#emp-email').value = emp.email || '';
                     container.querySelector('#emp-active').checked = emp.active;
+                    container.querySelector('#schedule-section').style.display = 'none';
                     modal.style.display = 'block';
                 }
             } catch (err) {
@@ -263,6 +284,7 @@ export default class EmployeesView {
             container.querySelector('#emp-username').value = '';
             container.querySelector('#emp-timezone').value = Intl.DateTimeFormat().resolvedOptions().timeZone || 'Europe/Zurich';
             container.querySelector('#emp-active').checked = true;
+            container.querySelector('#schedule-section').style.display = 'block';
             modal.style.display = 'block';
         });
 
@@ -272,6 +294,7 @@ export default class EmployeesView {
 
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
+
             const emp = {
                 personalNumber: container.querySelector('#emp-pers-nr').value,
                 firstname: container.querySelector('#emp-firstname').value,
@@ -284,7 +307,8 @@ export default class EmployeesView {
                 exitDate: container.querySelector('#emp-exit-date').value || null,
                 username: container.querySelector('#emp-username').value,
                 email: container.querySelector('#emp-email').value,
-                active: container.querySelector('#emp-active').checked
+                active: container.querySelector('#emp-active').checked,
+                scheduleTemplateId: editingId ? null : container.querySelector('#sched-template').value
             };
 
             try {

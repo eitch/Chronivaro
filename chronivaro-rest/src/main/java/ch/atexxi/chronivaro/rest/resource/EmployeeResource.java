@@ -15,6 +15,7 @@ import li.strolch.privilege.model.Certificate;
 import li.strolch.rest.StrolchRestfulConstants;
 import li.strolch.rest.helper.ResponseUtil;
 import li.strolch.service.StringArgument;
+import li.strolch.service.StringResult;
 import li.strolch.service.api.ServiceHandler;
 import li.strolch.service.api.ServiceResult;
 
@@ -73,9 +74,17 @@ public class EmployeeResource {
 		arg.active = dto.active();
 		arg.username = dto.username();
 		arg.email = dto.email();
+		arg.scheduleTemplateId = dto.scheduleTemplateId();
 
-		ServiceResult result = serviceHandler.doService(cert, new CreateEmployeeService(), arg);
-		return ResponseUtil.toResponse(result);
+		StringResult result = serviceHandler.doService(cert, new CreateEmployeeService(), arg);
+		if (result.isNok())
+			return ResponseUtil.toResponse(result);
+
+		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
+			Resource employee = tx.getResourceBy(TYPE_EMPLOYEE, result.getValue(), true);
+			return Response.ok(ChronivaroRestHelper.createGson().toJson(ChronivaroMapper.employeeToDto(employee)),
+					MediaType.APPLICATION_JSON).build();
+		}
 	}
 
 	@PUT

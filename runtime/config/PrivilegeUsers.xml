@@ -12,6 +12,20 @@
             <Property name="organisation" value="MyCompany"/>
         </Properties>
     </User>
+    <User userId="666954056572" username="bob">
+        <Firstname>Bob</Firstname>
+        <Lastname>Someone</Lastname>
+        <State>ENABLED</State>
+        <Locale>de</Locale>
+        <Roles>
+            <Role>Employee</Role>
+            <Role>ModelAccessor</Role>
+        </Roles>
+        <Properties>
+            <Property name="email" value="bob@example.com"/>
+            <Property name="organisation" value="MyCompany"/>
+        </Properties>
+    </User>
     <User userId="1" username="admin" password="$PBKDF2WithHmacSHA512,10000,256$61646d696e$cb69962946617da006a2f95776d78b49e5ec7941d2bdb2d25cdb05f957f64344">
         <Firstname>Admin</Firstname>
         <Lastname>Admin</Lastname>

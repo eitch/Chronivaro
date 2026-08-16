@@ -9,6 +9,7 @@ import li.strolch.service.api.ServiceResult;
 import java.time.ZonedDateTime;
 
 import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
+import static java.text.MessageFormat.format;
 
 public class CreateScheduleService
 		extends AbstractService<CreateScheduleService.CreateScheduleArgument, ServiceResult> {
@@ -36,6 +37,7 @@ public class CreateScheduleService
 
 			tx.add(schedule);
 			updateEmployeeCurrentSchedule(tx, arg.employeeId, schedule, arg.validFrom, arg.validTo);
+
 			tx.commitOnClose();
 		}
 
@@ -43,7 +45,8 @@ public class CreateScheduleService
 	}
 
 	private void validateNoOverlap(StrolchTransaction tx, CreateScheduleArgument arg) {
-		tx.streamResources(TYPE_EMPLOYMENT_SCHEDULE)
+		tx
+				.streamResources(TYPE_EMPLOYMENT_SCHEDULE)
 				.filter(r -> r.getRelationId(PARAM_EMPLOYEE).equals(arg.employeeId))
 				.forEach(r -> {
 					ZonedDateTime from = r.getDate(PARAM_VALID_FROM);
@@ -61,7 +64,8 @@ public class CreateScheduleService
 
 					if (overlaps) {
 						throw new IllegalArgumentException(
-								"New schedule version overlaps with existing version " + r.getId() + " (" + from + " - " + (to == null ? "open" : to) + ")");
+								format("New schedule version overlaps with existing version {0} ({1} - {2})", r.getId(),
+										from, to == null ? "open" : to));
 					}
 				});
 	}
