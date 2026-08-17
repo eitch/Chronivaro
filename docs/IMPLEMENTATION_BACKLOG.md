@@ -95,473 +95,6 @@ Do not perform unrelated refactoring while implementing a backlog item.
 
 ---
 
-# Phase 4a – Working Location
-
-## 11a. Working Location Domain Model
-
-Add working-location data to `WorkEntry` and define employee weekly defaults.
-
-This item is split because per-entry persistence and weekly default management
-are separate concerns. The first subtask is complete; weekly defaults remain
-pending as 11a.2.
-
-### 11a.1. WorkEntry Working Location **DONE**
-
-- Added `HOME_OFFICE`, `OFFICE`, and `CUSTOMER` values to the `WorkEntry` model.
-- Persisted the location on add and correction, with an empty value preserving
-  compatibility for existing entries.
-- Exposed the location through `WorkEntryDto` and validated unsupported values.
-
-### 11a.2. Weekly Working Location Defaults **DONE**
-
-Implemented as the `WorkingLocationDefault` resource with Core upsert/remove services
-and employee-scoped REST CRUD endpoints. Defaults are unique per employee, weekday,
-duration type, and day part. `weekday` and `durationType` are represented as enums in
-the Java model and API while remaining persisted as their enum names; full-day defaults
-require no day part and half-day defaults require `MORNING` or `AFTERNOON`. Existing
-work entries remain compatible because this feature is additive and does not alter their
-persisted location field.
-
-Implement independent weekday and day-part defaults, including create, update,
-clear, and uniqueness behavior.
-
-### Work
-- Support the locations `HOME_OFFICE`, `OFFICE`, and `CUSTOMER`.
-- Store the location on every work entry so morning and afternoon entries can have different locations.
-- Model `HALF_DAY` and `FULL_DAY` defaults, including the applicable half-day part.
-- Allow at most one default per weekday and day part.
-
-### Acceptance Criteria
-- Existing work entries remain valid through an explicit migration/default strategy.
-- A workday can represent home office in the morning and customer work in the afternoon without overlapping entries.
-- Weekly defaults can be created, changed, and removed independently for each weekday.
-
-## 11b. Dashboard Working Location Selection **DONE**
-
-Extend the dashboard start/stop workflow to select the working location for the current workday.
-
-### 11b.1. Timer Start Location Selection **DONE**
-
-- Added a dashboard location selector and a clear prompt when no location is selected.
-- Persisted the selected location when starting a timer through the Core service and REST API.
-- Default prefill, clearing, and morning/afternoon switching are implemented below.
-
-### Work
-- Prefill the dashboard from the employee's weekly default when opening a new workday. **DONE**
-- Added `GET /me/working-location-defaults` and dashboard prefill from the matching weekday's full-day or morning default.
-- Allow the employee to override or clear the prefilled location before starting work. **DONE**
-- Support changing location between the morning and afternoon by stopping the current timer and starting a separate
-  work-entry block with the new location.
-- Ensure the selected location is persisted with the affected work entry and shown in the dashboard. **DONE**
-
-### Acceptance Criteria
-- Starting work with no weekly default requires or clearly prompts for a location.
-- A full-day default can be overridden for one day without changing the recurring weekly default.
-- A half-day location change does not alter the other half of the workday.
-
-### Verification
-- The dashboard prefill is a client-side initial selection only; changing or clearing it does not update the recurring default.
-- The dashboard now provides a clear action that prevents the default from being reapplied during refresh; starting without a selection remains rejected.
-- The dashboard provides a `Change location` action that closes the active block and enables a new location selection.
-- `TimerWorkDayTest.shouldAllowDifferentWorkingLocationsForSeparateBlocks` verifies separate same-day blocks retain
-  different locations.
-
-## 11c. Working Location Validation and Queries
-
-Validate and expose working-location data consistently across time-entry services and dashboard queries.
-
-### Acceptance Criteria
-- Invalid locations and invalid half-day/full-day combinations are rejected.
-- Overlapping work entries with different locations remain prohibited.
-- Existing time calculations are unchanged; location is descriptive metadata and does not affect worked minutes.
-- Relevant service, REST, and dashboard tests cover defaults, overrides, full-day entries, and morning/afternoon changes.
-
----
-
-# Phase 1 – Foundations
-
-## 1. Business Roles and Permissions
-
-### Goal
-
-Implement the roles required by the specification:
-
-- `Employee`
-- `Supervisor`
-- `HR`
-- `Administrator`
-- `Leseberechtigter Benutzer`, if required by the specification
-
-### Work
-
-Inspect the current privilege model and `runtime/config/PrivilegeRoles.xml`.
-
-Add only missing roles and privileges.
-
-Define privileges granularly enough to distinguish at least:
-
-- own employee data;
-- own time entries;
-- own absences;
-- team data;
-- approval actions;
-- reporting;
-- employee/master-data administration;
-- system configuration;
-- reopening closed periods.
-
-Do not rely solely on UI visibility to enforce permissions.
-
-### Acceptance Criteria
-
-- Required roles exist.
-- Each relevant Core service verifies the necessary privilege.
-- Employee self-service cannot access another employee's protected data.
-- Supervisor functionality is limited to the supervisor's permitted employees/team.
-- HR/administrator functionality follows the specification.
-- Existing role functionality is not broken.
-
-### Verification
-
-Add or update permission-related tests where practical.
-
----
-
-## 2. Localisation Resources
-
-### Goal
-
-Centralise user-visible strings and domain labels required by the application.
-
-### Work
-
-Create or complete:
-
-```text
-ChronivaroMessages.properties
-ChronivaroMessages_de_CH.properties
-```
-
-Use German (Switzerland), not Swiss-German dialect.
-
-Use `ss`, never `ß`.
-
-Cover only strings currently required by implemented functionality.
-
-Do not move arbitrary internal/logging strings into resource bundles unless required.
-
-### Acceptance Criteria
-
-- Missing user-visible status and enum labels can be localised.
-- German (Switzerland) translations exist.
-- No duplicate localisation mechanism is introduced.
-
----
-
-## 3. Global Configuration
-
-### Goal
-
-Complete the Core representation and services for global Chronivaro configuration before exposing it through REST/UI.
-
-### Work
-
-Inspect the existing configuration model first.
-
-Implement only missing settings defined in the specification, such as:
-
-- global default target working time;
-- other global defaults explicitly defined by the specification.
-
-Employee-specific overrides must continue to take precedence.
-
-Do not invent configuration options.
-
-### Acceptance Criteria
-
-- Global defaults can be read.
-- Authorised users can modify configurable values.
-- Employee overrides continue to work.
-- Changes are audited if required by the specification.
-- Invalid configuration is rejected by Core validation.
-
----
-
-# Phase 2 – Absence Workflow
-
-## 4. Reject Absence
-
-### Goal
-
-Allow an authorised supervisor to reject a submitted absence.
-
-### Preconditions
-
-Existing absence submission and approval functionality must be understood before implementation.
-
-### Business Rules
-
-- Only valid source states may be rejected.
-- A rejection comment is mandatory.
-- The state becomes `REJECTED`.
-- The action is audited.
-- Authorisation is enforced in Core.
-- The supervisor may only act on employees within their permitted scope.
-
-### Acceptance Criteria
-
-Tests must cover at least:
-
-- successful rejection;
-- missing comment;
-- invalid source state;
-- unauthorised user;
-- supervisor acting on an employee outside their permitted scope.
-
-### Verification
-
-Implemented in `RejectAbsenceService`. Added tests in `AbsenceServiceTest`.
-
----
-
-## 5. Cancel Own Absence (✓ DONE)
-
-### Goal
-
-Allow an employee to cancel their own absence according to the specification.
-
-### Business Rules
-
-- The user may only cancel their own absence.
-- Cancellation is only possible while allowed by the specification.
-- Past absences cannot be cancelled if the specification forbids this.
-- Approved absences transition to `CANCELLED` where specified.
-- Vacation balance/journal effects must remain consistent.
-- The change is audited.
-
-### Acceptance Criteria
-
-Tests must cover:
-
-- own future absence;
-- another employee's absence;
-- past absence;
-- approved absence;
-- invalid status transition;
-- vacation-account side effects where applicable.
-
-### Verification
-
-Implemented in `CancelAbsenceService`. Added tests in `AbsenceServiceTest`. Balanced checked and verified.
-
----
-
-# Phase 3 – WorkDay & Timer Refactoring
-
-## 6. Implement WorkDay Domain Entity (✓ DONE)
-
-### Goal
-Implement the `WorkDay` entity as described in the specification to improve performance and data handling.
-
-### Work
-- Create `WorkDay` resource template. (Implemented in `Templates.xml`)
-- Add `currentWorkDayId` to `Employee` resource. (Implemented in `Templates.xml`)
-- Update `WorkEntry` to reference `WorkDay`. (Added `workDay` relation to `WorkEntry`)
-
-### Business Rules
-- A `WorkDay` is created for each calendar day a user works. (To be handled in Task 7)
-- It references the active `EmploymentScheduleVersion`. (Implemented in `WorkDay` template)
-- It serves as a container for all `WorkEntry` objects of that day. (WorkEntry now points to WorkDay)
-
-### Acceptance Criteria
-- `WorkDay` can be created and persisted. (Verified in `WorkDayTest`)
-- `Employee` correctly references the current `WorkDay`. (Verified in `WorkDayTest`)
-- `WorkEntry` is correctly associated with a `WorkDay`. (Verified in `WorkDayTest`)
-
-### Verification
-Implemented in `Templates.xml` and `ChronivaroConstants.java`. Added verification test `WorkDayTest`. Fixed pre-existing `CompleteRegistrationTest` failure.
-
----
-
-## 7. Refactor Timer Logic for WorkDay (✓ DONE)
-
-### Goal
-Update the start/stop timer logic to use the new `WorkDay` entity.
-
-### Work
-- Update `StartTimerService` to: (✓ DONE)
-  - Check if `currentWorkDayId` exists and matches today's date.
-  - Create a new `WorkDay` if necessary, capturing the current schedule.
-  - Update `Employee.currentWorkDayId`.
-  - Create `WorkEntry` within the context of the `WorkDay`.
-- Update `StopTimerService` to find the active entry via the `WorkDay`. (✓ DONE)
-
-### Acceptance Criteria
-- Starting the timer for a new day creates a `WorkDay`. (Verified in `TimerWorkDayTest`)
-- Starting the timer for the same day reuses the existing `WorkDay`. (Verified in `TimerWorkDayTest`)
-- No full scans of all `WorkEntry` objects are needed to find active entries. (Optimized in `WorkEntryHelper` and timer services)
-
-### Verification
-Refactored `StartTimerService`, `StopTimerService`, and `WorkEntryHelper`. Created `WorkDayHelper`. Added integration test `TimerWorkDayTest`.
-
----
-
-## 8. Ensure WorkEntries are on the same day (✓ DONE)
-
-### Goal
-Update `StopTimerService` and `UpdateWorkEntryService` to ensure `WorkEntry` objects do not span multiple days, as required by the specification. Handle forgotten timers by capping them at the time needed to reach the daily target.
-
-### Work
-- Update `StopTimerService` logic: (✓ DONE)
-  - If stop time is on the same day as start time: proceed as normal.
-  - If stop time is on the next day (midnight split):
-    - Set current entry end to 24:00 of start day.
-    - Create a new `WorkDay` for the next day if it doesn't exist.
-    - Create a new `WorkEntry` on the next `WorkDay` starting at 00:00 and ending at the original stop time.
-  - If stop time is more than one day after start time (forgotten timer):
-    - Calculate remaining time to reach the day's target (Sollzeit).
-    - Set current entry end to `Startzeit + max(0, Sollzeit - bisherige_Istzeit)`.
-    - Ensure end time does not exceed 24:00.
-    - Add comment "Timer vergessen - auf Sollzeit begrenzt".
-    - Remaining time is lost.
-- Update `UpdateWorkEntryService` and `CreateWorkEntryService` to validate that start and end are on the same day. (✓ DONE - services are named `CorrectWorkEntryService` and `AddWorkEntryService`)
-- Update `WorkEntry` validation in Core to enforce same-day constraint. (✓ DONE - implemented in `WorkEntryHelper.validateNoOverlap`)
-
-### Acceptance Criteria
-- Timer stops past midnight automatically split into two entries. (Verified in `WorkEntrySameDayTest`)
-- Forgotten timers (multi-day) are capped at the time the daily target is reached. (Verified in `WorkEntrySameDayTest`)
-- Manual entries spanning multiple days are rejected by validation. (Verified in `WorkEntrySameDayTest`)
-- Unit tests cover all carry-over and forgotten timer scenarios. (Implemented in `WorkEntrySameDayTest`)
-
-### Verification
-Refactored `StopTimerService` and `WorkEntryHelper`. Updated `WorkEntrySameDayTest` with comprehensive cases for midnight splits and forgotten timer capping logic. Verified that `AddWorkEntryService` and `CorrectWorkEntryService` correctly enforce the same-day constraint through `WorkEntryHelper`.
-
----
-
-# Phase 4 – Presence Status
-
-## 9. Presence Status Core Query [✓ DONE]
-
-Before implementing the dashboard, verify that the backend can determine the presence state required by the specification.
-
-Reuse existing work-entry and absence information.
-
-Define the output using the presence states already specified by Chronivaro.
-
-Do not invent additional privacy settings or status values.
-
-### Acceptance Criteria
-
-Tests cover representative cases such as:
-
-- currently working;
-- absence;
-- scheduled non-working day;
-- ambiguous/no data if such a state exists in the specification.
-
----
-
-## 10. Presence Status REST Endpoint [✓ DONE]
-
-Expose the presence query through a read-only REST endpoint.
-
-Return only information the authenticated user is permitted to see.
-
----
-
-## 11. Presence Status UI [✓ DONE]
-
-Implement the "Who is working?" view.
-
-Use the exact status semantics defined by the backend.
-
-The frontend must not infer presence independently from raw time entries.
-
----
-
-# Phase 5 – User Management & Registration
-
-## 12. Implement InitiateEmployeeRegistrationService (✓ DONE)
-
-### Goal
-Implement a service to initiate the password set process for an employee.
-
-### Business Rules
-- Find the linked Strolch user using `userId` and `username` from the employee resource.
-- Use `PrivilegeHandler.initiateChallengeFor(Usage.SET_PASSWORD, username, source)` to trigger the registration challenge.
-- The service should be restricted to administrators.
-- The action should be audited.
-
-### Acceptance Criteria
-- Challenge is successfully initiated for a valid employee.
-- Fails if the employee has no linked user.
-- Fails if the user is not found in Strolch.
-- Fails if the acting user lacks administrative privileges.
-
-### Verification
-Implemented in `InitiateEmployeeRegistrationService`. Added tests in `InitiateEmployeeRegistrationServiceTest` and `CompleteRegistrationTest`.
-
----
-
-## 13. Expose Registration REST Endpoint (✓ DONE)
-
-### Goal
-Expose the registration initiation service via a REST endpoint.
-
-### Work
-Add `POST /employees/{id}/register` to `EmployeeResource`.
-
-### Rules
-- Requires administrative privileges.
-- Delegates to `InitiateEmployeeRegistrationService`.
-
----
-
-## 14. Add Registration Action to UI (✓ DONE)
-
-### Goal
-Add a button to the Employees view to trigger the registration process.
-
-### Work
-- Update `EmployeeApi.js` to include `register(id)`.
-- Update `EmployeesView.js` to add a "Register" button in the employee list actions.
-- Show success/failure notification upon completion.
-
----
-## 15. Expose Employee Absence Self-Service (✓ DONE)
-
-### Goal
-Expose the completed Core absence functionality through REST.
-
-### Work
-Implement or complete:
-
-```text
-GET  /me/absences
-PUT  /me/absences/{id}
-POST /me/absences/{id}/cancel
-```
-
-### Rules
-
-The authenticated user identity must determine the employee.
-
-Do not trust an employee ID supplied by the client for `/me/...` operations.
-
-REST resources must delegate business rules to Core services.
-
-### Acceptance Criteria
-
-- A user only receives their own absences.
-- Attempted cross-user access is impossible through these endpoints.
-- Validation errors use the project's existing REST error conventions.
-- REST integration tests are added where the project already uses them.
-
-### Verification
-Implemented `UpdateAbsenceService`. Added endpoints to `ChronivaroResource`. Added tests in `UpdateAbsenceServiceTest`.
-
----
-
 ## 16. Personal Absence UI
 
 ### Goal
@@ -955,3 +488,103 @@ The final report must categorise findings as:
 - specification ambiguity.
 
 For each remaining gap, provide exact source locations and a proposed next task.
+
+---
+
+## Dependency-ordered delivery plan — 2026-08-17
+
+This audit is based on `IMPLEMENTATION_SPECIFICATION.md` and repository evidence, not on previous backlog labels. Execute the tasks in order; a task may begin only after its listed prerequisites are complete.
+
+### 1. Resolve product and API decisions
+
+- **Classification:** `SPECIFICATION_AMBIGUITY`
+- **Specification:** Sections 6.7.1, 13.2–13.3, 17.3, 21.
+- **Current location:** Open decisions are documented in `IMPLEMENTATION_SPECIFICATION.md`; no complete configuration REST/UI exists.
+- **Missing behaviour:** Decisions for vacation day minutes, proration rounding, vacation type ID, positive-correction carry-over, endpoint naming/status codes, approver selection, authentication, retention, and scope.
+- **Backlog item:** Record approved decisions and translate them into a versioned configuration/API contract.
+- **Dependencies:** None.
+- **Acceptance criteria:** Every open value has an owner-approved decision or an explicitly deferred scope; endpoint paths/status codes and configurable policy keys are documented without hidden defaults.
+
+### 2. Establish shared REST, correlation, and authorization foundations
+
+- **Classification:** `MISSING`
+- **Specification:** Sections 13.1, 14.2, 16.1–16.3, 17.3, 22.
+- **Current location:** REST resources under `chronivaro-rest/src/main/java/.../resource`; no complete shared error/OpenAPI/concurrency/pagination contract was found.
+- **Missing behaviour:** Standard errors with field errors and correlation ID, optimistic concurrency, pagination, complete ISO contracts, OpenAPI, and request correlation propagation.
+- **Backlog item:** Implement shared REST filters, error mapping, version checks, pagination helpers, OpenAPI schemas, and privilege-boundary tests.
+- **Dependencies:** Task 1 for final contract decisions.
+- **Acceptance criteria:** Existing and new mutable/list endpoints use one documented contract; stale writes fail deterministically; integration tests cover validation, authorization, conflicts, pagination, and error correlation.
+
+### 3. Complete audit infrastructure and access controls
+
+- **Classification:** `PARTIALLY_IMPLEMENTED`
+- **Specification:** Sections 5.2, 6.10, 9.3–9.5, 16.3, 19.15.
+- **Current location:** `chronivaro-core/src/main/java/.../model/ChronivaroAuditHelper.java` and update services such as `UpdateEmployeeService.java`, `UpdateTeamService.java`, and `UpdateScheduleService.java`.
+- **Missing behaviour:** Explicit action, reason, correlation ID, complete state-changing coverage, and restricted audit access.
+- **Backlog item:** Extend the audit event model/helper, instrument all required services, and add an authorized audit query.
+- **Dependencies:** Task 2 for correlation IDs and API access; existing privilege roles.
+- **Acceptance criteria:** Required changes record actor, entity, action, timestamp, old/new values, reason where required, and correlation ID; sensitive values are protected; unauthorized audit reads fail; representative tests pass.
+
+### 4. Complete the period lifecycle
+
+- **Classification:** `PARTIALLY_IMPLEMENTED`
+- **Specification:** Sections 6.9, 9.5, 10.1, 13.2.
+- **Current location:** `SubmitPeriodService.java`, `ApprovePeriodService.java`, `LockPeriodService.java`, and `chronivaro-rest/.../PeriodResource.java`.
+- **Missing behaviour:** Employee period retrieval/submission, rejection, reopen with permission/reason, full transition validation, metadata/snapshots, and approval listing.
+- **Backlog item:** Extend Core lifecycle services and REST resources without duplicating business rules in REST.
+- **Dependencies:** Tasks 2–3; Task 1 endpoint decisions.
+- **Acceptance criteria:** All states and valid/invalid transitions are tested; approval locks; rejection and authorized reopening require the specified metadata; snapshots preserve reproducibility; all period endpoints are documented.
+
+### 5. Implement vacation policy and journal accounting
+
+- **Classification:** `PARTIALLY_IMPLEMENTED` plus `SPECIFICATION_AMBIGUITY`.
+- **Specification:** Sections 6.7, 6.7.1, 9.4, 11.3, 13.2.
+- **Current location:** `VacationHelper.java`, `AddVacationCorrectionService.java`, and `ApproveAbsenceService.java`; no complete vacation REST/UI implementation.
+- **Missing behaviour:** Configurable entitlement/proration, carry-over, usage linkage/reversal, no-negative-balance approval blocking, account endpoints, and journal reporting.
+- **Backlog item:** Build one immutable journal engine and expose account/adjustment APIs after Task 1 decisions.
+- **Dependencies:** Tasks 1–3; employee schedules; absence approval/status.
+- **Acceptance criteria:** Entitlement, carry-over, usage, correction, and balance are reproducible in minutes; insufficient balance blocks approval; entries are immutable and audited; all section 11.3 values are exposed.
+
+### 6. Build scoped supervisor approval queues and UI
+
+- **Classification:** `MISSING`
+- **Specification:** Sections 3.2, 9.4–9.5, 12.1, 13.2, 18.2–18.3.
+- **Current location:** Approval services exist in `chronivaro-core/.../service`; no approval search/resource/`ApprovalsView.js` was found.
+- **Missing behaviour:** Team-scoped pending absence/period queues and approval/rejection UI with required comments and state handling.
+- **Backlog item:** Add Core searches, REST endpoints, and `ApprovalsView.js`.
+- **Dependencies:** Tasks 2–4; existing absence services and team authorization.
+- **Acceptance criteria:** Supervisors see only permitted pending items; Core enforces transitions and rejection comments; UI covers loading, empty, error, keyboard, and success states.
+
+### 7. Add personal absence and vacation UI
+
+- **Classification:** `MISSING`
+- **Specification:** Sections 12.1, 18.3, 19.
+- **Current location:** Absence operations are in `ChronivaroResource.java` and Core services; no personal absence or vacation page exists.
+- **Missing behaviour:** Personal absence list/create/edit/status and vacation account/journal views using real APIs.
+- **Backlog item:** Add `AbsencesView.js` and `VacationView.js` with centralized API handling and navigation.
+- **Dependencies:** Tasks 2 and 5; existing absence endpoints.
+- **Acceptance criteria:** Valid actions and rejection comments/statuses are displayed; no business calculations are duplicated in JavaScript; loading/empty/error and keyboard flows are covered.
+
+### 8. Implement reports and CSV export
+
+- **Classification:** `MISSING`
+- **Specification:** Sections 4.1.10, 4.1.12, 4.1.14, 11.1–11.5, 13.2, 18.2.
+- **Current location:** `DaySummaryService.java` and `MonthSummaryService.java`; no report resource/query/CSV serializer/page exists.
+- **Missing behaviour:** Time-balance, absence, team, and vacation reports; permission-scoped REST; UTF-8/BOM CSV; report UI.
+- **Backlog item:** Add Core projections, REST mappings, CSV serialization, and a Vanilla JavaScript reports page.
+- **Dependencies:** Tasks 2–7; period and vacation data.
+- **Acceptance criteria:** JSON/CSV contain required report fields; filters enforce server-side scope; CSV escaping/encoding/format tests pass; UI supports required filters and states.
+
+### 9. Complete non-functional and acceptance verification
+
+- **Classification:** `MISSING`
+- **Specification:** Sections 12.2, 17, 18, 19, 22.
+- **Current location:** Existing tests are under `chronivaro-core/src/test` and `chronivaro-rest/src/test`; no complete performance, browser/accessibility, health, metrics, or operational evidence was found.
+- **Missing behaviour:** Required DST/core/REST/UI tests, performance measurements, structured observability, health/readiness, retention guidance, and reproducible acceptance evidence.
+- **Backlog item:** Execute the verification track and document operational and acceptance results without weakening tests.
+- **Dependencies:** Tasks 1–8 and deployment/authentication decisions.
+- **Acceptance criteria:** Specification test cases pass; response-time targets are measured; health/readiness, metrics, correlation IDs, retention guidance, responsive/accessibility checks, and JDK 25 `mvn verify` evidence are documented.
+
+## Verified implemented areas not to reimplement
+
+The following were confirmed in source and tests: Maven/module foundation; roles and privilege configuration; localization resources; employee/team/location/schedule/holiday CRUD; historical schedule lookup and overlap prevention; WorkDay and current-day timer lifecycle; same-day and forgotten-timer handling; multiple work blocks and working-location defaults; absence self-service and rejection/cancellation; registration; presence status; and day/month summary calculation. These remain recorded as implemented or partial above only where the specification requires additional behaviour.
