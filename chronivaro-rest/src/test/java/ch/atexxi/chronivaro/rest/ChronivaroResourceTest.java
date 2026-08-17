@@ -144,6 +144,18 @@ public class ChronivaroResourceTest extends AbstractChronivaroRestfulTest {
 	}
 
 	@Test
+	public void shouldGetMyWorkingLocationDefaults() {
+		String authToken = authenticate();
+		try (Response response = target()
+				.path("chronivaro/v1/me/working-location-defaults")
+				.request(MediaType.APPLICATION_JSON)
+				.header("Authorization", authToken)
+				.get()) {
+			assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+		}
+	}
+
+	@Test
 	public void shouldGetMonthSummary() {
 		String authToken = authenticate();
 		String yearMonth = "2025-01";

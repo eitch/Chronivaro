@@ -15,6 +15,10 @@ export default class WorkEntryApi {
         return await Rest.get(`rest/chronivaro/v1/me/day-summary/${dateStr}`);
     }
 
+    static async getWorkingLocationDefaults() {
+        return await Rest.get('rest/chronivaro/v1/me/working-location-defaults');
+    }
+
     static async getMyWorkEntries(from, to) {
         const fromStr = encodeURIComponent(from.toISOString());
         const toStr = encodeURIComponent(to.toISOString());

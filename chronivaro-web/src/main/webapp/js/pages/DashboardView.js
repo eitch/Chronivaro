@@ -49,6 +49,16 @@ export default class DashboardView {
 
         const refresh = async () => {
             try {
+                if (!workingLocations.some(input => input.checked)) {
+                    const defaults = await WorkEntryApi.getWorkingLocationDefaults();
+                    const weekday = new Intl.DateTimeFormat('en', {weekday: 'long'}).format(new Date()).toUpperCase();
+                    const defaultLocation = defaults.find(item => item.weekday === weekday &&
+                        (item.durationType === 'FULL_DAY' || item.dayPart === 'MORNING'));
+                    const defaultInput = defaultLocation && workingLocations
+                        .find(input => input.value === defaultLocation.workingLocation);
+                    if (defaultInput)
+                        defaultInput.checked = true;
+                }
                 const summary = await WorkEntryApi.getDaySummary(new Date());
                 statusSpan.textContent = summary.stateLabel;
                 if (summary.state === 'WORKING') {

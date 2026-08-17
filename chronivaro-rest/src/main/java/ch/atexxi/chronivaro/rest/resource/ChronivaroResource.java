@@ -3,10 +3,12 @@ package ch.atexxi.chronivaro.rest.resource;
 import ch.atexxi.chronivaro.core.model.ChronivaroModelHelper;
 import ch.atexxi.chronivaro.core.model.WorkEntryHelper;
 import ch.atexxi.chronivaro.core.model.WorkingLocation;
+import ch.atexxi.chronivaro.core.model.WorkingLocationDurationType;
 import ch.atexxi.chronivaro.core.service.*;
 import ch.atexxi.chronivaro.rest.dto.AbsenceDto;
 import ch.atexxi.chronivaro.rest.dto.ChronivaroMapper;
 import ch.atexxi.chronivaro.rest.dto.WorkEntryDto;
+import ch.atexxi.chronivaro.rest.dto.WorkingLocationDefaultDto;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.Context;
@@ -24,6 +26,7 @@ import li.strolch.service.api.ServiceResult;
 
 import java.time.LocalDate;
 import java.time.YearMonth;
+import java.time.DayOfWeek;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -81,6 +84,27 @@ public class ChronivaroResource {
 			List<Resource> entries = WorkEntryHelper.findWorkEntries(tx, employeeId, from, to);
 			List<WorkEntryDto> dtos = entries.stream().map(ChronivaroMapper::toDto).toList();
 			return Response.ok(ChronivaroRestHelper.createGson().toJson(dtos), MediaType.APPLICATION_JSON).build();
+		}
+	}
+
+	@GET
+	@Path("me/working-location-defaults")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response getMyWorkingLocationDefaults(@Context HttpServletRequest request) {
+		Certificate cert = (Certificate) request.getAttribute(STROLCH_CERTIFICATE);
+		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
+			Optional<Resource> employee = ChronivaroModelHelper.findEmployeeByUser(tx, cert.getUserId());
+			if (employee.isEmpty())
+				return Response.status(Response.Status.NOT_FOUND).build();
+			String employeeId = employee.get().getId();
+			List<WorkingLocationDefaultDto> defaults = tx.streamResources(TYPE_WORKING_LOCATION_DEFAULT)
+					.filter(r -> employeeId.equals(r.getRelationId(PARAM_EMPLOYEE)))
+					.map(r -> new WorkingLocationDefaultDto(r.getId(), employeeId,
+							DayOfWeek.valueOf(r.getString(PARAM_WEEKDAY)),
+							WorkingLocationDurationType.valueOf(r.getString(PARAM_DURATION_TYPE)),
+							r.getString(PARAM_DAY_PART), r.getString(PARAM_WORKING_LOCATION)))
+					.toList();
+			return Response.ok(ChronivaroRestHelper.createGson().toJson(defaults), MediaType.APPLICATION_JSON).build();
 		}
 	}
 

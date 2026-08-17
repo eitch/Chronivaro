@@ -144,11 +144,12 @@ Extend the dashboard start/stop workflow to select the working location for the 
 
 - Added a dashboard location selector and a clear prompt when no location is selected.
 - Persisted the selected location when starting a timer through the Core service and REST API.
-- Default prefill, clearing an existing prefill, and morning/afternoon switching remain pending as 11b.2.
+- Default prefill is implemented below; clearing and morning/afternoon switching remain pending as 11b.2.
 
 ### Work
-- Prefill the dashboard from the employee's weekly default when opening a new workday.
-- Allow the employee to override or clear the prefilled location before starting work.
+- Prefill the dashboard from the employee's weekly default when opening a new workday. **DONE**
+- Added `GET /me/working-location-defaults` and dashboard prefill from the matching weekday's full-day or morning default.
+- Allow the employee to override or clear the prefilled location before starting work. **PARTIAL**
 - Support changing location between the morning and afternoon by creating or updating separate work-entry blocks.
 - Ensure the selected location is persisted with the affected work entry and shown in the dashboard.
 
@@ -156,6 +157,9 @@ Extend the dashboard start/stop workflow to select the working location for the 
 - Starting work with no weekly default requires or clearly prompts for a location.
 - A full-day default can be overridden for one day without changing the recurring weekly default.
 - A half-day location change does not alter the other half of the workday.
+
+### Verification
+- The dashboard prefill is a client-side initial selection only; changing or clearing it does not update the recurring default.
 
 ## 11c. Working Location Validation and Queries
 
