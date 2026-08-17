@@ -398,7 +398,7 @@ The frontend must not infer presence independently from raw time entries.
 
 # Phase 5 – User Management & Registration
 
-## 12. Implement InitiateEmployeeRegistrationService
+## 12. Implement InitiateEmployeeRegistrationService (✓ DONE)
 
 ### Goal
 Implement a service to initiate the password set process for an employee.
@@ -414,6 +414,9 @@ Implement a service to initiate the password set process for an employee.
 - Fails if the employee has no linked user.
 - Fails if the user is not found in Strolch.
 - Fails if the acting user lacks administrative privileges.
+
+### Verification
+Implemented in `InitiateEmployeeRegistrationService`. Added tests in `InitiateEmployeeRegistrationServiceTest` and `CompleteRegistrationTest`.
 
 ---
 
