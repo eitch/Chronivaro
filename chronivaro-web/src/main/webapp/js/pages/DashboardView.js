@@ -28,6 +28,7 @@ export default class DashboardView {
                 <div id="timer-controls">
 					<button id="start-timer" disabled>Start</button>
 					<button id="stop-timer" disabled>Stop</button>
+					<button id="change-working-location" type="button" disabled>Change location</button>
 				</div>
 			</div>
 			<div id="day-summary">
@@ -42,6 +43,7 @@ export default class DashboardView {
         const offDutyBadge = container.querySelector('#off-duty-badge');
         const startBtn = container.querySelector('#start-timer');
         const stopBtn = container.querySelector('#stop-timer');
+		const changeWorkingLocationBtn = container.querySelector('#change-working-location');
 		const workingLocationGroup = container.querySelector('#working-location-group');
 		const workingLocations = [...container.querySelectorAll('input[name="working-location"]')];
 		const clearWorkingLocationBtn = container.querySelector('#clear-working-location');
@@ -82,6 +84,7 @@ export default class DashboardView {
 
 				startBtn.disabled = summary.state === 'WORKING';
 				stopBtn.disabled = summary.state !== 'WORKING';
+				changeWorkingLocationBtn.disabled = summary.state !== 'WORKING';
 				workingLocations.forEach(input => input.disabled = summary.state === 'WORKING');
 				workingLocationGroup.classList.toggle('read-only', summary.state === 'WORKING');
             } catch (err) {
@@ -117,6 +120,20 @@ export default class DashboardView {
                 NotificationDialog.error(err.message);
             }
         });
+
+		changeWorkingLocationBtn.addEventListener('click', async () => {
+			try {
+				await WorkEntryApi.stopTimer();
+				locationSelectionCleared = true;
+				workingLocations.forEach(input => {
+					input.checked = false;
+					input.disabled = false;
+				});
+				await refresh();
+			} catch (err) {
+				NotificationDialog.error(err.message);
+			}
+		});
 
         refresh();
 

@@ -136,7 +136,7 @@ clear, and uniqueness behavior.
 - A workday can represent home office in the morning and customer work in the afternoon without overlapping entries.
 - Weekly defaults can be created, changed, and removed independently for each weekday.
 
-## 11b. Dashboard Working Location Selection
+## 11b. Dashboard Working Location Selection **DONE**
 
 Extend the dashboard start/stop workflow to select the working location for the current workday.
 
@@ -144,14 +144,15 @@ Extend the dashboard start/stop workflow to select the working location for the 
 
 - Added a dashboard location selector and a clear prompt when no location is selected.
 - Persisted the selected location when starting a timer through the Core service and REST API.
-- Default prefill is implemented below; clearing and morning/afternoon switching remain pending as 11b.2.
+- Default prefill, clearing, and morning/afternoon switching are implemented below.
 
 ### Work
 - Prefill the dashboard from the employee's weekly default when opening a new workday. **DONE**
 - Added `GET /me/working-location-defaults` and dashboard prefill from the matching weekday's full-day or morning default.
 - Allow the employee to override or clear the prefilled location before starting work. **DONE**
-- Support changing location between the morning and afternoon by creating or updating separate work-entry blocks.
-- Ensure the selected location is persisted with the affected work entry and shown in the dashboard.
+- Support changing location between the morning and afternoon by stopping the current timer and starting a separate
+  work-entry block with the new location.
+- Ensure the selected location is persisted with the affected work entry and shown in the dashboard. **DONE**
 
 ### Acceptance Criteria
 - Starting work with no weekly default requires or clearly prompts for a location.
@@ -161,6 +162,9 @@ Extend the dashboard start/stop workflow to select the working location for the 
 ### Verification
 - The dashboard prefill is a client-side initial selection only; changing or clearing it does not update the recurring default.
 - The dashboard now provides a clear action that prevents the default from being reapplied during refresh; starting without a selection remains rejected.
+- The dashboard provides a `Change location` action that closes the active block and enables a new location selection.
+- `TimerWorkDayTest.shouldAllowDifferentWorkingLocationsForSeparateBlocks` verifies separate same-day blocks retain
+  different locations.
 
 ## 11c. Working Location Validation and Queries
 

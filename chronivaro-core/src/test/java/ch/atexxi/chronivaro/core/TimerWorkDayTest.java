@@ -15,6 +15,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.time.LocalDate;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
@@ -97,6 +98,35 @@ public class TimerWorkDayTest {
 					.filter(we -> we.getRelationId(PARAM_WORK_DAY).equals(expectedWorkDayId))
 					.toList();
 			assertEquals(2, workEntries.size());
+		}
+	}
+
+	@Test
+	public void shouldAllowDifferentWorkingLocationsForSeparateBlocks() {
+		String employeeId = "timer-location-test";
+
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
+			createEmployee(tx, employeeId, "Timer Location Test");
+			tx.commitOnClose();
+		}
+
+		ServiceHandler serviceHandler = runtimeMock.getServiceHandler();
+		StartTimerService.Argument morningArgument = new StartTimerService.Argument(employeeId, WorkingLocation.HOME_OFFICE);
+		assertTrue(serviceHandler.doService(certificate, new StartTimerService(), morningArgument).isOk());
+		StopTimerService.StopTimerArgument stopArgument = new StopTimerService.StopTimerArgument(employeeId);
+		assertTrue(serviceHandler.doService(certificate, new StopTimerService(), stopArgument).isOk());
+		StartTimerService.Argument afternoonArgument = new StartTimerService.Argument(employeeId, WorkingLocation.CUSTOMER);
+		assertTrue(serviceHandler.doService(certificate, new StartTimerService(), afternoonArgument).isOk());
+
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
+			List<Resource> entries = tx.streamResources(TYPE_WORK_ENTRY)
+					.filter(entry -> employeeId.equals(entry.getRelationId(PARAM_EMPLOYEE)))
+					.toList();
+			assertEquals(2, entries.size());
+			assertTrue(entries.stream().anyMatch(entry -> WorkingLocation.HOME_OFFICE.name()
+					.equals(entry.getString(PARAM_WORKING_LOCATION))));
+			assertTrue(entries.stream().anyMatch(entry -> WorkingLocation.CUSTOMER.name()
+					.equals(entry.getString(PARAM_WORKING_LOCATION))));
 		}
 	}
 }

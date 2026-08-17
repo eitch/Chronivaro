@@ -1,6 +1,7 @@
 package ch.atexxi.chronivaro.core;
 
 import ch.atexxi.chronivaro.core.model.WorkDayHelper;
+import ch.atexxi.chronivaro.core.model.WorkingLocation;
 import li.strolch.model.Resource;
 import li.strolch.persistence.api.StrolchTransaction;
 
@@ -14,7 +15,8 @@ public class ChronivaroTestHelper {
 		return createEmployee(tx, employeeId, name, true);
 	}
 
-	public static Resource createEmployee(StrolchTransaction tx, String employeeId, String name, boolean createSchedule) {
+	public static Resource createEmployee(StrolchTransaction tx, String employeeId, String name,
+			boolean createSchedule) {
 		Resource employee = tx.getResourceTemplate(TYPE_EMPLOYEE, true);
 		employee.setId(employeeId);
 		employee.setName(name);
@@ -37,11 +39,13 @@ public class ChronivaroTestHelper {
 		return employee;
 	}
 
-	public static Resource createEmployee(StrolchTransaction tx, String employeeId, String name, ZonedDateTime joinDate) {
+	public static Resource createEmployee(StrolchTransaction tx, String employeeId, String name,
+			ZonedDateTime joinDate) {
 		return createEmployee(tx, employeeId, name, joinDate, true);
 	}
 
-	public static Resource createEmployee(StrolchTransaction tx, String employeeId, String name, ZonedDateTime joinDate, boolean createSchedule) {
+	public static Resource createEmployee(StrolchTransaction tx, String employeeId, String name, ZonedDateTime joinDate,
+			boolean createSchedule) {
 		Resource employee = tx.getResourceTemplate(TYPE_EMPLOYEE, true);
 		employee.setId(employeeId);
 		employee.setName(name);
@@ -63,6 +67,7 @@ public class ChronivaroTestHelper {
 		tx.add(employee);
 		return employee;
 	}
+
 	public static Resource createAbsenceType(StrolchTransaction tx, String code, String name) {
 		Resource absenceType = tx.getResourceTemplate(TYPE_ABSENCE_TYPE, true);
 		absenceType.setId(code);
@@ -77,12 +82,12 @@ public class ChronivaroTestHelper {
 			ZonedDateTime end) {
 		Resource workDay = WorkDayHelper.getOrCreateWorkDay(tx, employee, start);
 		Resource workEntry = tx.getResourceTemplate(TYPE_WORK_ENTRY, true);
-		workEntry.setId(tx.getAgent().getUniqueId());
 		workEntry.setName("WorkEntry " + start);
 		workEntry.setRelation(PARAM_EMPLOYEE, employee);
 		workEntry.setRelation(PARAM_WORK_DAY, workDay);
 		workEntry.setDate(PARAM_START, start);
 		workEntry.setDate(PARAM_END, end);
+		workEntry.setString(PARAM_WORKING_LOCATION, WorkingLocation.OFFICE);
 
 		tx.add(workEntry);
 		workDay.addRelation(PARAM_WORK_ENTRIES, workEntry);

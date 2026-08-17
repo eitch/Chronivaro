@@ -25,7 +25,7 @@
 - [x] Working Location on WorkEntries
 - [x] Weekly Working Location Defaults
 - [x] Working-location default weekday and duration type enums
-- [ ] Dashboard Working Location Selection and Overrides
+- [x] Dashboard Working Location Selection and Overrides
 - [x] Dashboard working location prefill override and clear action
 - [x] Dashboard timer-start working location selection and persistence
 - [x] Dashboard working location radio selection and read-only running state
