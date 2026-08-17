@@ -728,6 +728,10 @@ Prevent the creation of overlapping `EmploymentScheduleVersion` resources.
 
 ## 26. Automated Vacation Entitlement Engine
 
+**Status: BLOCKED pending specification decisions.** The current specification defines the vacation journal
+and entry types, but does not define the entitlement amount, age/seniority rules, carry-over limit, or expiry
+date. Do not implement guessed policy. Complete the prerequisite below before implementing the engine.
+
 ### Goal
 Implement automated booking of yearly vacation entitlement according to the specification (Section 6.7).
 
@@ -739,6 +743,13 @@ Implement automated booking of yearly vacation entitlement according to the spec
 ### Acceptance Criteria
 - Employees receive yearly entitlement entries automatically.
 - Expiry and carry-over are handled according to business rules.
+
+### Verified prerequisite
+
+- [ ] **26a. Define vacation entitlement policy**: specify the annual entitlement, employment-rate
+  calculation, age/seniority bands, carry-over limit, and expiry timing in the specification and configuration.
+- Existing journal storage and balance calculation are in `VacationHelper` and
+  `AddVacationCorrectionService`; reuse them rather than introducing parallel accounting.
 
 ---
 

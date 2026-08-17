@@ -278,6 +278,35 @@ Das Ferienguthaben wird als Journal geführt und nicht als veränderbarer Einzel
 
 Ferien werden intern in Minuten geführt. Die UI darf das Guthaben zusätzlich in Tagen anzeigen. Für die Darstellung in Tagen ist eine eindeutig definierte Bezugs-Sollzeit erforderlich.
 
+#### 6.7.1 Automated vacation entitlement policy
+
+The automated entitlement engine uses the following policy decisions:
+
+- The standard annual entitlement for a full-time employee is `25` vacation days per entitlement year.
+- The entitlement year is the calendar year, and the annual entitlement is booked at the beginning of that year.
+- One vacation day is converted to a fixed, configured number of minutes. The exact configured minute value must be
+  provided before implementation; it must not be inferred from an employee's daily target.
+- Part-time entitlement is calculated pro rata from the employment rate.
+- Employment starting or ending during the entitlement year is prorated for the active part of the year.
+- No age-based entitlement rules apply.
+- No seniority-based entitlement rules apply.
+- Unused vacation is carried over without a limit at the transition to the next calendar year.
+- Carry-over consumes the oldest available vacation balance first.
+- Carried-over vacation does not expire.
+- Only the configured standard vacation absence type creates `USAGE` entries. The technical identifier of this type must
+  be provided before implementation.
+- Journal entries are immutable. Corrections and reversals are represented by separately audited `CORRECTION` entries.
+- Vacation approval is blocked when the requested usage exceeds the available balance. No negative balance is permitted.
+- All policy values, including the fixed day-minute conversion, entitlement, proration, carry-over, expiry, and absence
+  type configuration, must be configurable rather than hard-coded.
+
+The following implementation parameters remain explicitly open because they were not defined by the policy decisions:
+
+- the fixed number of minutes representing one vacation day;
+- the rounding rule for prorated entitlement;
+- the exact technical identifier of the standard vacation absence type;
+- whether positive correction balances are included in the unlimited carry-over amount.
+
 ### 6.8 HolidayCalendar und Holiday
 
 | Attribut | Beschreibung |

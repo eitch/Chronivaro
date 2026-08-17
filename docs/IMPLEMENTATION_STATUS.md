@@ -19,6 +19,9 @@
 
 ## In Progress
 
+- Task 26 is verified as blocked: the specification does not define the entitlement, seniority/age,
+  carry-over, or expiry policy required for implementation. Existing support is limited to vacation
+  journal corrections and cumulative balance lookup in `VacationHelper` and `AddVacationCorrectionService`.
 
 ## Pending
 
@@ -33,7 +36,7 @@
 - [x] My Times displays the working location for each work entry
 - [x] Who is working? displays the active working location
 - [x] Who is working? places the active working location beside the status
-- [ ] Vacation Account Management (MVP 4.1.8 / 6.7)
+- [ ] Vacation Account Management (MVP 4.1.8 / 6.7) — blocked pending backlog prerequisite 26a
 - [ ] Period Workflow (MVP 4.1.11 / 6.10)
 - [ ] Administrative Audit Coverage
 - [ ] Reporting (MVP 4.1.10 / 4.1.12 / 4.1.14)
