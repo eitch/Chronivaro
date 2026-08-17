@@ -95,6 +95,50 @@ Do not perform unrelated refactoring while implementing a backlog item.
 
 ---
 
+# Phase 4a – Working Location
+
+## 11a. Working Location Domain Model
+
+Add working-location data to `WorkEntry` and define employee weekly defaults.
+
+### Work
+- Support the locations `HOME_OFFICE`, `OFFICE`, and `CUSTOMER`.
+- Store the location on every work entry so morning and afternoon entries can have different locations.
+- Model `HALF_DAY` and `FULL_DAY` defaults, including the applicable half-day part.
+- Allow at most one default per weekday and day part.
+
+### Acceptance Criteria
+- Existing work entries remain valid through an explicit migration/default strategy.
+- A workday can represent home office in the morning and customer work in the afternoon without overlapping entries.
+- Weekly defaults can be created, changed, and removed independently for each weekday.
+
+## 11b. Dashboard Working Location Selection
+
+Extend the dashboard start/stop workflow to select the working location for the current workday.
+
+### Work
+- Prefill the dashboard from the employee's weekly default when opening a new workday.
+- Allow the employee to override or clear the prefilled location before starting work.
+- Support changing location between the morning and afternoon by creating or updating separate work-entry blocks.
+- Ensure the selected location is persisted with the affected work entry and shown in the dashboard.
+
+### Acceptance Criteria
+- Starting work with no weekly default requires or clearly prompts for a location.
+- A full-day default can be overridden for one day without changing the recurring weekly default.
+- A half-day location change does not alter the other half of the workday.
+
+## 11c. Working Location Validation and Queries
+
+Validate and expose working-location data consistently across time-entry services and dashboard queries.
+
+### Acceptance Criteria
+- Invalid locations and invalid half-day/full-day combinations are rejected.
+- Overlapping work entries with different locations remain prohibited.
+- Existing time calculations are unchanged; location is descriptive metadata and does not affect worked minutes.
+- Relevant service, REST, and dashboard tests cover defaults, overrides, full-day entries, and morning/afternoon changes.
+
+---
+
 # Phase 1 – Foundations
 
 ## 1. Business Roles and Permissions

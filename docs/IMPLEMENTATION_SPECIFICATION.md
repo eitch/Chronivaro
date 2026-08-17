@@ -170,6 +170,7 @@ Regeln:
 | `source` | beispielsweise `TIMER`, `MANUAL`, `IMPORT`, `ADMIN` |
 | `comment` | optionaler Kommentar |
 | `createdBy` | Ersteller |
+| `workingLocation` | Arbeitsort: `HOME_OFFICE`, `OFFICE` oder `CUSTOMER` |
 
 Regeln:
 
@@ -180,6 +181,29 @@ Regeln:
 - Ein `WorkEntry` bildet ausschliesslich einen tatsächlich gearbeiteten Zeitblock ab.
 - Pausen werden nicht als eigene Entität erfasst. Eine Unterbrechung ergibt sich aus der zeitlichen Lücke zwischen zwei Arbeitsblöcken.
 - Direkte Tageszeiteingaben werden intern als separate manuelle Tagesbuchung oder als klar gekennzeichnete Dauerbuchung abgebildet; beide Erfassungsarten dürfen nicht zu einer Doppelzählung führen.
+- Jeder `WorkEntry` muss einen Arbeitsort haben. Der Arbeitsort beschreibt den Ort des jeweiligen Zeitblocks und ist nicht zwingend für den ganzen Arbeitstag gleich.
+- Ein Arbeitstag darf höchstens einen Arbeitsort am Vormittag und einen Arbeitsort am Nachmittag haben. Ein Wechsel des Arbeitsorts erzeugt daher separate, nicht überlappende `WorkEntry`-Zeitblöcke.
+- Für die Erfassung im Dashboard werden die Dauerbereiche `HALF_DAY` und `FULL_DAY` unterstützt. Ein halber Tag bezieht sich auf `MORNING` oder `AFTERNOON`; ein ganzer Tag gilt für beide Tageshälften.
+- `CUSTOMER` bezeichnet Arbeit beim Kunden beziehungsweise unterwegs für einen Kunden. Die konkrete Kundenreferenz ist für diese Erweiterung optional und darf später ergänzt werden.
+
+### 6.4.1 Wöchentliche Standardarbeitsorte
+
+Mitarbeitende können für jeden Wochentag einen Standardarbeitsort konfigurieren. Der Standard wird beim Öffnen eines neuen `WorkDay` im Dashboard vorausgefüllt und erstellt nicht selbstständig eine Arbeitszeitbuchung.
+
+| Attribut | Beschreibung |
+| --- | --- |
+| `weekday` | Wochentag, für den der Standard gilt |
+| `workingLocation` | `HOME_OFFICE`, `OFFICE` oder `CUSTOMER` |
+| `durationType` | `HALF_DAY` oder `FULL_DAY` |
+| `halfDayPart` | `MORNING` oder `AFTERNOON`, wenn `durationType` den Wert `HALF_DAY` hat |
+
+Regeln:
+
+- Mitarbeitende dürfen pro Wochentag und Tageshälfte höchstens einen Standard konfigurieren.
+- Beim Öffnen des Dashboards wird für das aktuelle Datum der passende wöchentliche Standard ausgewählt, sofern einer vorhanden ist.
+- Mitarbeitende dürfen den Standard vor dem Start oder beim Aktualisieren von Arbeitszeitbuchungen überschreiben oder löschen. Die Übersteuerung gilt nur für den betroffenen `WorkDay` und ändert die wöchentliche Konfiguration nicht.
+- Ein ganztägiger Standard darf in zwei halbtägige Buchungen mit unterschiedlichen Arbeitsorten aufgeteilt werden, beispielsweise `HOME_OFFICE` am Vormittag und `CUSTOMER` am Nachmittag.
+- Standards gelten nicht für arbeitsfreie Tage, ausser Mitarbeitende erfassen ausdrücklich Arbeitszeit.
 
 ### 6.5 AbsenceType – Abwesenheitsart
 

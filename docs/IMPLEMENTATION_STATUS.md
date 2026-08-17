@@ -19,11 +19,14 @@
 
 ## In Progress
 
-- [ ] Vacation Account Management (MVP 4.1.8 / 6.7)
-- [ ] Period Workflow (MVP 4.1.11 / 6.10)
 
 ## Pending
 
+- [ ] Working Location on WorkEntries and WorkDays
+- [ ] Weekly Working Location Defaults
+- [ ] Dashboard Working Location Selection and Overrides
+- [ ] Vacation Account Management (MVP 4.1.8 / 6.7)
+- [ ] Period Workflow (MVP 4.1.11 / 6.10)
 - [ ] Administrative Audit Coverage
 - [ ] Reporting (MVP 4.1.10 / 4.1.12 / 4.1.14)
 - [ ] Global Configuration REST/UI
