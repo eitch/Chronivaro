@@ -17,6 +17,14 @@ export default class DashboardView {
 				<p><span id="presence-status">Loading...</span></p>
 				<p><span id="off-duty-badge" class="hidden">Off-duty</span></p>
 				<div id="timer-controls">
+					<fieldset id="working-location-group">
+						<legend>Working location</legend>
+						<label><input type="radio" name="working-location" value="HOME_OFFICE"> Home office</label>
+						<label><input type="radio" name="working-location" value="OFFICE"> Office</label>
+						<label><input type="radio" name="working-location" value="CUSTOMER"> Customer</label>
+					</fieldset>
+                </div>
+                <div id="timer-controls">
 					<button id="start-timer" disabled>Start</button>
 					<button id="stop-timer" disabled>Stop</button>
 				</div>
@@ -33,6 +41,8 @@ export default class DashboardView {
         const offDutyBadge = container.querySelector('#off-duty-badge');
         const startBtn = container.querySelector('#start-timer');
         const stopBtn = container.querySelector('#stop-timer');
+		const workingLocationGroup = container.querySelector('#working-location-group');
+		const workingLocations = [...container.querySelectorAll('input[name="working-location"]')];
         const workedSpan = container.querySelector('#worked-time');
         const requiredSpan = container.querySelector('#required-time');
         const balanceSpan = container.querySelector('#day-balance');
@@ -43,6 +53,7 @@ export default class DashboardView {
                 statusSpan.textContent = summary.stateLabel;
                 if (summary.state === 'WORKING') {
                     statusSpan.className = 'status-working';
+                    workingLocations.forEach(input => input.checked = input.value === summary.workingLocation);
                     offDutyBadge.className = 'hidden';
                 } else if (summary.isOff) {
                     statusSpan.className = 'status-off-duty';
@@ -56,8 +67,10 @@ export default class DashboardView {
                 requiredSpan.textContent = Format.duration(summary.targetMinutes);
                 balanceSpan.textContent = Format.duration(summary.balance);
 
-                startBtn.disabled = summary.state === 'WORKING';
-                stopBtn.disabled = summary.state !== 'WORKING';
+				startBtn.disabled = summary.state === 'WORKING';
+				stopBtn.disabled = summary.state !== 'WORKING';
+				workingLocations.forEach(input => input.disabled = summary.state === 'WORKING');
+				workingLocationGroup.classList.toggle('read-only', summary.state === 'WORKING');
             } catch (err) {
                 console.error(err);
                 statusSpan.textContent = 'Error loading status';
@@ -66,7 +79,12 @@ export default class DashboardView {
 
         startBtn.addEventListener('click', async () => {
             try {
-                await WorkEntryApi.startTimer();
+				const workingLocation = workingLocations.find(input => input.checked);
+				if (!workingLocation) {
+					NotificationDialog.error('Select a working location before starting work.');
+					return;
+				}
+				await WorkEntryApi.startTimer(workingLocation.value);
                 await refresh();
             } catch (err) {
                 NotificationDialog.error(err.message);

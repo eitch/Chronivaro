@@ -97,7 +97,7 @@ public class MonthSummaryService
 				totalAbsence += absence;
 
 				daySummaries.add(
-						new DaySummary(date, state, state.getLabel(), target, actual, holiday, absence, target == 0,
+						new DaySummary(date, state, state.getLabel(), target, actual, holiday, absence, target == 0, null,
 								List.of(), List.of()));
 			}
 

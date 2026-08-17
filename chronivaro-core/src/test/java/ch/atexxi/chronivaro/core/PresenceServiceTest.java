@@ -1,14 +1,12 @@
 package ch.atexxi.chronivaro.core;
 
-import ch.atexxi.chronivaro.core.model.AbsenceHelper;
+import ch.atexxi.chronivaro.core.model.WorkingLocation;
 import ch.atexxi.chronivaro.core.service.PresenceService;
 import ch.atexxi.chronivaro.core.service.StartTimerService;
 import li.strolch.model.Resource;
 import li.strolch.persistence.api.StrolchTransaction;
 import li.strolch.privilege.model.Certificate;
-import li.strolch.privilege.model.PrivilegeContext;
 import li.strolch.privilege.model.SimpleRestrictable;
-import li.strolch.service.StringArgument;
 import li.strolch.service.api.ServiceHandler;
 import li.strolch.testbase.runtime.RuntimeMock;
 import org.junit.AfterClass;
@@ -17,7 +15,6 @@ import org.junit.Test;
 
 import java.time.LocalDate;
 import java.time.ZonedDateTime;
-import java.util.List;
 
 import static ch.atexxi.chronivaro.core.ChronivaroTestHelper.createAbsenceType;
 import static ch.atexxi.chronivaro.core.ChronivaroTestHelper.createEmployee;
@@ -114,7 +111,8 @@ public class PresenceServiceTest {
 		ServiceHandler serviceHandler = runtimeMock.getServiceHandler();
 
 		// Start timer for Emp 1
-		serviceHandler.doService(certificate, new StartTimerService(), new StringArgument("p-emp1"));
+		serviceHandler.doService(certificate, new StartTimerService(),
+				new StartTimerService.Argument("p-emp1", WorkingLocation.OFFICE));
 
 		// Check presence
 		PresenceService.PresenceArgument arg = new PresenceService.PresenceArgument();
@@ -162,9 +160,11 @@ public class PresenceServiceTest {
 		// Test Privacy
 		Certificate testCert = runtimeMock.login("supervisor", "admin");
 		try (StrolchTransaction tx = runtimeMock.openUserTx(testCert, true)) {
-			assertFalse(tx.getPrivilegeContext().hasPrivilege(new SimpleRestrictable(PRIVILEGE_GET_ABSENCE_REASON, "VACATION")));
+			assertFalse(tx
+					.getPrivilegeContext()
+					.hasPrivilege(new SimpleRestrictable(PRIVILEGE_GET_ABSENCE_REASON, "VACATION")));
 		}
-		
+
 		result = serviceHandler.doService(testCert, new PresenceService(), arg);
 		assertTrue(result.isOk());
 		PresenceService.PresenceInfo info3Privacy = result.presenceInfos

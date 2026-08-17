@@ -2,6 +2,7 @@ package ch.atexxi.chronivaro.rest.resource;
 
 import ch.atexxi.chronivaro.core.model.ChronivaroModelHelper;
 import ch.atexxi.chronivaro.core.model.WorkEntryHelper;
+import ch.atexxi.chronivaro.core.model.WorkingLocation;
 import ch.atexxi.chronivaro.core.service.*;
 import ch.atexxi.chronivaro.rest.dto.AbsenceDto;
 import ch.atexxi.chronivaro.rest.dto.ChronivaroMapper;
@@ -223,8 +224,9 @@ public class ChronivaroResource {
 
 	@POST
 	@Path("me/timer/start")
+	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response startTimer(@Context HttpServletRequest request) {
+	public Response startTimer(@Context HttpServletRequest request, String data) {
 		Certificate cert = (Certificate) request.getAttribute(STROLCH_CERTIFICATE);
 		ServiceHandler serviceHandler = ChronivaroRestHelper.getServiceHandler();
 
@@ -236,9 +238,15 @@ public class ChronivaroResource {
 			employeeId = employee.get().getId();
 		}
 
-		StringArgument arg = new StringArgument(employeeId);
+		TimerStartDto dataObject = ChronivaroRestHelper.createGson().fromJson(data, TimerStartDto.class);
+		StartTimerService.Argument arg = new StartTimerService.Argument();
+		arg.employeeId = employeeId;
+		arg.workingLocation = WorkingLocation.valueOf(dataObject.workingLocation);
 		ServiceResult result = serviceHandler.doService(cert, new StartTimerService(), arg);
 		return ResponseUtil.toResponse(result);
+	}
+
+	private record TimerStartDto(String workingLocation) {
 	}
 
 	@POST

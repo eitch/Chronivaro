@@ -115,7 +115,7 @@ public class ChronivaroResourceTest extends AbstractChronivaroRestfulTest {
 				.path("chronivaro/v1/me/timer/start")
 				.request(MediaType.APPLICATION_JSON)
 				.header("Authorization", authToken)
-				.post(null)) {
+				.post(Entity.json("{\"workingLocation\":\"HOME_OFFICE\"}"))) {
 			assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
 		}
 

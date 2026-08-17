@@ -1,5 +1,6 @@
 package ch.atexxi.chronivaro.core;
 
+import ch.atexxi.chronivaro.core.model.WorkingLocation;
 import ch.atexxi.chronivaro.core.service.ApproveAbsenceService;
 import ch.atexxi.chronivaro.core.service.StartTimerService;
 import li.strolch.privilege.model.Certificate;
@@ -39,12 +40,12 @@ public class RolePermissionTest {
 	public void employeeShouldBeAbleToStartTimer() {
 		ServiceHandler serviceHandler = runtimeMock.getServiceHandler();
 		StartTimerService service = new StartTimerService();
-		StringArgument arg = new StringArgument("emp1");
+		StartTimerService.Argument arg = new StartTimerService.Argument("emp1", WorkingLocation.OFFICE);
 		// This might fail for other reasons (e.g. employee missing), but it should NOT fail with AccessDeniedException
 		ServiceResult result = serviceHandler.doService(employeeCert, service, arg);
 		// If it's AccessDenied, result.isOk() is false and message contains Access denied
 		if (!result.isOk()) {
-			assertFalse("Should not be Access Denied: " + result.getMessage(), 
+			assertFalse("Should not be Access Denied: " + result.getMessage(),
 					result.getMessage().contains("may not perform service"));
 		}
 	}
@@ -56,7 +57,7 @@ public class RolePermissionTest {
 		StringArgument arg = new StringArgument("abs1");
 		ServiceResult result = serviceHandler.doService(employeeCert, service, arg);
 		assertFalse("Employee should not be able to approve absence", result.isOk());
-		assertTrue("Message should indicate Access Denied: " + result.getMessage(), 
+		assertTrue("Message should indicate Access Denied: " + result.getMessage(),
 				result.getMessage().contains("may not perform service"));
 	}
 
@@ -67,7 +68,7 @@ public class RolePermissionTest {
 		StringArgument arg = new StringArgument("abs1");
 		ServiceResult result = serviceHandler.doService(supervisorCert, service, arg);
 		if (!result.isOk()) {
-			assertFalse("Should not be Access Denied: " + result.getMessage(), 
+			assertFalse("Should not be Access Denied: " + result.getMessage(),
 					result.getMessage().contains("may not perform service"));
 		}
 	}
@@ -76,10 +77,10 @@ public class RolePermissionTest {
 	public void supervisorShouldNotBeAbleToStartTimer() {
 		ServiceHandler serviceHandler = runtimeMock.getServiceHandler();
 		StartTimerService service = new StartTimerService();
-		StringArgument arg = new StringArgument("emp1");
+		StartTimerService.Argument arg = new StartTimerService.Argument("emp1", WorkingLocation.OFFICE);
 		ServiceResult result = serviceHandler.doService(supervisorCert, service, arg);
 		assertFalse("Supervisor should not be able to start timer", result.isOk());
-		assertTrue("Message should indicate Access Denied: " + result.getMessage(), 
+		assertTrue("Message should indicate Access Denied: " + result.getMessage(),
 				result.getMessage().contains("may not perform service"));
 	}
 }

@@ -17,7 +17,7 @@ public class ChronivaroMapper {
 	public static PresenceDto toDto(PresenceService.PresenceInfo info) {
 		return new PresenceDto(info.employeeId(), info.firstname(), info.lastname(), info.teamId(), info.teamName(),
 				info.status(), info.statusLabel(), info.minutesToday(), info.absenceTypeCode(), info.absenceTypeName(),
-				info.isOff());
+				info.isOff(), info.workingLocation());
 	}
 
 	public static WorkEntryDto toDto(Resource workEntry) {
@@ -49,7 +49,7 @@ public class ChronivaroMapper {
 	public static DaySummaryDto toDto(DaySummary summary) {
 		return new DaySummaryDto(summary.date(), summary.state(), summary.stateLabel(), summary.targetMinutes(),
 				summary.actualMinutes(), summary.holidayMinutes(), summary.absenceMinutes(), summary.isOff(),
-				summary.getBalance(), summary
+				summary.getBalance(), summary.workingLocation(), summary
 						.workEntries()
 						.stream()
 						.map(e -> new WorkEntryRangeDto(e.id(), e.start(), e.end(), e.durationMinutes()))

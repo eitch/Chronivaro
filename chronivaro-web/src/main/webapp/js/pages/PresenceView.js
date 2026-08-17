@@ -107,7 +107,10 @@ export default class PresenceView {
 							card.innerHTML = `
 								<div class="presence-info">
 									<span class="presence-name">${info.firstname} ${info.lastname}</span>
-									<span class="presence-status ${statusClass}">${statusText}</span>
+									<div class="presence-status-line">
+										<span class="presence-status ${statusClass}">${statusText}</span>
+										${info.status === 'WORKING' && info.workingLocation ? `<span class="presence-working-location">${info.workingLocation}</span>` : ''}
+									</div>
 									${extraInfo}
 								</div>
 								<div class="presence-stats">

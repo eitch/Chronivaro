@@ -26,6 +26,12 @@
 - [x] Weekly Working Location Defaults
 - [x] Working-location default weekday and duration type enums
 - [ ] Dashboard Working Location Selection and Overrides
+- [x] Dashboard timer-start working location selection and persistence
+- [x] Dashboard working location radio selection and read-only running state
+- [x] Dashboard displays the selected working location while working
+- [x] My Times displays the working location for each work entry
+- [x] Who is working? displays the active working location
+- [x] Who is working? places the active working location beside the status
 - [ ] Vacation Account Management (MVP 4.1.8 / 6.7)
 - [ ] Period Workflow (MVP 4.1.11 / 6.10)
 - [ ] Administrative Audit Coverage

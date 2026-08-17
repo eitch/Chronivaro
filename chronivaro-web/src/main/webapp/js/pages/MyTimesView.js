@@ -25,11 +25,12 @@ export default class MyTimesView {
 						<th>Start</th>
 						<th>End</th>
 						<th>Duration</th>
+						<th>Working location</th>
 						<th>Comment</th>
 					</tr>
 				</thead>
 				<tbody>
-					<tr><td colspan="4">Loading...</td></tr>
+					<tr><td colspan="5">Loading...</td></tr>
 				</tbody>
 			</table>
 		`;
@@ -58,7 +59,7 @@ export default class MyTimesView {
                 tbody.innerHTML = '';
 
                 if (entries.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="4">No entries found.</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="5">No entries found.</td></tr>';
                     return;
                 }
 
@@ -68,13 +69,14 @@ export default class MyTimesView {
 						<td>${new Date(entry.start).toLocaleString()}</td>
 						<td>${entry.end ? new Date(entry.end).toLocaleString() : 'Running...'}</td>
 						<td>${Format.duration(entry.durationMinutes)}</td>
+						<td>${entry.workingLocation || ''}</td>
 						<td>${entry.comment || ''}</td>
 					`;
                     tbody.appendChild(row);
                 });
             } catch (err) {
                 console.error(err);
-                tbody.innerHTML = `<tr><td colspan="4" class="error">${err.message}</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="5" class="error">${err.message}</td></tr>`;
             }
         };
 

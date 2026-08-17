@@ -1,12 +1,12 @@
 package ch.atexxi.chronivaro.core;
 
 import ch.atexxi.chronivaro.core.model.WorkEntryHelper;
+import ch.atexxi.chronivaro.core.model.WorkingLocation;
 import ch.atexxi.chronivaro.core.service.StartTimerService;
 import ch.atexxi.chronivaro.core.service.StopTimerService;
 import li.strolch.model.Resource;
 import li.strolch.persistence.api.StrolchTransaction;
 import li.strolch.privilege.model.Certificate;
-import li.strolch.service.StringArgument;
 import li.strolch.service.api.ServiceHandler;
 import li.strolch.service.api.ServiceResult;
 import li.strolch.testbase.runtime.RuntimeMock;
@@ -52,7 +52,7 @@ public class WorkEntryServiceTest {
 		ServiceHandler serviceHandler = runtimeMock.getServiceHandler();
 
 		// Start Timer
-		StringArgument startArg = new StringArgument(employeeId);
+		StartTimerService.Argument startArg = new StartTimerService.Argument(employeeId, WorkingLocation.OFFICE);
 		ServiceResult startResult = serviceHandler.doService(certificate, new StartTimerService(), startArg);
 		assertTrue(startResult.getMessage(), startResult.isOk());
 
@@ -88,11 +88,11 @@ public class WorkEntryServiceTest {
 
 		ServiceHandler serviceHandler = runtimeMock.getServiceHandler();
 		ServiceResult result1 = serviceHandler.doService(certificate, new StartTimerService(),
-				new StringArgument(employeeId));
+				new StartTimerService.Argument(employeeId, WorkingLocation.OFFICE));
 		assertTrue(result1.isOk());
 
 		ServiceResult result2 = serviceHandler.doService(certificate, new StartTimerService(),
-				new StringArgument(employeeId));
+				new StartTimerService.Argument(employeeId, WorkingLocation.OFFICE));
 		assertFalse(result2.isOk());
 		assertTrue(result2.getMessage().contains("An active work entry already exists"));
 	}

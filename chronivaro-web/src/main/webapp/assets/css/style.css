@@ -168,6 +168,45 @@ button.ghost:hover {
     box-shadow: none;
 }
 
+#working-location-group {
+    display: flex;
+    gap: 0.5rem;
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+
+#working-location-group legend {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+#working-location-group label {
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: 0.5rem;
+    background-color: var(--card-bg);
+    cursor: pointer;
+}
+
+#working-location-group label:has(input:checked) {
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+    background-color: #eef2ff;
+}
+
+#working-location-group input {
+    margin-right: 0.35rem;
+}
+
+#working-location-group.read-only {
+    opacity: 0.65;
+}
+
+#working-location-group.read-only label {
+    cursor: not-allowed;
+}
+
 .actions {
     margin-bottom: 1.5rem;
     display: flex;
@@ -609,6 +648,12 @@ tr:hover {
     flex-direction: column;
     gap: 0.5rem;
     margin-bottom: 1rem;
+}
+
+.presence-status-line {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
 }
 
 .presence-name {

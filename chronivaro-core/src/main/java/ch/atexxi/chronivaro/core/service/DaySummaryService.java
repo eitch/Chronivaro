@@ -15,8 +15,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
-import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.PARAM_END;
-import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.PARAM_START;
+import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
 
 public class DaySummaryService
 		extends AbstractService<DaySummaryService.DaySummaryArgument, DaySummaryService.DaySummaryResult> {
@@ -57,6 +56,7 @@ public class DaySummaryService
 			List<BreakRange> breaks = new ArrayList<>();
 			int actualMinutes = 0;
 			DayState state = DayState.NOT_WORKING;
+			WorkingLocation workingLocation = null;
 
 			DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
 
@@ -66,8 +66,10 @@ public class DaySummaryService
 				ZonedDateTime start = entry.getDate(PARAM_START);
 				ZonedDateTime end = entry.getDate(PARAM_END);
 				boolean isActive = end.getYear() == 1970;
-				if (isActive)
+				if (isActive) {
 					state = DayState.WORKING;
+					workingLocation = WorkingLocation.valueOf(entry.getString(PARAM_WORKING_LOCATION));
+				}
 
 				// Clip to day boundaries
 				ZonedDateTime effectiveStart = start.isBefore(from) ? from : start;
@@ -94,7 +96,7 @@ public class DaySummaryService
 			}
 
 			DaySummary summary = new DaySummary(arg.date, state, state.getLabel(), targetMinutes, actualMinutes,
-					holidayMinutes, absenceMinutes, targetMinutes == 0, ranges, breaks);
+					holidayMinutes, absenceMinutes, targetMinutes == 0, workingLocation, ranges, breaks);
 			return new DaySummaryResult(summary);
 		}
 	}

@@ -140,6 +140,12 @@ clear, and uniqueness behavior.
 
 Extend the dashboard start/stop workflow to select the working location for the current workday.
 
+### 11b.1. Timer Start Location Selection **DONE**
+
+- Added a dashboard location selector and a clear prompt when no location is selected.
+- Persisted the selected location when starting a timer through the Core service and REST API.
+- Default prefill, clearing an existing prefill, and morning/afternoon switching remain pending as 11b.2.
+
 ### Work
 - Prefill the dashboard from the employee's weekly default when opening a new workday.
 - Allow the employee to override or clear the prefilled location before starting work.
@@ -900,6 +906,14 @@ Validate input server-side.
 
 ---
 
+
+## Verified UI Refinements
+
+- [x] Dashboard working location uses radio-style controls and becomes read-only while working (`chronivaro-web/src/main/webapp/js/pages/DashboardView.js` and `assets/css/style.css`).
+- [x] Dashboard shows the active timer's working location from the day-summary response.
+- [x] My Times shows each work entry's working location from the existing work-entry response.
+- [x] Who is working? shows the active working location from the presence response.
+- [x] Who is working? places the active working location beside the status.
 
 # Final Verification
 
