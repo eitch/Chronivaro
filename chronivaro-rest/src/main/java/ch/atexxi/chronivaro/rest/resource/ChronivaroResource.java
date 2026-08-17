@@ -105,6 +105,7 @@ public class ChronivaroResource {
 		arg.start = dto.start();
 		arg.end = dto.end();
 		arg.comment = dto.comment();
+		arg.workingLocation = dto.workingLocation();
 
 		ServiceResult result = serviceHandler.doService(cert, new AddWorkEntryService(), arg);
 		return ResponseUtil.toResponse(result);
@@ -124,6 +125,7 @@ public class ChronivaroResource {
 		arg.start = dto.start();
 		arg.end = dto.end();
 		arg.comment = dto.comment();
+		arg.workingLocation = dto.workingLocation();
 
 		ServiceResult result = serviceHandler.doService(cert, new CorrectWorkEntryService(), arg);
 		return ResponseUtil.toResponse(result);

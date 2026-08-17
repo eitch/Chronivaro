@@ -5,6 +5,7 @@ import ch.atexxi.chronivaro.core.model.MonthSummary;
 import ch.atexxi.chronivaro.core.service.PresenceService;
 import li.strolch.model.Resource;
 import li.strolch.persistence.api.StrolchTransaction;
+import ch.atexxi.chronivaro.core.model.WorkingLocation;
 
 import java.time.Duration;
 import java.time.ZonedDateTime;
@@ -34,7 +35,7 @@ public class ChronivaroMapper {
 
 		return new WorkEntryDto(workEntry.getId(), workEntry.getRelationId(PARAM_EMPLOYEE), start, end, durationMinutes,
 				workEntry.getString(PARAM_SOURCE), workEntry.getString(PARAM_COMMENT),
-				workEntry.getString(PARAM_CREATED_BY));
+				workEntry.getString(PARAM_CREATED_BY), WorkingLocation.fromValue(workEntry.getString(PARAM_WORKING_LOCATION)));
 	}
 
 	public static AbsenceDto toDto(Resource absence, String absenceTypeCode) {

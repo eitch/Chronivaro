@@ -101,6 +101,22 @@ Do not perform unrelated refactoring while implementing a backlog item.
 
 Add working-location data to `WorkEntry` and define employee weekly defaults.
 
+This item is split because per-entry persistence and weekly default management
+are separate concerns. The first subtask is complete; weekly defaults remain
+pending as 11a.2.
+
+### 11a.1. WorkEntry Working Location **DONE**
+
+- Added `HOME_OFFICE`, `OFFICE`, and `CUSTOMER` values to the `WorkEntry` model.
+- Persisted the location on add and correction, with an empty value preserving
+  compatibility for existing entries.
+- Exposed the location through `WorkEntryDto` and validated unsupported values.
+
+### 11a.2. Weekly Working Location Defaults
+
+Implement independent weekday and day-part defaults, including create, update,
+clear, and uniqueness behavior.
+
 ### Work
 - Support the locations `HOME_OFFICE`, `OFFICE`, and `CUSTOMER`.
 - Store the location on every work entry so morning and afternoon entries can have different locations.

@@ -4,6 +4,7 @@ import ch.atexxi.chronivaro.core.model.ChronivaroAuditHelper;
 import ch.atexxi.chronivaro.core.model.ScheduleHelper;
 import ch.atexxi.chronivaro.core.model.WorkDayHelper;
 import ch.atexxi.chronivaro.core.model.WorkEntryHelper;
+import ch.atexxi.chronivaro.core.model.WorkingLocation;
 import li.strolch.model.Resource;
 import li.strolch.persistence.api.StrolchTransaction;
 import li.strolch.service.api.AbstractService;
@@ -37,7 +38,6 @@ public class CorrectWorkEntryService
 			if (arg.end.isBefore(arg.start)) {
 				throw new IllegalStateException("End time cannot be before start time!");
 			}
-
 			WorkEntryHelper.validateNoOverlap(tx, employeeId, arg.start, arg.end, workEntry.getId());
 
 			if (!arg.start.toLocalDate().equals(oldStart.toLocalDate())) {
@@ -57,6 +57,7 @@ public class CorrectWorkEntryService
 			workEntry.setDate(PARAM_END, arg.end);
 			workEntry.setString(PARAM_COMMENT, arg.comment);
 			workEntry.setString(PARAM_SOURCE, SOURCE_MANUAL);
+			workEntry.setString(PARAM_WORKING_LOCATION, arg.workingLocation == null ? "" : arg.workingLocation.name());
 
 			Resource scheduleVersion = ScheduleHelper.findScheduleVersion(tx, employeeId).orElseThrow();
 			workEntry.setRelation(PARAM_SCHEDULE, scheduleVersion);
@@ -93,5 +94,6 @@ public class CorrectWorkEntryService
 		public ZonedDateTime start;
 		public ZonedDateTime end;
 		public String comment;
+		public WorkingLocation workingLocation;
 	}
 }

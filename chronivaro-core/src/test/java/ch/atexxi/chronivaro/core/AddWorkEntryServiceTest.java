@@ -1,5 +1,6 @@
 package ch.atexxi.chronivaro.core;
 
+import ch.atexxi.chronivaro.core.model.WorkingLocation;
 import ch.atexxi.chronivaro.core.service.AddWorkEntryService;
 import li.strolch.model.ParameterBag;
 import li.strolch.model.Resource;
@@ -55,6 +56,7 @@ public class AddWorkEntryServiceTest {
 		arg.start = ZonedDateTime.parse("2026-05-04T08:00:00+02:00[Europe/Zurich]");
 		arg.end = ZonedDateTime.parse("2026-05-04T12:00:00+02:00[Europe/Zurich]");
 		arg.comment = "Test work entry";
+		arg.workingLocation = WorkingLocation.HOME_OFFICE;
 
 		ServiceResult result = serviceHandler.doService(certificate, new AddWorkEntryService(), arg);
 		assertTrue(result.getMessage(), result.isOk());
@@ -70,6 +72,7 @@ public class AddWorkEntryServiceTest {
 			assertEquals(arg.end, entry.getDate(PARAM_END));
 			assertEquals(arg.comment, entry.getString(PARAM_COMMENT));
 			assertEquals(SOURCE_MANUAL, entry.getString(PARAM_SOURCE));
+			assertEquals(WorkingLocation.HOME_OFFICE.name(), entry.getString(PARAM_WORKING_LOCATION));
 		}
 	}
 }

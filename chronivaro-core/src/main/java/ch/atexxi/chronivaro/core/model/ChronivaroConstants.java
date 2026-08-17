@@ -62,6 +62,7 @@ public class ChronivaroConstants {
 	public static final String PARAM_SOURCE = "source";
 	public static final String PARAM_COMMENT = "comment";
 	public static final String PARAM_CREATED_BY = "createdBy";
+	public static final String PARAM_WORKING_LOCATION = "workingLocation";
 
 	public static final String PARAM_CODE = "code";
 	public static final String PARAM_NAME = "name";

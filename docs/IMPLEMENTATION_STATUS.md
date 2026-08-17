@@ -22,7 +22,7 @@
 
 ## Pending
 
-- [ ] Working Location on WorkEntries and WorkDays
+- [x] Working Location on WorkEntries
 - [ ] Weekly Working Location Defaults
 - [ ] Dashboard Working Location Selection and Overrides
 - [ ] Vacation Account Management (MVP 4.1.8 / 6.7)
