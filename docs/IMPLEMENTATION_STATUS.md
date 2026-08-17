@@ -23,7 +23,8 @@
 ## Pending
 
 - [x] Working Location on WorkEntries
-- [ ] Weekly Working Location Defaults
+- [x] Weekly Working Location Defaults
+- [x] Working-location default weekday and duration type enums
 - [ ] Dashboard Working Location Selection and Overrides
 - [ ] Vacation Account Management (MVP 4.1.8 / 6.7)
 - [ ] Period Workflow (MVP 4.1.11 / 6.10)

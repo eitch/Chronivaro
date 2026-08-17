@@ -1,9 +1,11 @@
 package ch.atexxi.chronivaro.rest.resource;
 
+import ch.atexxi.chronivaro.core.model.WorkingLocationDurationType;
 import ch.atexxi.chronivaro.core.service.*;
 import ch.atexxi.chronivaro.rest.dto.ChronivaroMapper;
 import ch.atexxi.chronivaro.rest.dto.EmployeeDto;
 import ch.atexxi.chronivaro.rest.dto.ScheduleDto;
+import ch.atexxi.chronivaro.rest.dto.WorkingLocationDefaultDto;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.Context;
@@ -19,6 +21,7 @@ import li.strolch.service.StringResult;
 import li.strolch.service.api.ServiceHandler;
 import li.strolch.service.api.ServiceResult;
 
+import java.time.DayOfWeek;
 import java.util.List;
 
 import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
@@ -184,6 +187,68 @@ public class EmployeeResource {
 		ServiceResult result = serviceHandler.doService(cert, new RemoveScheduleService(),
 				new StringArgument(scheduleId));
 		return ResponseUtil.toResponse(result);
+	}
+
+	@GET
+	@Path("{id}/working-location-defaults")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response getWorkingLocationDefaults(@Context HttpServletRequest request, @PathParam("id") String id) {
+		Certificate cert = (Certificate) request.getAttribute(StrolchRestfulConstants.STROLCH_CERTIFICATE);
+		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
+			List<WorkingLocationDefaultDto> defaults = tx
+					.streamResources(TYPE_WORKING_LOCATION_DEFAULT)
+					.filter(r -> id.equals(r.getRelationId(PARAM_EMPLOYEE)))
+					.map(r -> new WorkingLocationDefaultDto(r.getId(), id,
+							DayOfWeek.valueOf(r.getString(PARAM_WEEKDAY)),
+							WorkingLocationDurationType.valueOf(r.getString(PARAM_DURATION_TYPE)),
+							r.getString(PARAM_DAY_PART), r.getString(PARAM_WORKING_LOCATION)))
+					.toList();
+			return Response.ok(ChronivaroRestHelper.createGson().toJson(defaults), MediaType.APPLICATION_JSON).build();
+		}
+	}
+
+	@POST
+	@Path("{id}/working-location-defaults")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response createWorkingLocationDefault(@Context HttpServletRequest request, @PathParam("id") String id,
+			String data) {
+		Certificate cert = (Certificate) request.getAttribute(StrolchRestfulConstants.STROLCH_CERTIFICATE);
+		AddOrUpdateWorkingLocationDefaultService.Argument arg = ChronivaroRestHelper
+				.createGson()
+				.fromJson(data, AddOrUpdateWorkingLocationDefaultService.Argument.class);
+		arg.employeeId = id;
+		return ResponseUtil.toResponse(ChronivaroRestHelper
+				.getServiceHandler()
+				.doService(cert, new AddOrUpdateWorkingLocationDefaultService(), arg));
+	}
+
+	@PUT
+	@Path("{id}/working-location-defaults/{defaultId}")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response updateWorkingLocationDefault(@Context HttpServletRequest request, @PathParam("id") String id,
+			@PathParam("defaultId") String defaultId, String data) {
+		Certificate cert = (Certificate) request.getAttribute(StrolchRestfulConstants.STROLCH_CERTIFICATE);
+		AddOrUpdateWorkingLocationDefaultService.Argument arg = ChronivaroRestHelper
+				.createGson()
+				.fromJson(data, AddOrUpdateWorkingLocationDefaultService.Argument.class);
+		arg.id = defaultId;
+		arg.employeeId = id;
+		return ResponseUtil.toResponse(ChronivaroRestHelper
+				.getServiceHandler()
+				.doService(cert, new AddOrUpdateWorkingLocationDefaultService(), arg));
+	}
+
+	@DELETE
+	@Path("{id}/working-location-defaults/{defaultId}")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response removeWorkingLocationDefault(@Context HttpServletRequest request,
+			@PathParam("defaultId") String defaultId) {
+		Certificate cert = (Certificate) request.getAttribute(StrolchRestfulConstants.STROLCH_CERTIFICATE);
+		return ResponseUtil.toResponse(ChronivaroRestHelper
+				.getServiceHandler()
+				.doService(cert, new RemoveWorkingLocationDefaultService(), new StringArgument(defaultId)));
 	}
 
 	@POST

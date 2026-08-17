@@ -184,4 +184,16 @@
         </ParameterBag>
     </Resource>
 
+    <Resource Id="WorkingLocationDefault" Name="Template Working Location Default" Type="Template">
+        <ParameterBag Id="parameters" Name="Parameters" Type="Parameters">
+            <Parameter Id="weekday" Name="Weekday" Type="String" Value="MONDAY"/>
+            <Parameter Id="durationType" Name="Duration Type" Type="String" Value="FULL_DAY"/>
+            <Parameter Id="dayPart" Name="Day Part" Type="String" Value=""/>
+            <Parameter Id="workingLocation" Name="Working Location" Type="String" Value=""/>
+        </ParameterBag>
+        <ParameterBag Id="relations" Name="Relations" Type="Relations">
+            <Parameter Id="employee" Name="Employee" Type="String" Interpretation="Resource-Ref" Uom="Employee" Value=""/>
+        </ParameterBag>
+    </Resource>
+
 </StrolchModel>

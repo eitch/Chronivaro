@@ -112,7 +112,15 @@ pending as 11a.2.
   compatibility for existing entries.
 - Exposed the location through `WorkEntryDto` and validated unsupported values.
 
-### 11a.2. Weekly Working Location Defaults
+### 11a.2. Weekly Working Location Defaults **DONE**
+
+Implemented as the `WorkingLocationDefault` resource with Core upsert/remove services
+and employee-scoped REST CRUD endpoints. Defaults are unique per employee, weekday,
+duration type, and day part. `weekday` and `durationType` are represented as enums in
+the Java model and API while remaining persisted as their enum names; full-day defaults
+require no day part and half-day defaults require `MORNING` or `AFTERNOON`. Existing
+work entries remain compatible because this feature is additive and does not alter their
+persisted location field.
 
 Implement independent weekday and day-part defaults, including create, update,
 clear, and uniqueness behavior.
