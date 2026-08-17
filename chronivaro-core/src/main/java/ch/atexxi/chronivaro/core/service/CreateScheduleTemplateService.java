@@ -2,20 +2,21 @@ package ch.atexxi.chronivaro.core.service;
 
 import li.strolch.model.Resource;
 import li.strolch.persistence.api.StrolchTransaction;
+import li.strolch.service.StringResult;
 import li.strolch.service.api.AbstractService;
 import li.strolch.service.api.ServiceArgument;
-import li.strolch.service.api.ServiceResult;
+import li.strolch.service.api.ServiceResultState;
 
 import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
 
 public class CreateScheduleTemplateService
-		extends AbstractService<CreateScheduleTemplateService.CreateScheduleTemplateArgument, ServiceResult> {
+		extends AbstractService<CreateScheduleTemplateService.CreateScheduleTemplateArgument, StringResult> {
 
 	@Override
-	protected ServiceResult internalDoService(CreateScheduleTemplateArgument arg) throws Exception {
+	protected StringResult internalDoService(CreateScheduleTemplateArgument arg) throws Exception {
+		Resource template;
 		try (StrolchTransaction tx = openArgOrUserTx(arg)) {
-			Resource template = tx.getResourceTemplate(TYPE_EMPLOYMENT_SCHEDULE_TEMPLATE, true);
-			template.setId(arg.id);
+			template = tx.getResourceTemplate(TYPE_EMPLOYMENT_SCHEDULE_TEMPLATE, true);
 			template.setName(arg.name);
 
 			template.setString(PARAM_NAME, arg.name);
@@ -31,7 +32,7 @@ public class CreateScheduleTemplateService
 			tx.commitOnClose();
 		}
 
-		return ServiceResult.success();
+		return new StringResult(template.getId());
 	}
 
 	@Override
@@ -40,12 +41,11 @@ public class CreateScheduleTemplateService
 	}
 
 	@Override
-	public ServiceResult getResultInstance() {
-		return new ServiceResult();
+	public StringResult getResultInstance() {
+		return new StringResult(ServiceResultState.FAILED);
 	}
 
 	public static class CreateScheduleTemplateArgument extends ServiceArgument {
-		public String id;
 		public String name;
 		public int monday;
 		public int tuesday;
