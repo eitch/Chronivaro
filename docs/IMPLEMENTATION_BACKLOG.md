@@ -149,7 +149,7 @@ Extend the dashboard start/stop workflow to select the working location for the 
 ### Work
 - Prefill the dashboard from the employee's weekly default when opening a new workday. **DONE**
 - Added `GET /me/working-location-defaults` and dashboard prefill from the matching weekday's full-day or morning default.
-- Allow the employee to override or clear the prefilled location before starting work. **PARTIAL**
+- Allow the employee to override or clear the prefilled location before starting work. **DONE**
 - Support changing location between the morning and afternoon by creating or updating separate work-entry blocks.
 - Ensure the selected location is persisted with the affected work entry and shown in the dashboard.
 
@@ -160,6 +160,7 @@ Extend the dashboard start/stop workflow to select the working location for the 
 
 ### Verification
 - The dashboard prefill is a client-side initial selection only; changing or clearing it does not update the recurring default.
+- The dashboard now provides a clear action that prevents the default from being reapplied during refresh; starting without a selection remains rejected.
 
 ## 11c. Working Location Validation and Queries
 

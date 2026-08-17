@@ -22,6 +22,7 @@ export default class DashboardView {
 						<label><input type="radio" name="working-location" value="HOME_OFFICE"> Home office</label>
 						<label><input type="radio" name="working-location" value="OFFICE"> Office</label>
 						<label><input type="radio" name="working-location" value="CUSTOMER"> Customer</label>
+						<button id="clear-working-location" type="button">Clear</button>
 					</fieldset>
                 </div>
                 <div id="timer-controls">
@@ -43,13 +44,15 @@ export default class DashboardView {
         const stopBtn = container.querySelector('#stop-timer');
 		const workingLocationGroup = container.querySelector('#working-location-group');
 		const workingLocations = [...container.querySelectorAll('input[name="working-location"]')];
+		const clearWorkingLocationBtn = container.querySelector('#clear-working-location');
+		let locationSelectionCleared = false;
         const workedSpan = container.querySelector('#worked-time');
         const requiredSpan = container.querySelector('#required-time');
         const balanceSpan = container.querySelector('#day-balance');
 
         const refresh = async () => {
             try {
-                if (!workingLocations.some(input => input.checked)) {
+            				if (!locationSelectionCleared && !workingLocations.some(input => input.checked)) {
                     const defaults = await WorkEntryApi.getWorkingLocationDefaults();
                     const weekday = new Intl.DateTimeFormat('en', {weekday: 'long'}).format(new Date()).toUpperCase();
                     const defaultLocation = defaults.find(item => item.weekday === weekday &&
@@ -87,7 +90,7 @@ export default class DashboardView {
             }
         };
 
-        startBtn.addEventListener('click', async () => {
+      		startBtn.addEventListener('click', async () => {
             try {
 				const workingLocation = workingLocations.find(input => input.checked);
 				if (!workingLocation) {
@@ -99,7 +102,12 @@ export default class DashboardView {
             } catch (err) {
                 NotificationDialog.error(err.message);
             }
-        });
+      		});
+
+      		clearWorkingLocationBtn.addEventListener('click', () => {
+      			workingLocations.forEach(input => input.checked = false);
+      			locationSelectionCleared = true;
+      		});
 
         stopBtn.addEventListener('click', async () => {
             try {
