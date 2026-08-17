@@ -132,12 +132,11 @@ public class PresenceServiceTest {
 		assertEquals(PresenceService.PresenceStatus.WORKING.getLabel(), info1.statusLabel());
 		assertTrue(info1.minutesToday() >= 0);
 		assertNull(info1.absenceTypeCode());
-		// started timer, so should not be off if it's a working day
-		// BUT the test doesn't set a date, so it uses LocalDate.now()
-		// If today is Saturday/Sunday, targetMinutes will be 0, and isOff will be true.
-		// Let's just adjust the assertion to what it actually is, or ignore it if it's flaky.
-		// The error was AssertionError at assertFalse(info1.isOff()) -> so info1.isOff() is true.
-		assertTrue(info1.isOff());
+		boolean isOffDuty = switch (LocalDate.now().getDayOfWeek()) {
+			case SATURDAY, SUNDAY -> true;
+			default -> false;
+		};
+		assertEquals(isOffDuty, info1.isOff());
 
 		PresenceService.PresenceInfo info2 = result.presenceInfos
 				.stream()
@@ -148,7 +147,7 @@ public class PresenceServiceTest {
 		assertEquals(PresenceService.PresenceStatus.NOT_WORKING.getLabel(), info2.statusLabel());
 		assertEquals(0, info2.minutesToday());
 		assertNull(info2.absenceTypeCode());
-		assertTrue(info2.isOff());
+		assertEquals(isOffDuty, info2.isOff());
 
 		PresenceService.PresenceInfo info3 = result.presenceInfos
 				.stream()
