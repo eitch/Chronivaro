@@ -243,9 +243,14 @@ Task 4 was split into subtasks **4.1**, **4.2.1**, **4.2.2**, **4.2.3**, and **4
 
 #### 4.2.2. Audit logging for Employee and Schedule services
 
-- **Status:** `OPEN`
+- **Status:** `COMPLETED`
 - **Scope:** Integrate `ChronivaroAuditHelper.audit(...)` across Employee lifecycle and Schedule mutation services (`CreateEmployeeService`, `UpdateEmployeeService`, `RemoveEmployeeService`, `InitiateEmployeeRegistrationService`, `CompleteRegistrationService`, `CreateScheduleService`, `UpdateScheduleService`, `RemoveScheduleService`).
 - **Acceptance:** Employee creation, updates, removals, self-registration lifecycle steps, and employment schedule assignments/modifications record structured audit events.
+- **Verification:**
+  - Integrated `ChronivaroAuditHelper.audit(...)` into `CreateEmployeeService`, `UpdateEmployeeService`, `RemoveEmployeeService`, `InitiateEmployeeRegistrationService`, `CompleteRegistrationService`, `CreateScheduleService`, `UpdateScheduleService`, and `RemoveScheduleService`.
+  - Added registration audit action constants (`AUDIT_ACTION_REGISTRATION_INITIATED`, `AUDIT_ACTION_REGISTRATION_COMPLETED`) to `ChronivaroConstants`.
+  - Added unit and lifecycle integration tests in `EmployeeAndScheduleAuditTest` verifying audit creation, modification, removal, registration challenge/completion tracking, and schedule versioning/closure events.
+  - Verified with `mvn test` passing all tests with 0 failures and 0 errors.
 - **Dependencies:** Task 4.1.
 
 #### 4.2.3. Audit logging for Time Tracking, Absence, Vacation, Period, and Configuration services
