@@ -108,14 +108,15 @@ public class ManualCorrectionServiceTest {
 			assertEquals(end.plusHours(1), workEntry.getDate(PARAM_END));
 			assertEquals(SOURCE_MANUAL, workEntry.getString(PARAM_SOURCE));
 
-			// Check Audit (should have 2: one for start, one for end)
+			// Check Audit (should have 1 unified CORRECT action event)
 			List<Resource> audits = tx
 					.streamResources(TYPE_AUDIT_EVENT)
 					.filter(e -> e.getString(PARAM_ELEMENT_TYPE).equals(TYPE_WORK_ENTRY) && e
 							.getString(PARAM_ELEMENT_ID)
 							.equals(finalWorkEntryId))
 					.toList();
-			assertEquals(2, audits.size());
+			assertEquals(1, audits.size());
+			assertEquals(AUDIT_ACTION_CORRECT, audits.getFirst().getString(PARAM_ACTION));
 		}
 	}
 }

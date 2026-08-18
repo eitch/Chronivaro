@@ -1,6 +1,7 @@
 package ch.atexxi.chronivaro.core.service;
 
 import ch.atexxi.chronivaro.core.model.AbsenceHelper;
+import ch.atexxi.chronivaro.core.model.ChronivaroAuditHelper;
 import ch.atexxi.chronivaro.core.model.ChronivaroModelHelper;
 import li.strolch.model.Resource;
 import li.strolch.persistence.api.Operation;
@@ -69,6 +70,10 @@ public class UpdateAbsenceService extends AbstractService<UpdateAbsenceService.U
 
 			bumpVersion(absence, tx);
 			tx.update(absence);
+
+			ChronivaroAuditHelper.audit(tx, TYPE_ABSENCE, absence.getId(), AUDIT_ACTION_UPDATE, arg.comment,
+					"Updated absence " + absence.getId() + " for employee " + employee.getId());
+
 			tx.commitOnClose();
 		}
 

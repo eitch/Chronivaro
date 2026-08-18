@@ -1,13 +1,14 @@
 package ch.atexxi.chronivaro.core.service;
 
+import ch.atexxi.chronivaro.core.model.ChronivaroAuditHelper;
 import li.strolch.model.Resource;
 import li.strolch.persistence.api.StrolchTransaction;
 import li.strolch.service.api.AbstractService;
 import li.strolch.service.api.ServiceArgument;
 import li.strolch.service.api.ServiceResult;
 
-import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.PARAM_WEEKLY_TARGET_MINUTES;
-import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.TYPE_GLOBAL_CONFIGURATION;
+import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
+import static ch.atexxi.chronivaro.core.model.ChronivaroVersionHelper.bumpVersion;
 
 public class UpdateConfigurationService extends AbstractService<UpdateConfigurationService.UpdateConfigurationArgument, ServiceResult> {
 
@@ -25,7 +26,12 @@ public class UpdateConfigurationService extends AbstractService<UpdateConfigurat
 				config.setInteger(PARAM_WEEKLY_TARGET_MINUTES, arg.weeklyTargetMinutes);
 			}
 
+			bumpVersion(config, tx);
 			tx.update(config);
+
+			ChronivaroAuditHelper.audit(tx, TYPE_GLOBAL_CONFIGURATION, config.getId(), AUDIT_ACTION_UPDATE,
+					"Updated global configuration weeklyTargetMinutes=" + arg.weeklyTargetMinutes);
+
 			tx.commitOnClose();
 		}
 		return ServiceResult.success();

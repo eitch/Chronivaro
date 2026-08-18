@@ -1,5 +1,6 @@
 package ch.atexxi.chronivaro.core.service;
 
+import ch.atexxi.chronivaro.core.model.ChronivaroAuditHelper;
 import ch.atexxi.chronivaro.core.model.ScheduleHelper;
 import ch.atexxi.chronivaro.core.model.WorkingLocation;
 import ch.atexxi.chronivaro.core.model.WorkDayHelper;
@@ -52,6 +53,9 @@ public class AddWorkEntryService extends AbstractService<AddWorkEntryService.Add
 			tx.add(workEntry);
 			workDay.addRelation(PARAM_WORK_ENTRIES, workEntry);
 			tx.update(workDay);
+
+			ChronivaroAuditHelper.audit(tx, TYPE_WORK_ENTRY, workEntry.getId(), AUDIT_ACTION_CREATE, arg.comment,
+					"Added manual work entry for employee " + arg.employeeId + " from " + arg.start + " to " + arg.end);
 
 			tx.commitOnClose();
 		}

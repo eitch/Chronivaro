@@ -1,6 +1,7 @@
 package ch.atexxi.chronivaro.core.service;
 
 import ch.atexxi.chronivaro.core.model.AbsenceHelper;
+import ch.atexxi.chronivaro.core.model.ChronivaroAuditHelper;
 import ch.atexxi.chronivaro.core.model.ChronivaroModelHelper;
 import ch.atexxi.chronivaro.core.model.ScheduleHelper;
 import li.strolch.model.Resource;
@@ -61,6 +62,8 @@ public class CancelAbsenceService extends AbstractService<StringArgument, Servic
 			absence.setString(PARAM_STATE, STATE_CANCELLED);
 			bumpVersion(absence, tx);
 			tx.update(absence);
+			ChronivaroAuditHelper.audit(tx, TYPE_ABSENCE, absence.getId(), AUDIT_ACTION_CANCEL,
+					"Cancelled absence " + absence.getId() + " for employee " + employee.getId());
 
 			// If it was APPROVED and reduced vacation, we need to add back the vacation minutes
 			if (oldState.equals(STATE_APPROVED)) {
@@ -87,6 +90,8 @@ public class CancelAbsenceService extends AbstractService<StringArgument, Servic
 
 						initVersion(entry, tx);
 						tx.add(entry);
+						ChronivaroAuditHelper.audit(tx, TYPE_VACATION_ACCOUNT_ENTRY, entry.getId(), AUDIT_ACTION_CREATE,
+								"Created vacation cancellation refund entry for absence " + absence.getId() + " (" + totalMinutes + " minutes)");
 					}
 				}
 			}

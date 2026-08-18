@@ -1,6 +1,7 @@
 package ch.atexxi.chronivaro.core.service;
 
 import ch.atexxi.chronivaro.core.model.AbsenceHelper;
+import ch.atexxi.chronivaro.core.model.ChronivaroAuditHelper;
 import ch.atexxi.chronivaro.core.model.ScheduleHelper;
 import li.strolch.model.Resource;
 import li.strolch.persistence.api.StrolchTransaction;
@@ -31,6 +32,8 @@ public class ApproveAbsenceService extends AbstractService<StringArgument, Servi
 			absence.setString(PARAM_STATE, STATE_APPROVED);
 			bumpVersion(absence, tx);
 			tx.update(absence);
+			ChronivaroAuditHelper.audit(tx, TYPE_ABSENCE, absence.getId(), AUDIT_ACTION_APPROVE,
+					"Approved absence " + absence.getId() + " for employee " + absence.getRelationId(PARAM_EMPLOYEE));
 
 			// If it's a vacation absence, create a vacation account entry
 			Resource absenceType = tx.getResourceByRelation(absence, PARAM_ABSENCE_TYPE, true);
@@ -64,6 +67,8 @@ public class ApproveAbsenceService extends AbstractService<StringArgument, Servi
 
 					initVersion(entry, tx);
 					tx.add(entry);
+					ChronivaroAuditHelper.audit(tx, TYPE_VACATION_ACCOUNT_ENTRY, entry.getId(), AUDIT_ACTION_CREATE,
+							"Created vacation usage entry for absence " + absence.getId() + " (" + totalMinutes + " minutes)");
 				}
 			}
 

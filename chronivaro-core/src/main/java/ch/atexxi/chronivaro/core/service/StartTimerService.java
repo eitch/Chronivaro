@@ -1,5 +1,6 @@
 package ch.atexxi.chronivaro.core.service;
 
+import ch.atexxi.chronivaro.core.model.ChronivaroAuditHelper;
 import ch.atexxi.chronivaro.core.model.ChronivaroModelHelper;
 import ch.atexxi.chronivaro.core.model.WorkDayHelper;
 import ch.atexxi.chronivaro.core.model.WorkEntryHelper;
@@ -54,6 +55,9 @@ public class StartTimerService extends AbstractService<StartTimerService.Argumen
 			tx.add(workEntry);
 			workDay.addRelation(PARAM_WORK_ENTRIES, workEntry);
 			tx.update(workDay);
+
+			ChronivaroAuditHelper.audit(tx, TYPE_WORK_ENTRY, workEntry.getId(), AUDIT_ACTION_START,
+					"Started timer for employee " + employee.getId() + " at " + now);
 
 			tx.commitOnClose();
 		}

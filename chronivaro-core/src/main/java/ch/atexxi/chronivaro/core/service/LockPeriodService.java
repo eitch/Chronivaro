@@ -27,7 +27,8 @@ public class LockPeriodService extends AbstractService<StringArgument, ServiceRe
 			period.setString(PARAM_STATE, STATE_LOCKED);
 			tx.update(period);
 
-			ChronivaroAuditHelper.audit(tx, TYPE_TIME_PERIOD, period.getId(), PARAM_STATE, currentState, STATE_LOCKED);
+			ChronivaroAuditHelper.audit(tx, TYPE_TIME_PERIOD, period.getId(), AUDIT_ACTION_LOCK,
+					"Locked time period " + period.getId() + " for employee " + period.getRelationId(PARAM_EMPLOYEE));
 
 			tx.commitOnClose();
 		}

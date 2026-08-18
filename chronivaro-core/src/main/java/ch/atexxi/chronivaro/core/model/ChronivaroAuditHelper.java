@@ -39,11 +39,6 @@ public class ChronivaroAuditHelper {
 		CORRELATION_ID_HOLDER.remove();
 	}
 
-	public static void audit(StrolchTransaction tx, String elementType, String elementId, String paramName,
-			String oldValue, String newValue) {
-		audit(tx, elementType, elementId, null, null, paramName, oldValue, newValue, null, null);
-	}
-
 	public static void auditChange(StrolchTransaction tx, String elementType, String elementId, String paramName,
 			String oldValue, String newValue) {
 		audit(tx, elementType, elementId, null, null, paramName, oldValue, newValue, null, null);
@@ -52,6 +47,11 @@ public class ChronivaroAuditHelper {
 	public static void audit(StrolchTransaction tx, String elementType, String elementId, String action,
 			String details) {
 		audit(tx, elementType, elementId, action, null, null, null, null, details, null);
+	}
+
+	public static void audit(StrolchTransaction tx, String elementType, String elementId, String action,
+			String reason, String details) {
+		audit(tx, elementType, elementId, action, reason, null, null, null, details, null);
 	}
 
 	public static void auditAction(StrolchTransaction tx, String elementType, String elementId, String action,

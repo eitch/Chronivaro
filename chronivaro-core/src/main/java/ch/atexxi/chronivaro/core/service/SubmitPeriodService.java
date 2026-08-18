@@ -27,8 +27,8 @@ public class SubmitPeriodService extends AbstractService<StringArgument, Service
 			period.setString(PARAM_STATE, STATE_SUBMITTED);
 			tx.update(period);
 
-			ChronivaroAuditHelper.audit(tx, TYPE_TIME_PERIOD, period.getId(), PARAM_STATE, currentState,
-					STATE_SUBMITTED);
+			ChronivaroAuditHelper.audit(tx, TYPE_TIME_PERIOD, period.getId(), AUDIT_ACTION_SUBMIT,
+					"Submitted time period " + period.getId() + " for employee " + period.getRelationId(PARAM_EMPLOYEE));
 
 			tx.commitOnClose();
 		}

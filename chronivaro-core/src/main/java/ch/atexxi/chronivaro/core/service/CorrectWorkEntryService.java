@@ -66,14 +66,9 @@ public class CorrectWorkEntryService
 			bumpVersion(workEntry, tx);
 			tx.update(workEntry);
 
-			if (!arg.start.equals(oldStart)) {
-				ChronivaroAuditHelper.audit(tx, TYPE_WORK_ENTRY, workEntry.getId(), PARAM_START, oldStart.toString(),
-						arg.start.toString());
-			}
-			if (oldEnd == null || !arg.end.equals(oldEnd)) {
-				ChronivaroAuditHelper.audit(tx, TYPE_WORK_ENTRY, workEntry.getId(), PARAM_END,
-						oldEnd == null ? null : oldEnd.toString(), arg.end.toString());
-			}
+			ChronivaroAuditHelper.audit(tx, TYPE_WORK_ENTRY, workEntry.getId(), AUDIT_ACTION_CORRECT, arg.comment,
+					"Corrected work entry " + workEntry.getId() + " for employee " + employeeId + " (start: " + oldStart
+							+ " -> " + arg.start + ", end: " + oldEnd + " -> " + arg.end + ")");
 
 			tx.commitOnClose();
 		}

@@ -1,5 +1,6 @@
 package ch.atexxi.chronivaro.core.service;
 
+import ch.atexxi.chronivaro.core.model.ChronivaroAuditHelper;
 import li.strolch.model.Resource;
 import li.strolch.persistence.api.Operation;
 import li.strolch.persistence.api.StrolchTransaction;
@@ -35,6 +36,9 @@ public class RejectAbsenceService extends AbstractService<RejectAbsenceService.R
 			absence.setString(PARAM_COMMENT, arg.comment);
 			bumpVersion(absence, tx);
 			tx.update(absence);
+
+			ChronivaroAuditHelper.audit(tx, TYPE_ABSENCE, absence.getId(), AUDIT_ACTION_REJECT, arg.comment,
+					"Rejected absence " + absence.getId() + " for employee " + absence.getRelationId(PARAM_EMPLOYEE));
 
 			tx.commitOnClose();
 		}

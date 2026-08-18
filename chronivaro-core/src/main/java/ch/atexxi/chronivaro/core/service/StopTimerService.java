@@ -1,5 +1,6 @@
 package ch.atexxi.chronivaro.core.service;
 
+import ch.atexxi.chronivaro.core.model.ChronivaroAuditHelper;
 import ch.atexxi.chronivaro.core.model.ChronivaroModelHelper;
 import ch.atexxi.chronivaro.core.model.ScheduleHelper;
 import ch.atexxi.chronivaro.core.model.WorkDayHelper;
@@ -45,6 +46,8 @@ public class StopTimerService extends AbstractService<StopTimerService.StopTimer
 				workEntryClone.setDate(PARAM_END, now);
 				WorkEntryHelper.validateNoOverlap(tx, arg.employeeId, start, now, workEntryClone.getId());
 				tx.update(workEntryClone);
+				ChronivaroAuditHelper.audit(tx, TYPE_WORK_ENTRY, workEntryClone.getId(), AUDIT_ACTION_STOP,
+						"Stopped timer for employee " + arg.employeeId + " at " + now);
 			} else if (now.toLocalDate().equals(start.toLocalDate().plusDays(1))) {
 				// Next day carry-over
 				ZonedDateTime midnight = start.toLocalDate().plusDays(1).atStartOfDay(start.getZone());
@@ -53,6 +56,8 @@ public class StopTimerService extends AbstractService<StopTimerService.StopTimer
 				Resource workEntryClone = workEntry.getClone();
 				workEntryClone.setDate(PARAM_END, midnight);
 				tx.update(workEntryClone);
+				ChronivaroAuditHelper.audit(tx, TYPE_WORK_ENTRY, workEntryClone.getId(), AUDIT_ACTION_STOP,
+						"Split timer at midnight for employee " + arg.employeeId + " (start=" + start + ", end=" + midnight + ")");
 
 				// 2. Create new WorkEntry on the next day
 				Resource workDay = WorkDayHelper.getOrCreateWorkDay(tx, employee, now);
@@ -71,6 +76,8 @@ public class StopTimerService extends AbstractService<StopTimerService.StopTimer
 				tx.add(nextWorkEntry);
 				workDay.addRelation(PARAM_WORK_ENTRIES, nextWorkEntry);
 				tx.update(workDay);
+				ChronivaroAuditHelper.audit(tx, TYPE_WORK_ENTRY, nextWorkEntry.getId(), AUDIT_ACTION_CREATE,
+						"Created split timer entry for employee " + arg.employeeId + " (start=" + midnight + ", end=" + now + ")");
 			} else {
 				// Forgotten timer (more than one day)
 				// Cap at daily target, but no later than midnight
@@ -92,6 +99,8 @@ public class StopTimerService extends AbstractService<StopTimerService.StopTimer
 				workEntryClone.setDate(PARAM_END, end);
 				workEntryClone.setString(PARAM_COMMENT, "Timer vergessen - auf Sollzeit begrenzt");
 				tx.update(workEntryClone);
+				ChronivaroAuditHelper.audit(tx, TYPE_WORK_ENTRY, workEntryClone.getId(), AUDIT_ACTION_STOP,
+						"Capped forgotten timer for employee " + arg.employeeId + " at " + end);
 			}
 
 			tx.commitOnClose();

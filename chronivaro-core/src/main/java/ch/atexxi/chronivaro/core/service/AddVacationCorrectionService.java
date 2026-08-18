@@ -39,8 +39,8 @@ public class AddVacationCorrectionService
 
 			tx.add(entry);
 
-			ChronivaroAuditHelper.audit(tx, TYPE_VACATION_ACCOUNT_ENTRY, entry.getId(), PARAM_VALUE, null,
-					String.valueOf(arg.value));
+			ChronivaroAuditHelper.audit(tx, TYPE_VACATION_ACCOUNT_ENTRY, entry.getId(), AUDIT_ACTION_CREATE, arg.comment,
+					"Added vacation correction of " + arg.value + " minutes for employee " + arg.employeeId);
 
 			tx.commitOnClose();
 		}
