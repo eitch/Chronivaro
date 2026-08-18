@@ -177,9 +177,15 @@ Task 2 was split into tasks **2.1**, **2.2**, and **2.3** per the task-size and 
 
 #### 2.2. Implement REST pagination helpers and contracts
 
-- **Status:** `MISSING`
+- **Status:** `COMPLETED`
 - **Scope:** Define shared pagination query parameters (e.g. `offset`, `limit`) and paged response envelope DTOs (`PagedResultDto<T>`), along with Strolch search pagination utilities for REST list endpoints.
 - **Acceptance:** List endpoints support consistent pagination contracts and return correct total count, limit, and offset metadata.
+- **Verification:**
+  - Implemented `PagedResultDto<T>` record with fields `data`, `offset`, `limit`, `total`, and `size`.
+  - Implemented `PaginationHelper` with offset/limit validation, sanitization (defaults 0, 50, max 1000), `toPagedResult` for lists and `SearchResult<T>`, and `toPagedOrListResponse`.
+  - Integrated pagination parameters and helpers across all REST list endpoints (`EmployeeResource`, `TeamResource`, `LocationResource`, `HolidayCalendarsResource`, `AbsenceTypeResource`, `ScheduleTemplateResource`, `AbsenceResource`, and `ChronivaroResource`).
+  - Added unit and REST integration tests in `RestPaginationTest` covering valid pagination, out-of-bounds offsets, list slicing, `SearchResult` paging, and bad request validation errors for negative offset/invalid limit.
+  - Verified with full test suite passing via `mvn test`.
 - **Dependencies:** Task 2.1.
 
 #### 2.3. Implement REST optimistic concurrency control

@@ -25,15 +25,15 @@ public class AbsenceResource {
 
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response getAbsences(@Context HttpServletRequest request) {
+	public Response getAbsences(@Context HttpServletRequest request, @QueryParam("offset") Integer offset,
+			@QueryParam("limit") Integer limit) {
 		Certificate cert = (Certificate) request.getAttribute(STROLCH_CERTIFICATE);
 		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
 			List<Resource> absences = tx.streamResources(TYPE_ABSENCE).toList();
-			List<AbsenceDto> dtos = absences.stream().map(a -> {
+			return PaginationHelper.toPagedOrListResponse(absences, offset, limit, a -> {
 				Resource type = tx.getResourceByRelation(a, PARAM_ABSENCE_TYPE, true);
 				return ChronivaroMapper.toDto(a, type.getString(PARAM_CODE));
-			}).toList();
-			return Response.ok(ChronivaroRestHelper.createGson().toJson(dtos), MediaType.APPLICATION_JSON).build();
+			});
 		}
 	}
 

@@ -27,12 +27,12 @@ public class AbsenceTypeResource {
 
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response getAbsenceTypes(@Context HttpServletRequest request) {
+	public Response getAbsenceTypes(@Context HttpServletRequest request, @QueryParam("offset") Integer offset,
+			@QueryParam("limit") Integer limit) {
 		Certificate cert = (Certificate) request.getAttribute(StrolchRestfulConstants.STROLCH_CERTIFICATE);
 		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
 			List<Resource> types = tx.streamResources(TYPE_ABSENCE_TYPE).toList();
-			List<AbsenceTypeDto> dtos = types.stream().map(ChronivaroMapper::absenceTypeToDto).toList();
-			return Response.ok(ChronivaroRestHelper.createGson().toJson(dtos), MediaType.APPLICATION_JSON).build();
+			return PaginationHelper.toPagedOrListResponse(types, offset, limit, ChronivaroMapper::absenceTypeToDto);
 		}
 	}
 

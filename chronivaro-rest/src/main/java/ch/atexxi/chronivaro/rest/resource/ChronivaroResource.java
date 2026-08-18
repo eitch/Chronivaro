@@ -41,7 +41,8 @@ public class ChronivaroResource {
 	@Path("presence")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getPresence(@Context HttpServletRequest request, @QueryParam("teamId") String teamId,
-			@QueryParam("locationId") String locationId) {
+			@QueryParam("locationId") String locationId, @QueryParam("offset") Integer offset,
+			@QueryParam("limit") Integer limit) {
 		Certificate cert = (Certificate) request.getAttribute(STROLCH_CERTIFICATE);
 		ServiceHandler serviceHandler = ChronivaroRestHelper.getServiceHandler();
 
@@ -51,12 +52,8 @@ public class ChronivaroResource {
 
 		PresenceService.PresenceResult result = serviceHandler.doService(cert, new PresenceService(), arg);
 		if (result.isOk()) {
-			return Response
-					.ok(ChronivaroRestHelper
-									.createGson()
-									.toJson(result.presenceInfos.stream().map(ChronivaroMapper::toDto).toList()),
-							MediaType.APPLICATION_JSON)
-					.build();
+			return PaginationHelper.toPagedOrListResponse(result.presenceInfos, offset, limit,
+					ChronivaroMapper::toDto);
 		}
 		return ChronivaroRestHelper.toResponse(result);
 	}
@@ -65,7 +62,8 @@ public class ChronivaroResource {
 	@Path("me/work-entries")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getMyWorkEntries(@Context HttpServletRequest request, @QueryParam("from") String fromStr,
-			@QueryParam("to") String toStr) {
+			@QueryParam("to") String toStr, @QueryParam("offset") Integer offset,
+			@QueryParam("limit") Integer limit) {
 
 		Certificate cert = (Certificate) request.getAttribute(STROLCH_CERTIFICATE);
 		String employeeId;
@@ -82,15 +80,15 @@ public class ChronivaroResource {
 
 		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
 			List<Resource> entries = WorkEntryHelper.findWorkEntries(tx, employeeId, from, to);
-			List<WorkEntryDto> dtos = entries.stream().map(ChronivaroMapper::toDto).toList();
-			return Response.ok(ChronivaroRestHelper.createGson().toJson(dtos), MediaType.APPLICATION_JSON).build();
+			return PaginationHelper.toPagedOrListResponse(entries, offset, limit, ChronivaroMapper::toDto);
 		}
 	}
 
 	@GET
 	@Path("me/working-location-defaults")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response getMyWorkingLocationDefaults(@Context HttpServletRequest request) {
+	public Response getMyWorkingLocationDefaults(@Context HttpServletRequest request,
+			@QueryParam("offset") Integer offset, @QueryParam("limit") Integer limit) {
 		Certificate cert = (Certificate) request.getAttribute(STROLCH_CERTIFICATE);
 		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
 			Optional<Resource> employee = ChronivaroModelHelper.findEmployeeByUser(tx, cert.getUserId());
@@ -104,7 +102,7 @@ public class ChronivaroResource {
 							WorkingLocationDurationType.valueOf(r.getString(PARAM_DURATION_TYPE)),
 							r.getString(PARAM_DAY_PART), r.getString(PARAM_WORKING_LOCATION)))
 					.toList();
-			return Response.ok(ChronivaroRestHelper.createGson().toJson(defaults), MediaType.APPLICATION_JSON).build();
+			return PaginationHelper.toPagedOrListResponse(defaults, offset, limit, java.util.function.Function.identity());
 		}
 	}
 
@@ -160,7 +158,8 @@ public class ChronivaroResource {
 	@GET
 	@Path("me/absences")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response getMyAbsences(@Context HttpServletRequest request) {
+	public Response getMyAbsences(@Context HttpServletRequest request, @QueryParam("offset") Integer offset,
+			@QueryParam("limit") Integer limit) {
 		Certificate cert = (Certificate) request.getAttribute(STROLCH_CERTIFICATE);
 		String employeeId;
 		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
@@ -176,11 +175,10 @@ public class ChronivaroResource {
 					.streamResources(TYPE_ABSENCE)
 					.filter(a -> a.getRelationId(PARAM_EMPLOYEE).equals(employeeId))
 					.toList();
-			List<AbsenceDto> dtos = absences.stream().map(a -> {
+			return PaginationHelper.toPagedOrListResponse(absences, offset, limit, a -> {
 				Resource type = tx.getResourceByRelation(a, PARAM_ABSENCE_TYPE, true);
 				return ChronivaroMapper.toDto(a, type.getString(PARAM_CODE));
-			}).toList();
-			return Response.ok(ChronivaroRestHelper.createGson().toJson(dtos), MediaType.APPLICATION_JSON).build();
+			});
 		}
 	}
 

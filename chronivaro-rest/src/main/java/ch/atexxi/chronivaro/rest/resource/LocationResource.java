@@ -27,12 +27,12 @@ public class LocationResource {
 
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response getLocations(@Context HttpServletRequest request) {
+	public Response getLocations(@Context HttpServletRequest request, @QueryParam("offset") Integer offset,
+			@QueryParam("limit") Integer limit) {
 		Certificate cert = (Certificate) request.getAttribute(StrolchRestfulConstants.STROLCH_CERTIFICATE);
 		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
 			List<Resource> locations = tx.streamResources(TYPE_LOCATION).toList();
-			List<LocationDto> dtos = locations.stream().map(l -> locationToDto(tx, l)).toList();
-			return Response.ok(ChronivaroRestHelper.createGson().toJson(dtos), MediaType.APPLICATION_JSON).build();
+			return PaginationHelper.toPagedOrListResponse(locations, offset, limit, l -> locationToDto(tx, l));
 		}
 	}
 

@@ -31,12 +31,12 @@ public class HolidayCalendarsResource {
 
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response getHolidayCalendars(@Context HttpServletRequest request) {
+	public Response getHolidayCalendars(@Context HttpServletRequest request,
+			@QueryParam("offset") Integer offset, @QueryParam("limit") Integer limit) {
 		Certificate cert = (Certificate) request.getAttribute(STROLCH_CERTIFICATE);
 		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
 			List<Resource> calendars = tx.streamResources(TYPE_HOLIDAY_CALENDAR).toList();
-			List<HolidayCalendarDto> dtos = calendars.stream().map(ChronivaroMapper::holidayCalendarToDto).toList();
-			return Response.ok(ChronivaroRestHelper.createGson().toJson(dtos), MediaType.APPLICATION_JSON).build();
+			return PaginationHelper.toPagedOrListResponse(calendars, offset, limit, ChronivaroMapper::holidayCalendarToDto);
 		}
 	}
 
@@ -55,15 +55,15 @@ public class HolidayCalendarsResource {
 	@GET
 	@Path("{id}/holidays")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response getHolidays(@Context HttpServletRequest request, @PathParam("id") String id) {
+	public Response getHolidays(@Context HttpServletRequest request, @PathParam("id") String id,
+			@QueryParam("offset") Integer offset, @QueryParam("limit") Integer limit) {
 		Certificate cert = (Certificate) request.getAttribute(STROLCH_CERTIFICATE);
 		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
 			List<Resource> holidays = tx
 					.streamResources(TYPE_HOLIDAY)
 					.filter(h -> h.getRelationId(PARAM_HOLIDAY_CALENDAR).equals(id))
 					.toList();
-			List<HolidayDto> dtos = holidays.stream().map(ChronivaroMapper::holidayToDto).toList();
-			return Response.ok(ChronivaroRestHelper.createGson().toJson(dtos), MediaType.APPLICATION_JSON).build();
+			return PaginationHelper.toPagedOrListResponse(holidays, offset, limit, ChronivaroMapper::holidayToDto);
 		}
 	}
 

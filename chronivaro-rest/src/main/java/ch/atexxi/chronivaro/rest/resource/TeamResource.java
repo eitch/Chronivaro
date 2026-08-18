@@ -27,12 +27,12 @@ public class TeamResource {
 
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response getTeams(@Context HttpServletRequest request) {
+	public Response getTeams(@Context HttpServletRequest request, @QueryParam("offset") Integer offset,
+			@QueryParam("limit") Integer limit) {
 		Certificate cert = (Certificate) request.getAttribute(StrolchRestfulConstants.STROLCH_CERTIFICATE);
 		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
 			List<Resource> teams = tx.streamResources(TYPE_TEAM).toList();
-			List<TeamDto> dtos = teams.stream().map(ChronivaroMapper::teamToDto).toList();
-			return Response.ok(ChronivaroRestHelper.createGson().toJson(dtos), MediaType.APPLICATION_JSON).build();
+			return PaginationHelper.toPagedOrListResponse(teams, offset, limit, ChronivaroMapper::teamToDto);
 		}
 	}
 

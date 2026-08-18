@@ -22,6 +22,7 @@ import li.strolch.service.api.ServiceResult;
 
 import java.time.DayOfWeek;
 import java.util.List;
+import java.util.function.Function;
 
 import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
 import static ch.atexxi.chronivaro.rest.dto.ChronivaroMapper.employeeToDto;
@@ -31,12 +32,12 @@ public class EmployeeResource {
 
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response getEmployees(@Context HttpServletRequest request) {
+	public Response getEmployees(@Context HttpServletRequest request, @QueryParam("offset") Integer offset,
+			@QueryParam("limit") Integer limit) {
 		Certificate cert = (Certificate) request.getAttribute(StrolchRestfulConstants.STROLCH_CERTIFICATE);
 		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
 			List<Resource> employees = tx.streamResources(TYPE_EMPLOYEE).toList();
-			List<EmployeeDto> dtos = employees.stream().map(e -> employeeToDto(tx, e)).toList();
-			return Response.ok(ChronivaroRestHelper.createGson().toJson(dtos), MediaType.APPLICATION_JSON).build();
+			return PaginationHelper.toPagedOrListResponse(employees, offset, limit, e -> employeeToDto(tx, e));
 		}
 	}
 
@@ -146,15 +147,15 @@ public class EmployeeResource {
 	@GET
 	@Path("{id}/schedules")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response getSchedules(@Context HttpServletRequest request, @PathParam("id") String id) {
+	public Response getSchedules(@Context HttpServletRequest request, @PathParam("id") String id,
+			@QueryParam("offset") Integer offset, @QueryParam("limit") Integer limit) {
 		Certificate cert = (Certificate) request.getAttribute(StrolchRestfulConstants.STROLCH_CERTIFICATE);
 		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
 			List<Resource> schedules = tx
 					.streamResources(TYPE_EMPLOYMENT_SCHEDULE)
 					.filter(s -> s.getRelationId(PARAM_EMPLOYEE).equals(id))
 					.toList();
-			List<ScheduleDto> dtos = schedules.stream().map(ChronivaroMapper::scheduleToDto).toList();
-			return Response.ok(ChronivaroRestHelper.createGson().toJson(dtos), MediaType.APPLICATION_JSON).build();
+			return PaginationHelper.toPagedOrListResponse(schedules, offset, limit, ChronivaroMapper::scheduleToDto);
 		}
 	}
 
@@ -189,7 +190,8 @@ public class EmployeeResource {
 	@GET
 	@Path("{id}/working-location-defaults")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response getWorkingLocationDefaults(@Context HttpServletRequest request, @PathParam("id") String id) {
+	public Response getWorkingLocationDefaults(@Context HttpServletRequest request, @PathParam("id") String id,
+			@QueryParam("offset") Integer offset, @QueryParam("limit") Integer limit) {
 		Certificate cert = (Certificate) request.getAttribute(StrolchRestfulConstants.STROLCH_CERTIFICATE);
 		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
 			List<WorkingLocationDefaultDto> defaults = tx
@@ -200,7 +202,7 @@ public class EmployeeResource {
 							WorkingLocationDurationType.valueOf(r.getString(PARAM_DURATION_TYPE)),
 							r.getString(PARAM_DAY_PART), r.getString(PARAM_WORKING_LOCATION)))
 					.toList();
-			return Response.ok(ChronivaroRestHelper.createGson().toJson(defaults), MediaType.APPLICATION_JSON).build();
+			return PaginationHelper.toPagedOrListResponse(defaults, offset, limit, Function.identity());
 		}
 	}
 

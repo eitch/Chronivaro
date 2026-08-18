@@ -27,12 +27,12 @@ public class ScheduleTemplateResource {
 
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response getTemplates(@Context HttpServletRequest request) {
+	public Response getTemplates(@Context HttpServletRequest request, @QueryParam("offset") Integer offset,
+			@QueryParam("limit") Integer limit) {
 		Certificate cert = (Certificate) request.getAttribute(StrolchRestfulConstants.STROLCH_CERTIFICATE);
 		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
 			List<Resource> templates = tx.streamResources(TYPE_EMPLOYMENT_SCHEDULE_TEMPLATE).toList();
-			List<ScheduleTemplateDto> dtos = templates.stream().map(ChronivaroMapper::scheduleTemplateToDto).toList();
-			return Response.ok(ChronivaroRestHelper.createGson().toJson(dtos), MediaType.APPLICATION_JSON).build();
+			return PaginationHelper.toPagedOrListResponse(templates, offset, limit, ChronivaroMapper::scheduleTemplateToDto);
 		}
 	}
 

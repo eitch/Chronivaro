@@ -25,7 +25,7 @@ Audit date: 2026-08-17. `IMPLEMENTATION_SPECIFICATION.md` is authoritative; the 
 - Supervisor approval queue/API/UI for absences and submitted periods (sections 3.2, 12.1, 13.2): no approval queue query/resource/view was found.
 - Automated vacation entitlement engine and configurable policy values (section 6.7.1), subject to the open parameters listed below.
 - Registration of all required audit fields and audit access controls (sections 6.10 and 16.3), beyond the partial helper implementation.
-- REST-wide specification conventions: standard error payload with field errors/correlation ID implemented (Task 2.1); optimistic concurrency, pagination, OpenAPI documentation, and integration coverage remaining (sections 13.1, 14.2, 18.2).
+- REST-wide specification conventions: standard error payload with field errors/correlation ID (Task 2.1) and pagination contracts/helpers (Task 2.2) implemented; optimistic concurrency, OpenAPI documentation, and integration coverage remaining (sections 13.1, 14.2, 18.2).
 - Non-functional production controls: structured correlation-ID logs, metrics, health/readiness checks, documented retention/deletion policy, performance evidence, and responsive/accessibility verification (sections 16.3 and 17).
 
 ## Specification ambiguity resolved
