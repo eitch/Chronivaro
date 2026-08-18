@@ -2,7 +2,7 @@
 
 > **Claim:** Arbeitszeit im Überblick  
 > **Status:** Entwurf für die Implementierung  
-> **Technologiebasis:** Strolch, JDK 25, Maven, Vanilla JavaScript
+> **Technologiebasis:** Strolch, JDK 25, Maven, Eclipse Jetty (embedded), Jersey / JAX-RS, Vanilla JavaScript
 
 ## 1. Zweck des Dokuments
 
@@ -754,11 +754,17 @@ chronivaro/
 │       ├── main/java/
 │       ├── main/resources/
 │       └── test/java/
-└── chronivaro-web/
+├── chronivaro-web/
+│   ├── pom.xml
+│   └── src/
+│       ├── main/webapp/
+│       └── test/
+└── chronivaro-app/
     ├── pom.xml
     └── src/
-        ├── main/webapp/
-        └── test/
+        ├── main/java/
+        ├── main/resources/
+        └── test/java/
 ```
 
 Maven-Koordinaten:
@@ -818,7 +824,210 @@ Enthält:
 
 Die serverseitige Validierung bleibt verbindlich.
 
-## 15. Strolch-Modellierung
+### 14.4 `chronivaro-app`
+
+Enthält:
+
+- den ausführbaren Application Entry Point
+- Initialisierung und kontrolliertes Herunterfahren der Chronivaro- und Strolch-Laufzeit
+- den eingebetteten Eclipse-Jetty-Server
+- Registrierung von Jersey / JAX-RS im Servlet-Kontext
+- Bereitstellung der statischen Ressourcen aus `chronivaro-web`
+- technische HTTP-Server-Konfiguration
+- Runtime- und HTTP-Integrationstests
+
+`chronivaro-app` ist die äusserste Laufzeitschicht. Das Modul darf von `chronivaro-core`, `chronivaro-rest` und dem erzeugten Frontend-Artefakt abhängen. Umgekehrt dürfen `chronivaro-core` und `chronivaro-rest` nicht von `chronivaro-app` abhängen.
+
+Jetty-spezifischer Code bleibt auf diese Laufzeit- beziehungsweise Bootstrap-Schicht beschränkt. Insbesondere darf `chronivaro-core` keine Jetty-Abhängigkeit besitzen und JAX-RS-Ressourcen dürfen keine Jetty-spezifischen APIs voraussetzen.
+
+## 15. Eingebetteter HTTP-Server
+
+Chronivaro wird als eigenständige Java-Anwendung betrieben. Die Anwendung darf für ihren regulären Betrieb nicht in einen externen Servlet-Container oder Application Server deployt werden müssen.
+
+Eclipse Jetty ist Bestandteil der Chronivaro-Laufzeit und wird durch die Anwendung selbst gestartet, konfiguriert und gestoppt.
+
+Die Zielarchitektur ist:
+
+```text
+Chronivaro
+│
+├── Application Bootstrap (`chronivaro-app`)
+│
+├── Strolch Runtime
+│
+├── Chronivaro Application Services
+│
+└── Embedded Jetty
+    │
+    ├── Jersey / JAX-RS
+    │   └── REST API
+    │
+    └── Static Resource Handler
+        └── chronivaro-web
+```
+
+Tomcat ist nicht Bestandteil der benötigten Laufzeitarchitektur.
+
+### 15.1 Laufzeitmodell und Start
+
+Chronivaro muss über einen regulären Java-Einstiegspunkt direkt gestartet werden können. Das angestrebte Betriebsmodell ist:
+
+```bash
+java -jar chronivaro.jar
+```
+
+Die konkrete Maven-Packaging-Technik ist eine Implementierungsentscheidung. Das resultierende Produktionsartefakt muss jedoch ohne Installation oder Start eines externen Tomcat- oder Jetty-Servers ausführbar sein.
+
+Der Application Entry Point liegt in `chronivaro-app` und übernimmt die Orchestrierung der technischen Laufzeit.
+
+Die Startreihenfolge ist grundsätzlich:
+
+1. Konfiguration laden und validieren.
+2. Strolch Runtime und Chronivaro Application Services initialisieren.
+3. Embedded Jetty initialisieren.
+4. Jersey und die bestehende JAX-RS-Anwendung registrieren.
+5. Statische Frontend-Ressourcen konfigurieren.
+6. HTTP-Server starten und Requests akzeptieren.
+
+Kann eine zwingend benötigte Komponente nicht initialisiert werden, darf Chronivaro nicht in einem teilweise funktionsfähigen Zustand weiterlaufen. Der Prozessstart muss insbesondere fehlschlagen, wenn der konfigurierte HTTP-Port nicht gebunden werden kann, die HTTP-Konfiguration ungültig ist oder Jersey beziehungsweise notwendige Application Services nicht initialisiert werden können.
+
+### 15.2 REST API über Jersey / JAX-RS
+
+Die bestehende REST API verwendet weiterhin Jersey / JAX-RS.
+
+Der in Abschnitt 13 definierte REST-Basispfad bleibt unverändert:
+
+```text
+/rest/chronivaro/v1
+```
+
+Die Migration auf Embedded Jetty ist ein Infrastruktur-Refactoring und darf bestehende REST-Verträge, Pfade, Request- und Response-Modelle sowie HTTP-Semantik nicht verändern, sofern dies nicht durch eine andere Anforderung dieser Spezifikation ausdrücklich verlangt wird.
+
+Jersey wird in der eingebetteten Jetty Servlet Runtime registriert.
+
+JAX-RS-Ressourcen bleiben von Jetty-spezifischen APIs unabhängig. Fachliche Logik verbleibt in `chronivaro-core`; die REST-Schicht dient weiterhin ausschliesslich als API-Rand.
+
+### 15.3 Frontend-Auslieferung
+
+Das von `chronivaro-web` erzeugte Frontend wird durch denselben eingebetteten Jetty-Server ausgeliefert.
+
+Die Anwendung stellt damit sowohl die Weboberfläche als auch die REST API über denselben HTTP-Server bereit.
+
+Konzeptionell:
+
+```text
+/                           → Chronivaro Frontend
+/assets/...                 → statische Frontend-Ressourcen
+/rest/chronivaro/v1/...     → JAX-RS REST API
+```
+
+Für die Produktionsumgebung ist kein zusätzlicher Webserver ausschliesslich zur Auslieferung des Chronivaro Frontends erforderlich.
+
+Die konkrete Einbindung des von `chronivaro-web` erzeugten Artefakts in `chronivaro-app` ist eine Build- und Packaging-Entscheidung. Sie muss reproduzierbar über Maven erfolgen und darf keine manuelle Kopieroperation für einen Produktions-Build voraussetzen.
+
+### 15.4 Application Lifecycle und Shutdown
+
+Jetty ist Bestandteil des Chronivaro Application Lifecycles.
+
+Beim Beenden der JVM muss Chronivaro kontrolliert herunterfahren. Das Herunterfahren erfolgt in umgekehrter Abhängigkeitsreihenfolge des Starts.
+
+Dabei müssen mindestens:
+
+- keine neuen HTTP Requests mehr angenommen werden;
+- laufende HTTP Requests, soweit technisch sinnvoll, kontrolliert beendet werden;
+- Jetty gestoppt werden;
+- Chronivaro-Ressourcen freigegeben werden;
+- die Strolch Runtime ordnungsgemäss beendet werden.
+
+Ein Termination-Signal des Betriebssystems beziehungsweise Containers muss diesen kontrollierten Shutdown auslösen.
+
+### 15.5 HTTP-Konfiguration
+
+Die HTTP-Server-Konfiguration ist Bestandteil der regulären Chronivaro-Konfiguration und wird nicht über eine extern installierte Jetty-Instanz verwaltet.
+
+Mindestens folgende Werte müssen konfigurierbar sein:
+
+- Aktivierung beziehungsweise Deaktivierung des HTTP-Servers
+- Bind Address
+- HTTP Port
+- optionaler Context Path, falls für eine Zielumgebung benötigt
+- Quelle beziehungsweise Speicherort der statischen Frontend-Ressourcen, soweit diese nicht fest in das Produktionsartefakt integriert sind
+
+Sinnvolle Standardwerte dürfen definiert werden.
+
+Chronivaro darf für seine grundlegende HTTP-Konfiguration keine externen Jetty-spezifischen XML-Konfigurationsdateien voraussetzen.
+
+### 15.6 Abhängigkeitsgrenzen
+
+Jetty ist eine technische Infrastrukturabhängigkeit und darf nicht in die fachlichen Schichten hineinreichen.
+
+Es gelten insbesondere folgende Regeln:
+
+- `chronivaro-core` besitzt keine Abhängigkeit zu Jetty.
+- `chronivaro-rest` enthält keine Jetty-spezifische Business- oder Bootstrap-Logik.
+- JAX-RS-Ressourcen verwenden keine Jetty-spezifischen APIs.
+- Jetty Bootstrap und HTTP-Server-Konfiguration liegen in `chronivaro-app`.
+- Standardisierte Jakarta-Servlet-, JAX-RS-, Filter- und Listener-Mechanismen dürfen verwendet werden.
+- Portable Jakarta-Funktionalität wird nicht unnötig durch Jetty-spezifische Implementierungen ersetzt.
+
+### 15.7 Unabhängigkeit von Tomcat
+
+Chronivaro darf zur Laufzeit nicht von Tomcat oder Tomcat-spezifischer Infrastruktur abhängig sein.
+
+Nicht erforderlich beziehungsweise nicht zulässig als Laufzeitvoraussetzung sind insbesondere:
+
+- ein installierter Tomcat Server
+- `CATALINA_HOME`
+- Deployment nach `webapps`
+- Tomcat-spezifische APIs
+- Tomcat-spezifische Lifecycle-Mechanismen
+- Tomcat-spezifische Runtime-Konfiguration
+- ein klassisches WAR-Deployment als notwendiges Produktionsmodell
+
+Bestehende Tomcat-spezifische Annahmen müssen bei der Migration identifiziert und durch portable Jakarta-Mechanismen oder durch von `chronivaro-app` verwaltete Infrastruktur ersetzt werden.
+
+### 15.8 Logging und Beobachtbarkeit
+
+Jetty muss in das bestehende Logging- und Beobachtbarkeitskonzept von Chronivaro integriert werden.
+
+Es darf kein unabhängiges Logging-System ausschliesslich für Jetty eingeführt werden.
+
+Mindestens folgende Ereignisse werden nachvollziehbar geloggt:
+
+- Start des HTTP-Servers
+- verwendete Bind Address und Port
+- erfolgreiche Initialisierung der REST API
+- erfolgreiche Initialisierung der Frontend-Auslieferung
+- Fehler während des HTTP-Server-Starts
+- kontrolliertes Stoppen des HTTP-Servers
+
+Die in Abschnitt 18 definierten Anforderungen an strukturierte Logs, Metriken, Health und Readiness gelten auch für den eingebetteten HTTP-Server.
+
+### 15.9 Tests und Verifikation
+
+Die Embedded-Jetty-Laufzeit muss automatisiert getestet werden.
+
+Mindestens abzudecken sind:
+
+- erfolgreicher Start und Stop des HTTP-Servers;
+- Erreichbarkeit eines repräsentativen REST-Endpunkts;
+- korrekte Bereitstellung des Frontend Entry Points;
+- korrekte Trennung zwischen Frontend-Ressourcen und REST API;
+- Fehlerverhalten bei nicht verfügbarem HTTP-Port;
+- kontrollierter Shutdown der Anwendung.
+
+REST-Integrationstests sollen soweit sinnvoll gegen die tatsächlich eingebettete HTTP-Laufzeit ausgeführt werden. Unit-Tests für fachliche Logik und Tests einzelner REST-Ressourcen sollen jedoch weiterhin unabhängig vom konkreten Servlet-Container bleiben.
+
+Zusätzlich muss die Anwendung ohne Tomcat manuell verifizierbar sein:
+
+```bash
+java -jar chronivaro.jar
+```
+
+Danach müssen mindestens das Frontend unter `/` und ein repräsentativer Endpunkt unter `/rest/chronivaro/v1/...` erreichbar sein.
+
+
+## 16. Strolch-Modellierung
 
 Die konkrete Abbildung folgt den im Projekt verwendeten Strolch-Konventionen. Als Ausgangspunkt wird folgende Zuordnung empfohlen:
 
@@ -834,13 +1043,13 @@ Die konkrete Abbildung folgt den im Projekt verwendeten Strolch-Konventionen. Al
 
 Alle schreibenden Operationen laufen in einer Strolch-Transaktion. Fachliche Zustandsänderungen werden über Core-Services ausgeführt und nicht durch direkte Manipulation aus der REST-Schicht.
 
-## 16. Sicherheit und Datenschutz
+## 17. Sicherheit und Datenschutz
 
-### 16.1 Authentifizierung
+### 17.1 Authentifizierung
 
 Chronivaro verwendet die in der Zielumgebung etablierte Authentifizierung. Die REST-API darf keine fachlichen Endpunkte anonym freigeben.
 
-### 16.2 Autorisierung
+### 17.2 Autorisierung
 
 Mindestens folgende Berechtigungen werden getrennt geprüft:
 
@@ -854,7 +1063,7 @@ Mindestens folgende Berechtigungen werden getrennt geprüft:
 - sensible Abwesenheitsgründe lesen
 - Konfiguration administrieren
 
-### 16.3 Datenschutz
+### 17.3 Datenschutz
 
 - Krankheits- und Unfallinformationen sind besonders restriktiv sichtbar.
 - Audit-Daten sind nur für berechtigte Rollen zugänglich.
@@ -862,16 +1071,16 @@ Mindestens folgende Berechtigungen werden getrennt geprüft:
 - Aufbewahrungs- und Löschfristen sind vor Produktivbetrieb organisatorisch festzulegen.
 - Kommentare dürfen nicht für unnötige medizinische Details verwendet werden.
 
-## 17. Nichtfunktionale Anforderungen
+## 18. Nichtfunktionale Anforderungen
 
-### 17.1 Zuverlässigkeit
+### 18.1 Zuverlässigkeit
 
 - schreibende Operationen sind transaktional
 - wiederholte Client-Anfragen dürfen keine unbemerkten Doppelbuchungen erzeugen
 - Berechnungen sind deterministisch und automatisiert getestet
 - abgeschlossene Perioden bleiben reproduzierbar
 
-### 17.2 Performance
+### 18.2 Performance
 
 Zielwerte für das MVP bei normaler Unternehmensgrösse:
 
@@ -880,7 +1089,7 @@ Zielwerte für das MVP bei normaler Unternehmensgrösse:
 - Teamreport für 100 Mitarbeitende und einen Monat: innerhalb von 5 Sekunden
 - Server-seitige Pagination bei grossen Datenmengen
 
-### 17.3 Beobachtbarkeit
+### 18.3 Beobachtbarkeit
 
 - strukturierte Logs mit Korrelations-ID
 - keine sensiblen Inhalte in Standardlogs
@@ -888,15 +1097,15 @@ Zielwerte für das MVP bei normaler Unternehmensgrösse:
 - nachvollziehbare Fehlercodes
 - Health- und Readiness-Prüfungen
 
-### 17.4 Kompatibilität
+### 18.4 Kompatibilität
 
 - aktuelle Versionen von Firefox, Chromium-basierten Browsern und Edge
 - responsive Nutzung ab einer sinnvollen Smartphone-Breite
 - keine Abhängigkeit von proprietären Browsererweiterungen
 
-## 18. Teststrategie
+## 19. Teststrategie
 
-### 18.1 Unit-Tests im Core
+### 19.1 Unit-Tests im Core
 
 Mindestens folgende Fälle:
 
@@ -916,7 +1125,7 @@ Mindestens folgende Fälle:
 - Saldo über Monatsgrenzen
 - Ferienjournal mit Anspruch, Bezug, Korrektur und Verfall
 
-### 18.2 REST-Integrationstests
+### 19.2 REST-Integrationstests
 
 - erfolgreiche CRUD-Operationen
 - Validierungsfehler und Fehlerformat
@@ -926,7 +1135,7 @@ Mindestens folgende Fälle:
 - gesperrte Perioden
 - CSV-Export und Encoding
 
-### 18.3 UI-Tests
+### 19.3 UI-Tests
 
 - Start/Stoppen und erneuter Start eines weiteren Arbeitsblocks
 - Darstellung der Arbeitsblöcke und der daraus abgeleiteten Unterbrüche
@@ -937,7 +1146,16 @@ Mindestens folgende Fälle:
 - Tastaturbedienung
 - Statusdarstellung zusätzlich zur Farbe
 
-## 19. Akzeptanzkriterien für das MVP
+### 19.4 Runtime- und HTTP-Integrationstests
+
+- Start und Stop der Anwendung mit Embedded Jetty
+- REST-Zugriff über `/rest/chronivaro/v1`
+- Auslieferung von `index.html` und statischen Assets
+- parallele Bereitstellung von REST API und Frontend über denselben HTTP-Server
+- Fehler beim Binden eines bereits belegten HTTP-Ports
+- kontrollierter Shutdown von Jetty und Strolch Runtime
+
+## 20. Akzeptanzkriterien für das MVP
 
 Das MVP gilt als fachlich abnahmebereit, wenn:
 
@@ -956,14 +1174,21 @@ Das MVP gilt als fachlich abnahmebereit, wenn:
 13. ein Monatsreport Sollzeit, Istzeit, Abwesenheiten und Saldo zeigt;
 14. der Monatsreport als CSV exportiert werden kann;
 15. alle fachlich relevanten Änderungen im Audit-Log nachvollziehbar sind;
-16. die definierten Kernberechnungen automatisiert getestet sind.
+16. die definierten Kernberechnungen automatisiert getestet sind;
+17. Chronivaro ohne externen Servlet-Container als eigenständige Java-Anwendung gestartet werden kann;
+18. Embedded Jetty sowohl das Frontend als auch die bestehende REST API bereitstellt;
+19. Start, HTTP-Betrieb und kontrollierter Shutdown der Embedded-Jetty-Laufzeit automatisiert getestet sind.
 
-## 20. Vorgeschlagene Implementierungsreihenfolge
+## 21. Vorgeschlagene Implementierungsreihenfolge
 
 ### Phase 1 – Fundament
 
-- Maven-Multimodulprojekt erstellen
+- Maven-Multimodulprojekt einschliesslich `chronivaro-app` erstellen
 - Strolch-Laufzeit und Modellinitialisierung einrichten
+- eigenständigen Application Entry Point einrichten
+- Embedded Jetty als anwendungseigene HTTP-Laufzeit einrichten
+- Jersey / JAX-RS in Embedded Jetty integrieren
+- `chronivaro-web` über Embedded Jetty ausliefern
 - Authentifizierung und Rollenmodell anbinden
 - gemeinsame Fehler- und Audit-Infrastruktur aufbauen
 
@@ -1002,7 +1227,7 @@ Das MVP gilt als fachlich abnahmebereit, wenn:
 - Berechtigungs- und Datenschutztests
 - Performance-, Browser- und Abnahmetests
 
-## 21. Offene Produktentscheidungen
+## 22. Offene Produktentscheidungen
 
 Vor oder während der Implementierung sind folgende Punkte verbindlich zu entscheiden:
 
@@ -1028,7 +1253,7 @@ Bis zur Entscheidung gelten im MVP folgende Annahmen:
 - `Europe/Zurich` ist die Standardzeitzone
 - Homeoffice wird optional als Arbeitsort angezeigt
 
-## 22. Definition of Done
+## 23. Definition of Done
 
 Eine Funktion ist abgeschlossen, wenn:
 
@@ -1040,4 +1265,6 @@ Eine Funktion ist abgeschlossen, wenn:
 - UI-Zustände für Laden, leer, Erfolg und Fehler umgesetzt sind;
 - keine bekannten Fehler hoher Priorität bestehen;
 - Konfiguration und Betriebshinweise dokumentiert sind;
-- der Maven-Build mit JDK 25 reproduzierbar erfolgreich ist.
+- der Maven-Build mit JDK 25 reproduzierbar erfolgreich ist;
+- die Anwendung ohne externen Servlet-Container startbar ist;
+- Frontend und REST API über den eingebetteten Jetty-Server erreichbar sind.
