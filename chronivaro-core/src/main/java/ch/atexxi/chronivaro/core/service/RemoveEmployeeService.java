@@ -1,5 +1,6 @@
 package ch.atexxi.chronivaro.core.service;
 
+import ch.atexxi.chronivaro.core.model.ChronivaroAuditHelper;
 import ch.atexxi.chronivaro.core.model.ChronivaroModelHelper;
 import li.strolch.model.Resource;
 import li.strolch.persistence.api.StrolchTransaction;
@@ -31,6 +32,8 @@ public class RemoveEmployeeService extends AbstractService<StringArgument, Servi
 			}
 
 			tx.remove(employee);
+			ChronivaroAuditHelper.audit(tx, TYPE_EMPLOYEE, employee.getId(), AUDIT_ACTION_REMOVE,
+					"Removed employee " + employee.getName());
 			tx.commitOnClose();
 		}
 		return ServiceResult.success();

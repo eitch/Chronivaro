@@ -41,7 +41,8 @@ public class InitiateEmployeeRegistrationService extends AbstractService<StringA
 
 			privilegeHandler.initiateChallengeFor(Usage.SET_PASSWORD, username, "unknown");
 
-			ChronivaroAuditHelper.audit(tx, TYPE_EMPLOYEE, employee.getId(), "registrationInitiated", null, username);
+			ChronivaroAuditHelper.audit(tx, TYPE_EMPLOYEE, employee.getId(), AUDIT_ACTION_REGISTRATION_INITIATED,
+					"Initiated registration challenge for user " + username);
 
 			tx.commitOnClose();
 		}

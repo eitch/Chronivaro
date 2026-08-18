@@ -1,5 +1,6 @@
 package ch.atexxi.chronivaro.core.service;
 
+import ch.atexxi.chronivaro.core.model.ChronivaroAuditHelper;
 import li.strolch.model.Resource;
 import li.strolch.persistence.api.StrolchTransaction;
 import li.strolch.service.api.AbstractService;
@@ -33,6 +34,8 @@ public class UpdateScheduleService
 							arg.validFrom.minusDays(1).withHour(23).withMinute(59).withSecond(59));
 					bumpVersion(schedule, tx);
 					tx.update(schedule);
+					ChronivaroAuditHelper.audit(tx, TYPE_EMPLOYMENT_SCHEDULE, schedule.getId(), AUDIT_ACTION_UPDATE,
+							"Closed previous schedule version " + schedule.getId() + " validTo=" + schedule.getDate(PARAM_VALID_TO));
 
 					// Create new version
 					Resource newVersion = tx.getResourceTemplate(TYPE_EMPLOYMENT_SCHEDULE, true);
@@ -41,6 +44,9 @@ public class UpdateScheduleService
 					updateSchedule(newVersion, arg);
 					initVersion(newVersion, tx);
 					tx.add(newVersion);
+					ChronivaroAuditHelper.audit(tx, TYPE_EMPLOYMENT_SCHEDULE, newVersion.getId(), AUDIT_ACTION_CREATE,
+							"Created new schedule version for employee " + employeeId + " validFrom=" + arg.validFrom
+									+ (arg.validTo != null ? " to " + arg.validTo : ""));
 				} else {
 					// If new validFrom is before or same, we just update the existing one if no work entries,
 					// but here we know hasWorkEntries is true or validFrom changed.
@@ -65,12 +71,16 @@ public class UpdateScheduleService
 					updateSchedule(schedule, arg);
 					bumpVersion(schedule, tx);
 					tx.update(schedule);
+					ChronivaroAuditHelper.audit(tx, TYPE_EMPLOYMENT_SCHEDULE, schedule.getId(), AUDIT_ACTION_UPDATE,
+							"Updated schedule " + schedule.getId() + " for employee " + employeeId);
 				}
 			} else {
 				// No work entries and same validFrom, just update
 				updateSchedule(schedule, arg);
 				bumpVersion(schedule, tx);
 				tx.update(schedule);
+				ChronivaroAuditHelper.audit(tx, TYPE_EMPLOYMENT_SCHEDULE, schedule.getId(), AUDIT_ACTION_UPDATE,
+						"Updated schedule " + schedule.getId() + " for employee " + employeeId);
 			}
 
 			updateEmployeeCurrentSchedule(tx, employeeId);

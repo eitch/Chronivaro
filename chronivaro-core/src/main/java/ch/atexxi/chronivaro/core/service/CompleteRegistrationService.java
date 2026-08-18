@@ -1,5 +1,7 @@
 package ch.atexxi.chronivaro.core.service;
 
+import ch.atexxi.chronivaro.core.model.ChronivaroAuditHelper;
+import li.strolch.model.Resource;
 import li.strolch.model.audit.AccessType;
 import li.strolch.persistence.api.StrolchTransaction;
 import li.strolch.privilege.handler.PrivilegeHandler;
@@ -11,6 +13,7 @@ import li.strolch.service.api.ServiceArgument;
 import li.strolch.service.api.ServiceResult;
 import li.strolch.service.api.ServiceResultState;
 
+import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
 import static li.strolch.runtime.StrolchConstants.StrolchPrivilegeConstants.*;
 
 public class CompleteRegistrationService
@@ -46,6 +49,16 @@ public class CompleteRegistrationService
 					arg.password.toCharArray());
 
 			tx.add(tx.auditFrom(AccessType.UPDATE, PRIVILEGE, USER, userRep.getUsername()));
+
+			Resource employee = tx
+					.streamResources(TYPE_EMPLOYEE)
+					.filter(e -> arg.username.equals(e.getString(PARAM_USERNAME)))
+					.findFirst()
+					.orElse(null);
+			String employeeId = employee != null ? employee.getId() : arg.username;
+			ChronivaroAuditHelper.audit(tx, TYPE_EMPLOYEE, employeeId, AUDIT_ACTION_REGISTRATION_COMPLETED,
+					"Completed registration for user " + arg.username);
+
 			tx.commitOnClose();
 		} finally {
 			// 3. Invalidate the challenge certificate

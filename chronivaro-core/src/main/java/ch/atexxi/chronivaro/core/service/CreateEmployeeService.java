@@ -1,5 +1,6 @@
 package ch.atexxi.chronivaro.core.service;
 
+import ch.atexxi.chronivaro.core.model.ChronivaroAuditHelper;
 import li.strolch.model.Resource;
 import li.strolch.persistence.api.StrolchTransaction;
 import li.strolch.privilege.base.PrivilegeConstants;
@@ -63,6 +64,8 @@ public class CreateEmployeeService extends AbstractService<CreateEmployeeService
 			employeeId = employee.getId();
 			initVersion(employee, tx);
 			tx.add(employee);
+			ChronivaroAuditHelper.audit(tx, TYPE_EMPLOYEE, employee.getId(), AUDIT_ACTION_CREATE,
+					"Created employee " + employee.getName());
 
 			if (arg.scheduleTemplateId != null && !arg.scheduleTemplateId.isBlank()) {
 				Resource template = tx.getResourceBy(TYPE_EMPLOYMENT_SCHEDULE_TEMPLATE, arg.scheduleTemplateId, true);
@@ -81,6 +84,8 @@ public class CreateEmployeeService extends AbstractService<CreateEmployeeService
 
 				initVersion(schedule, tx);
 				tx.add(schedule);
+				ChronivaroAuditHelper.audit(tx, TYPE_EMPLOYMENT_SCHEDULE, schedule.getId(), AUDIT_ACTION_CREATE,
+						"Created schedule for " + employee.getName() + " from template " + template.getName());
 				employee.setRelation(PARAM_CURRENT_SCHEDULE, schedule);
 			}
 

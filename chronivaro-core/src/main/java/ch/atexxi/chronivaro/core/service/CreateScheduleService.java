@@ -1,5 +1,6 @@
 package ch.atexxi.chronivaro.core.service;
 
+import ch.atexxi.chronivaro.core.model.ChronivaroAuditHelper;
 import li.strolch.model.Resource;
 import li.strolch.persistence.api.StrolchTransaction;
 import li.strolch.service.api.AbstractService;
@@ -38,6 +39,9 @@ public class CreateScheduleService
 
 			initVersion(schedule, tx);
 			tx.add(schedule);
+			ChronivaroAuditHelper.audit(tx, TYPE_EMPLOYMENT_SCHEDULE, schedule.getId(), AUDIT_ACTION_CREATE,
+					"Created schedule for employee " + arg.employeeId + " validFrom=" + arg.validFrom
+							+ (arg.validTo != null ? " to " + arg.validTo : ""));
 			updateEmployeeCurrentSchedule(tx, arg.employeeId, schedule, arg.validFrom, arg.validTo);
 
 			tx.commitOnClose();
