@@ -255,9 +255,14 @@ Task 4 was split into subtasks **4.1**, **4.2.1**, **4.2.2**, **4.2.3**, and **4
 
 #### 4.2.3. Audit logging for Time Tracking, Absence, Vacation, Period, and Configuration services
 
-- **Status:** `OPEN`
+- **Status:** `COMPLETED`
 - **Scope:** Integrate `ChronivaroAuditHelper.audit(...)` across operational services: Timers & Work Entries (`StartTimerService`, `StopTimerService`, `AddWorkEntryService`, `CorrectWorkEntryService`), Absences (`RequestAbsenceService`, `UpdateAbsenceService`, `ApproveAbsenceService`, `RejectAbsenceService`, `CancelAbsenceService`), Vacation Corrections (`AddVacationCorrectionService`), Period Lifecycle (`SubmitPeriodService`, `ApprovePeriodService`, `LockPeriodService`), and System Configuration (`UpdateConfigurationService`).
 - **Acceptance:** All operational state transitions, manual edits, approvals, cancellations, period closings, and configuration modifications produce structured audit records with audit actions and details.
+- **Verification:**
+  - Integrated `ChronivaroAuditHelper.audit(...)` across timer services (`StartTimerService`, `StopTimerService`), work entry mutations (`AddWorkEntryService`, `CorrectWorkEntryService`), absence workflow services (`RequestAbsenceService`, `UpdateAbsenceService`, `ApproveAbsenceService`, `RejectAbsenceService`, `CancelAbsenceService`), vacation accounting (`AddVacationCorrectionService`), period lifecycle transitions (`SubmitPeriodService`, `ApprovePeriodService`, `LockPeriodService`), and global configuration (`UpdateConfigurationService`).
+  - Adjusted `ChronivaroAuditHelper` overload resolution to support `audit(tx, elementType, elementId, action, reason, details)` cleanly alongside `auditChange` and `auditAction`.
+  - Added comprehensive test suite in `OperationalServicesAuditTest` validating audit creation, correlation propagation, reason tracking, vacation accounting side effects, period transitions, and configuration changes.
+  - Verified with full test suite passing via `mvn test` (39 unit/integration tests passing across reactor modules with 0 failures and 0 errors).
 - **Dependencies:** Task 4.1.
 
 #### 4.3. Expose and secure the Admin Audit Logs REST endpoint
