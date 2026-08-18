@@ -215,10 +215,28 @@ Task 2 was split into tasks **2.1**, **2.2**, and **2.3** per the task-size and 
 
 ### 4. Complete audit metadata and access
 
-- **Status:** `PARTIAL`
-- **Scope:** Extend the audit helper and relevant Core mutations with action, reason, correlation ID, and complete service coverage; define retention/deletion and add a privilege-protected audit query/view.
-- **Acceptance:** Work, absence, vacation, period, administration, and configuration mutations are traceable; unauthorized reads fail; fields, access, and retention are tested.
+Task 4 was split into tasks **4.1**, **4.2**, and **4.3** per the task-size and single-concept rules (avoiding changes across 10+ files simultaneously).
+
+#### 4.1. Extend Core audit model, audit helper, retention purging, and search query
+
+- **Status:** `OPEN`
+- **Scope:** Extend `ChronivaroAuditEvent` template and constants with action, reason, correlation ID, and details; enhance `ChronivaroAuditHelper` to populate structured audit events (including MDC/thread-local correlation ID capture); implement audit retention/purge logic (`PurgeAuditEventsService` / retention rule); implement `AuditEventSearch` with fluent filters (entityType, entityId, username, action, date range) and privilege assertions in Core.
+- **Acceptance:** Audit events store complete metadata (action, reason, correlationId, details, createdBy, date, old/new values); retention purging removes aged events deterministically; `AuditEventSearch` correctly filters audit records and enforces privilege checks; verified by comprehensive Core unit/integration tests.
 - **Dependencies:** Tasks 1, 2.1.
+
+#### 4.2. Apply comprehensive audit logging across Core domain mutation services
+
+- **Status:** `OPEN`
+- **Scope:** Integrate `ChronivaroAuditHelper.audit(...)` across all domain mutation services (work entries, absences, vacation corrections, periods, employees, teams, locations, holiday calendars, schedule templates, global configuration).
+- **Acceptance:** All state transitions and administrative/mutation operations produce structured audit events with appropriate action tags and change details; core tests verify audit trail creation on domain operations.
+- **Dependencies:** Task 4.1.
+
+#### 4.3. Expose and secure the Admin Audit Logs REST endpoint
+
+- **Status:** `OPEN`
+- **Scope:** Implement `/chronivaro/v1/admin/audit-logs` endpoint with query filters (`entityType`, `entityId`, `username`, `from`, `to`), pagination envelopes (`PagedResultDto<AuditLogDto>`), correlation ID headers, and privilege enforcement (restricted to StrolchAdmin / Admin role).
+- **Acceptance:** Authorized administrators can query and paginate audit logs; unauthorized or non-admin users receive 403 Forbidden; filter combinations and correlation ID propagation are verified by REST integration tests.
+- **Dependencies:** Tasks 2.1, 2.2, 3, 4.1, 4.2.
 
 ### 5. Finish the period lifecycle in Core
 

@@ -36,15 +36,17 @@ Audit date: 2026-08-17. `IMPLEMENTATION_SPECIFICATION.md` is authoritative; the 
 
 ## Dependency-ordered next steps
 
-1. Complete audit fields, service coverage, correlation propagation, and restricted audit access (Task 4).
-2. Complete the period lifecycle, including submission, rejection, reopening, snapshots, and approval endpoints (Task 5).
-3. Expose personal and period workflow REST endpoints (Task 6).
-4. Implement configurable vacation entitlement and immutable journal accounting (Tasks 7 and 8).
-5. Complete vacation and absence REST surfaces (Task 9).
-6. Add scoped supervisor approval queues and the approvals UI (Task 10).
-7. Add personal absence and vacation pages (Task 11).
-8. Implement structured reports and CSV export (Task 12).
-9. Run the full non-functional and acceptance verification track.
+1. Complete Core audit metadata model, helper, retention purging, and query search (Task 4.1).
+2. Apply comprehensive audit logging across Core domain mutation services (Task 4.2).
+3. Expose and secure the Admin Audit Logs REST endpoint with filtering and pagination (Task 4.3).
+4. Complete the period lifecycle, including submission, rejection, reopening, snapshots, and approval endpoints (Task 5).
+5. Expose personal and period workflow REST endpoints (Task 6).
+6. Implement configurable vacation entitlement and immutable journal accounting (Tasks 7 and 8).
+7. Complete vacation and absence REST surfaces (Task 9).
+8. Add scoped supervisor approval queues and the approvals UI (Task 10).
+9. Add personal absence and vacation pages (Task 11).
+10. Implement structured reports and CSV export (Task 12).
+11. Run the full non-functional and acceptance verification track.
 
 The matching dependency-ordered tasks, evidence, dependencies, and acceptance criteria are in `IMPLEMENTATION_BACKLOG.md`.
 
