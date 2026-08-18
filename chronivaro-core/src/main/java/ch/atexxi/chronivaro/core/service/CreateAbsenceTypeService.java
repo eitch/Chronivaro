@@ -1,5 +1,6 @@
 package ch.atexxi.chronivaro.core.service;
 
+import ch.atexxi.chronivaro.core.model.ChronivaroAuditHelper;
 import li.strolch.model.Resource;
 import li.strolch.persistence.api.StrolchTransaction;
 import li.strolch.service.api.AbstractService;
@@ -30,6 +31,8 @@ public class CreateAbsenceTypeService
 			type.setBoolean(PARAM_ACTIVE, arg.active);
 			initVersion(type, tx);
 			tx.add(type);
+			ChronivaroAuditHelper.audit(tx, TYPE_ABSENCE_TYPE, type.getId(), AUDIT_ACTION_CREATE,
+					"Created absence type " + arg.name + " (" + arg.code + ")");
 			tx.commitOnClose();
 		}
 		return ServiceResult.success();

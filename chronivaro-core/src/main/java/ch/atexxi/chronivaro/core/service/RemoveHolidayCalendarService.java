@@ -1,5 +1,6 @@
 package ch.atexxi.chronivaro.core.service;
 
+import ch.atexxi.chronivaro.core.model.ChronivaroAuditHelper;
 import li.strolch.model.Resource;
 import li.strolch.persistence.api.StrolchTransaction;
 import li.strolch.service.StringArgument;
@@ -36,6 +37,8 @@ public class RemoveHolidayCalendarService extends AbstractService<StringArgument
 					.forEach(tx::remove);
 
 			tx.remove(calendar);
+			ChronivaroAuditHelper.audit(tx, TYPE_HOLIDAY_CALENDAR, calendar.getId(), AUDIT_ACTION_REMOVE,
+					"Removed holiday calendar " + calendar.getName());
 			tx.commitOnClose();
 		}
 		return ServiceResult.success();

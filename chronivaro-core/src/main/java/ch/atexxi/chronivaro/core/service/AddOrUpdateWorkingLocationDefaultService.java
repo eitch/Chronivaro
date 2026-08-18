@@ -1,5 +1,6 @@
 package ch.atexxi.chronivaro.core.service;
 
+import ch.atexxi.chronivaro.core.model.ChronivaroAuditHelper;
 import ch.atexxi.chronivaro.core.model.WorkingLocation;
 import ch.atexxi.chronivaro.core.model.WorkingLocationDurationType;
 import li.strolch.model.Resource;
@@ -48,10 +49,17 @@ public class AddOrUpdateWorkingLocationDefaultService
 			resource.setString(PARAM_DURATION_TYPE, durationType.name());
 			resource.setString(PARAM_DAY_PART, arg.dayPart == null ? "" : arg.dayPart);
 			resource.setString(PARAM_WORKING_LOCATION, arg.workingLocation);
-			if (arg.id == null)
+			if (arg.id == null) {
 				tx.add(resource);
-			else
+				ChronivaroAuditHelper.audit(tx, TYPE_WORKING_LOCATION_DEFAULT, resource.getId(), AUDIT_ACTION_CREATE,
+						"Added working location default " + weekday.name() + " -> " + arg.workingLocation
+								+ " for employee " + arg.employeeId);
+			} else {
 				tx.update(resource);
+				ChronivaroAuditHelper.audit(tx, TYPE_WORKING_LOCATION_DEFAULT, resource.getId(), AUDIT_ACTION_UPDATE,
+						"Updated working location default " + weekday.name() + " -> " + arg.workingLocation
+								+ " for employee " + arg.employeeId);
+			}
 			tx.commitOnClose();
 		}
 		return ServiceResult.success();

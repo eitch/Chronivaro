@@ -1,5 +1,6 @@
 package ch.atexxi.chronivaro.core.service;
 
+import ch.atexxi.chronivaro.core.model.ChronivaroAuditHelper;
 import li.strolch.model.Resource;
 import li.strolch.persistence.api.StrolchTransaction;
 import li.strolch.service.StringResult;
@@ -31,6 +32,8 @@ public class CreateScheduleTemplateService
 
 			initVersion(template, tx);
 			tx.add(template);
+			ChronivaroAuditHelper.audit(tx, TYPE_EMPLOYMENT_SCHEDULE_TEMPLATE, template.getId(), AUDIT_ACTION_CREATE,
+					"Created schedule template " + arg.name);
 			tx.commitOnClose();
 		}
 

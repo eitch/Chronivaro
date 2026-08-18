@@ -1,5 +1,6 @@
 package ch.atexxi.chronivaro.core.service;
 
+import ch.atexxi.chronivaro.core.model.ChronivaroAuditHelper;
 import ch.atexxi.chronivaro.core.model.ChronivaroModelHelper;
 import li.strolch.model.Resource;
 import li.strolch.persistence.api.StrolchTransaction;
@@ -23,6 +24,8 @@ public class UpdateLocationService
 					tx.getResourceBy(TYPE_HOLIDAY_CALENDAR, arg.holidayCalendarId, true));
 			bumpVersion(location, tx);
 			tx.update(location);
+			ChronivaroAuditHelper.audit(tx, TYPE_LOCATION, location.getId(), AUDIT_ACTION_UPDATE,
+					"Updated location " + arg.name);
 			tx.commitOnClose();
 		}
 		return ServiceResult.success();

@@ -1,5 +1,6 @@
 package ch.atexxi.chronivaro.core.service;
 
+import ch.atexxi.chronivaro.core.model.ChronivaroAuditHelper;
 import li.strolch.model.Resource;
 import li.strolch.persistence.api.StrolchTransaction;
 import li.strolch.service.api.AbstractService;
@@ -46,6 +47,8 @@ public class CreateHolidayService extends AbstractService<CreateHolidayService.H
 			holiday.setDouble(PARAM_CREDIT_FACTOR, arg.creditFactor == 0.0 ? 1.0 : arg.creditFactor);
 			initVersion(holiday, tx);
 			tx.add(holiday);
+			ChronivaroAuditHelper.audit(tx, TYPE_HOLIDAY, holiday.getId(), AUDIT_ACTION_CREATE,
+					"Created holiday " + arg.name + " on " + arg.date);
 			tx.commitOnClose();
 		}
 		return ServiceResult.success();

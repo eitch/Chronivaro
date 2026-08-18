@@ -1,5 +1,6 @@
 package ch.atexxi.chronivaro.core.service;
 
+import ch.atexxi.chronivaro.core.model.ChronivaroAuditHelper;
 import li.strolch.model.Resource;
 import li.strolch.persistence.api.StrolchTransaction;
 import li.strolch.service.api.AbstractService;
@@ -24,6 +25,8 @@ public class CreateLocationService extends AbstractService<CreateLocationService
 			location.setString(PARAM_TIMEZONE, timeZone);
 			initVersion(location, tx);
 			tx.add(location);
+			ChronivaroAuditHelper.audit(tx, TYPE_LOCATION, location.getId(), AUDIT_ACTION_CREATE,
+					"Created location " + arg.name);
 			tx.commitOnClose();
 		}
 		return ServiceResult.success();

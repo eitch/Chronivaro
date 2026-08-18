@@ -1,5 +1,6 @@
 package ch.atexxi.chronivaro.core.service;
 
+import ch.atexxi.chronivaro.core.model.ChronivaroAuditHelper;
 import ch.atexxi.chronivaro.core.model.ChronivaroModelHelper;
 import li.strolch.model.Resource;
 import li.strolch.persistence.api.StrolchTransaction;
@@ -7,8 +8,7 @@ import li.strolch.service.StringArgument;
 import li.strolch.service.api.AbstractService;
 import li.strolch.service.api.ServiceResult;
 
-import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.PARAM_PRIMARY_TEAM;
-import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.TYPE_EMPLOYEE;
+import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
 
 public class RemoveTeamService extends AbstractService<StringArgument, ServiceResult> {
 
@@ -26,6 +26,7 @@ public class RemoveTeamService extends AbstractService<StringArgument, ServiceRe
 			}
 
 			tx.remove(team);
+			ChronivaroAuditHelper.audit(tx, TYPE_TEAM, team.getId(), AUDIT_ACTION_REMOVE, "Removed team " + team.getName());
 			tx.commitOnClose();
 		}
 		return ServiceResult.success();

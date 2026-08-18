@@ -1,13 +1,13 @@
 package ch.atexxi.chronivaro.core.service;
 
+import ch.atexxi.chronivaro.core.model.ChronivaroAuditHelper;
 import li.strolch.model.Resource;
 import li.strolch.persistence.api.StrolchTransaction;
 import li.strolch.service.api.AbstractService;
 import li.strolch.service.api.ServiceArgument;
 import li.strolch.service.api.ServiceResult;
 
-import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.PARAM_NAME;
-import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.TYPE_TEAM;
+import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
 import static ch.atexxi.chronivaro.core.model.ChronivaroVersionHelper.initVersion;
 
 public class CreateTeamService extends AbstractService<CreateTeamService.TeamArgument, ServiceResult> {
@@ -20,6 +20,7 @@ public class CreateTeamService extends AbstractService<CreateTeamService.TeamArg
 			team.setString(PARAM_NAME, arg.name);
 			initVersion(team, tx);
 			tx.add(team);
+			ChronivaroAuditHelper.audit(tx, TYPE_TEAM, team.getId(), AUDIT_ACTION_CREATE, "Created team " + arg.name);
 			tx.commitOnClose();
 		}
 		return ServiceResult.success();

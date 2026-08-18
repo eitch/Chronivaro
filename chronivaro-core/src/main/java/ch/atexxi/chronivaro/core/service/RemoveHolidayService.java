@@ -1,11 +1,13 @@
 package ch.atexxi.chronivaro.core.service;
 
+import ch.atexxi.chronivaro.core.model.ChronivaroAuditHelper;
 import li.strolch.model.Resource;
 import li.strolch.persistence.api.StrolchTransaction;
 import li.strolch.service.StringArgument;
 import li.strolch.service.api.AbstractService;
 import li.strolch.service.api.ServiceResult;
 
+import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.AUDIT_ACTION_REMOVE;
 import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.TYPE_HOLIDAY;
 
 public class RemoveHolidayService extends AbstractService<StringArgument, ServiceResult> {
@@ -15,6 +17,8 @@ public class RemoveHolidayService extends AbstractService<StringArgument, Servic
 		try (StrolchTransaction tx = openArgOrUserTx(arg)) {
 			Resource holiday = tx.getResourceBy(TYPE_HOLIDAY, arg.value, true);
 			tx.remove(holiday);
+			ChronivaroAuditHelper.audit(tx, TYPE_HOLIDAY, holiday.getId(), AUDIT_ACTION_REMOVE,
+					"Removed holiday " + holiday.getName());
 			tx.commitOnClose();
 		}
 		return ServiceResult.success();
