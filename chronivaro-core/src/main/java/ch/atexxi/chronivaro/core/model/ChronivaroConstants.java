@@ -88,6 +88,12 @@ public class ChronivaroConstants {
 	public static final String PARAM_CREDIT_FACTOR = "creditFactor";
 
 	public static final String PARAM_YEAR_MONTH = "yearMonth";
+	public static final String PARAM_SUBMITTED_AT = "submittedAt";
+	public static final String PARAM_APPROVED_AT = "approvedAt";
+	public static final String PARAM_APPROVED_BY = "approvedBy";
+	public static final String PARAM_REJECTED_AT = "rejectedAt";
+	public static final String PARAM_REJECTED_BY = "rejectedBy";
+	public static final String PARAM_CALCULATION_SNAPSHOT = "calculationSnapshot";
 	public static final String PARAM_ELEMENT_TYPE = "elementType";
 	public static final String PARAM_ELEMENT_ID = "elementId";
 	public static final String PARAM_ACTION = "action";
@@ -107,6 +113,7 @@ public class ChronivaroConstants {
 	public static final String AUDIT_ACTION_REJECT = "REJECT";
 	public static final String AUDIT_ACTION_CANCEL = "CANCEL";
 	public static final String AUDIT_ACTION_LOCK = "LOCK";
+	public static final String AUDIT_ACTION_REOPEN = "REOPEN";
 	public static final String AUDIT_ACTION_START = "START";
 	public static final String AUDIT_ACTION_STOP = "STOP";
 	public static final String AUDIT_ACTION_PURGE = "PURGE";

@@ -2,6 +2,7 @@ package ch.atexxi.chronivaro.core.service;
 
 import ch.atexxi.chronivaro.core.model.AbsenceHelper;
 import ch.atexxi.chronivaro.core.model.ChronivaroAuditHelper;
+import ch.atexxi.chronivaro.core.model.PeriodHelper;
 import li.strolch.model.Resource;
 import li.strolch.persistence.api.StrolchTransaction;
 import li.strolch.service.api.AbstractService;
@@ -37,6 +38,11 @@ public class RequestAbsenceService
 		DBC.PRE.assertNotEmpty("durationType must be set", arg.durationType);
 
 		try (StrolchTransaction tx = openArgOrUserTx(arg)) {
+			PeriodHelper.assertPeriodOpen(tx, arg.employeeId, arg.start.toLocalDate());
+			if (!arg.start.toLocalDate().equals(arg.end.toLocalDate())) {
+				PeriodHelper.assertPeriodOpen(tx, arg.employeeId, arg.end.toLocalDate());
+			}
+
 			Resource absenceType = AbsenceHelper.getAbsenceType(tx, arg.absenceTypeCode);
 
 			Resource absence = tx.getResourceTemplate(TYPE_ABSENCE, true);

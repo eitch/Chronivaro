@@ -2,6 +2,7 @@ package ch.atexxi.chronivaro.core.service;
 
 import ch.atexxi.chronivaro.core.model.ChronivaroAuditHelper;
 import ch.atexxi.chronivaro.core.model.ChronivaroModelHelper;
+import ch.atexxi.chronivaro.core.model.PeriodHelper;
 import ch.atexxi.chronivaro.core.model.WorkDayHelper;
 import ch.atexxi.chronivaro.core.model.WorkEntryHelper;
 import ch.atexxi.chronivaro.core.model.WorkingLocation;
@@ -28,6 +29,7 @@ public class StartTimerService extends AbstractService<StartTimerService.Argumen
 			Resource employee = ChronivaroModelHelper.getEmployee(tx, arg.employeeId);
 
 			ZonedDateTime now = ZonedDateTime.now(ChronivaroModelHelper.getEmployeeTimezone(employee));
+			PeriodHelper.assertPeriodOpen(tx, employee.getId(), now.toLocalDate());
 			String username = tx.getCertificate().getUsername();
 
 			Resource workDay = WorkDayHelper.getOrCreateWorkDay(tx, employee, now);

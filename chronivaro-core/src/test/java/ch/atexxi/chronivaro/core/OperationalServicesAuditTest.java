@@ -126,6 +126,31 @@ public class OperationalServicesAuditTest {
 			for (Resource r : tx.streamResources(TYPE_AUDIT_EVENT).toList()) {
 				tx.remove(r);
 			}
+			for (Resource r : tx.streamResources(TYPE_TIME_PERIOD).toList()) {
+				tx.remove(r);
+			}
+			for (Resource r : tx.streamResources(TYPE_WORK_ENTRY).toList()) {
+				tx.remove(r);
+			}
+			for (Resource r : tx.streamResources(TYPE_WORK_DAY).toList()) {
+				tx.remove(r);
+			}
+			for (Resource r : tx.streamResources(TYPE_ABSENCE).toList()) {
+				tx.remove(r);
+			}
+			for (Resource r : tx.streamResources(TYPE_VACATION_ACCOUNT_ENTRY).toList()) {
+				tx.remove(r);
+			}
+			tx.commitOnClose();
+		}
+		ChronivaroAuditHelper.removeCorrelationId();
+	}
+
+	private void clearAuditEventsOnly() {
+		try (StrolchTransaction tx = runtimeMock.openUserTx(adminCert, false)) {
+			for (Resource r : tx.streamResources(TYPE_AUDIT_EVENT).toList()) {
+				tx.remove(r);
+			}
 			tx.commitOnClose();
 		}
 		ChronivaroAuditHelper.removeCorrelationId();
@@ -372,7 +397,7 @@ public class OperationalServicesAuditTest {
 					.getString(PARAM_ELEMENT_ID);
 		}
 
-		cleanAuditEvents();
+		clearAuditEventsOnly();
 
 		RejectAbsenceService.RejectAbsenceArgument rejArg = new RejectAbsenceService.RejectAbsenceArgument();
 		rejArg.absenceId = absenceId;
@@ -438,12 +463,12 @@ public class OperationalServicesAuditTest {
 			tx.commitOnClose();
 		}
 
-		cleanAuditEvents();
+		clearAuditEventsOnly();
 		String corrId = "corr-period-workflow";
 		ChronivaroAuditHelper.setCorrelationId(corrId);
 
 		// 1. Submit Period
-		ServiceResult subRes = serviceHandler.doService(adminCert, new SubmitPeriodService(), new StringArgument(periodId));
+		ServiceResult subRes = serviceHandler.doService(adminCert, new SubmitPeriodService(), new PeriodActionArgument(periodId));
 		assertTrue(subRes.getMessage(), subRes.isOk());
 
 		try (StrolchTransaction tx = runtimeMock.openUserTx(adminCert, true)) {
@@ -458,7 +483,7 @@ public class OperationalServicesAuditTest {
 		}
 
 		// 2. Approve Period
-		ServiceResult appRes = serviceHandler.doService(adminCert, new ApprovePeriodService(), new StringArgument(periodId));
+		ServiceResult appRes = serviceHandler.doService(adminCert, new ApprovePeriodService(), new PeriodActionArgument(periodId));
 		assertTrue(appRes.getMessage(), appRes.isOk());
 
 		try (StrolchTransaction tx = runtimeMock.openUserTx(adminCert, true)) {
@@ -473,7 +498,7 @@ public class OperationalServicesAuditTest {
 		}
 
 		// 3. Lock Period
-		ServiceResult lockRes = serviceHandler.doService(adminCert, new LockPeriodService(), new StringArgument(periodId));
+		ServiceResult lockRes = serviceHandler.doService(adminCert, new LockPeriodService(), new PeriodActionArgument(periodId));
 		assertTrue(lockRes.getMessage(), lockRes.isOk());
 
 		try (StrolchTransaction tx = runtimeMock.openUserTx(adminCert, true)) {

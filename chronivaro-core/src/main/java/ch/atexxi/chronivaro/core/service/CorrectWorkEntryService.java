@@ -1,6 +1,7 @@
 package ch.atexxi.chronivaro.core.service;
 
 import ch.atexxi.chronivaro.core.model.ChronivaroAuditHelper;
+import ch.atexxi.chronivaro.core.model.PeriodHelper;
 import ch.atexxi.chronivaro.core.model.ScheduleHelper;
 import ch.atexxi.chronivaro.core.model.WorkDayHelper;
 import ch.atexxi.chronivaro.core.model.WorkEntryHelper;
@@ -35,6 +36,11 @@ public class CorrectWorkEntryService
 			ZonedDateTime oldEnd = workEntry.getDate(PARAM_END);
 			if (oldEnd.getYear() == 1970)
 				oldEnd = null;
+
+			PeriodHelper.assertPeriodOpen(tx, employeeId, oldStart.toLocalDate());
+			if (!arg.start.toLocalDate().equals(oldStart.toLocalDate())) {
+				PeriodHelper.assertPeriodOpen(tx, employeeId, arg.start.toLocalDate());
+			}
 
 			if (arg.end.isBefore(arg.start)) {
 				throw new IllegalStateException("End time cannot be before start time!");

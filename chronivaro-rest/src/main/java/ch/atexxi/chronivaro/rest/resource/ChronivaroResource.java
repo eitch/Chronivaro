@@ -360,7 +360,7 @@ public class ChronivaroResource {
 	public Response submitPeriod(@Context HttpServletRequest request, @PathParam("id") String id) {
 		Certificate cert = (Certificate) request.getAttribute(STROLCH_CERTIFICATE);
 		ServiceHandler serviceHandler = ChronivaroRestHelper.getServiceHandler();
-		ServiceResult result = serviceHandler.doService(cert, new SubmitPeriodService(), new StringArgument(id));
+		ServiceResult result = serviceHandler.doService(cert, new SubmitPeriodService(), new PeriodActionArgument(id));
 		return ChronivaroRestHelper.toResponse(result);
 	}
 

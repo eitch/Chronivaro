@@ -1,34 +1,56 @@
 package ch.atexxi.chronivaro.core.service;
 
 import ch.atexxi.chronivaro.core.model.ChronivaroAuditHelper;
+import ch.atexxi.chronivaro.core.model.PeriodHelper;
 import li.strolch.model.Resource;
 import li.strolch.persistence.api.StrolchTransaction;
-import li.strolch.service.StringArgument;
 import li.strolch.service.api.AbstractService;
 import li.strolch.service.api.ServiceResult;
 import li.strolch.utils.dbc.DBC;
 
-import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
+import java.time.YearMonth;
 
-public class LockPeriodService extends AbstractService<StringArgument, ServiceResult> {
+import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
+import static ch.atexxi.chronivaro.core.model.ChronivaroVersionHelper.bumpVersion;
+import static li.strolch.utils.helper.StringHelper.isNotEmpty;
+
+public class LockPeriodService extends AbstractService<PeriodActionArgument, ServiceResult> {
 
 	@Override
-	protected ServiceResult internalDoService(StringArgument arg) throws Exception {
-		DBC.PRE.assertNotEmpty("periodId must be set", arg.value);
+	protected ServiceResult internalDoService(PeriodActionArgument arg) throws Exception {
+		DBC.PRE.assertNotNull("Argument must be set", arg);
 
 		try (StrolchTransaction tx = openArgOrUserTx(arg)) {
-			Resource period = tx.getResourceBy(TYPE_TIME_PERIOD, arg.value, true).getClone();
+			Resource period;
+			if (isNotEmpty(arg.periodId)) {
+				period = tx.getResourceBy(TYPE_TIME_PERIOD, arg.periodId, true).getClone();
+			} else if (isNotEmpty(arg.employeeId) && arg.yearMonth != null) {
+				period = PeriodHelper.getPeriod(tx, arg.employeeId, arg.yearMonth, true).getClone();
+			} else {
+				throw new IllegalArgumentException("Either periodId or (employeeId and yearMonth) must be provided!");
+			}
 
 			String currentState = period.getString(PARAM_STATE);
 			if (!currentState.equals(STATE_APPROVED)) {
-				throw new IllegalStateException("Period is not in state APPROVED!");
+				throw new IllegalStateException("Period is in state " + currentState +
+						", but only APPROVED periods can be locked!");
 			}
 
+			String employeeId = period.getRelationId(PARAM_EMPLOYEE);
+			YearMonth ym = YearMonth.parse(period.getString(PARAM_YEAR_MONTH));
+
 			period.setString(PARAM_STATE, STATE_LOCKED);
+			if (arg.comment != null)
+				period.setString(PARAM_COMMENT, arg.comment);
+
+			String snapshot = PeriodHelper.createCalculationSnapshot(tx, employeeId, ym);
+			period.setString(PARAM_CALCULATION_SNAPSHOT, snapshot);
+
+			bumpVersion(period, tx);
 			tx.update(period);
 
-			ChronivaroAuditHelper.audit(tx, TYPE_TIME_PERIOD, period.getId(), AUDIT_ACTION_LOCK,
-					"Locked time period " + period.getId() + " for employee " + period.getRelationId(PARAM_EMPLOYEE));
+			ChronivaroAuditHelper.audit(tx, TYPE_TIME_PERIOD, period.getId(), AUDIT_ACTION_LOCK, arg.comment,
+					"Locked time period " + period.getId() + " for employee " + employeeId);
 
 			tx.commitOnClose();
 		}
@@ -37,8 +59,8 @@ public class LockPeriodService extends AbstractService<StringArgument, ServiceRe
 	}
 
 	@Override
-	public StringArgument getArgumentInstance() {
-		return new StringArgument();
+	public PeriodActionArgument getArgumentInstance() {
+		return new PeriodActionArgument();
 	}
 
 	@Override

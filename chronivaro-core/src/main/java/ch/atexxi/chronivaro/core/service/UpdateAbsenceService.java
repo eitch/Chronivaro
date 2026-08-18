@@ -3,6 +3,7 @@ package ch.atexxi.chronivaro.core.service;
 import ch.atexxi.chronivaro.core.model.AbsenceHelper;
 import ch.atexxi.chronivaro.core.model.ChronivaroAuditHelper;
 import ch.atexxi.chronivaro.core.model.ChronivaroModelHelper;
+import ch.atexxi.chronivaro.core.model.PeriodHelper;
 import li.strolch.model.Resource;
 import li.strolch.persistence.api.Operation;
 import li.strolch.persistence.api.StrolchTransaction;
@@ -43,6 +44,11 @@ public class UpdateAbsenceService extends AbstractService<UpdateAbsenceService.U
 			}
 
 			Resource employee = tx.getResourceByRelation(absence, PARAM_EMPLOYEE, true);
+
+			PeriodHelper.assertPeriodOpen(tx, employee.getId(), absence.getDate(PARAM_START).toLocalDate());
+			if (arg.start != null) {
+				PeriodHelper.assertPeriodOpen(tx, employee.getId(), arg.start.toLocalDate());
+			}
 			
 			// Authorization: Only own absence or Supervisor/HR/Admin
 			if (!tx.getPrivilegeContext().hasRole(ROLE_HR) && !tx.getPrivilegeContext().hasRole(ROLE_ADMIN)) {

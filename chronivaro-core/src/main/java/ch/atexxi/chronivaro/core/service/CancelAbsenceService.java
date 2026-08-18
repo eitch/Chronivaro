@@ -3,6 +3,7 @@ package ch.atexxi.chronivaro.core.service;
 import ch.atexxi.chronivaro.core.model.AbsenceHelper;
 import ch.atexxi.chronivaro.core.model.ChronivaroAuditHelper;
 import ch.atexxi.chronivaro.core.model.ChronivaroModelHelper;
+import ch.atexxi.chronivaro.core.model.PeriodHelper;
 import ch.atexxi.chronivaro.core.model.ScheduleHelper;
 import li.strolch.model.Resource;
 import li.strolch.persistence.api.Operation;
@@ -35,6 +36,11 @@ public class CancelAbsenceService extends AbstractService<StringArgument, Servic
 			}
 
 			Resource employee = tx.getResourceByRelation(absence, PARAM_EMPLOYEE, true);
+
+			PeriodHelper.assertPeriodOpen(tx, employee.getId(), absence.getDate(PARAM_START).toLocalDate());
+			if (!absence.getDate(PARAM_START).toLocalDate().equals(absence.getDate(PARAM_END).toLocalDate())) {
+				PeriodHelper.assertPeriodOpen(tx, employee.getId(), absence.getDate(PARAM_END).toLocalDate());
+			}
 
 			// Authorization: Employee can only cancel own absence.
 			// Supervisors/HR can cancel based on their UpdateResource privilege on Employee

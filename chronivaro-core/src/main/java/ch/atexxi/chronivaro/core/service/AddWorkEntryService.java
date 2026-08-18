@@ -1,6 +1,7 @@
 package ch.atexxi.chronivaro.core.service;
 
 import ch.atexxi.chronivaro.core.model.ChronivaroAuditHelper;
+import ch.atexxi.chronivaro.core.model.PeriodHelper;
 import ch.atexxi.chronivaro.core.model.ScheduleHelper;
 import ch.atexxi.chronivaro.core.model.WorkingLocation;
 import ch.atexxi.chronivaro.core.model.WorkDayHelper;
@@ -26,6 +27,7 @@ public class AddWorkEntryService extends AbstractService<AddWorkEntryService.Add
 		DBC.PRE.assertNotNull("end must be set", arg.end);
 
 		try (StrolchTransaction tx = openArgOrUserTx(arg)) {
+			PeriodHelper.assertPeriodOpen(tx, arg.employeeId, arg.start.toLocalDate());
 			if (arg.end.isBefore(arg.start))
 				throw new IllegalStateException("End time cannot be before start time!");
 			WorkEntryHelper.validateNoOverlap(tx, arg.employeeId, arg.start, arg.end, null);
