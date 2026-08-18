@@ -10,6 +10,7 @@ import li.strolch.service.api.ServiceResult;
 import java.time.ZoneId;
 
 import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
+import static ch.atexxi.chronivaro.core.model.ChronivaroVersionHelper.bumpVersion;
 import static ch.atexxi.chronivaro.core.service.CreateEmployeeService.createOrUpdateUser;
 
 public class UpdateEmployeeService
@@ -42,6 +43,7 @@ public class UpdateEmployeeService
 				employee.setString(PARAM_EMAIL, arg.email);
 			else
 				employee.removeParameter(PARAM_EMAIL);
+			bumpVersion(employee, tx);
 			tx.update(employee);
 
 			UserRep userRep = createOrUpdateUser(tx, arg);

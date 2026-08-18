@@ -11,6 +11,7 @@ import li.strolch.utils.dbc.DBC;
 import java.time.ZonedDateTime;
 
 import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
+import static ch.atexxi.chronivaro.core.model.ChronivaroVersionHelper.initVersion;
 
 public class RequestAbsenceService
 		extends AbstractService<RequestAbsenceService.RequestAbsenceArgument, ServiceResult> {
@@ -53,6 +54,7 @@ public class RequestAbsenceService
 				absence.setString(PARAM_COMMENT, arg.comment);
 			absence.setString(PARAM_STATE, STATE_SUBMITTED);
 
+			initVersion(absence, tx);
 			tx.add(absence);
 			tx.commitOnClose();
 		}

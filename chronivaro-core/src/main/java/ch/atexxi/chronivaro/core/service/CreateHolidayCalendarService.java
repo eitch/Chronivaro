@@ -9,6 +9,7 @@ import li.strolch.service.api.ServiceResultState;
 
 import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.PARAM_NAME;
 import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.TYPE_HOLIDAY_CALENDAR;
+import static ch.atexxi.chronivaro.core.model.ChronivaroVersionHelper.initVersion;
 
 public class CreateHolidayCalendarService
 		extends AbstractService<CreateHolidayCalendarService.HolidayCalendarArgument, StringResult> {
@@ -20,6 +21,7 @@ public class CreateHolidayCalendarService
 			calendar = tx.getResourceTemplate(TYPE_HOLIDAY_CALENDAR, true);
 			calendar.setName(arg.name);
 			calendar.setString(PARAM_NAME, arg.name);
+			initVersion(calendar, tx);
 			tx.add(calendar);
 			tx.commitOnClose();
 		}

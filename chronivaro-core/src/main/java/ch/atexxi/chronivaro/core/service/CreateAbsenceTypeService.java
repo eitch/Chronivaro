@@ -9,6 +9,7 @@ import li.strolch.service.api.ServiceResult;
 import java.util.List;
 
 import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
+import static ch.atexxi.chronivaro.core.model.ChronivaroVersionHelper.initVersion;
 
 public class CreateAbsenceTypeService
 		extends AbstractService<CreateAbsenceTypeService.AbsenceTypeArgument, ServiceResult> {
@@ -27,6 +28,7 @@ public class CreateAbsenceTypeService
 			if (arg.durationTypes != null)
 				type.setStringList(PARAM_DURATION_TYPES, arg.durationTypes);
 			type.setBoolean(PARAM_ACTIVE, arg.active);
+			initVersion(type, tx);
 			tx.add(type);
 			tx.commitOnClose();
 		}

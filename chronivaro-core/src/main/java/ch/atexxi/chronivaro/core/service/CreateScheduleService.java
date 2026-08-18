@@ -9,6 +9,7 @@ import li.strolch.service.api.ServiceResult;
 import java.time.ZonedDateTime;
 
 import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
+import static ch.atexxi.chronivaro.core.model.ChronivaroVersionHelper.initVersion;
 import static java.text.MessageFormat.format;
 
 public class CreateScheduleService
@@ -35,6 +36,7 @@ public class CreateScheduleService
 			schedule.setInteger(PARAM_DAILY_TARGET_MINUTES_SATURDAY, arg.saturday);
 			schedule.setInteger(PARAM_DAILY_TARGET_MINUTES_SUNDAY, arg.sunday);
 
+			initVersion(schedule, tx);
 			tx.add(schedule);
 			updateEmployeeCurrentSchedule(tx, arg.employeeId, schedule, arg.validFrom, arg.validTo);
 

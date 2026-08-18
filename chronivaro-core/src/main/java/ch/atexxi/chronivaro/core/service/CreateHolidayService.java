@@ -12,6 +12,7 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 
 import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
+import static ch.atexxi.chronivaro.core.model.ChronivaroVersionHelper.initVersion;
 
 public class CreateHolidayService extends AbstractService<CreateHolidayService.HolidayArgument, ServiceResult> {
 
@@ -43,6 +44,7 @@ public class CreateHolidayService extends AbstractService<CreateHolidayService.H
 			holiday.setDate(PARAM_DATE, date);
 			holiday.setString(PARAM_NAME, arg.name);
 			holiday.setDouble(PARAM_CREDIT_FACTOR, arg.creditFactor == 0.0 ? 1.0 : arg.creditFactor);
+			initVersion(holiday, tx);
 			tx.add(holiday);
 			tx.commitOnClose();
 		}

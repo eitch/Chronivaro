@@ -7,6 +7,7 @@ import li.strolch.service.api.AbstractService;
 import li.strolch.service.api.ServiceResult;
 
 import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.PARAM_NAME;
+import static ch.atexxi.chronivaro.core.model.ChronivaroVersionHelper.bumpVersion;
 
 public class UpdateTeamService extends AbstractService<CreateTeamService.UpdateTeamArgument, ServiceResult> {
 
@@ -16,6 +17,7 @@ public class UpdateTeamService extends AbstractService<CreateTeamService.UpdateT
 			Resource team = ChronivaroModelHelper.getTeam(tx, arg.id);
 			team.setName(arg.name);
 			team.setString(PARAM_NAME, arg.name);
+			bumpVersion(team, tx);
 			tx.update(team);
 			tx.commitOnClose();
 		}

@@ -92,6 +92,8 @@ public class ChronivaroConstants {
 	public static final String PARAM_ELEMENT_ID = "elementId";
 	public static final String PARAM_OLD_VALUE = "oldValue";
 	public static final String PARAM_NEW_VALUE = "newValue";
+	public static final String PARAM_VERSION = "version";
+	public static final String PARAM_UPDATED_BY = "updatedBy";
 
 	public static final String SOURCE_TIMER = "TIMER";
 	public static final String SOURCE_MANUAL = "MANUAL";

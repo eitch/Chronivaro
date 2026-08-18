@@ -18,6 +18,7 @@ import java.util.Map;
 import java.util.Set;
 
 import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
+import static ch.atexxi.chronivaro.core.model.ChronivaroVersionHelper.initVersion;
 import static li.strolch.privilege.model.UserState.ENABLED;
 
 public class CreateEmployeeService extends AbstractService<CreateEmployeeService.EmployeeArgument, StringResult> {
@@ -60,6 +61,7 @@ public class CreateEmployeeService extends AbstractService<CreateEmployeeService
 			employee.setString(PARAM_USERNAME, userRep.getUsername());
 
 			employeeId = employee.getId();
+			initVersion(employee, tx);
 			tx.add(employee);
 
 			if (arg.scheduleTemplateId != null && !arg.scheduleTemplateId.isBlank()) {
@@ -77,6 +79,7 @@ public class CreateEmployeeService extends AbstractService<CreateEmployeeService
 				schedule.setInteger(PARAM_DAILY_TARGET_MINUTES_SATURDAY, template.getInteger(PARAM_DAILY_TARGET_MINUTES_SATURDAY));
 				schedule.setInteger(PARAM_DAILY_TARGET_MINUTES_SUNDAY, template.getInteger(PARAM_DAILY_TARGET_MINUTES_SUNDAY));
 
+				initVersion(schedule, tx);
 				tx.add(schedule);
 				employee.setRelation(PARAM_CURRENT_SCHEDULE, schedule);
 			}

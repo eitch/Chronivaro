@@ -9,6 +9,8 @@ import li.strolch.service.api.ServiceResult;
 import java.time.ZonedDateTime;
 
 import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
+import static ch.atexxi.chronivaro.core.model.ChronivaroVersionHelper.bumpVersion;
+import static ch.atexxi.chronivaro.core.model.ChronivaroVersionHelper.initVersion;
 
 public class UpdateScheduleService
 		extends AbstractService<UpdateScheduleService.UpdateScheduleArgument, ServiceResult> {
@@ -29,6 +31,7 @@ public class UpdateScheduleService
 				if (arg.validFrom.isAfter(oldValidFrom)) {
 					schedule.setDate(PARAM_VALID_TO,
 							arg.validFrom.minusDays(1).withHour(23).withMinute(59).withSecond(59));
+					bumpVersion(schedule, tx);
 					tx.update(schedule);
 
 					// Create new version
@@ -36,6 +39,7 @@ public class UpdateScheduleService
 					newVersion.setName("Schedule for " + employeeId);
 					newVersion.setRelationId(PARAM_EMPLOYEE, employeeId);
 					updateSchedule(newVersion, arg);
+					initVersion(newVersion, tx);
 					tx.add(newVersion);
 				} else {
 					// If new validFrom is before or same, we just update the existing one if no work entries,
@@ -59,11 +63,13 @@ public class UpdateScheduleService
 					}
 
 					updateSchedule(schedule, arg);
+					bumpVersion(schedule, tx);
 					tx.update(schedule);
 				}
 			} else {
 				// No work entries and same validFrom, just update
 				updateSchedule(schedule, arg);
+				bumpVersion(schedule, tx);
 				tx.update(schedule);
 			}
 

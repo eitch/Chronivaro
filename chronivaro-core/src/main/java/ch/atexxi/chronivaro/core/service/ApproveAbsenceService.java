@@ -12,6 +12,8 @@ import li.strolch.utils.dbc.DBC;
 import java.time.LocalDate;
 
 import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
+import static ch.atexxi.chronivaro.core.model.ChronivaroVersionHelper.bumpVersion;
+import static ch.atexxi.chronivaro.core.model.ChronivaroVersionHelper.initVersion;
 
 public class ApproveAbsenceService extends AbstractService<StringArgument, ServiceResult> {
 
@@ -27,6 +29,7 @@ public class ApproveAbsenceService extends AbstractService<StringArgument, Servi
 			}
 
 			absence.setString(PARAM_STATE, STATE_APPROVED);
+			bumpVersion(absence, tx);
 			tx.update(absence);
 
 			// If it's a vacation absence, create a vacation account entry
@@ -59,6 +62,7 @@ public class ApproveAbsenceService extends AbstractService<StringArgument, Servi
 					entry.setString(PARAM_VACATION_TYPE, VACATION_USAGE);
 					entry.setInteger(PARAM_VALUE, -totalMinutes);
 
+					initVersion(entry, tx);
 					tx.add(entry);
 				}
 			}

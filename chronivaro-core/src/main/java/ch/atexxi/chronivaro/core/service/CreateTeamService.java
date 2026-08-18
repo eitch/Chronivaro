@@ -8,6 +8,7 @@ import li.strolch.service.api.ServiceResult;
 
 import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.PARAM_NAME;
 import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.TYPE_TEAM;
+import static ch.atexxi.chronivaro.core.model.ChronivaroVersionHelper.initVersion;
 
 public class CreateTeamService extends AbstractService<CreateTeamService.TeamArgument, ServiceResult> {
 
@@ -17,6 +18,7 @@ public class CreateTeamService extends AbstractService<CreateTeamService.TeamArg
 			Resource team = tx.getResourceTemplate(TYPE_TEAM, true);
 			team.setName(arg.name);
 			team.setString(PARAM_NAME, arg.name);
+			initVersion(team, tx);
 			tx.add(team);
 			tx.commitOnClose();
 		}

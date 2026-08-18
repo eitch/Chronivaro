@@ -9,6 +9,7 @@ import li.strolch.service.api.ServiceResult;
 import li.strolch.utils.dbc.DBC;
 
 import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
+import static ch.atexxi.chronivaro.core.model.ChronivaroVersionHelper.bumpVersion;
 
 public class RejectAbsenceService extends AbstractService<RejectAbsenceService.RejectAbsenceArgument, ServiceResult> {
 
@@ -32,6 +33,7 @@ public class RejectAbsenceService extends AbstractService<RejectAbsenceService.R
 			absence = absence.getClone();
 			absence.setString(PARAM_STATE, STATE_REJECTED);
 			absence.setString(PARAM_COMMENT, arg.comment);
+			bumpVersion(absence, tx);
 			tx.update(absence);
 
 			tx.commitOnClose();

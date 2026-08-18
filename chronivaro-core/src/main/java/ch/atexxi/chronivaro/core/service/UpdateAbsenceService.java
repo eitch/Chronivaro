@@ -14,6 +14,7 @@ import java.time.ZonedDateTime;
 import java.util.Optional;
 
 import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
+import static ch.atexxi.chronivaro.core.model.ChronivaroVersionHelper.bumpVersion;
 
 public class UpdateAbsenceService extends AbstractService<UpdateAbsenceService.UpdateAbsenceArgument, ServiceResult> {
 
@@ -66,6 +67,7 @@ public class UpdateAbsenceService extends AbstractService<UpdateAbsenceService.U
 			if (arg.minutes != null) absence.setInteger(PARAM_MINUTES, arg.minutes);
 			if (arg.comment != null) absence.setString(PARAM_COMMENT, arg.comment);
 
+			bumpVersion(absence, tx);
 			tx.update(absence);
 			tx.commitOnClose();
 		}

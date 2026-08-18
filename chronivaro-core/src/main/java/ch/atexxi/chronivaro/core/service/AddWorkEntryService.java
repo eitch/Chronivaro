@@ -14,6 +14,7 @@ import li.strolch.utils.dbc.DBC;
 import java.time.ZonedDateTime;
 
 import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
+import static ch.atexxi.chronivaro.core.model.ChronivaroVersionHelper.initVersion;
 
 public class AddWorkEntryService extends AbstractService<AddWorkEntryService.AddWorkEntryArgument, ServiceResult> {
 
@@ -47,6 +48,7 @@ public class AddWorkEntryService extends AbstractService<AddWorkEntryService.Add
 			Resource scheduleVersion = ScheduleHelper.findScheduleVersion(tx, arg.employeeId).orElseThrow();
 			workEntry.setRelation(PARAM_SCHEDULE, scheduleVersion);
 
+			initVersion(workEntry, tx);
 			tx.add(workEntry);
 			workDay.addRelation(PARAM_WORK_ENTRIES, workEntry);
 			tx.update(workDay);

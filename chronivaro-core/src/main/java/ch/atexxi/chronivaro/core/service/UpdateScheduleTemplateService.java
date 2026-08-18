@@ -7,6 +7,7 @@ import li.strolch.service.api.ServiceArgument;
 import li.strolch.service.api.ServiceResult;
 
 import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
+import static ch.atexxi.chronivaro.core.model.ChronivaroVersionHelper.bumpVersion;
 
 public class UpdateScheduleTemplateService
 		extends AbstractService<UpdateScheduleTemplateService.UpdateScheduleTemplateArgument, ServiceResult> {
@@ -26,6 +27,7 @@ public class UpdateScheduleTemplateService
 			template.setInteger(PARAM_DAILY_TARGET_MINUTES_SATURDAY, arg.saturday);
 			template.setInteger(PARAM_DAILY_TARGET_MINUTES_SUNDAY, arg.sunday);
 
+			bumpVersion(template, tx);
 			tx.update(template);
 			tx.commitOnClose();
 		}

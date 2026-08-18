@@ -7,6 +7,7 @@ import li.strolch.service.api.AbstractService;
 import li.strolch.service.api.ServiceResult;
 
 import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
+import static ch.atexxi.chronivaro.core.model.ChronivaroVersionHelper.bumpVersion;
 
 public class UpdateLocationService
 		extends AbstractService<CreateLocationService.UpdateLocationArgument, ServiceResult> {
@@ -20,6 +21,7 @@ public class UpdateLocationService
 			location.setString(PARAM_TIMEZONE, arg.timezone);
 			location.setRelation(PARAM_HOLIDAY_CALENDAR,
 					tx.getResourceBy(TYPE_HOLIDAY_CALENDAR, arg.holidayCalendarId, true));
+			bumpVersion(location, tx);
 			tx.update(location);
 			tx.commitOnClose();
 		}

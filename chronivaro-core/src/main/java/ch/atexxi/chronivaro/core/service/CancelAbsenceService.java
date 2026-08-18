@@ -15,6 +15,8 @@ import java.time.LocalDate;
 import java.util.Optional;
 
 import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
+import static ch.atexxi.chronivaro.core.model.ChronivaroVersionHelper.bumpVersion;
+import static ch.atexxi.chronivaro.core.model.ChronivaroVersionHelper.initVersion;
 
 public class CancelAbsenceService extends AbstractService<StringArgument, ServiceResult> {
 
@@ -57,6 +59,7 @@ public class CancelAbsenceService extends AbstractService<StringArgument, Servic
 			String oldState = absence.getString(PARAM_STATE);
 			absence = absence.getClone();
 			absence.setString(PARAM_STATE, STATE_CANCELLED);
+			bumpVersion(absence, tx);
 			tx.update(absence);
 
 			// If it was APPROVED and reduced vacation, we need to add back the vacation minutes
@@ -82,6 +85,7 @@ public class CancelAbsenceService extends AbstractService<StringArgument, Servic
 						entry.setString(PARAM_VACATION_TYPE, VACATION_CORRECTION);
 						entry.setInteger(PARAM_VALUE, totalMinutes);
 
+						initVersion(entry, tx);
 						tx.add(entry);
 					}
 				}
