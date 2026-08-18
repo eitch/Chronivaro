@@ -298,9 +298,19 @@ Task 4 was split into subtasks **4.1**, **4.2.1**, **4.2.2**, **4.2.3**, and **4
 
 ### 6. Expose personal and period workflow REST endpoints
 
-- **Status:** `PARTIAL`
+- **Status:** `COMPLETED`
 - **Scope:** Complete employee period/status endpoints and agreed approval routes while preserving existing REST contracts and HTTP semantics.
 - **Acceptance:** Employee, supervisor, and administrator access is enforced server-side; integration tests cover transitions, conflicts, forbidden access, and standard errors.
+- **Verification:**
+  - Implemented `PeriodStatusDto` and `PeriodActionRequestDto` matching OpenAPI and specification data models.
+  - Added `periodToDto` mapping in `ChronivaroMapper`.
+  - Implemented `PeriodResource` (`/chronivaro/v1/periods`) supporting `GET /status`, `POST /submit`, `POST /approve`, `POST /reject`, `POST /reopen`, and `POST /{id}/reopen` with ETag validation, Gson deserialization, and standard error handling.
+  - Implemented `AdminPeriodResource` (`/chronivaro/v1/admin/periods`) supporting `POST /{id}/approve`, `POST /{id}/reject`, `POST /{id}/reopen`, and `POST /{id}/lock`.
+  - Implemented `ApprovalsResource` (`/chronivaro/v1/approvals`) supporting `GET /periods` (paged list of submitted periods), `POST /periods/{id}/approve`, `POST /periods/{id}/reject`, `GET /absences` (paged list of submitted absences), `POST /absences/{id}/approve`, and `POST /absences/{id}/reject`.
+  - Added personal period endpoints in `ChronivaroResource` (`GET /chronivaro/v1/me/periods/{yearMonth}`, `POST /chronivaro/v1/me/periods/{yearMonth}/submit`, and `POST /chronivaro/v1/me/periods/{id}/submit`).
+  - Registered new resources in `ChronivaroRestfulClasses`.
+  - Added comprehensive integration tests in `PeriodResourceTest` covering status lookup/auto-creation, submission, approvals queue retrieval, supervisor approval, rejection with mandatory comment, reopening with mandatory comment, HR period locking, Strolch role privilege enforcement (403 Forbidden for unauthorized actions), concurrency control (409 Conflict with stale If-Match ETag), unauthenticated 401 handling, and 400 Bad Request parameter validation.
+  - Verified with full test suite passing via `mvn test` (56 tests passing across all reactor modules with 0 failures and 0 errors).
 - **Dependencies:** Tasks 2.1, 2.2, 3, and 5.
 
 ### 7. Implement configurable vacation entitlement policy
