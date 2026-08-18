@@ -278,34 +278,26 @@ Das Ferienguthaben wird als Journal geführt und nicht als veränderbarer Einzel
 
 Ferien werden intern in Minuten geführt. Die UI darf das Guthaben zusätzlich in Tagen anzeigen. Für die Darstellung in Tagen ist eine eindeutig definierte Bezugs-Sollzeit erforderlich.
 
-#### 6.7.1 Automated vacation entitlement policy
+## 6.7.1 Automatisierte Ferienanspruchsregelung
 
-The automated entitlement engine uses the following policy decisions:
+Die automatisierte Anspruchsberechnung verwendet die folgenden Regelungen:
 
-- The standard annual entitlement for a full-time employee is `25` vacation days per entitlement year.
-- The entitlement year is the calendar year, and the annual entitlement is booked at the beginning of that year.
-- One vacation day is converted to a fixed, configured number of minutes. The exact configured minute value must be
-  provided before implementation; it must not be inferred from an employee's daily target.
-- Part-time entitlement is calculated pro rata from the employment rate.
-- Employment starting or ending during the entitlement year is prorated for the active part of the year.
-- No age-based entitlement rules apply.
-- No seniority-based entitlement rules apply.
-- Unused vacation is carried over without a limit at the transition to the next calendar year.
-- Carry-over consumes the oldest available vacation balance first.
-- Carried-over vacation does not expire.
-- Only the configured standard vacation absence type creates `USAGE` entries. The technical identifier of this type must
-  be provided before implementation.
-- Journal entries are immutable. Corrections and reversals are represented by separately audited `CORRECTION` entries.
-- Vacation approval is blocked when the requested usage exceeds the available balance. No negative balance is permitted.
-- All policy values, including the fixed day-minute conversion, entitlement, proration, carry-over, expiry, and absence
-  type configuration, must be configurable rather than hard-coded.
-
-The following implementation parameters remain explicitly open because they were not defined by the policy decisions:
-
-- the fixed number of minutes representing one vacation day;
-- the rounding rule for prorated entitlement;
-- the exact technical identifier of the standard vacation absence type;
-- whether positive correction balances are included in the unlimited carry-over amount.
+- Der standardmässige jährliche Ferienanspruch für einen vollzeitbeschäftigten Mitarbeiter beträgt `25` Ferientage pro Anspruchsjahr.
+- Das Anspruchsjahr entspricht dem Kalenderjahr, und der jährliche Ferienanspruch wird zu Beginn dieses Jahres gutgeschrieben.
+- Ein Ferientag entspricht `480` Minuten. Dieser Wert ist global konfigurierbar und hat standardmässig den Wert `480` Minuten. Er wird nicht aus der individuellen täglichen Sollarbeitszeit oder dem Beschäftigungsgrad eines Mitarbeiters abgeleitet.
+- Der Ferienanspruch bei Teilzeitbeschäftigung wird anteilsmässig anhand des Beschäftigungsgrads berechnet.
+- Beginnt oder endet ein Arbeitsverhältnis während des Anspruchsjahres, wird der Ferienanspruch anteilsmässig für den aktiven Zeitraum des Jahres berechnet.
+- Anteilig berechnete Ferienansprüche werden mit voller Genauigkeit berechnet, in Minuten umgerechnet und anschliessend kaufmännisch auf die nächste ganze Minute gerundet.
+- Es gelten keine altersabhängigen Ferienanspruchsregeln.
+- Es gelten keine dienstaltersabhängigen Ferienanspruchsregeln.
+- Nicht bezogene Ferien werden beim Übergang ins nächste Kalenderjahr ohne Begrenzung übertragen.
+- Positive `CORRECTION`-Guthaben werden in den übertragbaren Ferienbestand einbezogen.
+- Beim Ferienbezug wird zuerst das älteste verfügbare Ferienguthaben verwendet.
+- Übertragene Ferien verfallen nicht.
+- Nur der konfigurierte Standard-Abwesenheitstyp für Ferien erzeugt `USAGE`-Einträge. Der technische Bezeichner dieses Typs lautet `VACATION`.
+- Journaleinträge sind unveränderlich. Korrekturen und Stornierungen werden durch separat auditierte `CORRECTION`-Einträge dargestellt.
+- Die Genehmigung von Ferien wird blockiert, wenn der beantragte Bezug das verfügbare Guthaben überschreitet. Ein negatives Guthaben ist nicht zulässig.
+- Sämtliche Regelwerte, einschliesslich der Umrechnung von Ferientagen in Minuten, des jährlichen Anspruchs, der anteilsmässigen Berechnung, der Rundungsregel, der Übertragung, des Verfalls und der Konfiguration des Abwesenheitstyps, müssen konfigurierbar und dürfen nicht hart codiert sein.
 
 ### 6.8 HolidayCalendar und Holiday
 
