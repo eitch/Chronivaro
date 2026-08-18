@@ -215,7 +215,7 @@ Task 2 was split into tasks **2.1**, **2.2**, and **2.3** per the task-size and 
 
 ### 4. Complete audit metadata and access
 
-Task 4 was split into tasks **4.1**, **4.2**, and **4.3** per the task-size and single-concept rules (avoiding changes across 10+ files simultaneously).
+Task 4 was split into subtasks **4.1**, **4.2.1**, **4.2.2**, **4.2.3**, and **4.3** per the task-size and single-concept rules (avoiding changes across 10+ files simultaneously).
 
 #### 4.1. Extend Core audit model, audit helper, retention purging, and search query
 
@@ -230,11 +230,29 @@ Task 4 was split into tasks **4.1**, **4.2**, and **4.3** per the task-size and 
   - Added unit and integration tests in `AuditEventTest` validating full metadata persistence, MDC correlation extraction, query filtering, retention purging, and Strolch privilege enforcement (39 tests passing across reactor modules).
 - **Dependencies:** Tasks 1, 2.1.
 
-#### 4.2. Apply comprehensive audit logging across Core domain mutation services
+#### 4.2.1. Audit logging for Administrative Master Data services
+
+- **Status:** `COMPLETED`
+- **Scope:** Integrate `ChronivaroAuditHelper.audit(...)` across administrative master data mutation services: Team (`CreateTeamService`, `UpdateTeamService`, `RemoveTeamService`), Location & Defaults (`CreateLocationService`, `UpdateLocationService`, `RemoveLocationService`, `AddOrUpdateWorkingLocationDefaultService`, `RemoveWorkingLocationDefaultService`), Holiday Calendar & Holidays (`CreateHolidayCalendarService`, `RemoveHolidayCalendarService`, `CreateHolidayService`, `RemoveHolidayService`), Absence Types (`CreateAbsenceTypeService`, `UpdateAbsenceTypeService`, `RemoveAbsenceTypeService`), and Schedule Templates (`CreateScheduleTemplateService`, `UpdateScheduleTemplateService`, `RemoveScheduleTemplateService`).
+- **Acceptance:** All create, update, and remove actions on administrative master data entities record structured audit events with appropriate action tags (`CREATE`, `UPDATE`, `REMOVE`), parameter changes, and descriptive details; verified by Core unit and lifecycle tests.
+- **Verification:**
+  - Integrated `ChronivaroAuditHelper.audit(...)` across all 18 administrative master data services in `chronivaro-core`.
+  - Added unit and lifecycle integration tests in `AdminMasterDataAuditTest` verifying audit creation, modification, removal, and search querying across Teams, Locations, Holiday Calendars, Holidays, Absence Types, Schedule Templates, and Working Location Defaults.
+  - Verified with `mvn test` (all 39 tests passing with 0 failures and 0 errors).
+- **Dependencies:** Task 4.1.
+
+#### 4.2.2. Audit logging for Employee and Schedule services
 
 - **Status:** `OPEN`
-- **Scope:** Integrate `ChronivaroAuditHelper.audit(...)` across all domain mutation services (work entries, absences, vacation corrections, periods, employees, teams, locations, holiday calendars, schedule templates, global configuration).
-- **Acceptance:** All state transitions and administrative/mutation operations produce structured audit events with appropriate action tags and change details; core tests verify audit trail creation on domain operations.
+- **Scope:** Integrate `ChronivaroAuditHelper.audit(...)` across Employee lifecycle and Schedule mutation services (`CreateEmployeeService`, `UpdateEmployeeService`, `RemoveEmployeeService`, `InitiateEmployeeRegistrationService`, `CompleteRegistrationService`, `CreateScheduleService`, `UpdateScheduleService`, `RemoveScheduleService`).
+- **Acceptance:** Employee creation, updates, removals, self-registration lifecycle steps, and employment schedule assignments/modifications record structured audit events.
+- **Dependencies:** Task 4.1.
+
+#### 4.2.3. Audit logging for Time Tracking, Absence, Vacation, Period, and Configuration services
+
+- **Status:** `OPEN`
+- **Scope:** Integrate `ChronivaroAuditHelper.audit(...)` across operational services: Timers & Work Entries (`StartTimerService`, `StopTimerService`, `AddWorkEntryService`, `CorrectWorkEntryService`), Absences (`RequestAbsenceService`, `UpdateAbsenceService`, `ApproveAbsenceService`, `RejectAbsenceService`, `CancelAbsenceService`), Vacation Corrections (`AddVacationCorrectionService`), Period Lifecycle (`SubmitPeriodService`, `ApprovePeriodService`, `LockPeriodService`), and System Configuration (`UpdateConfigurationService`).
+- **Acceptance:** All operational state transitions, manual edits, approvals, cancellations, period closings, and configuration modifications produce structured audit records with audit actions and details.
 - **Dependencies:** Task 4.1.
 
 #### 4.3. Expose and secure the Admin Audit Logs REST endpoint
@@ -242,7 +260,7 @@ Task 4 was split into tasks **4.1**, **4.2**, and **4.3** per the task-size and 
 - **Status:** `OPEN`
 - **Scope:** Implement `/chronivaro/v1/admin/audit-logs` endpoint with query filters (`entityType`, `entityId`, `username`, `from`, `to`), pagination envelopes (`PagedResultDto<AuditLogDto>`), correlation ID headers, and privilege enforcement (restricted to StrolchAdmin / Admin role).
 - **Acceptance:** Authorized administrators can query and paginate audit logs; unauthorized or non-admin users receive 403 Forbidden; filter combinations and correlation ID propagation are verified by REST integration tests.
-- **Dependencies:** Tasks 2.1, 2.2, 3, 4.1, 4.2.
+- **Dependencies:** Tasks 2.1, 2.2, 3, 4.1, 4.2.1, 4.2.2, 4.2.3.
 
 ### 5. Finish the period lifecycle in Core
 

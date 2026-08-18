@@ -15,7 +15,7 @@ Audit date: 2026-08-17. `IMPLEMENTATION_SPECIFICATION.md` is authoritative; the 
 
 - Period workflow (spec sections 6.9, 9.5, 10.1, 13.2): submit/approve/lock core services exist and `PeriodResource` exposes only admin approve/lock; rejection, reopen-with-reason, period lookup, full status transitions, snapshots, and complete `/me`/approval endpoints are absent.
 - Vacation accounting (sections 6.7, 9.4, 11.3): immutable-style correction support and balance lookup exist in `VacationHelper` and `AddVacationCorrectionService`, but entitlement, carry-over, usage linkage, approval balance blocking, and complete account reporting/UI are absent.
-- Audit logging (sections 5.2, 6.10, 9.3–9.5, 16.3): `ChronivaroAuditHelper` enhanced with full metadata (action, reason, correlation ID from MDC/thread-local, details, date, user, old/new values), `AuditEventSearch` fluent query, and `PurgeAuditEventsService` retention purge logic implemented in Core (Task 4.1 completed); mutation service coverage across all Core services (Task 4.2) and administrative REST view (Task 4.3) remaining.
+- Audit logging (sections 5.2, 6.10, 9.3–9.5, 16.3): `ChronivaroAuditHelper` enhanced with full metadata (action, reason, correlation ID from MDC/thread-local, details, date, user, old/new values), `AuditEventSearch` fluent query, and `PurgeAuditEventsService` retention purge logic implemented in Core (Task 4.1 completed); administrative master data mutation services audited (Task 4.2.1 completed); Employee/Schedule (Task 4.2.2), operational/period/vacation/config services (Task 4.2.3), and administrative REST view (Task 4.3) remaining.
 - Administration (sections 3.3–3.4, 12.1): employee/team/location/schedule/holiday/absence-type pages and APIs exist, but global configuration has core support only and no REST/UI administration.
 - UI coverage (sections 12.1–12.2): dashboard, times, presence, and administration pages exist; personal absences, vacations, approvals, reports, period workflow, and explicit loading/empty/error/accessibility coverage remain incomplete.
 
@@ -36,16 +36,17 @@ Audit date: 2026-08-17. `IMPLEMENTATION_SPECIFICATION.md` is authoritative; the 
 
 ## Dependency-ordered next steps
 
-1. Apply comprehensive audit logging across Core domain mutation services (Task 4.2).
-2. Expose and secure the Admin Audit Logs REST endpoint with filtering and pagination (Task 4.3).
-3. Complete the period lifecycle, including submission, rejection, reopening, snapshots, and approval endpoints (Task 5).
-4. Expose personal and period workflow REST endpoints (Task 6).
-5. Implement configurable vacation entitlement and immutable journal accounting (Tasks 7 and 8).
-6. Complete vacation and absence REST surfaces (Task 9).
-7. Add scoped supervisor approval queues and the approvals UI (Task 10).
-8. Add personal absence and vacation pages (Task 11).
-9. Implement structured reports and CSV export (Task 12).
-10. Run the full non-functional and acceptance verification track.
+1. Apply audit logging across Employee and Schedule services (Task 4.2.2).
+2. Apply audit logging across Time Tracking, Absence, Vacation, Period, and Configuration services (Task 4.2.3).
+3. Expose and secure the Admin Audit Logs REST endpoint with filtering and pagination (Task 4.3).
+4. Complete the period lifecycle, including submission, rejection, reopening, snapshots, and approval endpoints (Task 5).
+5. Expose personal and period workflow REST endpoints (Task 6).
+6. Implement configurable vacation entitlement and immutable journal accounting (Tasks 7 and 8).
+7. Complete vacation and absence REST surfaces (Task 9).
+8. Add scoped supervisor approval queues and the approvals UI (Task 10).
+9. Add personal absence and vacation pages (Task 11).
+10. Implement structured reports and CSV export (Task 12).
+11. Run the full non-functional and acceptance verification track.
 
 The matching dependency-ordered tasks, evidence, dependencies, and acceptance criteria are in `IMPLEMENTATION_BACKLOG.md`.
 
