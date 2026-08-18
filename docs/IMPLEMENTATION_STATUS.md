@@ -28,23 +28,25 @@ Audit date: 2026-08-17. `IMPLEMENTATION_SPECIFICATION.md` is authoritative; the 
 - REST-wide specification conventions: standard error payload with field errors/correlation ID, optimistic concurrency, pagination, OpenAPI documentation, and integration coverage (sections 13.1, 14.2, 18.2).
 - Non-functional production controls: structured correlation-ID logs, metrics, health/readiness checks, documented retention/deletion policy, performance evidence, and responsive/accessibility verification (sections 16.3 and 17).
 
-## Specification ambiguity
+## Specification ambiguity resolved
 
-- Vacation day-to-minute conversion, proration rounding, standard vacation absence type ID, and treatment of positive corrections in unlimited carry-over are explicitly open in section 6.7.1 (items 303–308); entitlement automation must not guess them.
-- Product decisions remain open in section 21: negative balances, rounding, multi-team approver selection, cancellation rules, illness during vacation, overtime carry-over, home-office status visibility, authentication target, retention, and multi-entity/time-zone scope.
-- The specification names both `/approvals/...` and an existing repository convention `/admin/periods/...`; final endpoint paths and OpenAPI status codes are not yet fixed (sections 13.2 and 13.3).
+- Vacation calculation and accounting rules are resolved in section 6.7.1 and section 22: 25 days annual entitlement (480 min/day), commercial rounding to whole minute, technical code `VACATION`, unlimited carry-over, oldest-balance consumption, and no negative vacation balances.
+- Product decisions for MVP are resolved in section 22: negative time balances allowed, no rounding, employee assigned to one primary team with supervisor approval, cancellation workflow with reversing journal entries, `Europe/Zurich` default timezone, single legal entity, and home office visible as optional working location.
+- Standard REST endpoints are fixed in section 13.2, including `/approvals/absences` and `/approvals/periods`.
 
 ## Dependency-ordered next steps
 
-1. Resolve open product and API decisions in specification sections 6.7.1, 13.2–13.3, 17.3, and 21.
-2. Establish shared REST error, correlation-ID, concurrency, pagination, OpenAPI, and authorization foundations.
-3. Complete audit fields, service coverage, correlation propagation, and restricted audit access.
-4. Complete the period lifecycle, including submission, rejection, reopening, snapshots, and approval endpoints.
-5. Implement configurable vacation entitlement and immutable journal accounting.
-6. Add scoped supervisor approval queues and the approvals UI.
-7. Add personal absence and vacation pages.
-8. Implement structured reports and CSV export.
-9. Run the full non-functional and acceptance verification track.
+1. Establish standard REST error contracts (`ErrorDto`, `FieldErrorDto` matching section 13.1) and correlation ID propagation (Task 2.1).
+2. Implement REST pagination helpers and contracts (Task 2.2).
+3. Implement REST optimistic concurrency control (Task 2.3).
+4. Document the REST contract with OpenAPI (Task 3).
+5. Complete audit fields, service coverage, correlation propagation, and restricted audit access (Task 4).
+6. Complete the period lifecycle, including submission, rejection, reopening, snapshots, and approval endpoints (Task 5).
+7. Implement configurable vacation entitlement and immutable journal accounting (Tasks 7 and 8).
+8. Add scoped supervisor approval queues and the approvals UI (Task 10).
+9. Add personal absence and vacation pages (Tasks 9 and 11).
+10. Implement structured reports and CSV export (Task 12).
+11. Run the full non-functional and acceptance verification track.
 
 The matching dependency-ordered tasks, evidence, dependencies, and acceptance criteria are in `IMPLEMENTATION_BACKLOG.md`.
 

@@ -143,48 +143,73 @@ Do not continue with the next numbered task automatically.
 
 ### 1. Resolve remaining open product and API decisions
 
-- **Status:** `SPECIFICATION_AMBIGUITY`
-- **Specification:** Sections 13.2–13.3, 17.3, and 22. Vacation calculation rules in section 6.7.1 are already decided and are not part of this task.
-- **Decide:** vacation absence type ID, approval paths/status codes, approver selection, cancellation and illness rules, overtime carry-over, authentication target, retention, and multi-entity/time-zone scope.
-- **Acceptance:** Every remaining value is owner-approved or explicitly deferred; endpoint paths, status codes, and policy keys have no hidden defaults. The decision record does not override the fixed section 6.7.1 vacation rules.
+- **Status:** `COMPLETED`
+- **Specification:** Sections 6.7.1, 13.2, and 22.
+- **Verification:** All open decisions for MVP are resolved and fixed in `IMPLEMENTATION_SPECIFICATION.md`:
+  - Vacation absence type code: `VACATION` (section 6.7.1).
+  - Vacation calculation rules: 25 days/year, 480 min/day, whole-minute commercial rounding, unlimited carry-over, positive corrections included in carry-over, oldest-balance usage, no negative vacation balances (sections 6.7.1 and 22).
+  - Standard REST approval routes: `/approvals/absences`, `/approvals/absences/{id}/approve`, `/approvals/absences/{id}/reject`, `/approvals/periods`, `/approvals/periods/{id}/approve`, `/approvals/periods/{id}/reject`, `/periods/{id}/reopen` (section 13.2).
+  - Approver selection: Each employee belongs to exactly one primary team; supervisor approves team members' absences and periods (section 22).
+  - Cancellation & illness rules: Approved absences modified only via cancellation workflow with reversing journal entries (section 22).
+  - Time balances: Negative time balances allowed; no rounding in MVP (section 22).
+  - Default timezone & legal entity: `Europe/Zurich`, single legal entity (section 22).
+  - Working location visibility: Home office optionally visible as working location (section 22).
 - **Dependencies:** None.
 
 ## Dependency-ordered implementation tasks
 
 ### 2. Establish shared REST contracts
 
+Task 2 was split into tasks **2.1**, **2.2**, and **2.3** per the task-size and single-concept rules (avoiding changes across 10+ files simultaneously).
+
+#### 2.1. Establish standard REST error contracts and correlation ID propagation
+
 - **Status:** `MISSING`
-- **Scope:** Add common errors with field errors and correlation IDs, ISO date/time rules, pagination helpers, optimistic concurrency, and request correlation propagation.
-- **Acceptance:** Existing and new mutable/list endpoints use one documented contract; validation, authorization, stale-write, pagination, and correlation integration tests pass.
+- **Scope:** Add standard error payload DTOs (`ErrorDto`, `FieldErrorDto` matching section 13.1), correlation ID request filter and response header (`X-Correlation-Id`), standard exception mappers and `ServiceResult` error conversion in the REST layer, with integration tests covering standard error responses and correlation propagation.
+- **Acceptance:** Error responses strictly follow the section 13.1 schema; correlation IDs are generated or propagated and returned in headers/payloads; unhandled exceptions and service failures map deterministically to appropriate HTTP status codes (400, 401, 403, 404, 500).
 - **Dependencies:** Task 1.
+
+#### 2.2. Implement REST pagination helpers and contracts
+
+- **Status:** `MISSING`
+- **Scope:** Define shared pagination query parameters (e.g. `offset`, `limit`) and paged response envelope DTOs (`PagedResultDto<T>`), along with Strolch search pagination utilities for REST list endpoints.
+- **Acceptance:** List endpoints support consistent pagination contracts and return correct total count, limit, and offset metadata.
+- **Dependencies:** Task 2.1.
+
+#### 2.3. Implement REST optimistic concurrency control
+
+- **Status:** `MISSING`
+- **Scope:** Add version/ETag concurrency validation mechanisms for mutable domain entities and REST resources.
+- **Acceptance:** Stale updates return 409 Conflict with standard error payload; concurrent modifications are safely rejected.
+- **Dependencies:** Task 2.1.
 
 ### 3. Document the REST contract
 
 - **Status:** `MISSING`
 - **Scope:** Add OpenAPI documentation for implemented and planned `/rest/chronivaro/v1` resources, errors, pagination, concurrency, authorization, and status codes.
 - **Acceptance:** Documentation matches executable routes and DTOs and has a focused contract check.
-- **Dependencies:** Tasks 1–2.
+- **Dependencies:** Tasks 1, 2.1–2.3.
 
 ### 4. Complete audit metadata and access
 
 - **Status:** `PARTIAL`
 - **Scope:** Extend the audit helper and relevant Core mutations with action, reason, correlation ID, and complete service coverage; define retention/deletion and add a privilege-protected audit query/view.
 - **Acceptance:** Work, absence, vacation, period, administration, and configuration mutations are traceable; unauthorized reads fail; fields, access, and retention are tested.
-- **Dependencies:** Tasks 1–2.
+- **Dependencies:** Tasks 1, 2.1.
 
 ### 5. Finish the period lifecycle in Core
 
 - **Status:** `PARTIAL`
 - **Scope:** Implement lookup, submit/reject/reopen-with-reason, transition validation, snapshots, remaining services, warnings, and rollback using existing transaction patterns.
 - **Acceptance:** Valid transitions succeed, invalid transitions do not mutate, reopening requires a reason, snapshots preserve history, and Core tests cover errors and rollback.
-- **Dependencies:** Tasks 1, 2, and 4.
+- **Dependencies:** Tasks 1, 2.1, and 4.
 
 ### 6. Expose personal and period workflow REST endpoints
 
 - **Status:** `PARTIAL`
 - **Scope:** Complete employee period/status endpoints and agreed approval routes while preserving existing REST contracts and HTTP semantics.
 - **Acceptance:** Employee, supervisor, and administrator access is enforced server-side; integration tests cover transitions, conflicts, forbidden access, and standard errors.
-- **Dependencies:** Tasks 2, 3, and 5.
+- **Dependencies:** Tasks 2.1, 2.2, 3, and 5.
 
 ### 7. Implement configurable vacation entitlement policy
 
@@ -205,14 +230,14 @@ Do not continue with the next numbered task automatically.
 - **Status:** `PARTIAL`
 - **Scope:** Complete `/me/absences`, vacation-account, and related status routes, DTOs, authorization, pagination, and error/concurrency handling.
 - **Acceptance:** Documented routes return calculated values; invalid dates/statuses and unauthorized cross-user access are rejected.
-- **Dependencies:** Tasks 2, 3, 6, and 8.
+- **Dependencies:** Tasks 2.1, 2.2, 3, 6, and 8.
 
 ### 10. Build supervisor approval queues
 
 - **Status:** `MISSING`
 - **Scope:** Add scoped Core searches/services and REST resources for absence and submitted-period approval queues using the decided approver rules.
 - **Acceptance:** Results are scope-limited and paginated; transitions are atomic and audited; queue and authorization tests pass.
-- **Dependencies:** Tasks 2, 4, 5, 6, and 9.
+- **Dependencies:** Tasks 2.1, 2.2, 4, 5, 6, and 9.
 
 ### 11. Add personal workflow and approval UI
 
@@ -233,14 +258,14 @@ Do not continue with the next numbered task automatically.
 - **Status:** `PARTIAL`
 - **Scope:** Expose supported Core configuration through authorized REST and UI with validation and audit metadata.
 - **Acceptance:** Administrators can update only supported values; invalid values fail consistently and changes are audited.
-- **Dependencies:** Tasks 2, 3, 4, and 7.
+- **Dependencies:** Tasks 2.1, 3, 4, and 7.
 
 ### 14. Create `chronivaro-app` and executable packaging
 
 - **Status:** `MISSING`
 - **Scope:** Add the application module and executable artifact with application-owned configuration/startup contracts. Keep Jetty out of Core and REST; remove Tomcat as a runtime requirement.
 - **Acceptance:** The parent builds four modules and the documented artifact launches with `java -jar`.
-- **Dependencies:** Tasks 2–3 and the existing modules.
+- **Dependencies:** Tasks 2.1–2.3, 3, and the existing modules.
 
 ### 15. Implement embedded Jetty lifecycle and configuration
 
