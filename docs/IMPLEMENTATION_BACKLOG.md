@@ -190,9 +190,15 @@ Task 2 was split into tasks **2.1**, **2.2**, and **2.3** per the task-size and 
 
 #### 2.3. Implement REST optimistic concurrency control
 
-- **Status:** `MISSING`
+- **Status:** `COMPLETED`
 - **Scope:** Add version/ETag concurrency validation mechanisms for mutable domain entities and REST resources.
 - **Acceptance:** Stale updates return 409 Conflict with standard error payload; concurrent modifications are safely rejected.
+- **Verification:**
+  - Implemented `ChronivaroVersionHelper` in `chronivaro-core` for initialising and incrementing element versions (`PARAM_VERSION`, `PARAM_UPDATED_BY`, and Strolch `Version` metadata) during entity creation and modification.
+  - Implemented `ConcurrencyHelper` in `chronivaro-rest` supporting ETag generation (`ETag` header / `EntityTag`), weak/strong ETag parsing, and `If-Match` validation rejecting mismatched or stale updates with HTTP 409 Conflict (`CONCURRENCY_CONFLICT`) and standard `ErrorDto` payload.
+  - Updated all mutable REST resource endpoints (`EmployeeResource`, `TeamResource`, `LocationResource`, `AbsenceTypeResource`, `ScheduleTemplateResource`, `HolidayCalendarsResource`, `AbsenceResource`, and `ChronivaroResource`) to return `ETag` headers on GET/PUT/POST mutations and enforce `If-Match` optimistic locking on updates and deletions.
+  - Added comprehensive REST integration tests in `RestConcurrencyTest` validating ETag returns, matching If-Match success, stale If-Match 409 Conflict rejections, weak ETag matching, and invalid If-Match header 400 Bad Request error mappings.
+  - Verified with full test suite passing via `mvn test` (38 passing tests, 0 failures, 0 errors).
 - **Dependencies:** Task 2.1.
 
 ### 3. Document the REST contract

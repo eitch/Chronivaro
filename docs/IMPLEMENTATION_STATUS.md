@@ -25,7 +25,7 @@ Audit date: 2026-08-17. `IMPLEMENTATION_SPECIFICATION.md` is authoritative; the 
 - Supervisor approval queue/API/UI for absences and submitted periods (sections 3.2, 12.1, 13.2): no approval queue query/resource/view was found.
 - Automated vacation entitlement engine and configurable policy values (section 6.7.1), subject to the open parameters listed below.
 - Registration of all required audit fields and audit access controls (sections 6.10 and 16.3), beyond the partial helper implementation.
-- REST-wide specification conventions: standard error payload with field errors/correlation ID (Task 2.1) and pagination contracts/helpers (Task 2.2) implemented; optimistic concurrency, OpenAPI documentation, and integration coverage remaining (sections 13.1, 14.2, 18.2).
+- REST-wide specification conventions: standard error payload with field errors/correlation ID (Task 2.1), pagination contracts/helpers (Task 2.2), and optimistic concurrency control (Task 2.3) implemented; OpenAPI documentation and integration coverage remaining (sections 13.1, 14.2, 18.2).
 - Non-functional production controls: structured correlation-ID logs, metrics, health/readiness checks, documented retention/deletion policy, performance evidence, and responsive/accessibility verification (sections 16.3 and 17).
 
 ## Specification ambiguity resolved
@@ -36,17 +36,16 @@ Audit date: 2026-08-17. `IMPLEMENTATION_SPECIFICATION.md` is authoritative; the 
 
 ## Dependency-ordered next steps
 
-1. Establish standard REST error contracts (`ErrorDto`, `FieldErrorDto` matching section 13.1) and correlation ID propagation (Task 2.1).
-2. Implement REST pagination helpers and contracts (Task 2.2).
-3. Implement REST optimistic concurrency control (Task 2.3).
-4. Document the REST contract with OpenAPI (Task 3).
-5. Complete audit fields, service coverage, correlation propagation, and restricted audit access (Task 4).
-6. Complete the period lifecycle, including submission, rejection, reopening, snapshots, and approval endpoints (Task 5).
-7. Implement configurable vacation entitlement and immutable journal accounting (Tasks 7 and 8).
-8. Add scoped supervisor approval queues and the approvals UI (Task 10).
-9. Add personal absence and vacation pages (Tasks 9 and 11).
-10. Implement structured reports and CSV export (Task 12).
-11. Run the full non-functional and acceptance verification track.
+1. Document the REST contract with OpenAPI (Task 3).
+2. Complete audit fields, service coverage, correlation propagation, and restricted audit access (Task 4).
+3. Complete the period lifecycle, including submission, rejection, reopening, snapshots, and approval endpoints (Task 5).
+4. Expose personal and period workflow REST endpoints (Task 6).
+5. Implement configurable vacation entitlement and immutable journal accounting (Tasks 7 and 8).
+6. Complete vacation and absence REST surfaces (Task 9).
+7. Add scoped supervisor approval queues and the approvals UI (Task 10).
+8. Add personal absence and vacation pages (Task 11).
+9. Implement structured reports and CSV export (Task 12).
+10. Run the full non-functional and acceptance verification track.
 
 The matching dependency-ordered tasks, evidence, dependencies, and acceptance criteria are in `IMPLEMENTATION_BACKLOG.md`.
 
