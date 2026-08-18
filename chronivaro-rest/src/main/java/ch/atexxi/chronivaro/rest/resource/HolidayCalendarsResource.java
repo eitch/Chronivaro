@@ -7,15 +7,16 @@ import ch.atexxi.chronivaro.core.service.RemoveHolidayService;
 import ch.atexxi.chronivaro.rest.dto.ChronivaroMapper;
 import ch.atexxi.chronivaro.rest.dto.HolidayCalendarDto;
 import ch.atexxi.chronivaro.rest.dto.HolidayDto;
+import com.google.gson.JsonObject;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import li.strolch.model.Resource;
+import li.strolch.model.Tags;
 import li.strolch.persistence.api.StrolchTransaction;
 import li.strolch.privilege.model.Certificate;
-import li.strolch.rest.helper.ResponseUtil;
 import li.strolch.service.StringArgument;
 import li.strolch.service.api.ServiceHandler;
 import li.strolch.service.api.ServiceResult;
@@ -86,11 +87,14 @@ public class HolidayCalendarsResource {
 								.equals(arg.name))
 						.findFirst()
 						.orElse(null);
-				if (calendar != null)
-					return ResponseUtil.toResponse(li.strolch.model.Tags.Json.VALUE, calendar.getId());
+				if (calendar != null) {
+					JsonObject json = new JsonObject();
+					json.addProperty(Tags.Json.VALUE, calendar.getId());
+					return Response.ok(ChronivaroRestHelper.createGson().toJson(json), MediaType.APPLICATION_JSON).build();
+				}
 			}
 		}
-		return ResponseUtil.toResponse(result);
+		return ChronivaroRestHelper.toResponse(result);
 	}
 
 	@POST
@@ -106,7 +110,7 @@ public class HolidayCalendarsResource {
 				.fromJson(data, CreateHolidayService.HolidayArgument.class);
 		arg.holidayCalendarId = calendarId;
 		ServiceResult result = serviceHandler.doService(cert, new CreateHolidayService(), arg);
-		return ResponseUtil.toResponse(result);
+		return ChronivaroRestHelper.toResponse(result);
 	}
 
 	@DELETE
@@ -117,7 +121,7 @@ public class HolidayCalendarsResource {
 		ServiceHandler serviceHandler = ChronivaroRestHelper.getServiceHandler();
 		ServiceResult result = serviceHandler.doService(cert, new RemoveHolidayCalendarService(),
 				new StringArgument(id));
-		return ResponseUtil.toResponse(result);
+		return ChronivaroRestHelper.toResponse(result);
 	}
 
 	@DELETE
@@ -129,6 +133,6 @@ public class HolidayCalendarsResource {
 		ServiceHandler serviceHandler = ChronivaroRestHelper.getServiceHandler();
 		ServiceResult result = serviceHandler.doService(cert, new RemoveHolidayService(),
 				new StringArgument(holidayId));
-		return ResponseUtil.toResponse(result);
+		return ChronivaroRestHelper.toResponse(result);
 	}
 }

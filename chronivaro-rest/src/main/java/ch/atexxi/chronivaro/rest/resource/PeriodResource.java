@@ -12,7 +12,6 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import li.strolch.privilege.model.Certificate;
 import li.strolch.rest.StrolchRestfulConstants;
-import li.strolch.rest.helper.ResponseUtil;
 import li.strolch.service.StringArgument;
 import li.strolch.service.api.ServiceHandler;
 import li.strolch.service.api.ServiceResult;
@@ -27,7 +26,7 @@ public class PeriodResource {
 		Certificate cert = (Certificate) request.getAttribute(StrolchRestfulConstants.STROLCH_CERTIFICATE);
 		ServiceHandler serviceHandler = ChronivaroRestHelper.getServiceHandler();
 		ServiceResult result = serviceHandler.doService(cert, new ApprovePeriodService(), new StringArgument(id));
-		return ResponseUtil.toResponse(result);
+		return ChronivaroRestHelper.toResponse(result);
 	}
 
 	@POST
@@ -37,6 +36,6 @@ public class PeriodResource {
 		Certificate cert = (Certificate) request.getAttribute(StrolchRestfulConstants.STROLCH_CERTIFICATE);
 		ServiceHandler serviceHandler = ChronivaroRestHelper.getServiceHandler();
 		ServiceResult result = serviceHandler.doService(cert, new LockPeriodService(), new StringArgument(id));
-		return ResponseUtil.toResponse(result);
+		return ChronivaroRestHelper.toResponse(result);
 	}
 }

@@ -15,7 +15,6 @@ import li.strolch.model.Resource;
 import li.strolch.persistence.api.StrolchTransaction;
 import li.strolch.privilege.model.Certificate;
 import li.strolch.rest.StrolchRestfulConstants;
-import li.strolch.rest.helper.ResponseUtil;
 import li.strolch.service.StringArgument;
 import li.strolch.service.StringResult;
 import li.strolch.service.api.ServiceHandler;
@@ -47,9 +46,7 @@ public class EmployeeResource {
 	public Response getEmployee(@Context HttpServletRequest request, @PathParam("id") String id) {
 		Certificate cert = (Certificate) request.getAttribute(StrolchRestfulConstants.STROLCH_CERTIFICATE);
 		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
-			Resource employee = tx.getResourceBy(TYPE_EMPLOYEE, id);
-			if (employee == null)
-				return Response.status(Response.Status.NOT_FOUND).build();
+			Resource employee = tx.getResourceBy(TYPE_EMPLOYEE, id, true);
 			return Response
 					.ok(ChronivaroRestHelper.createGson().toJson(employeeToDto(tx, employee)),
 							MediaType.APPLICATION_JSON)
@@ -82,7 +79,7 @@ public class EmployeeResource {
 
 		StringResult result = serviceHandler.doService(cert, new CreateEmployeeService(), arg);
 		if (result.isNok())
-			return ResponseUtil.toResponse(result);
+			return ChronivaroRestHelper.toResponse(result);
 
 		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
 			Resource employee = tx.getResourceBy(TYPE_EMPLOYEE, result.getValue(), true);
@@ -118,7 +115,7 @@ public class EmployeeResource {
 		arg.username = dto.username();
 
 		ServiceResult result = serviceHandler.doService(cert, new UpdateEmployeeService(), arg);
-		return ResponseUtil.toResponse(result);
+		return ChronivaroRestHelper.toResponse(result);
 	}
 
 	@DELETE
@@ -128,7 +125,7 @@ public class EmployeeResource {
 		Certificate cert = (Certificate) request.getAttribute(StrolchRestfulConstants.STROLCH_CERTIFICATE);
 		ServiceHandler serviceHandler = ChronivaroRestHelper.getServiceHandler();
 		ServiceResult result = serviceHandler.doService(cert, new RemoveEmployeeService(), new StringArgument(id));
-		return ResponseUtil.toResponse(result);
+		return ChronivaroRestHelper.toResponse(result);
 	}
 
 	@POST
@@ -143,7 +140,7 @@ public class EmployeeResource {
 				.fromJson(data, CreateScheduleService.CreateScheduleArgument.class);
 		arg.employeeId = id;
 		ServiceResult result = serviceHandler.doService(cert, new CreateScheduleService(), arg);
-		return ResponseUtil.toResponse(result);
+		return ChronivaroRestHelper.toResponse(result);
 	}
 
 	@GET
@@ -174,7 +171,7 @@ public class EmployeeResource {
 				.fromJson(data, UpdateScheduleService.UpdateScheduleArgument.class);
 		arg.id = scheduleId;
 		ServiceResult result = serviceHandler.doService(cert, new UpdateScheduleService(), arg);
-		return ResponseUtil.toResponse(result);
+		return ChronivaroRestHelper.toResponse(result);
 	}
 
 	@DELETE
@@ -186,7 +183,7 @@ public class EmployeeResource {
 		ServiceHandler serviceHandler = ChronivaroRestHelper.getServiceHandler();
 		ServiceResult result = serviceHandler.doService(cert, new RemoveScheduleService(),
 				new StringArgument(scheduleId));
-		return ResponseUtil.toResponse(result);
+		return ChronivaroRestHelper.toResponse(result);
 	}
 
 	@GET
@@ -218,7 +215,7 @@ public class EmployeeResource {
 				.createGson()
 				.fromJson(data, AddOrUpdateWorkingLocationDefaultService.Argument.class);
 		arg.employeeId = id;
-		return ResponseUtil.toResponse(ChronivaroRestHelper
+		return ChronivaroRestHelper.toResponse(ChronivaroRestHelper
 				.getServiceHandler()
 				.doService(cert, new AddOrUpdateWorkingLocationDefaultService(), arg));
 	}
@@ -235,7 +232,7 @@ public class EmployeeResource {
 				.fromJson(data, AddOrUpdateWorkingLocationDefaultService.Argument.class);
 		arg.id = defaultId;
 		arg.employeeId = id;
-		return ResponseUtil.toResponse(ChronivaroRestHelper
+		return ChronivaroRestHelper.toResponse(ChronivaroRestHelper
 				.getServiceHandler()
 				.doService(cert, new AddOrUpdateWorkingLocationDefaultService(), arg));
 	}
@@ -246,7 +243,7 @@ public class EmployeeResource {
 	public Response removeWorkingLocationDefault(@Context HttpServletRequest request,
 			@PathParam("defaultId") String defaultId) {
 		Certificate cert = (Certificate) request.getAttribute(StrolchRestfulConstants.STROLCH_CERTIFICATE);
-		return ResponseUtil.toResponse(ChronivaroRestHelper
+		return ChronivaroRestHelper.toResponse(ChronivaroRestHelper
 				.getServiceHandler()
 				.doService(cert, new RemoveWorkingLocationDefaultService(), new StringArgument(defaultId)));
 	}
@@ -264,7 +261,7 @@ public class EmployeeResource {
 				.fromJson(data, AddVacationCorrectionService.AddVacationCorrectionArgument.class);
 		arg.employeeId = id;
 		ServiceResult result = serviceHandler.doService(cert, new AddVacationCorrectionService(), arg);
-		return ResponseUtil.toResponse(result);
+		return ChronivaroRestHelper.toResponse(result);
 	}
 
 	@POST
@@ -275,6 +272,6 @@ public class EmployeeResource {
 		ServiceHandler serviceHandler = ChronivaroRestHelper.getServiceHandler();
 		ServiceResult result = serviceHandler.doService(cert, new InitiateEmployeeRegistrationService(),
 				new StringArgument(id));
-		return ResponseUtil.toResponse(result);
+		return ChronivaroRestHelper.toResponse(result);
 	}
 }

@@ -32,6 +32,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.Base64;
 import java.util.Collections;
+import java.util.Set;
 import java.util.logging.Level;
 
 import static org.junit.Assert.assertEquals;
@@ -131,13 +132,13 @@ public abstract class AbstractChronivaroRestfulTest extends JerseyTest {
 					@Override
 					public void start() {
 						try {
+							Set<Class<?>> classes = new java.util.HashSet<>(ChronivaroRestfulClasses.getRestfulClasses());
+							classes.addAll(ChronivaroRestfulClasses.getProviderClasses());
+							classes.add(AuthenticationResource.class);
+							String classNames = String.join(";", classes.stream().map(Class::getName).toList());
+
 							this.server = GrizzlyWebContainerFactory.create(baseUri,
-									Collections.singletonMap("jersey.config.server.provider.packages",
-											"ch.atexxi.chronivaro.rest.resource" + ";" + AuthenticationResource.class
-													.getPackage()
-													.getName() + ";" + AuthenticationRequestFilter.class
-													.getPackage()
-													.getName()));
+									Collections.singletonMap("jersey.config.server.provider.classnames", classNames));
 						} catch (ProcessingException | IOException e) {
 							throw new TestContainerException(e);
 						}

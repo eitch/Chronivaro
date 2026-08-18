@@ -19,7 +19,6 @@ import li.strolch.model.Resource;
 import li.strolch.persistence.api.StrolchTransaction;
 import li.strolch.privilege.model.Certificate;
 import li.strolch.rest.RestfulStrolchComponent;
-import li.strolch.rest.helper.ResponseUtil;
 import li.strolch.service.StringArgument;
 import li.strolch.service.api.ServiceHandler;
 import li.strolch.service.api.ServiceResult;
@@ -59,7 +58,7 @@ public class ChronivaroResource {
 							MediaType.APPLICATION_JSON)
 					.build();
 		}
-		return ResponseUtil.toResponse(result);
+		return ChronivaroRestHelper.toResponse(result);
 	}
 
 	@GET
@@ -73,7 +72,8 @@ public class ChronivaroResource {
 		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
 			Optional<Resource> employee = ChronivaroModelHelper.findEmployeeByUser(tx, cert.getUserId());
 			if (employee.isEmpty())
-				return Response.status(Response.Status.NOT_FOUND).build();
+				return ChronivaroRestHelper.toErrorResponse(Response.Status.NOT_FOUND, "NOT_FOUND",
+						"Employee not found for current user");
 			employeeId = employee.get().getId();
 		}
 
@@ -121,7 +121,8 @@ public class ChronivaroResource {
 		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
 			Optional<Resource> employee = ChronivaroModelHelper.findEmployeeByUser(tx, cert.getUserId());
 			if (employee.isEmpty())
-				return Response.status(Response.Status.NOT_FOUND).build();
+				return ChronivaroRestHelper.toErrorResponse(Response.Status.NOT_FOUND, "NOT_FOUND",
+						"Employee not found for current user");
 			employeeId = employee.get().getId();
 		}
 
@@ -133,7 +134,7 @@ public class ChronivaroResource {
 		arg.workingLocation = dto.workingLocation();
 
 		ServiceResult result = serviceHandler.doService(cert, new AddWorkEntryService(), arg);
-		return ResponseUtil.toResponse(result);
+		return ChronivaroRestHelper.toResponse(result);
 	}
 
 	@PUT
@@ -153,7 +154,7 @@ public class ChronivaroResource {
 		arg.workingLocation = dto.workingLocation();
 
 		ServiceResult result = serviceHandler.doService(cert, new CorrectWorkEntryService(), arg);
-		return ResponseUtil.toResponse(result);
+		return ChronivaroRestHelper.toResponse(result);
 	}
 
 	@GET
@@ -165,7 +166,8 @@ public class ChronivaroResource {
 		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
 			Optional<Resource> employee = ChronivaroModelHelper.findEmployeeByUser(tx, cert.getUserId());
 			if (employee.isEmpty())
-				return Response.status(Response.Status.NOT_FOUND).build();
+				return ChronivaroRestHelper.toErrorResponse(Response.Status.NOT_FOUND, "NOT_FOUND",
+						"Employee not found for current user");
 			employeeId = employee.get().getId();
 		}
 
@@ -195,7 +197,8 @@ public class ChronivaroResource {
 		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
 			Optional<Resource> employee = ChronivaroModelHelper.findEmployeeByUser(tx, cert.getUserId());
 			if (employee.isEmpty())
-				return Response.status(Response.Status.NOT_FOUND).build();
+				return ChronivaroRestHelper.toErrorResponse(Response.Status.NOT_FOUND, "NOT_FOUND",
+						"Employee not found for current user");
 			employeeId = employee.get().getId();
 		}
 
@@ -210,7 +213,7 @@ public class ChronivaroResource {
 		arg.comment = dto.comment();
 
 		ServiceResult result = serviceHandler.doService(cert, new RequestAbsenceService(), arg);
-		return ResponseUtil.toResponse(result);
+		return ChronivaroRestHelper.toResponse(result);
 	}
 
 	@PUT
@@ -233,7 +236,7 @@ public class ChronivaroResource {
 		arg.comment = dto.comment();
 
 		ServiceResult result = serviceHandler.doService(cert, new UpdateAbsenceService(), arg);
-		return ResponseUtil.toResponse(result);
+		return ChronivaroRestHelper.toResponse(result);
 	}
 
 	@POST
@@ -243,7 +246,7 @@ public class ChronivaroResource {
 		Certificate cert = (Certificate) request.getAttribute(STROLCH_CERTIFICATE);
 		ServiceHandler serviceHandler = ChronivaroRestHelper.getServiceHandler();
 		ServiceResult result = serviceHandler.doService(cert, new CancelAbsenceService(), new StringArgument(id));
-		return ResponseUtil.toResponse(result);
+		return ChronivaroRestHelper.toResponse(result);
 	}
 
 	@POST
@@ -258,7 +261,8 @@ public class ChronivaroResource {
 		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
 			Optional<Resource> employee = ChronivaroModelHelper.findEmployeeByUser(tx, cert.getUserId());
 			if (employee.isEmpty())
-				return Response.status(Response.Status.NOT_FOUND).build();
+				return ChronivaroRestHelper.toErrorResponse(Response.Status.NOT_FOUND, "NOT_FOUND",
+						"Employee not found for current user");
 			employeeId = employee.get().getId();
 		}
 
@@ -267,7 +271,7 @@ public class ChronivaroResource {
 		arg.employeeId = employeeId;
 		arg.workingLocation = WorkingLocation.valueOf(dataObject.workingLocation);
 		ServiceResult result = serviceHandler.doService(cert, new StartTimerService(), arg);
-		return ResponseUtil.toResponse(result);
+		return ChronivaroRestHelper.toResponse(result);
 	}
 
 	private record TimerStartDto(String workingLocation) {
@@ -284,13 +288,14 @@ public class ChronivaroResource {
 		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
 			Optional<Resource> employee = ChronivaroModelHelper.findEmployeeByUser(tx, cert.getUserId());
 			if (employee.isEmpty())
-				return Response.status(Response.Status.NOT_FOUND).build();
+				return ChronivaroRestHelper.toErrorResponse(Response.Status.NOT_FOUND, "NOT_FOUND",
+						"Employee not found for current user");
 			employeeId = employee.get().getId();
 		}
 
 		StopTimerService.StopTimerArgument arg = new StopTimerService.StopTimerArgument(employeeId);
 		ServiceResult result = serviceHandler.doService(cert, new StopTimerService(), arg);
-		return ResponseUtil.toResponse(result);
+		return ChronivaroRestHelper.toResponse(result);
 	}
 
 	@POST
@@ -300,7 +305,7 @@ public class ChronivaroResource {
 		Certificate cert = (Certificate) request.getAttribute(STROLCH_CERTIFICATE);
 		ServiceHandler serviceHandler = ChronivaroRestHelper.getServiceHandler();
 		ServiceResult result = serviceHandler.doService(cert, new SubmitPeriodService(), new StringArgument(id));
-		return ResponseUtil.toResponse(result);
+		return ChronivaroRestHelper.toResponse(result);
 	}
 
 	@POST
@@ -324,7 +329,7 @@ public class ChronivaroResource {
 			throw new RuntimeException(e);
 		}
 
-		return ResponseUtil.toResponse(result);
+		return ChronivaroRestHelper.toResponse(result);
 	}
 
 	@GET
@@ -338,7 +343,8 @@ public class ChronivaroResource {
 		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
 			Optional<Resource> employee = ChronivaroModelHelper.findEmployeeByUser(tx, cert.getUserId());
 			if (employee.isEmpty())
-				return Response.status(Response.Status.NOT_FOUND).build();
+				return ChronivaroRestHelper.toErrorResponse(Response.Status.NOT_FOUND, "NOT_FOUND",
+						"Employee not found for current user");
 			employeeId = employee.get().getId();
 		}
 
@@ -353,7 +359,7 @@ public class ChronivaroResource {
 							MediaType.APPLICATION_JSON)
 					.build();
 		}
-		return ResponseUtil.toResponse(result);
+		return ChronivaroRestHelper.toResponse(result);
 	}
 
 	@GET
@@ -367,7 +373,8 @@ public class ChronivaroResource {
 		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
 			Optional<Resource> employee = ChronivaroModelHelper.findEmployeeByUser(tx, cert.getUserId());
 			if (employee.isEmpty())
-				return Response.status(Response.Status.NOT_FOUND).build();
+				return ChronivaroRestHelper.toErrorResponse(Response.Status.NOT_FOUND, "NOT_FOUND",
+						"Employee not found for current user");
 			employeeId = employee.get().getId();
 		}
 
@@ -382,6 +389,6 @@ public class ChronivaroResource {
 							MediaType.APPLICATION_JSON)
 					.build();
 		}
-		return ResponseUtil.toResponse(result);
+		return ChronivaroRestHelper.toResponse(result);
 	}
 }

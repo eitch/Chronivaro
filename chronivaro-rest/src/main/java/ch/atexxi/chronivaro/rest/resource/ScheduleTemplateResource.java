@@ -14,7 +14,6 @@ import li.strolch.model.Resource;
 import li.strolch.persistence.api.StrolchTransaction;
 import li.strolch.privilege.model.Certificate;
 import li.strolch.rest.StrolchRestfulConstants;
-import li.strolch.rest.helper.ResponseUtil;
 import li.strolch.service.api.ServiceHandler;
 import li.strolch.service.StringArgument;
 import li.strolch.service.api.ServiceResult;
@@ -47,7 +46,7 @@ public class ScheduleTemplateResource {
 				.createGson()
 				.fromJson(data, CreateScheduleTemplateService.CreateScheduleTemplateArgument.class);
 		ServiceResult result = serviceHandler.doService(cert, new CreateScheduleTemplateService(), arg);
-		return ResponseUtil.toResponse(result);
+		return ChronivaroRestHelper.toResponse(result);
 	}
 
 	@PUT
@@ -62,7 +61,7 @@ public class ScheduleTemplateResource {
 				.fromJson(data, UpdateScheduleTemplateService.UpdateScheduleTemplateArgument.class);
 		arg.id = id;
 		ServiceResult result = serviceHandler.doService(cert, new UpdateScheduleTemplateService(), arg);
-		return ResponseUtil.toResponse(result);
+		return ChronivaroRestHelper.toResponse(result);
 	}
 
 	@DELETE
@@ -73,6 +72,6 @@ public class ScheduleTemplateResource {
 		ServiceHandler serviceHandler = ChronivaroRestHelper.getServiceHandler();
 		ServiceResult result = serviceHandler.doService(cert, new RemoveScheduleTemplateService(),
 				new StringArgument(id));
-		return ResponseUtil.toResponse(result);
+		return ChronivaroRestHelper.toResponse(result);
 	}
 }

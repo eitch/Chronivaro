@@ -164,9 +164,15 @@ Task 2 was split into tasks **2.1**, **2.2**, and **2.3** per the task-size and 
 
 #### 2.1. Establish standard REST error contracts and correlation ID propagation
 
-- **Status:** `MISSING`
+- **Status:** `COMPLETED`
 - **Scope:** Add standard error payload DTOs (`ErrorDto`, `FieldErrorDto` matching section 13.1), correlation ID request filter and response header (`X-Correlation-Id`), standard exception mappers and `ServiceResult` error conversion in the REST layer, with integration tests covering standard error responses and correlation propagation.
 - **Acceptance:** Error responses strictly follow the section 13.1 schema; correlation IDs are generated or propagated and returned in headers/payloads; unhandled exceptions and service failures map deterministically to appropriate HTTP status codes (400, 401, 403, 404, 500).
+- **Verification:**
+  - Implemented `ErrorDto` and `FieldErrorDto` matching the Section 13.1 schema.
+  - Implemented `CorrelationIdFilter` to extract incoming `X-Correlation-Id` or generate a unique correlation ID, propating it via thread local, SLF4J MDC, request properties, and response headers.
+  - Implemented `ChronivaroRestfulExceptionMapper` to map uncaught exceptions and `RestException` (including field errors) to standard HTTP statuses and `ErrorDto` responses with correlation ID.
+  - Updated `ChronivaroRestHelper` and all REST resources to map `ServiceResult` errors and missing entities to standard `ErrorDto` responses.
+  - Verified via integration tests in `RestErrorTest` and full test suite run (`mvn test`).
 - **Dependencies:** Task 1.
 
 #### 2.2. Implement REST pagination helpers and contracts

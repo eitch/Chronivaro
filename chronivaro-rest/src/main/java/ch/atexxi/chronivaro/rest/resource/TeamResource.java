@@ -14,7 +14,6 @@ import li.strolch.model.Resource;
 import li.strolch.persistence.api.StrolchTransaction;
 import li.strolch.privilege.model.Certificate;
 import li.strolch.rest.StrolchRestfulConstants;
-import li.strolch.rest.helper.ResponseUtil;
 import li.strolch.service.StringArgument;
 import li.strolch.service.api.ServiceHandler;
 import li.strolch.service.api.ServiceResult;
@@ -49,7 +48,7 @@ public class TeamResource {
 		arg.name = dto.name();
 
 		ServiceResult result = serviceHandler.doService(cert, new CreateTeamService(), arg);
-		return ResponseUtil.toResponse(result);
+		return ChronivaroRestHelper.toResponse(result);
 	}
 
 	@PUT
@@ -66,7 +65,7 @@ public class TeamResource {
 		arg.name = dto.name();
 
 		ServiceResult result = serviceHandler.doService(cert, new UpdateTeamService(), arg);
-		return ResponseUtil.toResponse(result);
+		return ChronivaroRestHelper.toResponse(result);
 	}
 
 	@DELETE
@@ -76,6 +75,6 @@ public class TeamResource {
 		Certificate cert = (Certificate) request.getAttribute(StrolchRestfulConstants.STROLCH_CERTIFICATE);
 		ServiceHandler serviceHandler = ChronivaroRestHelper.getServiceHandler();
 		ServiceResult result = serviceHandler.doService(cert, new RemoveTeamService(), new StringArgument(id));
-		return ResponseUtil.toResponse(result);
+		return ChronivaroRestHelper.toResponse(result);
 	}
 }

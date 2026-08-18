@@ -13,7 +13,6 @@ import li.strolch.model.Resource;
 import li.strolch.persistence.api.StrolchTransaction;
 import li.strolch.privilege.model.Certificate;
 import li.strolch.rest.StrolchRestfulConstants;
-import li.strolch.rest.helper.ResponseUtil;
 import li.strolch.service.StringArgument;
 import li.strolch.service.api.ServiceHandler;
 import li.strolch.service.api.ServiceResult;
@@ -51,7 +50,7 @@ public class LocationResource {
 		arg.holidayCalendarId = dto.holidayCalendarId();
 
 		ServiceResult result = serviceHandler.doService(cert, new CreateLocationService(), arg);
-		return ResponseUtil.toResponse(result);
+		return ChronivaroRestHelper.toResponse(result);
 	}
 
 	@PUT
@@ -70,7 +69,7 @@ public class LocationResource {
 		arg.holidayCalendarId = dto.holidayCalendarId();
 
 		ServiceResult result = serviceHandler.doService(cert, new UpdateLocationService(), arg);
-		return ResponseUtil.toResponse(result);
+		return ChronivaroRestHelper.toResponse(result);
 	}
 
 	@DELETE
@@ -80,6 +79,6 @@ public class LocationResource {
 		Certificate cert = (Certificate) request.getAttribute(StrolchRestfulConstants.STROLCH_CERTIFICATE);
 		ServiceHandler serviceHandler = ChronivaroRestHelper.getServiceHandler();
 		ServiceResult result = serviceHandler.doService(cert, new RemoveLocationService(), new StringArgument(id));
-		return ResponseUtil.toResponse(result);
+		return ChronivaroRestHelper.toResponse(result);
 	}
 }
