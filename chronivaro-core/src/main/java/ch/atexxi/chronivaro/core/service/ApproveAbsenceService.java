@@ -44,14 +44,6 @@ public class ApproveAbsenceService extends AbstractService<StringArgument, Servi
 
 				int totalMinutes = 0;
 				for (LocalDate date = start; !date.isAfter(end); date = date.plusDays(1)) {
-					totalMinutes += AbsenceHelper.getAbsenceMinutes(tx, employeeId, date);
-				}
-
-				// Wait, the above will return the current absence minutes ONLY IF it's already approved.
-				// But we are in the process of approving it.
-				// Let's recalculate manually for this absence.
-				totalMinutes = 0;
-				for (LocalDate date = start; !date.isAfter(end); date = date.plusDays(1)) {
 					totalMinutes += calculateMinutesForDay(tx, employeeId, absence, date);
 				}
 
