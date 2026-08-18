@@ -13,7 +13,7 @@ Audit date: 2026-08-17. `IMPLEMENTATION_SPECIFICATION.md` is authoritative; the 
 
 ## Partially implemented
 
-- Period workflow (spec sections 6.9, 9.5, 10.1, 13.2): submit/approve/lock core services exist and `PeriodResource` exposes only admin approve/lock; rejection, reopen-with-reason, period lookup, full status transitions, snapshots, and complete `/me`/approval endpoints are absent.
+- Period workflow (spec sections 6.9, 9.5, 10.1, 13.2): Core period lifecycle completed with auto-creation, submission, approval, rejection, reopening with reason, calculation snapshots, audit trails, period closure locking, and `TimePeriodSearch` (Task 5 completed); REST personal and approval workflow endpoints (Task 6) remaining.
 - Vacation accounting (sections 6.7, 9.4, 11.3): immutable-style correction support and balance lookup exist in `VacationHelper` and `AddVacationCorrectionService`, but entitlement, carry-over, usage linkage, approval balance blocking, and complete account reporting/UI are absent.
 - Audit logging (sections 5.2, 6.10, 9.3–9.5, 16.3): `ChronivaroAuditHelper` enhanced with full metadata (action, reason, correlation ID from MDC/thread-local, details, date, user, old/new values), `AuditEventSearch` fluent query, and `PurgeAuditEventsService` retention purge logic implemented in Core (Task 4.1 completed); administrative master data mutation services audited (Task 4.2.1 completed); Employee and Schedule services audited (Task 4.2.2 completed); operational Time Tracking, Absence, Vacation, Period, and Configuration services audited (Task 4.2.3 completed); administrative REST endpoint and security implemented (Task 4.3 completed).
 - Administration (sections 3.3–3.4, 12.1): employee/team/location/schedule/holiday/absence-type pages and APIs exist, but global configuration has core support only and no REST/UI administration.
@@ -36,14 +36,13 @@ Audit date: 2026-08-17. `IMPLEMENTATION_SPECIFICATION.md` is authoritative; the 
 
 ## Dependency-ordered next steps
 
-1. Complete the period lifecycle in Core, including submission, rejection, reopening with reason, snapshots, and approval transitions (Task 5).
-2. Expose personal and period workflow REST endpoints (Task 6).
-3. Implement configurable vacation entitlement and immutable journal accounting (Tasks 7 and 8).
-4. Complete vacation and absence REST surfaces (Task 9).
-5. Add scoped supervisor approval queues and the approvals UI (Task 10).
-6. Add personal absence and vacation pages (Task 11).
-7. Implement structured reports and CSV export (Task 12).
-8. Run the full non-functional and acceptance verification track.
+1. Expose personal and period workflow REST endpoints (Task 6).
+2. Implement configurable vacation entitlement and immutable journal accounting (Tasks 7 and 8).
+3. Complete vacation and absence REST surfaces (Task 9).
+4. Add scoped supervisor approval queues and the approvals UI (Task 10).
+5. Add personal absence and vacation pages (Task 11).
+6. Implement structured reports and CSV export (Task 12).
+7. Run the full non-functional and acceptance verification track.
 
 The matching dependency-ordered tasks, evidence, dependencies, and acceptance criteria are in `IMPLEMENTATION_BACKLOG.md`.
 

@@ -282,9 +282,18 @@ Task 4 was split into subtasks **4.1**, **4.2.1**, **4.2.2**, **4.2.3**, and **4
 
 ### 5. Finish the period lifecycle in Core
 
-- **Status:** `PARTIAL`
+- **Status:** `COMPLETED`
 - **Scope:** Implement lookup, submit/reject/reopen-with-reason, transition validation, snapshots, remaining services, warnings, and rollback using existing transaction patterns.
 - **Acceptance:** Valid transitions succeed, invalid transitions do not mutate, reopening requires a reason, snapshots preserve history, and Core tests cover errors and rollback.
+- **Verification:**
+  - Implemented `PeriodHelper` with `getPeriodId`, `findPeriod`, `getOrCreatePeriod`, `isPeriodClosed`, `assertPeriodOpen`, and `createCalculationSnapshot` (capturing month summary target, actual, holiday, absence, and balance calculations).
+  - Implemented `PeriodActionArgument` supporting period resolution by `periodId` or `(employeeId, yearMonth)` and comment/reason payloads.
+  - Implemented `SubmitPeriodService`, `ApprovePeriodService`, `RejectPeriodService`, `ReopenPeriodService`, and `LockPeriodService` validating state transitions (`OPEN`/`REJECTED` -> `SUBMITTED` -> `APPROVED` -> `LOCKED`, with `REOPEN` -> `OPEN`), recording timestamps (`submittedAt`, `approvedAt`, `approvedBy`, `rejectedAt`, `rejectedBy`), capturing calculation snapshots, asserting mandatory rejection/reopening reasons, bumping version metadata, and auditing all transitions via `ChronivaroAuditHelper`.
+  - Enforced period closure locking across operational mutation services (`AddWorkEntryService`, `CorrectWorkEntryService`, `StartTimerService`, `RequestAbsenceService`, `UpdateAbsenceService`, `CancelAbsenceService`) using `PeriodHelper.assertPeriodOpen`.
+  - Implemented `TimePeriodSearch` providing fluent queries by `employee`, `yearMonth`, `state`, and `year`.
+  - Configured role privileges for `Employee`, `Supervisor`, `HR`, and `Administrator` in `PrivilegeRoles.xml`.
+  - Added comprehensive unit and integration tests in `PeriodLifecycleServiceTest` and updated `OperationalServicesAuditTest`, `PeriodResource`, and `ChronivaroResource`.
+  - Verified with full test suite passing via `mvn test` (46 unit/integration tests passing across reactor modules with 0 failures and 0 errors).
 - **Dependencies:** Tasks 1, 2.1, and 4.
 
 ### 6. Expose personal and period workflow REST endpoints
