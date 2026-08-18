@@ -49,6 +49,14 @@ public class RejectAbsenceService extends AbstractService<RejectAbsenceService.R
 	public static class RejectAbsenceArgument extends ServiceArgument {
 		public String absenceId;
 		public String comment;
+
+		public RejectAbsenceArgument() {
+		}
+
+		public RejectAbsenceArgument(String absenceId, String comment) {
+			this.absenceId = absenceId;
+			this.comment = comment;
+		}
 	}
 
 	@Override

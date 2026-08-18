@@ -1,12 +1,14 @@
 package ch.atexxi.chronivaro.rest.resource;
 
 import ch.atexxi.chronivaro.core.model.ChronivaroModelHelper;
+import ch.atexxi.chronivaro.core.model.PeriodHelper;
 import ch.atexxi.chronivaro.core.model.WorkEntryHelper;
 import ch.atexxi.chronivaro.core.model.WorkingLocation;
 import ch.atexxi.chronivaro.core.model.WorkingLocationDurationType;
 import ch.atexxi.chronivaro.core.service.*;
 import ch.atexxi.chronivaro.rest.dto.AbsenceDto;
 import ch.atexxi.chronivaro.rest.dto.ChronivaroMapper;
+import ch.atexxi.chronivaro.rest.dto.PeriodActionRequestDto;
 import ch.atexxi.chronivaro.rest.dto.WorkEntryDto;
 import ch.atexxi.chronivaro.rest.dto.WorkingLocationDefaultDto;
 import jakarta.servlet.http.HttpServletRequest;
@@ -33,6 +35,7 @@ import java.util.Optional;
 import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
 import static li.strolch.rest.StrolchRestfulConstants.STROLCH_CERTIFICATE;
 import static li.strolch.rest.StrolchRestfulConstants.STROLCH_REMOTE_IP;
+import static li.strolch.utils.helper.StringHelper.isNotEmpty;
 
 @Path("chronivaro/v1")
 public class ChronivaroResource {
@@ -354,13 +357,99 @@ public class ChronivaroResource {
 		return ChronivaroRestHelper.toResponse(result);
 	}
 
+	@GET
+	@Path("me/periods/{yearMonth}")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response getMyPeriodStatus(@Context HttpServletRequest request, @PathParam("yearMonth") String yearMonthStr) {
+		Certificate cert = (Certificate) request.getAttribute(STROLCH_CERTIFICATE);
+		YearMonth ym;
+		try {
+			ym = YearMonth.parse(yearMonthStr);
+		} catch (Exception e) {
+			return ChronivaroRestHelper.toErrorResponse(Response.Status.BAD_REQUEST, "BAD_REQUEST",
+					"Invalid yearMonth format: " + yearMonthStr);
+		}
+
+		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
+			Optional<Resource> employee = ChronivaroModelHelper.findEmployeeByUser(tx, cert.getUserId());
+			if (employee.isEmpty())
+				return ChronivaroRestHelper.toErrorResponse(Response.Status.NOT_FOUND, "NOT_FOUND",
+						"Employee not found for current user");
+
+			Optional<Resource> period = PeriodHelper.findPeriod(tx, employee.get().getId(), ym);
+			if (period.isPresent()) {
+				return ConcurrencyHelper.toResponseWithETag(period.get(), ChronivaroMapper.periodToDto(period.get()));
+			}
+			ch.atexxi.chronivaro.rest.dto.PeriodStatusDto openDto = new ch.atexxi.chronivaro.rest.dto.PeriodStatusDto(
+					employee.get().getId(), ym.toString(), STATE_OPEN, null, null, null);
+			return Response.ok(ChronivaroRestHelper.createGson().toJson(openDto), MediaType.APPLICATION_JSON).build();
+		}
+	}
+
+	@POST
+	@Path("me/periods/{yearMonth}/submit")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response submitMyPeriod(
+			@Context HttpServletRequest request,
+			@PathParam("yearMonth") String yearMonthStr,
+			String data) {
+
+		Certificate cert = (Certificate) request.getAttribute(STROLCH_CERTIFICATE);
+		YearMonth ym;
+		try {
+			ym = YearMonth.parse(yearMonthStr);
+		} catch (Exception e) {
+			return ChronivaroRestHelper.toErrorResponse(Response.Status.BAD_REQUEST, "BAD_REQUEST",
+					"Invalid yearMonth format: " + yearMonthStr);
+		}
+
+		PeriodActionRequestDto dto = isNotEmpty(data) ?
+				ChronivaroRestHelper.createGson().fromJson(data, PeriodActionRequestDto.class) : null;
+
+		String employeeId;
+		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
+			Optional<Resource> employee = ChronivaroModelHelper.findEmployeeByUser(tx, cert.getUserId());
+			if (employee.isEmpty())
+				return ChronivaroRestHelper.toErrorResponse(Response.Status.NOT_FOUND, "NOT_FOUND",
+						"Employee not found for current user");
+			employeeId = employee.get().getId();
+
+			Optional<Resource> existing = PeriodHelper.findPeriod(tx, employeeId, ym);
+			existing.ifPresent(period -> ConcurrencyHelper.validateIfMatch(request, period));
+		}
+
+		ServiceHandler serviceHandler = ChronivaroRestHelper.getServiceHandler();
+		String comment = dto != null ? dto.comment() : null;
+		ServiceResult result = serviceHandler.doService(cert, new SubmitPeriodService(),
+				new PeriodActionArgument(employeeId, ym, comment));
+		if (result.isOk()) {
+			try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
+				Resource period = PeriodHelper.getPeriod(tx, employeeId, ym, true);
+				return ConcurrencyHelper.toResponseWithETag(period, ChronivaroMapper.periodToDto(period));
+			}
+		}
+		return ChronivaroRestHelper.toResponse(result);
+	}
+
 	@POST
 	@Path("me/periods/{id}/submit")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response submitPeriod(@Context HttpServletRequest request, @PathParam("id") String id) {
 		Certificate cert = (Certificate) request.getAttribute(STROLCH_CERTIFICATE);
+		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
+			Resource period = tx.getResourceBy(TYPE_TIME_PERIOD, id, true);
+			ConcurrencyHelper.validateIfMatch(request, period);
+		}
+
 		ServiceHandler serviceHandler = ChronivaroRestHelper.getServiceHandler();
 		ServiceResult result = serviceHandler.doService(cert, new SubmitPeriodService(), new PeriodActionArgument(id));
+		if (result.isOk()) {
+			try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
+				Resource period = tx.getResourceBy(TYPE_TIME_PERIOD, id, true);
+				return ConcurrencyHelper.toResponseWithETag(period, ChronivaroMapper.periodToDto(period));
+			}
+		}
 		return ChronivaroRestHelper.toResponse(result);
 	}
 

@@ -162,4 +162,23 @@ public class ChronivaroMapper {
 				auditEvent.getString(PARAM_ELEMENT_TYPE), auditEvent.getString(PARAM_ELEMENT_ID),
 				details != null ? details : "");
 	}
+
+	public static PeriodStatusDto periodToDto(Resource period) {
+		ZonedDateTime submittedAt = period.hasParameter(PARAM_SUBMITTED_AT)
+				&& period.getDate(PARAM_SUBMITTED_AT).getYear() > 1970
+				? period.getDate(PARAM_SUBMITTED_AT) : null;
+		ZonedDateTime approvedAt = period.hasParameter(PARAM_APPROVED_AT)
+				&& period.getDate(PARAM_APPROVED_AT).getYear() > 1970
+				? period.getDate(PARAM_APPROVED_AT) : null;
+		String approvedBy = period.hasParameter(PARAM_APPROVED_BY)
+				&& !period.getString(PARAM_APPROVED_BY).isEmpty()
+				? period.getString(PARAM_APPROVED_BY) : null;
+		return new PeriodStatusDto(
+				period.getRelationId(PARAM_EMPLOYEE),
+				period.getString(PARAM_YEAR_MONTH),
+				period.getString(PARAM_STATE),
+				submittedAt,
+				approvedAt,
+				approvedBy);
+	}
 }

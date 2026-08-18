@@ -48,8 +48,10 @@ public class PeriodHelper {
 		Resource employee = ChronivaroModelHelper.getEmployee(tx, employeeId);
 		Resource period = tx.getResourceTemplate(TYPE_TIME_PERIOD, true);
 		period.setId(getPeriodId(employeeId, yearMonth));
-		period.setName("Period " + yearMonth + " (" + employee.getString(PARAM_FIRSTNAME) + " " +
-				employee.getString(PARAM_LASTNAME) + ")");
+		String empName = employee.hasParameter(PARAM_FIRSTNAME) && employee.hasParameter(PARAM_LASTNAME)
+				? employee.getString(PARAM_FIRSTNAME) + " " + employee.getString(PARAM_LASTNAME)
+				: employee.getName();
+		period.setName("Period " + yearMonth + " (" + empName + ")");
 		period.setString(PARAM_YEAR_MONTH, yearMonth.toString());
 		period.setString(PARAM_STATE, STATE_OPEN);
 		period.setRelation(PARAM_EMPLOYEE, employee);
