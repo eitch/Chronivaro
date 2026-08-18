@@ -36,6 +36,17 @@ public class TeamResource {
 		}
 	}
 
+	@GET
+	@Path("{id}")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response getTeam(@Context HttpServletRequest request, @PathParam("id") String id) {
+		Certificate cert = (Certificate) request.getAttribute(StrolchRestfulConstants.STROLCH_CERTIFICATE);
+		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
+			Resource team = tx.getResourceBy(TYPE_TEAM, id, true);
+			return ConcurrencyHelper.toResponseWithETag(team, ChronivaroMapper.teamToDto(team));
+		}
+	}
+
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
@@ -57,6 +68,11 @@ public class TeamResource {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response updateTeam(@Context HttpServletRequest request, @PathParam("id") String id, String data) {
 		Certificate cert = (Certificate) request.getAttribute(StrolchRestfulConstants.STROLCH_CERTIFICATE);
+		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
+			Resource team = tx.getResourceBy(TYPE_TEAM, id, true);
+			ConcurrencyHelper.validateIfMatch(request, team);
+		}
+
 		ServiceHandler serviceHandler = ChronivaroRestHelper.getServiceHandler();
 		TeamDto dto = ChronivaroRestHelper.createGson().fromJson(data, TeamDto.class);
 
@@ -65,6 +81,12 @@ public class TeamResource {
 		arg.name = dto.name();
 
 		ServiceResult result = serviceHandler.doService(cert, new UpdateTeamService(), arg);
+		if (result.isOk()) {
+			try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
+				Resource team = tx.getResourceBy(TYPE_TEAM, id, true);
+				return ConcurrencyHelper.toResponseWithETag(team, ChronivaroMapper.teamToDto(team));
+			}
+		}
 		return ChronivaroRestHelper.toResponse(result);
 	}
 
@@ -73,6 +95,11 @@ public class TeamResource {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response removeTeam(@Context HttpServletRequest request, @PathParam("id") String id) {
 		Certificate cert = (Certificate) request.getAttribute(StrolchRestfulConstants.STROLCH_CERTIFICATE);
+		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
+			Resource team = tx.getResourceBy(TYPE_TEAM, id, true);
+			ConcurrencyHelper.validateIfMatch(request, team);
+		}
+
 		ServiceHandler serviceHandler = ChronivaroRestHelper.getServiceHandler();
 		ServiceResult result = serviceHandler.doService(cert, new RemoveTeamService(), new StringArgument(id));
 		return ChronivaroRestHelper.toResponse(result);

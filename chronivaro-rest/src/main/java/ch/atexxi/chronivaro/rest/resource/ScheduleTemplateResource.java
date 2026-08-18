@@ -36,6 +36,17 @@ public class ScheduleTemplateResource {
 		}
 	}
 
+	@GET
+	@Path("{id}")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response getTemplate(@Context HttpServletRequest request, @PathParam("id") String id) {
+		Certificate cert = (Certificate) request.getAttribute(StrolchRestfulConstants.STROLCH_CERTIFICATE);
+		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
+			Resource template = tx.getResourceBy(TYPE_EMPLOYMENT_SCHEDULE_TEMPLATE, id, true);
+			return ConcurrencyHelper.toResponseWithETag(template, ChronivaroMapper.scheduleTemplateToDto(template));
+		}
+	}
+
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
@@ -55,12 +66,23 @@ public class ScheduleTemplateResource {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response updateTemplate(@Context HttpServletRequest request, @PathParam("id") String id, String data) {
 		Certificate cert = (Certificate) request.getAttribute(StrolchRestfulConstants.STROLCH_CERTIFICATE);
+		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
+			Resource template = tx.getResourceBy(TYPE_EMPLOYMENT_SCHEDULE_TEMPLATE, id, true);
+			ConcurrencyHelper.validateIfMatch(request, template);
+		}
+
 		ServiceHandler serviceHandler = ChronivaroRestHelper.getServiceHandler();
 		UpdateScheduleTemplateService.UpdateScheduleTemplateArgument arg = ChronivaroRestHelper
 				.createGson()
 				.fromJson(data, UpdateScheduleTemplateService.UpdateScheduleTemplateArgument.class);
 		arg.id = id;
 		ServiceResult result = serviceHandler.doService(cert, new UpdateScheduleTemplateService(), arg);
+		if (result.isOk()) {
+			try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
+				Resource template = tx.getResourceBy(TYPE_EMPLOYMENT_SCHEDULE_TEMPLATE, id, true);
+				return ConcurrencyHelper.toResponseWithETag(template, ChronivaroMapper.scheduleTemplateToDto(template));
+			}
+		}
 		return ChronivaroRestHelper.toResponse(result);
 	}
 
@@ -69,6 +91,11 @@ public class ScheduleTemplateResource {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response removeTemplate(@Context HttpServletRequest request, @PathParam("id") String id) {
 		Certificate cert = (Certificate) request.getAttribute(StrolchRestfulConstants.STROLCH_CERTIFICATE);
+		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
+			Resource template = tx.getResourceBy(TYPE_EMPLOYMENT_SCHEDULE_TEMPLATE, id, true);
+			ConcurrencyHelper.validateIfMatch(request, template);
+		}
+
 		ServiceHandler serviceHandler = ChronivaroRestHelper.getServiceHandler();
 		ServiceResult result = serviceHandler.doService(cert, new RemoveScheduleTemplateService(),
 				new StringArgument(id));

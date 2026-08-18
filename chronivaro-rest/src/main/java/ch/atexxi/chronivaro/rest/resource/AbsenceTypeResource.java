@@ -36,6 +36,17 @@ public class AbsenceTypeResource {
 		}
 	}
 
+	@GET
+	@Path("{id}")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response getAbsenceType(@Context HttpServletRequest request, @PathParam("id") String id) {
+		Certificate cert = (Certificate) request.getAttribute(StrolchRestfulConstants.STROLCH_CERTIFICATE);
+		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
+			Resource type = tx.getResourceBy(TYPE_ABSENCE_TYPE, id, true);
+			return ConcurrencyHelper.toResponseWithETag(type, ChronivaroMapper.absenceTypeToDto(type));
+		}
+	}
+
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
@@ -64,6 +75,11 @@ public class AbsenceTypeResource {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response updateAbsenceType(@Context HttpServletRequest request, @PathParam("id") String id, String data) {
 		Certificate cert = (Certificate) request.getAttribute(StrolchRestfulConstants.STROLCH_CERTIFICATE);
+		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
+			Resource type = tx.getResourceBy(TYPE_ABSENCE_TYPE, id, true);
+			ConcurrencyHelper.validateIfMatch(request, type);
+		}
+
 		ServiceHandler serviceHandler = ChronivaroRestHelper.getServiceHandler();
 		AbsenceTypeDto dto = ChronivaroRestHelper.createGson().fromJson(data, AbsenceTypeDto.class);
 
@@ -80,6 +96,12 @@ public class AbsenceTypeResource {
 		arg.active = dto.active();
 
 		ServiceResult result = serviceHandler.doService(cert, new UpdateAbsenceTypeService(), arg);
+		if (result.isOk()) {
+			try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
+				Resource type = tx.getResourceBy(TYPE_ABSENCE_TYPE, id, true);
+				return ConcurrencyHelper.toResponseWithETag(type, ChronivaroMapper.absenceTypeToDto(type));
+			}
+		}
 		return ChronivaroRestHelper.toResponse(result);
 	}
 
@@ -88,6 +110,11 @@ public class AbsenceTypeResource {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response removeAbsenceType(@Context HttpServletRequest request, @PathParam("id") String id) {
 		Certificate cert = (Certificate) request.getAttribute(StrolchRestfulConstants.STROLCH_CERTIFICATE);
+		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
+			Resource type = tx.getResourceBy(TYPE_ABSENCE_TYPE, id, true);
+			ConcurrencyHelper.validateIfMatch(request, type);
+		}
+
 		ServiceHandler serviceHandler = ChronivaroRestHelper.getServiceHandler();
 		ServiceResult result = serviceHandler.doService(cert, new RemoveAbsenceTypeService(), new StringArgument(id));
 		return ChronivaroRestHelper.toResponse(result);

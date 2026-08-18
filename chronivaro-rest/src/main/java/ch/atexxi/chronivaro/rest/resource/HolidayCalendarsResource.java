@@ -48,7 +48,7 @@ public class HolidayCalendarsResource {
 		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
 			Resource calendar = tx.getResourceBy(TYPE_HOLIDAY_CALENDAR, id, true);
 			HolidayCalendarDto dto = ChronivaroMapper.holidayCalendarToDto(calendar);
-			return Response.ok(ChronivaroRestHelper.createGson().toJson(dto), MediaType.APPLICATION_JSON).build();
+			return ConcurrencyHelper.toResponseWithETag(calendar, dto);
 		}
 	}
 
@@ -64,6 +64,18 @@ public class HolidayCalendarsResource {
 					.filter(h -> h.getRelationId(PARAM_HOLIDAY_CALENDAR).equals(id))
 					.toList();
 			return PaginationHelper.toPagedOrListResponse(holidays, offset, limit, ChronivaroMapper::holidayToDto);
+		}
+	}
+
+	@GET
+	@Path("{id}/holidays/{holidayId}")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response getHoliday(@Context HttpServletRequest request, @PathParam("id") String id,
+			@PathParam("holidayId") String holidayId) {
+		Certificate cert = (Certificate) request.getAttribute(STROLCH_CERTIFICATE);
+		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
+			Resource holiday = tx.getResourceBy(TYPE_HOLIDAY, holidayId, true);
+			return ConcurrencyHelper.toResponseWithETag(holiday, ChronivaroMapper.holidayToDto(holiday));
 		}
 	}
 
@@ -90,7 +102,7 @@ public class HolidayCalendarsResource {
 				if (calendar != null) {
 					JsonObject json = new JsonObject();
 					json.addProperty(Tags.Json.VALUE, calendar.getId());
-					return Response.ok(ChronivaroRestHelper.createGson().toJson(json), MediaType.APPLICATION_JSON).build();
+					return ConcurrencyHelper.toResponseWithETag(calendar, json);
 				}
 			}
 		}
@@ -118,6 +130,11 @@ public class HolidayCalendarsResource {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response removeHolidayCalendar(@Context HttpServletRequest request, @PathParam("id") String id) {
 		Certificate cert = (Certificate) request.getAttribute(STROLCH_CERTIFICATE);
+		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
+			Resource calendar = tx.getResourceBy(TYPE_HOLIDAY_CALENDAR, id, true);
+			ConcurrencyHelper.validateIfMatch(request, calendar);
+		}
+
 		ServiceHandler serviceHandler = ChronivaroRestHelper.getServiceHandler();
 		ServiceResult result = serviceHandler.doService(cert, new RemoveHolidayCalendarService(),
 				new StringArgument(id));
@@ -130,6 +147,11 @@ public class HolidayCalendarsResource {
 	public Response removeHoliday(@Context HttpServletRequest request, @PathParam("calendarId") String calendarId,
 			@PathParam("holidayId") String holidayId) {
 		Certificate cert = (Certificate) request.getAttribute(STROLCH_CERTIFICATE);
+		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
+			Resource holiday = tx.getResourceBy(TYPE_HOLIDAY, holidayId, true);
+			ConcurrencyHelper.validateIfMatch(request, holiday);
+		}
+
 		ServiceHandler serviceHandler = ChronivaroRestHelper.getServiceHandler();
 		ServiceResult result = serviceHandler.doService(cert, new RemoveHolidayService(),
 				new StringArgument(holidayId));

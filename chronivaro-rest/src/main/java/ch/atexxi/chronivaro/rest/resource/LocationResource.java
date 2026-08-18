@@ -36,6 +36,17 @@ public class LocationResource {
 		}
 	}
 
+	@GET
+	@Path("{id}")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response getLocation(@Context HttpServletRequest request, @PathParam("id") String id) {
+		Certificate cert = (Certificate) request.getAttribute(StrolchRestfulConstants.STROLCH_CERTIFICATE);
+		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
+			Resource location = tx.getResourceBy(TYPE_LOCATION, id, true);
+			return ConcurrencyHelper.toResponseWithETag(location, locationToDto(tx, location));
+		}
+	}
+
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
@@ -59,6 +70,11 @@ public class LocationResource {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response updateLocation(@Context HttpServletRequest request, @PathParam("id") String id, String data) {
 		Certificate cert = (Certificate) request.getAttribute(StrolchRestfulConstants.STROLCH_CERTIFICATE);
+		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
+			Resource location = tx.getResourceBy(TYPE_LOCATION, id, true);
+			ConcurrencyHelper.validateIfMatch(request, location);
+		}
+
 		ServiceHandler serviceHandler = ChronivaroRestHelper.getServiceHandler();
 		LocationDto dto = ChronivaroRestHelper.createGson().fromJson(data, LocationDto.class);
 
@@ -69,6 +85,12 @@ public class LocationResource {
 		arg.holidayCalendarId = dto.holidayCalendarId();
 
 		ServiceResult result = serviceHandler.doService(cert, new UpdateLocationService(), arg);
+		if (result.isOk()) {
+			try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
+				Resource location = tx.getResourceBy(TYPE_LOCATION, id, true);
+				return ConcurrencyHelper.toResponseWithETag(location, locationToDto(tx, location));
+			}
+		}
 		return ChronivaroRestHelper.toResponse(result);
 	}
 
@@ -77,6 +99,11 @@ public class LocationResource {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response removeLocation(@Context HttpServletRequest request, @PathParam("id") String id) {
 		Certificate cert = (Certificate) request.getAttribute(StrolchRestfulConstants.STROLCH_CERTIFICATE);
+		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
+			Resource location = tx.getResourceBy(TYPE_LOCATION, id, true);
+			ConcurrencyHelper.validateIfMatch(request, location);
+		}
+
 		ServiceHandler serviceHandler = ChronivaroRestHelper.getServiceHandler();
 		ServiceResult result = serviceHandler.doService(cert, new RemoveLocationService(), new StringArgument(id));
 		return ChronivaroRestHelper.toResponse(result);

@@ -106,6 +106,17 @@ public class ChronivaroResource {
 		}
 	}
 
+	@GET
+	@Path("me/work-entries/{id}")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response getMyWorkEntry(@Context HttpServletRequest request, @PathParam("id") String id) {
+		Certificate cert = (Certificate) request.getAttribute(STROLCH_CERTIFICATE);
+		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
+			Resource workEntry = tx.getResourceBy(TYPE_WORK_ENTRY, id, true);
+			return ConcurrencyHelper.toResponseWithETag(workEntry, ChronivaroMapper.toDto(workEntry));
+		}
+	}
+
 	@POST
 	@Path("me/work-entries")
 	@Consumes(MediaType.APPLICATION_JSON)
@@ -141,6 +152,11 @@ public class ChronivaroResource {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response updateWorkEntry(@Context HttpServletRequest request, @PathParam("id") String id, String data) {
 		Certificate cert = (Certificate) request.getAttribute(STROLCH_CERTIFICATE);
+		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
+			Resource workEntry = tx.getResourceBy(TYPE_WORK_ENTRY, id, true);
+			ConcurrencyHelper.validateIfMatch(request, workEntry);
+		}
+
 		ServiceHandler serviceHandler = ChronivaroRestHelper.getServiceHandler();
 		WorkEntryDto dto = ChronivaroRestHelper.createGson().fromJson(data, WorkEntryDto.class);
 
@@ -152,6 +168,12 @@ public class ChronivaroResource {
 		arg.workingLocation = dto.workingLocation();
 
 		ServiceResult result = serviceHandler.doService(cert, new CorrectWorkEntryService(), arg);
+		if (result.isOk()) {
+			try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
+				Resource workEntry = tx.getResourceBy(TYPE_WORK_ENTRY, id, true);
+				return ConcurrencyHelper.toResponseWithETag(workEntry, ChronivaroMapper.toDto(workEntry));
+			}
+		}
 		return ChronivaroRestHelper.toResponse(result);
 	}
 
@@ -179,6 +201,18 @@ public class ChronivaroResource {
 				Resource type = tx.getResourceByRelation(a, PARAM_ABSENCE_TYPE, true);
 				return ChronivaroMapper.toDto(a, type.getString(PARAM_CODE));
 			});
+		}
+	}
+
+	@GET
+	@Path("me/absences/{id}")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response getMyAbsence(@Context HttpServletRequest request, @PathParam("id") String id) {
+		Certificate cert = (Certificate) request.getAttribute(STROLCH_CERTIFICATE);
+		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
+			Resource absence = tx.getResourceBy(TYPE_ABSENCE, id, true);
+			Resource type = tx.getResourceByRelation(absence, PARAM_ABSENCE_TYPE, true);
+			return ConcurrencyHelper.toResponseWithETag(absence, ChronivaroMapper.toDto(absence, type.getString(PARAM_CODE)));
 		}
 	}
 
@@ -220,6 +254,11 @@ public class ChronivaroResource {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response updateAbsence(@Context HttpServletRequest request, @PathParam("id") String id, String data) {
 		Certificate cert = (Certificate) request.getAttribute(STROLCH_CERTIFICATE);
+		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
+			Resource absence = tx.getResourceBy(TYPE_ABSENCE, id, true);
+			ConcurrencyHelper.validateIfMatch(request, absence);
+		}
+
 		ServiceHandler serviceHandler = ChronivaroRestHelper.getServiceHandler();
 		AbsenceDto dto = ChronivaroRestHelper.createGson().fromJson(data, AbsenceDto.class);
 
@@ -234,6 +273,13 @@ public class ChronivaroResource {
 		arg.comment = dto.comment();
 
 		ServiceResult result = serviceHandler.doService(cert, new UpdateAbsenceService(), arg);
+		if (result.isOk()) {
+			try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
+				Resource absence = tx.getResourceBy(TYPE_ABSENCE, id, true);
+				Resource type = tx.getResourceByRelation(absence, PARAM_ABSENCE_TYPE, true);
+				return ConcurrencyHelper.toResponseWithETag(absence, ChronivaroMapper.toDto(absence, type.getString(PARAM_CODE)));
+			}
+		}
 		return ChronivaroRestHelper.toResponse(result);
 	}
 
@@ -242,8 +288,20 @@ public class ChronivaroResource {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response cancelAbsence(@Context HttpServletRequest request, @PathParam("id") String id) {
 		Certificate cert = (Certificate) request.getAttribute(STROLCH_CERTIFICATE);
+		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
+			Resource absence = tx.getResourceBy(TYPE_ABSENCE, id, true);
+			ConcurrencyHelper.validateIfMatch(request, absence);
+		}
+
 		ServiceHandler serviceHandler = ChronivaroRestHelper.getServiceHandler();
 		ServiceResult result = serviceHandler.doService(cert, new CancelAbsenceService(), new StringArgument(id));
+		if (result.isOk()) {
+			try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
+				Resource absence = tx.getResourceBy(TYPE_ABSENCE, id, true);
+				Resource type = tx.getResourceByRelation(absence, PARAM_ABSENCE_TYPE, true);
+				return ConcurrencyHelper.toResponseWithETag(absence, ChronivaroMapper.toDto(absence, type.getString(PARAM_CODE)));
+			}
+		}
 		return ChronivaroRestHelper.toResponse(result);
 	}
 

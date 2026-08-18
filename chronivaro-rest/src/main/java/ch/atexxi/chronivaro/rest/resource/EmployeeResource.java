@@ -48,10 +48,7 @@ public class EmployeeResource {
 		Certificate cert = (Certificate) request.getAttribute(StrolchRestfulConstants.STROLCH_CERTIFICATE);
 		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
 			Resource employee = tx.getResourceBy(TYPE_EMPLOYEE, id, true);
-			return Response
-					.ok(ChronivaroRestHelper.createGson().toJson(employeeToDto(tx, employee)),
-							MediaType.APPLICATION_JSON)
-					.build();
+			return ConcurrencyHelper.toResponseWithETag(employee, employeeToDto(tx, employee));
 		}
 	}
 
@@ -84,10 +81,7 @@ public class EmployeeResource {
 
 		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
 			Resource employee = tx.getResourceBy(TYPE_EMPLOYEE, result.getValue(), true);
-			return Response
-					.ok(ChronivaroRestHelper.createGson().toJson(employeeToDto(tx, employee)),
-							MediaType.APPLICATION_JSON)
-					.build();
+			return ConcurrencyHelper.toResponseWithETag(employee, employeeToDto(tx, employee));
 		}
 	}
 
@@ -97,6 +91,11 @@ public class EmployeeResource {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response updateEmployee(@Context HttpServletRequest request, @PathParam("id") String id, String data) {
 		Certificate cert = (Certificate) request.getAttribute(StrolchRestfulConstants.STROLCH_CERTIFICATE);
+		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
+			Resource employee = tx.getResourceBy(TYPE_EMPLOYEE, id, true);
+			ConcurrencyHelper.validateIfMatch(request, employee);
+		}
+
 		ServiceHandler serviceHandler = ChronivaroRestHelper.getServiceHandler();
 		EmployeeDto dto = ChronivaroRestHelper.createGson().fromJson(data, EmployeeDto.class);
 
@@ -116,6 +115,12 @@ public class EmployeeResource {
 		arg.username = dto.username();
 
 		ServiceResult result = serviceHandler.doService(cert, new UpdateEmployeeService(), arg);
+		if (result.isOk()) {
+			try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
+				Resource employee = tx.getResourceBy(TYPE_EMPLOYEE, id, true);
+				return ConcurrencyHelper.toResponseWithETag(employee, employeeToDto(tx, employee));
+			}
+		}
 		return ChronivaroRestHelper.toResponse(result);
 	}
 
@@ -124,6 +129,11 @@ public class EmployeeResource {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response removeEmployee(@Context HttpServletRequest request, @PathParam("id") String id) {
 		Certificate cert = (Certificate) request.getAttribute(StrolchRestfulConstants.STROLCH_CERTIFICATE);
+		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
+			Resource employee = tx.getResourceBy(TYPE_EMPLOYEE, id, true);
+			ConcurrencyHelper.validateIfMatch(request, employee);
+		}
+
 		ServiceHandler serviceHandler = ChronivaroRestHelper.getServiceHandler();
 		ServiceResult result = serviceHandler.doService(cert, new RemoveEmployeeService(), new StringArgument(id));
 		return ChronivaroRestHelper.toResponse(result);
@@ -159,6 +169,18 @@ public class EmployeeResource {
 		}
 	}
 
+	@GET
+	@Path("{id}/schedules/{scheduleId}")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response getSchedule(@Context HttpServletRequest request, @PathParam("id") String id,
+			@PathParam("scheduleId") String scheduleId) {
+		Certificate cert = (Certificate) request.getAttribute(StrolchRestfulConstants.STROLCH_CERTIFICATE);
+		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
+			Resource schedule = tx.getResourceBy(TYPE_EMPLOYMENT_SCHEDULE, scheduleId, true);
+			return ConcurrencyHelper.toResponseWithETag(schedule, ChronivaroMapper.scheduleToDto(schedule));
+		}
+	}
+
 	@PUT
 	@Path("{id}/schedules/{scheduleId}")
 	@Consumes(MediaType.APPLICATION_JSON)
@@ -166,12 +188,23 @@ public class EmployeeResource {
 	public Response updateSchedule(@Context HttpServletRequest request, @PathParam("id") String id,
 			@PathParam("scheduleId") String scheduleId, String data) {
 		Certificate cert = (Certificate) request.getAttribute(StrolchRestfulConstants.STROLCH_CERTIFICATE);
+		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
+			Resource schedule = tx.getResourceBy(TYPE_EMPLOYMENT_SCHEDULE, scheduleId, true);
+			ConcurrencyHelper.validateIfMatch(request, schedule);
+		}
+
 		ServiceHandler serviceHandler = ChronivaroRestHelper.getServiceHandler();
 		UpdateScheduleService.UpdateScheduleArgument arg = ChronivaroRestHelper
 				.createGson()
 				.fromJson(data, UpdateScheduleService.UpdateScheduleArgument.class);
 		arg.id = scheduleId;
 		ServiceResult result = serviceHandler.doService(cert, new UpdateScheduleService(), arg);
+		if (result.isOk()) {
+			try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
+				Resource schedule = tx.getResourceBy(TYPE_EMPLOYMENT_SCHEDULE, scheduleId, true);
+				return ConcurrencyHelper.toResponseWithETag(schedule, ChronivaroMapper.scheduleToDto(schedule));
+			}
+		}
 		return ChronivaroRestHelper.toResponse(result);
 	}
 
@@ -181,6 +214,11 @@ public class EmployeeResource {
 	public Response removeSchedule(@Context HttpServletRequest request, @PathParam("id") String id,
 			@PathParam("scheduleId") String scheduleId) {
 		Certificate cert = (Certificate) request.getAttribute(StrolchRestfulConstants.STROLCH_CERTIFICATE);
+		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
+			Resource schedule = tx.getResourceBy(TYPE_EMPLOYMENT_SCHEDULE, scheduleId, true);
+			ConcurrencyHelper.validateIfMatch(request, schedule);
+		}
+
 		ServiceHandler serviceHandler = ChronivaroRestHelper.getServiceHandler();
 		ServiceResult result = serviceHandler.doService(cert, new RemoveScheduleService(),
 				new StringArgument(scheduleId));
