@@ -49,10 +49,7 @@ public class PaginationHelper {
 		if (searchResult == null)
 			return PagedResultDto.empty(offset, limit);
 
-		Paging<T> paging = searchResult.toPaging(offset, limit);
-		long total = paging.getSize();
-		List<R> data = paging.getPage().stream().map(mapper).toList();
-		return PagedResultDto.of(data, offset, limit, total);
+		return PagedResultDto.from(searchResult.toPaging(offset, limit), mapper);
 	}
 
 	public static <T> PagedResultDto<T> toPagedResult(SearchResult<T> searchResult, Integer offsetParam,
@@ -69,11 +66,7 @@ public class PaginationHelper {
 		if (allItems == null || allItems.isEmpty())
 			return PagedResultDto.empty(offset, limit);
 
-		int total = allItems.size();
-		int fromIndex = Math.min(offset, total);
-		int toIndex = Math.min(fromIndex + limit, total);
-		List<R> data = allItems.subList(fromIndex, toIndex).stream().map(mapper).toList();
-		return PagedResultDto.of(data, offset, limit, total);
+		return PagedResultDto.from(Paging.asPage(allItems, offset, limit), mapper);
 	}
 
 	public static <T> PagedResultDto<T> toPagedResult(List<T> allItems, Integer offsetParam, Integer limitParam) {
