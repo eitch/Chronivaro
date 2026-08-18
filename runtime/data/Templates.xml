@@ -127,6 +127,13 @@
         <ParameterBag Id="parameters" Name="Parameters" Type="Parameters">
             <Parameter Id="yearMonth" Name="Year Month" Type="String" Value=""/>
             <Parameter Id="state" Name="State" Type="String" Value="OPEN"/>
+            <Parameter Id="submittedAt" Name="Submitted At" Type="Date" Value="1970-01-01T00:00:00.000+01:00"/>
+            <Parameter Id="approvedAt" Name="Approved At" Type="Date" Value="1970-01-01T00:00:00.000+01:00"/>
+            <Parameter Id="approvedBy" Name="Approved By" Type="String" Value=""/>
+            <Parameter Id="rejectedAt" Name="Rejected At" Type="Date" Value="1970-01-01T00:00:00.000+01:00"/>
+            <Parameter Id="rejectedBy" Name="Rejected By" Type="String" Value=""/>
+            <Parameter Id="comment" Name="Comment" Type="String" Value=""/>
+            <Parameter Id="calculationSnapshot" Name="Calculation Snapshot" Type="String" Value=""/>
         </ParameterBag>
         <ParameterBag Id="relations" Name="Relations" Type="Relations">
             <Parameter Id="employee" Name="Employee" Type="String" Interpretation="Resource-Ref" Uom="Employee" Value=""/>

@@ -97,6 +97,10 @@
             <Allow>ch.atexxi.chronivaro.core.service.CancelAbsenceService</Allow>
             <Allow>ch.atexxi.chronivaro.core.service.StartTimerService</Allow>
             <Allow>ch.atexxi.chronivaro.core.service.StopTimerService</Allow>
+            <Allow>ch.atexxi.chronivaro.core.service.SubmitPeriodService</Allow>
+        </Privilege>
+        <Privilege name="li.strolch.search.StrolchSearch" policy="DefaultPrivilege">
+            <Allow>ch.atexxi.chronivaro.core.search.TimePeriodSearch</Allow>
         </Privilege>
         <Privilege name="PrivilegeSetUserPassword" policy="DefaultPrivilege">
             <AllAllowed>true</AllAllowed>
@@ -108,6 +112,13 @@
             <Allow>ch.atexxi.chronivaro.core.service.ApproveAbsenceService</Allow>
             <Allow>ch.atexxi.chronivaro.core.service.RejectAbsenceService</Allow>
             <Allow>ch.atexxi.chronivaro.core.service.PresenceService</Allow>
+            <Allow>ch.atexxi.chronivaro.core.service.SubmitPeriodService</Allow>
+            <Allow>ch.atexxi.chronivaro.core.service.ApprovePeriodService</Allow>
+            <Allow>ch.atexxi.chronivaro.core.service.RejectPeriodService</Allow>
+            <Allow>ch.atexxi.chronivaro.core.service.ReopenPeriodService</Allow>
+        </Privilege>
+        <Privilege name="li.strolch.search.StrolchSearch" policy="DefaultPrivilege">
+            <Allow>ch.atexxi.chronivaro.core.search.TimePeriodSearch</Allow>
         </Privilege>
     </Role>
 
@@ -118,6 +129,14 @@
             <Allow>ch.atexxi.chronivaro.core.service.PresenceService</Allow>
             <Allow>ch.atexxi.chronivaro.core.service.CreateEmployeeService</Allow>
             <Allow>ch.atexxi.chronivaro.core.service.UpdateEmployeeService</Allow>
+            <Allow>ch.atexxi.chronivaro.core.service.SubmitPeriodService</Allow>
+            <Allow>ch.atexxi.chronivaro.core.service.ApprovePeriodService</Allow>
+            <Allow>ch.atexxi.chronivaro.core.service.RejectPeriodService</Allow>
+            <Allow>ch.atexxi.chronivaro.core.service.ReopenPeriodService</Allow>
+            <Allow>ch.atexxi.chronivaro.core.service.LockPeriodService</Allow>
+        </Privilege>
+        <Privilege name="li.strolch.search.StrolchSearch" policy="DefaultPrivilege">
+            <Allow>ch.atexxi.chronivaro.core.search.TimePeriodSearch</Allow>
         </Privilege>
     </Role>
 </Roles>

@@ -68,7 +68,7 @@
 
     <Resource Id="test-period-approve" Name="Test Period Approve" Type="TimePeriod">
         <ParameterBag Id="parameters" Name="Parameters" Type="Parameters">
-            <Parameter Id="yearMonth" Name="Year Month" Type="String" Value="2025-01"/>
+            <Parameter Id="yearMonth" Name="Year Month" Type="String" Value="2024-11"/>
             <Parameter Id="state" Name="State" Type="String" Value="SUBMITTED"/>
         </ParameterBag>
         <ParameterBag Id="relations" Name="Relations" Type="Relations">
@@ -78,7 +78,7 @@
 
     <Resource Id="test-period-lock" Name="Test Period Lock" Type="TimePeriod">
         <ParameterBag Id="parameters" Name="Parameters" Type="Parameters">
-            <Parameter Id="yearMonth" Name="Year Month" Type="String" Value="2025-01"/>
+            <Parameter Id="yearMonth" Name="Year Month" Type="String" Value="2024-12"/>
             <Parameter Id="state" Name="State" Type="String" Value="APPROVED"/>
         </ParameterBag>
         <ParameterBag Id="relations" Name="Relations" Type="Relations">
