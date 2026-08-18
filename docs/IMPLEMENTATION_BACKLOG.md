@@ -219,9 +219,15 @@ Task 4 was split into tasks **4.1**, **4.2**, and **4.3** per the task-size and 
 
 #### 4.1. Extend Core audit model, audit helper, retention purging, and search query
 
-- **Status:** `OPEN`
+- **Status:** `COMPLETED`
 - **Scope:** Extend `ChronivaroAuditEvent` template and constants with action, reason, correlation ID, and details; enhance `ChronivaroAuditHelper` to populate structured audit events (including MDC/thread-local correlation ID capture); implement audit retention/purge logic (`PurgeAuditEventsService` / retention rule); implement `AuditEventSearch` with fluent filters (entityType, entityId, username, action, date range) and privilege assertions in Core.
 - **Acceptance:** Audit events store complete metadata (action, reason, correlationId, details, createdBy, date, old/new values); retention purging removes aged events deterministically; `AuditEventSearch` correctly filters audit records and enforces privilege checks; verified by comprehensive Core unit/integration tests.
+- **Verification:**
+  - Extended `ChronivaroConstants` with audit constants (`PARAM_ACTION`, `PARAM_REASON`, `PARAM_CORRELATION_ID`, `PARAM_DETAILS`, and standard audit action identifiers).
+  - Enhanced `ChronivaroAuditHelper` to capture correlation IDs from thread-local / SLF4J MDC and populate structured `ChronivaroAuditEvent` elements with complete action/reason/correlation/value metadata.
+  - Implemented `AuditEventSearch` extending `ResourceSearch` with fluent query filters (`forElementType`, `forElementId`, `forUsername`, `forAction`, `forCorrelationId`, `inDateRange`) and privilege assertions.
+  - Implemented `PurgeAuditEventsService` supporting retention period (`retentionDays`) or explicit cutoff date (`cutoffDate`) purging with automated audit event recording.
+  - Added unit and integration tests in `AuditEventTest` validating full metadata persistence, MDC correlation extraction, query filtering, retention purging, and Strolch privilege enforcement (39 tests passing across reactor modules).
 - **Dependencies:** Tasks 1, 2.1.
 
 #### 4.2. Apply comprehensive audit logging across Core domain mutation services

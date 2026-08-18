@@ -90,10 +90,27 @@ public class ChronivaroConstants {
 	public static final String PARAM_YEAR_MONTH = "yearMonth";
 	public static final String PARAM_ELEMENT_TYPE = "elementType";
 	public static final String PARAM_ELEMENT_ID = "elementId";
+	public static final String PARAM_ACTION = "action";
+	public static final String PARAM_REASON = "reason";
+	public static final String PARAM_CORRELATION_ID = "correlationId";
+	public static final String PARAM_DETAILS = "details";
 	public static final String PARAM_OLD_VALUE = "oldValue";
 	public static final String PARAM_NEW_VALUE = "newValue";
 	public static final String PARAM_VERSION = "version";
 	public static final String PARAM_UPDATED_BY = "updatedBy";
+
+	public static final String AUDIT_ACTION_CREATE = "CREATE";
+	public static final String AUDIT_ACTION_UPDATE = "UPDATE";
+	public static final String AUDIT_ACTION_REMOVE = "REMOVE";
+	public static final String AUDIT_ACTION_SUBMIT = "SUBMIT";
+	public static final String AUDIT_ACTION_APPROVE = "APPROVE";
+	public static final String AUDIT_ACTION_REJECT = "REJECT";
+	public static final String AUDIT_ACTION_CANCEL = "CANCEL";
+	public static final String AUDIT_ACTION_LOCK = "LOCK";
+	public static final String AUDIT_ACTION_START = "START";
+	public static final String AUDIT_ACTION_STOP = "STOP";
+	public static final String AUDIT_ACTION_PURGE = "PURGE";
+	public static final String AUDIT_ACTION_CORRECT = "CORRECT";
 
 	public static final String SOURCE_TIMER = "TIMER";
 	public static final String SOURCE_MANUAL = "MANUAL";
