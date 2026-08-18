@@ -267,9 +267,17 @@ Task 4 was split into subtasks **4.1**, **4.2.1**, **4.2.2**, **4.2.3**, and **4
 
 #### 4.3. Expose and secure the Admin Audit Logs REST endpoint
 
-- **Status:** `OPEN`
+- **Status:** `COMPLETED`
 - **Scope:** Implement `/chronivaro/v1/admin/audit-logs` endpoint with query filters (`entityType`, `entityId`, `username`, `from`, `to`), pagination envelopes (`PagedResultDto<AuditLogDto>`), correlation ID headers, and privilege enforcement (restricted to StrolchAdmin / Admin role).
 - **Acceptance:** Authorized administrators can query and paginate audit logs; unauthorized or non-admin users receive 403 Forbidden; filter combinations and correlation ID propagation are verified by REST integration tests.
+- **Verification:**
+  - Implemented `AuditLogDto` in `chronivaro-rest` matching OpenAPI schema (`id`, `timestamp`, `username`, `action`, `entityType`, `entityId`, `details`).
+  - Added `auditLogToDto` in `ChronivaroMapper` converting `ChronivaroAuditEvent` resources into `AuditLogDto`.
+  - Implemented `AuditLogsResource` (`/chronivaro/v1/admin/audit-logs`) with query filters (`entityType`, `entityId`, `username`, `action`, `from`, `to`), descending timestamp ordering (`orderByParam(PARAM_DATE, true)`), and pagination integration via `PaginationHelper`.
+  - Registered `AuditLogsResource` in `ChronivaroRestfulClasses`.
+  - Enforced Strolch privilege authorization ensuring non-admin users receive 403 Forbidden (`ACCESS_DENIED`) via `ChronivaroRestfulExceptionMapper`.
+  - Added comprehensive REST integration tests in `AuditLogsResourceTest` covering admin queries, filtering, date range parsing, pagination envelopes, 403 Forbidden checks for non-admin employees, 401 Unauthorized for unauthenticated requests, and 400 Bad Request on invalid date formats.
+  - Verified with full test suite passing via `mvn test` (46 unit/integration tests passing across reactor modules with 0 failures and 0 errors).
 - **Dependencies:** Tasks 2.1, 2.2, 3, 4.1, 4.2.1, 4.2.2, 4.2.3.
 
 ### 5. Finish the period lifecycle in Core
