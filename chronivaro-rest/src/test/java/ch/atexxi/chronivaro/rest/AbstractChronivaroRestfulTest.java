@@ -72,7 +72,7 @@ public abstract class AbstractChronivaroRestfulTest extends JerseyTest {
 		// login
 		JsonObject login = new JsonObject();
 		login.addProperty("username", username);
-		login.addProperty("password", Base64.getEncoder().encodeToString(username.getBytes()));
+		login.addProperty("password", Base64.getEncoder().encodeToString(password.getBytes()));
 		Entity<String> entity = Entity.entity(login.toString(), MediaType.APPLICATION_JSON);
 
 		JsonObject loginResult;

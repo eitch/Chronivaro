@@ -151,4 +151,15 @@ public class ChronivaroMapper {
 				template.getInteger(PARAM_DAILY_TARGET_MINUTES_SATURDAY),
 				template.getInteger(PARAM_DAILY_TARGET_MINUTES_SUNDAY));
 	}
+
+	public static AuditLogDto auditLogToDto(Resource auditEvent) {
+		String details = auditEvent.getString(PARAM_DETAILS);
+		if (details == null || details.isEmpty()) {
+			details = auditEvent.getString(PARAM_REASON);
+		}
+		return new AuditLogDto(auditEvent.getId(), auditEvent.getDate(PARAM_DATE),
+				auditEvent.getString(PARAM_CREATED_BY), auditEvent.getString(PARAM_ACTION),
+				auditEvent.getString(PARAM_ELEMENT_TYPE), auditEvent.getString(PARAM_ELEMENT_ID),
+				details != null ? details : "");
+	}
 }

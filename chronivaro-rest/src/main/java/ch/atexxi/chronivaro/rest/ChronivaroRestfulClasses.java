@@ -17,6 +17,7 @@ public class ChronivaroRestfulClasses {
 		Set<Class<?>> restfulClasses = new HashSet<>(StrolchRestfulClasses.getRestfulClasses());
 		restfulClasses.add(AbsenceResource.class);
 		restfulClasses.add(AbsenceTypeResource.class);
+		restfulClasses.add(AuditLogsResource.class);
 		restfulClasses.add(ChronivaroResource.class);
 		restfulClasses.add(EmployeeResource.class);
 		restfulClasses.add(HolidayCalendarsResource.class);
