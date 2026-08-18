@@ -203,9 +203,14 @@ Task 2 was split into tasks **2.1**, **2.2**, and **2.3** per the task-size and 
 
 ### 3. Document the REST contract
 
-- **Status:** `MISSING`
+- **Status:** `COMPLETED`
 - **Scope:** Add OpenAPI documentation for implemented and planned `/rest/chronivaro/v1` resources, errors, pagination, concurrency, authorization, and status codes.
 - **Acceptance:** Documentation matches executable routes and DTOs and has a focused contract check.
+- **Verification:**
+  - Created `docs/openapi.yaml` (OpenAPI 3.0.3) covering all current endpoints and planned routes from specification Section 13.2 (system/version, authentication/registration, presence, timer/work entries, day/month summaries, absences/approvals, period lifecycle/closing, and administrative resources for employees, schedules, vacation account, teams, locations, absence types, holiday calendars, schedule templates, audit logs, and configuration).
+  - Defined all shared headers (`X-Correlation-Id`, `ETag`, `If-Match`), pagination parameters (`offset`, `limit`), error structures (`ErrorDto`, `FieldErrorDto`), and standard DTO schemas matching existing Java records.
+  - Added automated contract verification test in `chronivaro-rest` (`OpenApiSpecTest`) validating file presence, version, required schemas, headers, query parameters, and all endpoint paths.
+  - Verified with full project test suite passing (`mvn test`, 39 tests passing with 0 failures and 0 errors).
 - **Dependencies:** Tasks 1, 2.1–2.3.
 
 ### 4. Complete audit metadata and access

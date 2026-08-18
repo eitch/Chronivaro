@@ -1,0 +1,4721 @@
+openapi: 3.0.3
+info:
+  title: Chronivaro REST API
+  description: |
+    REST API specification for Chronivaro, a Resource-Order-Activity time tracking and absence management system built on Strolch.
+    Provides endpoints for time tracking, timers, presence overview, absence requests, period closing, reports, and administrative management.
+  version: 0.1.0-SNAPSHOT
+  contact:
+    name: atexxi Systems AG
+    url: https://atexxi.ch
+servers:
+  - url: /
+    description: Current server instance
+
+paths:
+  # ==========================================
+  # System & Authentication
+  # ==========================================
+  /chronivaro/v1/version:
+    get:
+      summary: Get application version and build metadata
+      description: Returns the application version, build timestamp, environment mode, and Strolch version.
+      operationId: getVersion
+      tags:
+        - System
+      responses:
+        '200':
+          description: Version metadata retrieved successfully
+          headers:
+            X-Correlation-Id:
+              $ref: '#/components/headers/X-Correlation-Id'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VersionDto'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /chronivaro/v1/auth/login:
+    post:
+      summary: User login
+      description: Authenticates user credentials and sets session cookie or returns authentication certificate token.
+      operationId: login
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequestDto'
+      responses:
+        '200':
+          description: Authentication successful
+          headers:
+            Set-Cookie:
+              schema:
+                type: string
+                example: strolch.authorization=Bearer abc123xyz; Path=/; HttpOnly; SameSite=Strict
+            X-Correlation-Id:
+              $ref: '#/components/headers/X-Correlation-Id'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponseDto'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /chronivaro/v1/auth/logout:
+    post:
+      summary: User logout
+      description: Invalidates active user session and clears authentication cookies.
+      operationId: logout
+      tags:
+        - Authentication
+      security:
+        - CookieAuth: []
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Logout successful
+          headers:
+            X-Correlation-Id:
+              $ref: '#/components/headers/X-Correlation-Id'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponseDto'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /chronivaro/v1/auth/me:
+    get:
+      summary: Current user profile
+      description: Returns authenticated user identity, assigned employee ID, and system roles.
+      operationId: getCurrentUser
+      tags:
+        - Authentication
+      security:
+        - CookieAuth: []
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Current user profile retrieved successfully
+          headers:
+            X-Correlation-Id:
+              $ref: '#/components/headers/X-Correlation-Id'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CurrentUserDto'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /chronivaro/v1/auth/initiate-registration:
+    post:
+      summary: Initiate employee registration
+      description: Triggers self-registration invitation workflow for an employee by generating a registration token and sending an email.
+      operationId: initiateRegistration
+      tags:
+        - Authentication
+      security:
+        - CookieAuth: []
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegistrationInitiateRequestDto'
+      responses:
+        '200':
+          description: Registration initiated successfully
+          headers:
+            X-Correlation-Id:
+              $ref: '#/components/headers/X-Correlation-Id'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponseDto'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /chronivaro/v1/auth/complete-registration:
+    post:
+      summary: Complete employee registration
+      description: Activates user account with provided invitation token and sets the initial password.
+      operationId: completeRegistration
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegistrationCompleteRequestDto'
+      responses:
+        '200':
+          description: Registration completed successfully
+          headers:
+            X-Correlation-Id:
+              $ref: '#/components/headers/X-Correlation-Id'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponseDto'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # ==========================================
+  # Presence
+  # ==========================================
+  /chronivaro/v1/presence:
+    get:
+      summary: Get system-wide presence overview
+      description: Returns real-time working status for all active employees. Presence reason is abstracted based on role privileges.
+      operationId: getPresenceOverview
+      tags:
+        - Presence
+      security:
+        - CookieAuth: []
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/OffsetParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - name: teamId
+          in: query
+          description: Filter by team ID
+          required: false
+          schema:
+            type: string
+        - name: locationId
+          in: query
+          description: Filter by location ID
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Presence list retrieved successfully
+          headers:
+            X-Correlation-Id:
+              $ref: '#/components/headers/X-Correlation-Id'
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: array
+                    items:
+                      $ref: '#/components/schemas/PresenceDto'
+                  - $ref: '#/components/schemas/PagedPresenceDto'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /chronivaro/v1/presence/team/{teamId}:
+    get:
+      summary: Get team presence overview
+      description: Returns real-time presence status for all employees in the specified team.
+      operationId: getTeamPresence
+      tags:
+        - Presence
+      security:
+        - CookieAuth: []
+        - BearerAuth: []
+      parameters:
+        - name: teamId
+          in: path
+          required: true
+          description: Team identifier
+          schema:
+            type: string
+        - $ref: '#/components/parameters/OffsetParam'
+        - $ref: '#/components/parameters/LimitParam'
+      responses:
+        '200':
+          description: Team presence list retrieved successfully
+          headers:
+            X-Correlation-Id:
+              $ref: '#/components/headers/X-Correlation-Id'
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: array
+                    items:
+                      $ref: '#/components/schemas/PresenceDto'
+                  - $ref: '#/components/schemas/PagedPresenceDto'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /chronivaro/v1/presence/employee/{employeeId}:
+    get:
+      summary: Get employee presence status
+      description: Returns real-time presence status for a specific employee.
+      operationId: getEmployeePresence
+      tags:
+        - Presence
+      security:
+        - CookieAuth: []
+        - BearerAuth: []
+      parameters:
+        - name: employeeId
+          in: path
+          required: true
+          description: Employee identifier
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Employee presence retrieved successfully
+          headers:
+            X-Correlation-Id:
+              $ref: '#/components/headers/X-Correlation-Id'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PresenceDto'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # ==========================================
+  # Timer & Work Entries
+  # ==========================================
+  /chronivaro/v1/timer/start:
+    post:
+      summary: Start work timer
+      description: Starts an active timer for the logged-in employee with an optional working location.
+      operationId: startTimer
+      tags:
+        - Time Tracking
+      security:
+        - CookieAuth: []
+        - BearerAuth: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StartTimerRequestDto'
+      responses:
+        '200':
+          description: Timer started successfully
+          headers:
+            X-Correlation-Id:
+              $ref: '#/components/headers/X-Correlation-Id'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TimerStatusDto'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /chronivaro/v1/timer/stop:
+    post:
+      summary: Stop work timer
+      description: Stops the active timer and records a completed work entry for the day.
+      operationId: stopTimer
+      tags:
+        - Time Tracking
+      security:
+        - CookieAuth: []
+        - BearerAuth: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StopTimerRequestDto'
+      responses:
+        '200':
+          description: Timer stopped successfully and work entry created
+          headers:
+            X-Correlation-Id:
+              $ref: '#/components/headers/X-Correlation-Id'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkEntryDto'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /chronivaro/v1/timer/status:
+    get:
+      summary: Get active timer status
+      description: Returns the status of the current user's timer, start time, and accumulated duration today.
+      operationId: getTimerStatus
+      tags:
+        - Time Tracking
+      security:
+        - CookieAuth: []
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Timer status retrieved successfully
+          headers:
+            X-Correlation-Id:
+              $ref: '#/components/headers/X-Correlation-Id'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TimerStatusDto'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /chronivaro/v1/work-entries:
+    post:
+      summary: Add work entry manually
+      description: Creates a manual work entry with start/end timestamps and location for a specific day.
+      operationId: addWorkEntry
+      tags:
+        - Time Tracking
+      security:
+        - CookieAuth: []
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkEntryCreateDto'
+      responses:
+        '200':
+          description: Work entry created successfully
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
+            X-Correlation-Id:
+              $ref: '#/components/headers/X-Correlation-Id'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkEntryDto'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /chronivaro/v1/work-entries/day/{date}:
+    get:
+      summary: Get work entries for day
+      description: Retrieves all recorded work entries for a specific date (YYYY-MM-DD).
+      operationId: getWorkEntriesForDay
+      tags:
+        - Time Tracking
+      security:
+        - CookieAuth: []
+        - BearerAuth: []
+      parameters:
+        - name: date
+          in: path
+          required: true
+          description: Target date formatted as YYYY-MM-DD
+          schema:
+            type: string
+            format: date
+            example: '2026-08-18'
+        - name: employeeId
+          in: query
+          description: Employee ID (requires supervisor/admin privilege if querying another employee)
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Work entries retrieved successfully
+          headers:
+            X-Correlation-Id:
+              $ref: '#/components/headers/X-Correlation-Id'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/WorkEntryDto'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /chronivaro/v1/work-entries/{id}:
+    put:
+      summary: Correct work entry
+      description: Updates an existing work entry time range, comment, or location. Supports optimistic concurrency via `If-Match`.
+      operationId: updateWorkEntry
+      tags:
+        - Time Tracking
+      security:
+        - CookieAuth: []
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Work entry identifier
+          schema:
+            type: string
+        - $ref: '#/components/parameters/IfMatchParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkEntryUpdateDto'
+      responses:
+        '200':
+          description: Work entry updated successfully
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
+            X-Correlation-Id:
+              $ref: '#/components/headers/X-Correlation-Id'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkEntryDto'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      summary: Delete work entry
+      description: Removes a recorded work entry from the work day. Supports optimistic concurrency via `If-Match`.
+      operationId: deleteWorkEntry
+      tags:
+        - Time Tracking
+      security:
+        - CookieAuth: []
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Work entry identifier
+          schema:
+            type: string
+        - $ref: '#/components/parameters/IfMatchParam'
+      responses:
+        '200':
+          description: Work entry deleted successfully
+          headers:
+            X-Correlation-Id:
+              $ref: '#/components/headers/X-Correlation-Id'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponseDto'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # ==========================================
+  # Summaries & Reports
+  # ==========================================
+  /chronivaro/v1/summary/day/{date}:
+    get:
+      summary: Get day summary
+      description: Returns target minutes, actual recorded minutes, holiday credits, absences, computed balance, and gap-based breaks.
+      operationId: getDaySummary
+      tags:
+        - Summaries
+      security:
+        - CookieAuth: []
+        - BearerAuth: []
+      parameters:
+        - name: date
+          in: path
+          required: true
+          description: Target date formatted as YYYY-MM-DD
+          schema:
+            type: string
+            format: date
+            example: '2026-08-18'
+        - name: employeeId
+          in: query
+          description: Employee ID (optional, defaults to current user's employee)
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Day summary retrieved successfully
+          headers:
+            X-Correlation-Id:
+              $ref: '#/components/headers/X-Correlation-Id'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DaySummaryDto'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /chronivaro/v1/summary/month/{yearMonth}:
+    get:
+      summary: Get month summary
+      description: Returns full monthly aggregation including starting balance, monthly actuals, holiday/absence credits, end balance, and daily breakdown.
+      operationId: getMonthSummary
+      tags:
+        - Summaries
+      security:
+        - CookieAuth: []
+        - BearerAuth: []
+      parameters:
+        - name: yearMonth
+          in: path
+          required: true
+          description: Target month formatted as YYYY-MM
+          schema:
+            type: string
+            example: '2026-08'
+        - name: employeeId
+          in: query
+          description: Employee ID (optional, defaults to current user's employee)
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Month summary retrieved successfully
+          headers:
+            X-Correlation-Id:
+              $ref: '#/components/headers/X-Correlation-Id'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MonthSummaryDto'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # ==========================================
+  # Absences
+  # ==========================================
+  /chronivaro/v1/absences:
+    get:
+      summary: List absences
+      description: Retrieves absences with filtering by employee, date range, or state.
+      operationId: getAbsences
+      tags:
+        - Absences
+      security:
+        - CookieAuth: []
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/OffsetParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - name: employeeId
+          in: query
+          description: Filter by employee ID
+          required: false
+          schema:
+            type: string
+        - name: from
+          in: query
+          description: Start of period (ISO date or date-time)
+          required: false
+          schema:
+            type: string
+        - name: to
+          in: query
+          description: End of period (ISO date or date-time)
+          required: false
+          schema:
+            type: string
+        - name: state
+          in: query
+          description: Filter by absence state (REQUESTED, APPROVED, REJECTED, CANCELLED)
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Absences list retrieved successfully
+          headers:
+            X-Correlation-Id:
+              $ref: '#/components/headers/X-Correlation-Id'
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: array
+                    items:
+                      $ref: '#/components/schemas/AbsenceDto'
+                  - $ref: '#/components/schemas/PagedAbsenceDto'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      summary: Request new absence
+      description: Creates a new absence request.
+      operationId: createAbsence
+      tags:
+        - Absences
+      security:
+        - CookieAuth: []
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AbsenceCreateDto'
+      responses:
+        '200':
+          description: Absence request submitted successfully
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
+            X-Correlation-Id:
+              $ref: '#/components/headers/X-Correlation-Id'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AbsenceDto'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /chronivaro/v1/absences/{id}:
+    get:
+      summary: Get absence by ID
+      description: Retrieves a single absence by identifier.
+      operationId: getAbsenceById
+      tags:
+        - Absences
+      security:
+        - CookieAuth: []
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Absence identifier
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Absence retrieved successfully
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
+            X-Correlation-Id:
+              $ref: '#/components/headers/X-Correlation-Id'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AbsenceDto'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    put:
+      summary: Update absence
+      description: Updates an existing absence request. Supports optimistic concurrency via `If-Match`.
+      operationId: updateAbsence
+      tags:
+        - Absences
+      security:
+        - CookieAuth: []
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Absence identifier
+          schema:
+            type: string
+        - $ref: '#/components/parameters/IfMatchParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AbsenceCreateDto'
+      responses:
+        '200':
+          description: Absence updated successfully
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
+            X-Correlation-Id:
+              $ref: '#/components/headers/X-Correlation-Id'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AbsenceDto'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      summary: Remove or cancel absence
+      description: Removes or cancels an existing absence request. Supports optimistic concurrency via `If-Match`.
+      operationId: removeAbsence
+      tags:
+        - Absences
+      security:
+        - CookieAuth: []
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Absence identifier
+          schema:
+            type: string
+        - $ref: '#/components/parameters/IfMatchParam'
+      responses:
+        '200':
+          description: Absence removed successfully
+          headers:
+            X-Correlation-Id:
+              $ref: '#/components/headers/X-Correlation-Id'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponseDto'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /chronivaro/v1/absences/{id}/approve:
+    post:
+      summary: Approve absence
+      description: Approves a pending absence request (supervisor/admin action). Supports optimistic concurrency via `If-Match`.
+      operationId: approveAbsence
+      tags:
+        - Absences
+      security:
+        - CookieAuth: []
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Absence identifier
+          schema:
+            type: string
+        - $ref: '#/components/parameters/IfMatchParam'
+      responses:
+        '200':
+          description: Absence approved successfully
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
+            X-Correlation-Id:
+              $ref: '#/components/headers/X-Correlation-Id'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AbsenceDto'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /chronivaro/v1/absences/{id}/reject:
+    post:
+      summary: Reject absence
+      description: Rejects a pending absence request with an optional comment. Supports optimistic concurrency via `If-Match`.
+      operationId: rejectAbsence
+      tags:
+        - Absences
+      security:
+        - CookieAuth: []
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Absence identifier
+          schema:
+            type: string
+        - $ref: '#/components/parameters/IfMatchParam'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ActionCommentDto'
+      responses:
+        '200':
+          description: Absence rejected successfully
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
+            X-Correlation-Id:
+              $ref: '#/components/headers/X-Correlation-Id'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AbsenceDto'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /chronivaro/v1/absences/{id}/cancel:
+    post:
+      summary: Cancel absence
+      description: Cancels an approved or pending absence request. Supports optimistic concurrency via `If-Match`.
+      operationId: cancelAbsence
+      tags:
+        - Absences
+      security:
+        - CookieAuth: []
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Absence identifier
+          schema:
+            type: string
+        - $ref: '#/components/parameters/IfMatchParam'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ActionCommentDto'
+      responses:
+        '200':
+          description: Absence cancelled successfully
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
+            X-Correlation-Id:
+              $ref: '#/components/headers/X-Correlation-Id'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AbsenceDto'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # ==========================================
+  # Periods & Monthly Closing
+  # ==========================================
+  /chronivaro/v1/periods/status:
+    get:
+      summary: Get monthly period status
+      description: Retrieves the submission, approval, and locking status of an employee's time period.
+      operationId: getPeriodStatus
+      tags:
+        - Periods
+      security:
+        - CookieAuth: []
+        - BearerAuth: []
+      parameters:
+        - name: employeeId
+          in: query
+          required: false
+          description: Employee ID (defaults to current user)
+          schema:
+            type: string
+        - name: yearMonth
+          in: query
+          required: true
+          description: Target month (YYYY-MM)
+          schema:
+            type: string
+            example: '2026-08'
+      responses:
+        '200':
+          description: Period status retrieved successfully
+          headers:
+            X-Correlation-Id:
+              $ref: '#/components/headers/X-Correlation-Id'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PeriodStatusDto'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /chronivaro/v1/periods/submit:
+    post:
+      summary: Submit monthly period
+      description: Submits an employee's monthly period for supervisor review and approval.
+      operationId: submitPeriod
+      tags:
+        - Periods
+      security:
+        - CookieAuth: []
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PeriodActionRequestDto'
+      responses:
+        '200':
+          description: Period submitted successfully
+          headers:
+            X-Correlation-Id:
+              $ref: '#/components/headers/X-Correlation-Id'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PeriodStatusDto'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /chronivaro/v1/periods/approve:
+    post:
+      summary: Approve monthly period
+      description: Approves and locks a submitted monthly period (supervisor/admin action).
+      operationId: approvePeriod
+      tags:
+        - Periods
+      security:
+        - CookieAuth: []
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PeriodActionRequestDto'
+      responses:
+        '200':
+          description: Period approved successfully
+          headers:
+            X-Correlation-Id:
+              $ref: '#/components/headers/X-Correlation-Id'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PeriodStatusDto'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /chronivaro/v1/periods/reopen:
+    post:
+      summary: Reopen closed period
+      description: Reopens a previously approved or submitted monthly period for corrections (requires admin or privileged supervisor role).
+      operationId: reopenPeriod
+      tags:
+        - Periods
+      security:
+        - CookieAuth: []
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PeriodActionRequestDto'
+      responses:
+        '200':
+          description: Period reopened successfully
+          headers:
+            X-Correlation-Id:
+              $ref: '#/components/headers/X-Correlation-Id'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PeriodStatusDto'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /chronivaro/v1/periods/close-year:
+    post:
+      summary: Execute annual closing
+      description: Carries forward vacation balances and overtime based on policy rules at fiscal year-end.
+      operationId: closeYear
+      tags:
+        - Periods
+      security:
+        - CookieAuth: []
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/YearClosingRequestDto'
+      responses:
+        '200':
+          description: Year closing executed successfully
+          headers:
+            X-Correlation-Id:
+              $ref: '#/components/headers/X-Correlation-Id'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponseDto'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # ==========================================
+  # Admin - Employees
+  # ==========================================
+  /chronivaro/v1/admin/employees:
+    get:
+      summary: List all employees
+      description: Returns a list or page of employees with filtering options.
+      operationId: getEmployees
+      tags:
+        - Admin - Employees
+      security:
+        - CookieAuth: []
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/OffsetParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - name: activeOnly
+          in: query
+          description: Filter for active employees only
+          required: false
+          schema:
+            type: boolean
+        - name: teamId
+          in: query
+          description: Filter by team ID
+          required: false
+          schema:
+            type: string
+        - name: locationId
+          in: query
+          description: Filter by location ID
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Employee list retrieved successfully
+          headers:
+            X-Correlation-Id:
+              $ref: '#/components/headers/X-Correlation-Id'
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: array
+                    items:
+                      $ref: '#/components/schemas/EmployeeDto'
+                  - $ref: '#/components/schemas/PagedEmployeeDto'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      summary: Create employee
+      description: Creates a new employee master record in the system.
+      operationId: createEmployee
+      tags:
+        - Admin - Employees
+      security:
+        - CookieAuth: []
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmployeeCreateDto'
+      responses:
+        '200':
+          description: Employee created successfully
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
+            X-Correlation-Id:
+              $ref: '#/components/headers/X-Correlation-Id'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmployeeDto'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /chronivaro/v1/admin/employees/{id}:
+    get:
+      summary: Get employee by ID
+      description: Returns full details of an employee.
+      operationId: getEmployeeById
+      tags:
+        - Admin - Employees
+      security:
+        - CookieAuth: []
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Employee identifier
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Employee retrieved successfully
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
+            X-Correlation-Id:
+              $ref: '#/components/headers/X-Correlation-Id'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmployeeDto'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    put:
+      summary: Update employee
+      description: Updates employee master data. Supports optimistic concurrency via `If-Match`.
+      operationId: updateEmployee
+      tags:
+        - Admin - Employees
+      security:
+        - CookieAuth: []
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Employee identifier
+          schema:
+            type: string
+        - $ref: '#/components/parameters/IfMatchParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmployeeUpdateDto'
+      responses:
+        '200':
+          description: Employee updated successfully
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
+            X-Correlation-Id:
+              $ref: '#/components/headers/X-Correlation-Id'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmployeeDto'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      summary: Remove employee
+      description: Deactivates or removes an employee. Supports optimistic concurrency via `If-Match`.
+      operationId: removeEmployee
+      tags:
+        - Admin - Employees
+      security:
+        - CookieAuth: []
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Employee identifier
+          schema:
+            type: string
+        - $ref: '#/components/parameters/IfMatchParam'
+      responses:
+        '200':
+          description: Employee removed successfully
+          headers:
+            X-Correlation-Id:
+              $ref: '#/components/headers/X-Correlation-Id'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponseDto'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /chronivaro/v1/admin/employees/{id}/schedules:
+    get:
+      summary: Get employee schedule history
+      description: Returns all historical and current work schedules assigned to an employee.
+      operationId: getEmployeeSchedules
+      tags:
+        - Admin - Employees
+      security:
+        - CookieAuth: []
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Employee identifier
+          schema:
+            type: string
+        - $ref: '#/components/parameters/OffsetParam'
+        - $ref: '#/components/parameters/LimitParam'
+      responses:
+        '200':
+          description: Schedules retrieved successfully
+          headers:
+            X-Correlation-Id:
+              $ref: '#/components/headers/X-Correlation-Id'
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: array
+                    items:
+                      $ref: '#/components/schemas/ScheduleDto'
+                  - $ref: '#/components/schemas/PagedScheduleDto'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      summary: Add employee schedule
+      description: Adds a new schedule interval with target minutes per weekday and validity range.
+      operationId: createEmployeeSchedule
+      tags:
+        - Admin - Employees
+      security:
+        - CookieAuth: []
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Employee identifier
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ScheduleCreateDto'
+      responses:
+        '200':
+          description: Schedule created successfully
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
+            X-Correlation-Id:
+              $ref: '#/components/headers/X-Correlation-Id'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScheduleDto'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /chronivaro/v1/admin/employees/{id}/schedules/{scheduleId}:
+    get:
+      summary: Get employee schedule by ID
+      description: Returns a specific schedule period for an employee.
+      operationId: getEmployeeScheduleById
+      tags:
+        - Admin - Employees
+      security:
+        - CookieAuth: []
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Employee identifier
+          schema:
+            type: string
+        - name: scheduleId
+          in: path
+          required: true
+          description: Schedule identifier
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Schedule retrieved successfully
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
+            X-Correlation-Id:
+              $ref: '#/components/headers/X-Correlation-Id'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScheduleDto'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    put:
+      summary: Update employee schedule
+      description: Updates schedule weekday hours and validity range. Supports optimistic concurrency via `If-Match`.
+      operationId: updateEmployeeSchedule
+      tags:
+        - Admin - Employees
+      security:
+        - CookieAuth: []
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Employee identifier
+          schema:
+            type: string
+        - name: scheduleId
+          in: path
+          required: true
+          description: Schedule identifier
+          schema:
+            type: string
+        - $ref: '#/components/parameters/IfMatchParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ScheduleUpdateDto'
+      responses:
+        '200':
+          description: Schedule updated successfully
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
+            X-Correlation-Id:
+              $ref: '#/components/headers/X-Correlation-Id'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScheduleDto'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      summary: Remove employee schedule
+      description: Removes a schedule interval. Supports optimistic concurrency via `If-Match`.
+      operationId: removeEmployeeSchedule
+      tags:
+        - Admin - Employees
+      security:
+        - CookieAuth: []
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Employee identifier
+          schema:
+            type: string
+        - name: scheduleId
+          in: path
+          required: true
+          description: Schedule identifier
+          schema:
+            type: string
+        - $ref: '#/components/parameters/IfMatchParam'
+      responses:
+        '200':
+          description: Schedule removed successfully
+          headers:
+            X-Correlation-Id:
+              $ref: '#/components/headers/X-Correlation-Id'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponseDto'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /chronivaro/v1/admin/employees/{id}/vacation-account:
+    get:
+      summary: Get employee vacation account entries
+      description: Returns the journal entries representing entitlement additions, deductions, and adjustments for the employee.
+      operationId: getVacationAccount
+      tags:
+        - Admin - Employees
+      security:
+        - CookieAuth: []
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Employee identifier
+          schema:
+            type: string
+        - name: year
+          in: query
+          required: false
+          description: Fiscal year filter
+          schema:
+            type: integer
+            example: 2026
+        - $ref: '#/components/parameters/OffsetParam'
+        - $ref: '#/components/parameters/LimitParam'
+      responses:
+        '200':
+          description: Vacation account entries retrieved successfully
+          headers:
+            X-Correlation-Id:
+              $ref: '#/components/headers/X-Correlation-Id'
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: array
+                    items:
+                      $ref: '#/components/schemas/VacationAccountEntryDto'
+                  - $ref: '#/components/schemas/PagedVacationAccountDto'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /chronivaro/v1/admin/employees/{id}/vacation-correction:
+    post:
+      summary: Perform manual vacation account correction
+      description: Appends a manual journal adjustment entry to an employee's vacation account.
+      operationId: createVacationCorrection
+      tags:
+        - Admin - Employees
+      security:
+        - CookieAuth: []
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Employee identifier
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VacationCorrectionRequestDto'
+      responses:
+        '200':
+          description: Vacation adjustment booked successfully
+          headers:
+            X-Correlation-Id:
+              $ref: '#/components/headers/X-Correlation-Id'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VacationAccountEntryDto'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # ==========================================
+  # Admin - Teams
+  # ==========================================
+  /chronivaro/v1/admin/teams:
+    get:
+      summary: List all teams
+      description: Returns all organizational teams.
+      operationId: getTeams
+      tags:
+        - Admin - Teams
+      security:
+        - CookieAuth: []
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/OffsetParam'
+        - $ref: '#/components/parameters/LimitParam'
+      responses:
+        '200':
+          description: Teams list retrieved successfully
+          headers:
+            X-Correlation-Id:
+              $ref: '#/components/headers/X-Correlation-Id'
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: array
+                    items:
+                      $ref: '#/components/schemas/TeamDto'
+                  - $ref: '#/components/schemas/PagedTeamDto'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      summary: Create team
+      description: Creates a new team.
+      operationId: createTeam
+      tags:
+        - Admin - Teams
+      security:
+        - CookieAuth: []
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TeamCreateDto'
+      responses:
+        '200':
+          description: Team created successfully
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
+            X-Correlation-Id:
+              $ref: '#/components/headers/X-Correlation-Id'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamDto'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /chronivaro/v1/admin/teams/{id}:
+    get:
+      summary: Get team by ID
+      description: Returns details of a specific team.
+      operationId: getTeamById
+      tags:
+        - Admin - Teams
+      security:
+        - CookieAuth: []
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Team identifier
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Team retrieved successfully
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
+            X-Correlation-Id:
+              $ref: '#/components/headers/X-Correlation-Id'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamDto'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    put:
+      summary: Update team
+      description: Updates team name or properties. Supports optimistic concurrency via `If-Match`.
+      operationId: updateTeam
+      tags:
+        - Admin - Teams
+      security:
+        - CookieAuth: []
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Team identifier
+          schema:
+            type: string
+        - $ref: '#/components/parameters/IfMatchParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TeamCreateDto'
+      responses:
+        '200':
+          description: Team updated successfully
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
+            X-Correlation-Id:
+              $ref: '#/components/headers/X-Correlation-Id'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamDto'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      summary: Remove team
+      description: Removes a team. Supports optimistic concurrency via `If-Match`.
+      operationId: removeTeam
+      tags:
+        - Admin - Teams
+      security:
+        - CookieAuth: []
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Team identifier
+          schema:
+            type: string
+        - $ref: '#/components/parameters/IfMatchParam'
+      responses:
+        '200':
+          description: Team removed successfully
+          headers:
+            X-Correlation-Id:
+              $ref: '#/components/headers/X-Correlation-Id'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponseDto'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # ==========================================
+  # Admin - Locations
+  # ==========================================
+  /chronivaro/v1/admin/locations:
+    get:
+      summary: List all locations
+      description: Returns all office and branch locations.
+      operationId: getLocations
+      tags:
+        - Admin - Locations
+      security:
+        - CookieAuth: []
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/OffsetParam'
+        - $ref: '#/components/parameters/LimitParam'
+      responses:
+        '200':
+          description: Locations list retrieved successfully
+          headers:
+            X-Correlation-Id:
+              $ref: '#/components/headers/X-Correlation-Id'
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: array
+                    items:
+                      $ref: '#/components/schemas/LocationDto'
+                  - $ref: '#/components/schemas/PagedLocationDto'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      summary: Create location
+      description: Creates a new company location with timezone and assigned holiday calendar.
+      operationId: createLocation
+      tags:
+        - Admin - Locations
+      security:
+        - CookieAuth: []
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LocationCreateDto'
+      responses:
+        '200':
+          description: Location created successfully
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
+            X-Correlation-Id:
+              $ref: '#/components/headers/X-Correlation-Id'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LocationDto'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /chronivaro/v1/admin/locations/{id}:
+    get:
+      summary: Get location by ID
+      description: Returns details of a specific location.
+      operationId: getLocationById
+      tags:
+        - Admin - Locations
+      security:
+        - CookieAuth: []
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Location identifier
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Location retrieved successfully
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
+            X-Correlation-Id:
+              $ref: '#/components/headers/X-Correlation-Id'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LocationDto'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    put:
+      summary: Update location
+      description: Updates location name, timezone, or holiday calendar. Supports optimistic concurrency via `If-Match`.
+      operationId: updateLocation
+      tags:
+        - Admin - Locations
+      security:
+        - CookieAuth: []
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Location identifier
+          schema:
+            type: string
+        - $ref: '#/components/parameters/IfMatchParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LocationCreateDto'
+      responses:
+        '200':
+          description: Location updated successfully
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
+            X-Correlation-Id:
+              $ref: '#/components/headers/X-Correlation-Id'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LocationDto'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      summary: Remove location
+      description: Removes a location. Supports optimistic concurrency via `If-Match`.
+      operationId: removeLocation
+      tags:
+        - Admin - Locations
+      security:
+        - CookieAuth: []
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Location identifier
+          schema:
+            type: string
+        - $ref: '#/components/parameters/IfMatchParam'
+      responses:
+        '200':
+          description: Location removed successfully
+          headers:
+            X-Correlation-Id:
+              $ref: '#/components/headers/X-Correlation-Id'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponseDto'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # ==========================================
+  # Admin - Absence Types
+  # ==========================================
+  /chronivaro/v1/admin/absence-types:
+    get:
+      summary: List absence types
+      description: Returns configured absence categories (Vacation, Sickness, Military, etc.).
+      operationId: getAbsenceTypes
+      tags:
+        - Admin - Absence Types
+      security:
+        - CookieAuth: []
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/OffsetParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - name: activeOnly
+          in: query
+          required: false
+          description: Filter active absence types only
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: Absence types retrieved successfully
+          headers:
+            X-Correlation-Id:
+              $ref: '#/components/headers/X-Correlation-Id'
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: array
+                    items:
+                      $ref: '#/components/schemas/AbsenceTypeDto'
+                  - $ref: '#/components/schemas/PagedAbsenceTypeDto'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      summary: Create absence type
+      description: Defines a new absence category and its policy configuration.
+      operationId: createAbsenceType
+      tags:
+        - Admin - Absence Types
+      security:
+        - CookieAuth: []
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AbsenceTypeCreateDto'
+      responses:
+        '200':
+          description: Absence type created successfully
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
+            X-Correlation-Id:
+              $ref: '#/components/headers/X-Correlation-Id'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AbsenceTypeDto'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /chronivaro/v1/admin/absence-types/{id}:
+    get:
+      summary: Get absence type by ID
+      description: Returns configuration for an absence type.
+      operationId: getAbsenceTypeById
+      tags:
+        - Admin - Absence Types
+      security:
+        - CookieAuth: []
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Absence type identifier
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Absence type retrieved successfully
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
+            X-Correlation-Id:
+              $ref: '#/components/headers/X-Correlation-Id'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AbsenceTypeDto'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    put:
+      summary: Update absence type
+      description: Updates absence rules, names, and flags. Supports optimistic concurrency via `If-Match`.
+      operationId: updateAbsenceType
+      tags:
+        - Admin - Absence Types
+      security:
+        - CookieAuth: []
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Absence type identifier
+          schema:
+            type: string
+        - $ref: '#/components/parameters/IfMatchParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AbsenceTypeCreateDto'
+      responses:
+        '200':
+          description: Absence type updated successfully
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
+            X-Correlation-Id:
+              $ref: '#/components/headers/X-Correlation-Id'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AbsenceTypeDto'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      summary: Remove absence type
+      description: Removes or deactivates an absence type. Supports optimistic concurrency via `If-Match`.
+      operationId: removeAbsenceType
+      tags:
+        - Admin - Absence Types
+      security:
+        - CookieAuth: []
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Absence type identifier
+          schema:
+            type: string
+        - $ref: '#/components/parameters/IfMatchParam'
+      responses:
+        '200':
+          description: Absence type removed successfully
+          headers:
+            X-Correlation-Id:
+              $ref: '#/components/headers/X-Correlation-Id'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponseDto'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # ==========================================
+  # Admin - Holiday Calendars
+  # ==========================================
+  /chronivaro/v1/admin/holiday-calendars:
+    get:
+      summary: List holiday calendars
+      description: Returns configured public holiday calendars.
+      operationId: getHolidayCalendars
+      tags:
+        - Admin - Holiday Calendars
+      security:
+        - CookieAuth: []
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/OffsetParam'
+        - $ref: '#/components/parameters/LimitParam'
+      responses:
+        '200':
+          description: Holiday calendars retrieved successfully
+          headers:
+            X-Correlation-Id:
+              $ref: '#/components/headers/X-Correlation-Id'
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: array
+                    items:
+                      $ref: '#/components/schemas/HolidayCalendarDto'
+                  - $ref: '#/components/schemas/PagedHolidayCalendarDto'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      summary: Create holiday calendar
+      description: Creates a new regional holiday calendar.
+      operationId: createHolidayCalendar
+      tags:
+        - Admin - Holiday Calendars
+      security:
+        - CookieAuth: []
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HolidayCalendarCreateDto'
+      responses:
+        '200':
+          description: Holiday calendar created successfully
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
+            X-Correlation-Id:
+              $ref: '#/components/headers/X-Correlation-Id'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HolidayCalendarDto'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /chronivaro/v1/admin/holiday-calendars/{id}:
+    get:
+      summary: Get holiday calendar by ID
+      description: Returns details of a specific holiday calendar.
+      operationId: getHolidayCalendarById
+      tags:
+        - Admin - Holiday Calendars
+      security:
+        - CookieAuth: []
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Holiday calendar identifier
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Holiday calendar retrieved successfully
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
+            X-Correlation-Id:
+              $ref: '#/components/headers/X-Correlation-Id'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HolidayCalendarDto'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    put:
+      summary: Update holiday calendar
+      description: Updates holiday calendar name. Supports optimistic concurrency via `If-Match`.
+      operationId: updateHolidayCalendar
+      tags:
+        - Admin - Holiday Calendars
+      security:
+        - CookieAuth: []
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Holiday calendar identifier
+          schema:
+            type: string
+        - $ref: '#/components/parameters/IfMatchParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HolidayCalendarCreateDto'
+      responses:
+        '200':
+          description: Holiday calendar updated successfully
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
+            X-Correlation-Id:
+              $ref: '#/components/headers/X-Correlation-Id'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HolidayCalendarDto'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      summary: Remove holiday calendar
+      description: Removes a holiday calendar. Supports optimistic concurrency via `If-Match`.
+      operationId: removeHolidayCalendar
+      tags:
+        - Admin - Holiday Calendars
+      security:
+        - CookieAuth: []
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Holiday calendar identifier
+          schema:
+            type: string
+        - $ref: '#/components/parameters/IfMatchParam'
+      responses:
+        '200':
+          description: Holiday calendar removed successfully
+          headers:
+            X-Correlation-Id:
+              $ref: '#/components/headers/X-Correlation-Id'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponseDto'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /chronivaro/v1/admin/holiday-calendars/{id}/holidays:
+    get:
+      summary: List holidays in calendar
+      description: Returns individual holiday definitions for the calendar with optional year filtering.
+      operationId: getHolidays
+      tags:
+        - Admin - Holiday Calendars
+      security:
+        - CookieAuth: []
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Holiday calendar identifier
+          schema:
+            type: string
+        - name: year
+          in: query
+          required: false
+          description: Year filter (e.g., 2026)
+          schema:
+            type: integer
+            example: 2026
+        - $ref: '#/components/parameters/OffsetParam'
+        - $ref: '#/components/parameters/LimitParam'
+      responses:
+        '200':
+          description: Holidays list retrieved successfully
+          headers:
+            X-Correlation-Id:
+              $ref: '#/components/headers/X-Correlation-Id'
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: array
+                    items:
+                      $ref: '#/components/schemas/HolidayDto'
+                  - $ref: '#/components/schemas/PagedHolidayDto'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      summary: Add holiday to calendar
+      description: Defines a holiday date, name, and credit factor (e.g., 1.0 for full day, 0.5 for half day).
+      operationId: createHoliday
+      tags:
+        - Admin - Holiday Calendars
+      security:
+        - CookieAuth: []
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Holiday calendar identifier
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HolidayCreateDto'
+      responses:
+        '200':
+          description: Holiday added successfully
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
+            X-Correlation-Id:
+              $ref: '#/components/headers/X-Correlation-Id'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HolidayDto'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /chronivaro/v1/admin/holiday-calendars/{id}/holidays/{holidayId}:
+    get:
+      summary: Get holiday by ID
+      description: Returns details of a specific holiday definition.
+      operationId: getHolidayById
+      tags:
+        - Admin - Holiday Calendars
+      security:
+        - CookieAuth: []
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Holiday calendar identifier
+          schema:
+            type: string
+        - name: holidayId
+          in: path
+          required: true
+          description: Holiday identifier
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Holiday retrieved successfully
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
+            X-Correlation-Id:
+              $ref: '#/components/headers/X-Correlation-Id'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HolidayDto'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    put:
+      summary: Update holiday
+      description: Updates holiday date, name, or credit factor. Supports optimistic concurrency via `If-Match`.
+      operationId: updateHoliday
+      tags:
+        - Admin - Holiday Calendars
+      security:
+        - CookieAuth: []
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Holiday calendar identifier
+          schema:
+            type: string
+        - name: holidayId
+          in: path
+          required: true
+          description: Holiday identifier
+          schema:
+            type: string
+        - $ref: '#/components/parameters/IfMatchParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HolidayCreateDto'
+      responses:
+        '200':
+          description: Holiday updated successfully
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
+            X-Correlation-Id:
+              $ref: '#/components/headers/X-Correlation-Id'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HolidayDto'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      summary: Remove holiday
+      description: Removes a holiday from calendar. Supports optimistic concurrency via `If-Match`.
+      operationId: removeHoliday
+      tags:
+        - Admin - Holiday Calendars
+      security:
+        - CookieAuth: []
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Holiday calendar identifier
+          schema:
+            type: string
+        - name: holidayId
+          in: path
+          required: true
+          description: Holiday identifier
+          schema:
+            type: string
+        - $ref: '#/components/parameters/IfMatchParam'
+      responses:
+        '200':
+          description: Holiday removed successfully
+          headers:
+            X-Correlation-Id:
+              $ref: '#/components/headers/X-Correlation-Id'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponseDto'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # ==========================================
+  # Admin - Schedule Templates
+  # ==========================================
+  /chronivaro/v1/admin/schedule-templates:
+    get:
+      summary: List schedule templates
+      description: Returns predefined weekly schedule templates (e.g., 100% Full Time 40h, 80% 32h).
+      operationId: getScheduleTemplates
+      tags:
+        - Admin - Schedule Templates
+      security:
+        - CookieAuth: []
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/OffsetParam'
+        - $ref: '#/components/parameters/LimitParam'
+      responses:
+        '200':
+          description: Schedule templates retrieved successfully
+          headers:
+            X-Correlation-Id:
+              $ref: '#/components/headers/X-Correlation-Id'
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: array
+                    items:
+                      $ref: '#/components/schemas/ScheduleTemplateDto'
+                  - $ref: '#/components/schemas/PagedScheduleTemplateDto'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      summary: Create schedule template
+      description: Creates a new reusable weekly schedule model.
+      operationId: createScheduleTemplate
+      tags:
+        - Admin - Schedule Templates
+      security:
+        - CookieAuth: []
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ScheduleTemplateCreateDto'
+      responses:
+        '200':
+          description: Schedule template created successfully
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
+            X-Correlation-Id:
+              $ref: '#/components/headers/X-Correlation-Id'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScheduleTemplateDto'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /chronivaro/v1/admin/schedule-templates/{id}:
+    get:
+      summary: Get schedule template by ID
+      description: Returns details of a specific schedule template.
+      operationId: getScheduleTemplateById
+      tags:
+        - Admin - Schedule Templates
+      security:
+        - CookieAuth: []
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Schedule template identifier
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Schedule template retrieved successfully
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
+            X-Correlation-Id:
+              $ref: '#/components/headers/X-Correlation-Id'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScheduleTemplateDto'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    put:
+      summary: Update schedule template
+      description: Updates template name and day target allocations. Supports optimistic concurrency via `If-Match`.
+      operationId: updateScheduleTemplate
+      tags:
+        - Admin - Schedule Templates
+      security:
+        - CookieAuth: []
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Schedule template identifier
+          schema:
+            type: string
+        - $ref: '#/components/parameters/IfMatchParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ScheduleTemplateCreateDto'
+      responses:
+        '200':
+          description: Schedule template updated successfully
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
+            X-Correlation-Id:
+              $ref: '#/components/headers/X-Correlation-Id'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScheduleTemplateDto'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      summary: Remove schedule template
+      description: Removes a schedule template. Supports optimistic concurrency via `If-Match`.
+      operationId: removeScheduleTemplate
+      tags:
+        - Admin - Schedule Templates
+      security:
+        - CookieAuth: []
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Schedule template identifier
+          schema:
+            type: string
+        - $ref: '#/components/parameters/IfMatchParam'
+      responses:
+        '200':
+          description: Schedule template removed successfully
+          headers:
+            X-Correlation-Id:
+              $ref: '#/components/headers/X-Correlation-Id'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponseDto'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # ==========================================
+  # Admin - Audit Logs, Configuration & Corrections
+  # ==========================================
+  /chronivaro/v1/admin/audit-logs:
+    get:
+      summary: Query system audit logs
+      description: Returns immutable audit log records with filtering by entity, user, date range, or action.
+      operationId: getAuditLogs
+      tags:
+        - Admin - Audits & Configuration
+      security:
+        - CookieAuth: []
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/OffsetParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - name: entityType
+          in: query
+          required: false
+          description: Entity type filter (e.g., Employee, Absence, WorkEntry)
+          schema:
+            type: string
+        - name: entityId
+          in: query
+          required: false
+          description: Specific entity identifier
+          schema:
+            type: string
+        - name: username
+          in: query
+          required: false
+          description: Performed by username
+          schema:
+            type: string
+        - name: from
+          in: query
+          required: false
+          description: Earliest audit log timestamp (ISO)
+          schema:
+            type: string
+        - name: to
+          in: query
+          required: false
+          description: Latest audit log timestamp (ISO)
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Audit logs retrieved successfully
+          headers:
+            X-Correlation-Id:
+              $ref: '#/components/headers/X-Correlation-Id'
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: array
+                    items:
+                      $ref: '#/components/schemas/AuditLogDto'
+                  - $ref: '#/components/schemas/PagedAuditLogDto'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /chronivaro/v1/admin/configuration:
+    get:
+      summary: Get global system configuration
+      description: Returns tenant-wide settings (e.g. grace periods, default break rules, holiday calendars).
+      operationId: getConfiguration
+      tags:
+        - Admin - Audits & Configuration
+      security:
+        - CookieAuth: []
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Configuration retrieved successfully
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
+            X-Correlation-Id:
+              $ref: '#/components/headers/X-Correlation-Id'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConfigurationDto'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    put:
+      summary: Update global system configuration
+      description: Updates system configuration parameters. Supports optimistic concurrency via `If-Match`.
+      operationId: updateConfiguration
+      tags:
+        - Admin - Audits & Configuration
+      security:
+        - CookieAuth: []
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IfMatchParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfigurationDto'
+      responses:
+        '200':
+          description: Configuration updated successfully
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
+            X-Correlation-Id:
+              $ref: '#/components/headers/X-Correlation-Id'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConfigurationDto'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /chronivaro/v1/admin/corrections:
+    post:
+      summary: Perform manual balance or time correction
+      description: Applies a privileged manual adjustment or time credit directly to an employee record.
+      operationId: executeManualCorrection
+      tags:
+        - Admin - Audits & Configuration
+      security:
+        - CookieAuth: []
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ManualCorrectionRequestDto'
+      responses:
+        '200':
+          description: Manual correction applied successfully
+          headers:
+            X-Correlation-Id:
+              $ref: '#/components/headers/X-Correlation-Id'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponseDto'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+# ==========================================
+# Components
+# ==========================================
+components:
+  securitySchemes:
+    CookieAuth:
+      type: apiKey
+      in: cookie
+      name: strolch.authorization
+      description: Strolch session cookie containing the user authentication token.
+    BearerAuth:
+      type: http
+      scheme: bearer
+      description: Bearer token containing the Strolch user certificate ID.
+
+  headers:
+    ETag:
+      description: Entity version validator for optimistic concurrency control (e.g., W/"1" or "1").
+      schema:
+        type: string
+        example: '"1"'
+    If-Match:
+      description: Precondition header requiring the client's cached entity version before mutation.
+      schema:
+        type: string
+        example: '"1"'
+    X-Correlation-Id:
+      description: Unique identifier for tracking and correlating requests across logs and client telemetry.
+      schema:
+        type: string
+        format: uuid
+        example: '4a1b0289-53e7-4b72-bdf4-f8b898ecb817'
+
+  parameters:
+    OffsetParam:
+      name: offset
+      in: query
+      description: Zero-based item offset for pagination (defaults to 0).
+      required: false
+      schema:
+        type: integer
+        minimum: 0
+        default: 0
+        example: 0
+    LimitParam:
+      name: limit
+      in: query
+      description: Number of items to return (defaults to 50, maximum 1000).
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 1000
+        default: 50
+        example: 50
+    IfMatchParam:
+      name: If-Match
+      in: header
+      required: false
+      description: Target entity version for optimistic concurrency control.
+      schema:
+        type: string
+        example: '"1"'
+
+  responses:
+    BadRequest:
+      description: Bad request - Validation failure or malformed payload
+      headers:
+        X-Correlation-Id:
+          $ref: '#/components/headers/X-Correlation-Id'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorDto'
+    Unauthorized:
+      description: Unauthorized - Authentication is missing or invalid
+      headers:
+        X-Correlation-Id:
+          $ref: '#/components/headers/X-Correlation-Id'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorDto'
+    Forbidden:
+      description: Forbidden - Insufficient user privileges or role permissions
+      headers:
+        X-Correlation-Id:
+          $ref: '#/components/headers/X-Correlation-Id'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorDto'
+    NotFound:
+      description: Not found - Requested resource does not exist
+      headers:
+        X-Correlation-Id:
+          $ref: '#/components/headers/X-Correlation-Id'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorDto'
+    Conflict:
+      description: Conflict - Concurrency mismatch (stale If-Match) or business state violation
+      headers:
+        X-Correlation-Id:
+          $ref: '#/components/headers/X-Correlation-Id'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorDto'
+    InternalServerError:
+      description: Internal server error - Unexpected system failure
+      headers:
+        X-Correlation-Id:
+          $ref: '#/components/headers/X-Correlation-Id'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorDto'
+
+  schemas:
+    # ------------------------------------------
+    # Error & Common Models
+    # ------------------------------------------
+    ErrorDto:
+      type: object
+      required:
+        - error
+        - code
+        - message
+        - correlationId
+      properties:
+        error:
+          type: boolean
+          example: true
+        code:
+          type: string
+          example: 'VALIDATION_ERROR'
+        message:
+          type: string
+          example: 'Invalid input parameters'
+        correlationId:
+          type: string
+          example: '4a1b0289-53e7-4b72-bdf4-f8b898ecb817'
+        fieldErrors:
+          type: array
+          items:
+            $ref: '#/components/schemas/FieldErrorDto'
+
+    FieldErrorDto:
+      type: object
+      required:
+        - field
+        - message
+      properties:
+        field:
+          type: string
+          example: 'email'
+        message:
+          type: string
+          example: 'Email address is invalid'
+
+    SuccessResponseDto:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: 'Operation completed successfully'
+
+    ActionCommentDto:
+      type: object
+      properties:
+        comment:
+          type: string
+          example: 'Approved based on team coverage agreement'
+
+    VersionDto:
+      type: object
+      properties:
+        version:
+          type: string
+          example: '0.1.0-SNAPSHOT'
+        buildTimestamp:
+          type: string
+          example: '2026-08-18 10:00:00'
+        environment:
+          type: string
+          example: 'DEVELOPMENT'
+        strolchVersion:
+          type: string
+          example: '2.7.0-SNAPSHOT'
+
+    # ------------------------------------------
+    # Auth & Users
+    # ------------------------------------------
+    LoginRequestDto:
+      type: object
+      required:
+        - username
+        - password
+      properties:
+        username:
+          type: string
+          example: 'admin'
+        password:
+          type: string
+          format: password
+          example: 'Secret123!'
+
+    LoginResponseDto:
+      type: object
+      properties:
+        token:
+          type: string
+          example: 'abc123token'
+        username:
+          type: string
+          example: 'admin'
+        roles:
+          type: array
+          items:
+            type: string
+          example: ['AppUser', 'Administrator']
+
+    CurrentUserDto:
+      type: object
+      properties:
+        username:
+          type: string
+          example: 'admin'
+        firstname:
+          type: string
+          example: 'John'
+        lastname:
+          type: string
+          example: 'Doe'
+        employeeId:
+          type: string
+          example: 'emp-001'
+        roles:
+          type: array
+          items:
+            type: string
+          example: ['AppUser', 'Administrator']
+
+    RegistrationInitiateRequestDto:
+      type: object
+      required:
+        - employeeId
+        - email
+      properties:
+        employeeId:
+          type: string
+          example: 'emp-001'
+        email:
+          type: string
+          format: email
+          example: 'john.doe@example.com'
+
+    RegistrationCompleteRequestDto:
+      type: object
+      required:
+        - token
+        - password
+      properties:
+        token:
+          type: string
+          example: 'invitation-uuid-token'
+        password:
+          type: string
+          format: password
+          example: 'StrongP@ssw0rd!'
+
+    # ------------------------------------------
+    # Presence
+    # ------------------------------------------
+    PresenceDto:
+      type: object
+      properties:
+        employeeId:
+          type: string
+          example: 'emp-001'
+        firstname:
+          type: string
+          example: 'John'
+        lastname:
+          type: string
+          example: 'Doe'
+        teamId:
+          type: string
+          example: 'team-engineering'
+        teamName:
+          type: string
+          example: 'Engineering'
+        status:
+          type: string
+          enum: [WORKING, NOT_WORKING]
+          example: 'WORKING'
+        statusLabel:
+          type: string
+          example: 'Working'
+        minutesToday:
+          type: integer
+          example: 240
+        absenceTypeCode:
+          type: string
+          nullable: true
+          example: 'VACATION'
+        absenceTypeName:
+          type: string
+          nullable: true
+          example: 'Vacation'
+        isOff:
+          type: boolean
+          example: false
+        workingLocation:
+          type: string
+          enum: [OFFICE, REMOTE, CLIENT, TRANSIT]
+          example: 'OFFICE'
+
+    PagedPresenceDto:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/PresenceDto'
+        offset:
+          type: integer
+          example: 0
+        limit:
+          type: integer
+          example: 50
+        total:
+          type: integer
+          example: 10
+        size:
+          type: integer
+          example: 10
+
+    # ------------------------------------------
+    # Time Tracking & Timer
+    # ------------------------------------------
+    StartTimerRequestDto:
+      type: object
+      properties:
+        workingLocation:
+          type: string
+          enum: [OFFICE, REMOTE, CLIENT, TRANSIT]
+          example: 'OFFICE'
+
+    StopTimerRequestDto:
+      type: object
+      properties:
+        comment:
+          type: string
+          example: 'Sprint planning and core development'
+
+    TimerStatusDto:
+      type: object
+      properties:
+        active:
+          type: boolean
+          example: true
+        startTime:
+          type: string
+          format: date-time
+          nullable: true
+          example: '2026-08-18T08:30:00+02:00'
+        workingLocation:
+          type: string
+          enum: [OFFICE, REMOTE, CLIENT, TRANSIT]
+          nullable: true
+          example: 'OFFICE'
+        minutesToday:
+          type: integer
+          example: 210
+
+    WorkEntryDto:
+      type: object
+      properties:
+        id:
+          type: string
+          example: 'we-20260818-01'
+        employeeId:
+          type: string
+          example: 'emp-001'
+        start:
+          type: string
+          format: date-time
+          example: '2026-08-18T08:00:00+02:00'
+        end:
+          type: string
+          format: date-time
+          example: '2026-08-18T12:00:00+02:00'
+        durationMinutes:
+          type: integer
+          example: 240
+        source:
+          type: string
+          enum: [TIMER, MANUAL, API]
+          example: 'TIMER'
+        comment:
+          type: string
+          nullable: true
+          example: 'Morning development session'
+        createdBy:
+          type: string
+          example: 'admin'
+        workingLocation:
+          type: string
+          enum: [OFFICE, REMOTE, CLIENT, TRANSIT]
+          example: 'OFFICE'
+
+    WorkEntryCreateDto:
+      type: object
+      required:
+        - employeeId
+        - start
+        - end
+      properties:
+        employeeId:
+          type: string
+          example: 'emp-001'
+        start:
+          type: string
+          format: date-time
+          example: '2026-08-18T08:00:00+02:00'
+        end:
+          type: string
+          format: date-time
+          example: '2026-08-18T12:00:00+02:00'
+        comment:
+          type: string
+          example: 'Manual project work'
+        workingLocation:
+          type: string
+          enum: [OFFICE, REMOTE, CLIENT, TRANSIT]
+          default: 'OFFICE'
+          example: 'OFFICE'
+
+    WorkEntryUpdateDto:
+      type: object
+      required:
+        - start
+        - end
+      properties:
+        start:
+          type: string
+          format: date-time
+          example: '2026-08-18T08:15:00+02:00'
+        end:
+          type: string
+          format: date-time
+          example: '2026-08-18T12:00:00+02:00'
+        comment:
+          type: string
+          example: 'Adjusted arrival timestamp'
+        workingLocation:
+          type: string
+          enum: [OFFICE, REMOTE, CLIENT, TRANSIT]
+          example: 'OFFICE'
+
+    WorkEntryRangeDto:
+      type: object
+      properties:
+        start:
+          type: string
+          format: date-time
+          example: '2026-08-18T08:00:00+02:00'
+        end:
+          type: string
+          format: date-time
+          example: '2026-08-18T12:00:00+02:00'
+        durationMinutes:
+          type: integer
+          example: 240
+        workingLocation:
+          type: string
+          enum: [OFFICE, REMOTE, CLIENT, TRANSIT]
+          example: 'OFFICE'
+
+    BreakRangeDto:
+      type: object
+      properties:
+        start:
+          type: string
+          format: date-time
+          example: '2026-08-18T12:00:00+02:00'
+        end:
+          type: string
+          format: date-time
+          example: '2026-08-18T12:45:00+02:00'
+        durationMinutes:
+          type: integer
+          example: 45
+
+    # ------------------------------------------
+    # Summaries
+    # ------------------------------------------
+    DaySummaryDto:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+          example: '2026-08-18'
+        state:
+          type: string
+          enum: [REGULAR, ABSENT, HOLIDAY, WEEKEND, OFF]
+          example: 'REGULAR'
+        stateLabel:
+          type: string
+          example: 'Regular Workday'
+        targetMinutes:
+          type: integer
+          example: 480
+        actualMinutes:
+          type: integer
+          example: 510
+        holidayMinutes:
+          type: integer
+          example: 0
+        absenceMinutes:
+          type: integer
+          example: 0
+        isOff:
+          type: boolean
+          example: false
+        balance:
+          type: integer
+          example: 30
+        workingLocation:
+          type: string
+          enum: [OFFICE, REMOTE, CLIENT, TRANSIT]
+          example: 'OFFICE'
+        workEntries:
+          type: array
+          items:
+            $ref: '#/components/schemas/WorkEntryRangeDto'
+        breaks:
+          type: array
+          items:
+            $ref: '#/components/schemas/BreakRangeDto'
+
+    MonthSummaryDto:
+      type: object
+      properties:
+        employeeId:
+          type: string
+          example: 'emp-001'
+        yearMonth:
+          type: string
+          example: '2026-08'
+        totalTargetMinutes:
+          type: integer
+          example: 10080
+        totalActualMinutes:
+          type: integer
+          example: 10320
+        totalHolidayMinutes:
+          type: integer
+          example: 480
+        totalAbsenceMinutes:
+          type: integer
+          example: 0
+        initialBalanceMinutes:
+          type: integer
+          example: 120
+        periodBalanceMinutes:
+          type: integer
+          example: 720
+        endBalanceMinutes:
+          type: integer
+          example: 840
+        daySummaries:
+          type: array
+          items:
+            $ref: '#/components/schemas/DaySummaryDto'
+
+    # ------------------------------------------
+    # Absences
+    # ------------------------------------------
+    AbsenceDto:
+      type: object
+      properties:
+        id:
+          type: string
+          example: 'abs-001'
+        employeeId:
+          type: string
+          example: 'emp-001'
+        absenceTypeCode:
+          type: string
+          example: 'VACATION'
+        start:
+          type: string
+          format: date-time
+          example: '2026-08-20T00:00:00+02:00'
+        end:
+          type: string
+          format: date-time
+          example: '2026-08-22T23:59:59+02:00'
+        durationType:
+          type: string
+          enum: [DAYS, HALF_DAY, HOURS]
+          example: 'DAYS'
+        dayPart:
+          type: string
+          enum: [MORNING, AFTERNOON]
+          nullable: true
+          example: 'MORNING'
+        minutes:
+          type: integer
+          nullable: true
+          example: 1440
+        comment:
+          type: string
+          nullable: true
+          example: 'Summer vacation'
+        state:
+          type: string
+          enum: [REQUESTED, APPROVED, REJECTED, CANCELLED]
+          example: 'APPROVED'
+
+    AbsenceCreateDto:
+      type: object
+      required:
+        - employeeId
+        - absenceTypeCode
+        - start
+        - end
+        - durationType
+      properties:
+        employeeId:
+          type: string
+          example: 'emp-001'
+        absenceTypeCode:
+          type: string
+          example: 'VACATION'
+        start:
+          type: string
+          format: date-time
+          example: '2026-08-20T00:00:00+02:00'
+        end:
+          type: string
+          format: date-time
+          example: '2026-08-22T23:59:59+02:00'
+        durationType:
+          type: string
+          enum: [DAYS, HALF_DAY, HOURS]
+          example: 'DAYS'
+        dayPart:
+          type: string
+          enum: [MORNING, AFTERNOON]
+          example: 'MORNING'
+        minutes:
+          type: integer
+          example: 1440
+        comment:
+          type: string
+          example: 'Annual vacation'
+
+    PagedAbsenceDto:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/AbsenceDto'
+        offset:
+          type: integer
+          example: 0
+        limit:
+          type: integer
+          example: 50
+        total:
+          type: integer
+          example: 15
+        size:
+          type: integer
+          example: 15
+
+    # ------------------------------------------
+    # Periods
+    # ------------------------------------------
+    PeriodStatusDto:
+      type: object
+      properties:
+        employeeId:
+          type: string
+          example: 'emp-001'
+        yearMonth:
+          type: string
+          example: '2026-08'
+        status:
+          type: string
+          enum: [OPEN, SUBMITTED, APPROVED, CLOSED]
+          example: 'APPROVED'
+        submittedAt:
+          type: string
+          format: date-time
+          nullable: true
+        approvedAt:
+          type: string
+          format: date-time
+          nullable: true
+        approvedBy:
+          type: string
+          nullable: true
+          example: 'supervisor1'
+
+    PeriodActionRequestDto:
+      type: object
+      required:
+        - employeeId
+        - yearMonth
+      properties:
+        employeeId:
+          type: string
+          example: 'emp-001'
+        yearMonth:
+          type: string
+          example: '2026-08'
+        comment:
+          type: string
+          example: 'Monthly review completed'
+
+    YearClosingRequestDto:
+      type: object
+      required:
+        - year
+      properties:
+        year:
+          type: integer
+          example: 2026
+        maxOvertimeCarryoverHours:
+          type: integer
+          default: 50
+          example: 50
+
+    # ------------------------------------------
+    # Admin Models
+    # ------------------------------------------
+    EmployeeDto:
+      type: object
+      properties:
+        id:
+          type: string
+          example: 'emp-001'
+        personalNumber:
+          type: string
+          example: 'PER-1001'
+        firstname:
+          type: string
+          example: 'John'
+        lastname:
+          type: string
+          example: 'Doe'
+        birthdate:
+          type: string
+          format: date
+          example: '1990-05-15'
+        teamId:
+          type: string
+          example: 'team-engineering'
+        teamName:
+          type: string
+          example: 'Engineering'
+        locationId:
+          type: string
+          example: 'loc-zurich'
+        locationName:
+          type: string
+          example: 'Zurich HQ'
+        timezone:
+          type: string
+          example: 'Europe/Zurich'
+        joinDate:
+          type: string
+          format: date
+          example: '2024-01-01'
+        exitDate:
+          type: string
+          format: date
+          nullable: true
+          example: null
+        active:
+          type: boolean
+          example: true
+        userId:
+          type: string
+          example: 'usr-jdoe'
+        username:
+          type: string
+          example: 'jdoe'
+        email:
+          type: string
+          format: email
+          example: 'john.doe@example.com'
+        scheduleTemplateId:
+          type: string
+          example: 'st-fulltime-40'
+
+    EmployeeCreateDto:
+      type: object
+      required:
+        - personalNumber
+        - firstname
+        - lastname
+        - email
+        - teamId
+        - locationId
+        - joinDate
+      properties:
+        personalNumber:
+          type: string
+          example: 'PER-1001'
+        firstname:
+          type: string
+          example: 'John'
+        lastname:
+          type: string
+          example: 'Doe'
+        birthdate:
+          type: string
+          format: date
+          example: '1990-05-15'
+        email:
+          type: string
+          format: email
+          example: 'john.doe@example.com'
+        teamId:
+          type: string
+          example: 'team-engineering'
+        locationId:
+          type: string
+          example: 'loc-zurich'
+        joinDate:
+          type: string
+          format: date
+          example: '2024-01-01'
+        scheduleTemplateId:
+          type: string
+          example: 'st-fulltime-40'
+
+    EmployeeUpdateDto:
+      type: object
+      required:
+        - firstname
+        - lastname
+        - email
+        - teamId
+        - locationId
+      properties:
+        personalNumber:
+          type: string
+          example: 'PER-1001'
+        firstname:
+          type: string
+          example: 'John'
+        lastname:
+          type: string
+          example: 'Doe'
+        birthdate:
+          type: string
+          format: date
+          example: '1990-05-15'
+        email:
+          type: string
+          format: email
+          example: 'john.doe@example.com'
+        teamId:
+          type: string
+          example: 'team-engineering'
+        locationId:
+          type: string
+          example: 'loc-zurich'
+        joinDate:
+          type: string
+          format: date
+          example: '2024-01-01'
+        exitDate:
+          type: string
+          format: date
+          nullable: true
+        active:
+          type: boolean
+          example: true
+        scheduleTemplateId:
+          type: string
+          example: 'st-fulltime-40'
+
+    PagedEmployeeDto:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/EmployeeDto'
+        offset:
+          type: integer
+          example: 0
+        limit:
+          type: integer
+          example: 50
+        total:
+          type: integer
+          example: 10
+        size:
+          type: integer
+          example: 10
+
+    ScheduleDto:
+      type: object
+      properties:
+        id:
+          type: string
+          example: 'sch-001'
+        employeeId:
+          type: string
+          example: 'emp-001'
+        validFrom:
+          type: string
+          format: date-time
+          example: '2026-01-01T00:00:00+01:00'
+        validTo:
+          type: string
+          format: date-time
+          nullable: true
+          example: '2026-12-31T23:59:59+01:00'
+        monday:
+          type: integer
+          example: 480
+        tuesday:
+          type: integer
+          example: 480
+        wednesday:
+          type: integer
+          example: 480
+        thursday:
+          type: integer
+          example: 480
+        friday:
+          type: integer
+          example: 480
+        saturday:
+          type: integer
+          example: 0
+        sunday:
+          type: integer
+          example: 0
+
+    ScheduleCreateDto:
+      type: object
+      required:
+        - validFrom
+        - monday
+        - tuesday
+        - wednesday
+        - thursday
+        - friday
+      properties:
+        validFrom:
+          type: string
+          format: date-time
+          example: '2026-01-01T00:00:00+01:00'
+        validTo:
+          type: string
+          format: date-time
+          nullable: true
+        monday:
+          type: integer
+          example: 480
+        tuesday:
+          type: integer
+          example: 480
+        wednesday:
+          type: integer
+          example: 480
+        thursday:
+          type: integer
+          example: 480
+        friday:
+          type: integer
+          example: 480
+        saturday:
+          type: integer
+          default: 0
+          example: 0
+        sunday:
+          type: integer
+          default: 0
+          example: 0
+
+    ScheduleUpdateDto:
+      type: object
+      required:
+        - validFrom
+        - monday
+        - tuesday
+        - wednesday
+        - thursday
+        - friday
+      properties:
+        validFrom:
+          type: string
+          format: date-time
+          example: '2026-01-01T00:00:00+01:00'
+        validTo:
+          type: string
+          format: date-time
+          nullable: true
+        monday:
+          type: integer
+          example: 480
+        tuesday:
+          type: integer
+          example: 480
+        wednesday:
+          type: integer
+          example: 480
+        thursday:
+          type: integer
+          example: 480
+        friday:
+          type: integer
+          example: 480
+        saturday:
+          type: integer
+          example: 0
+        sunday:
+          type: integer
+          example: 0
+
+    PagedScheduleDto:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/ScheduleDto'
+        offset:
+          type: integer
+          example: 0
+        limit:
+          type: integer
+          example: 50
+        total:
+          type: integer
+          example: 2
+        size:
+          type: integer
+          example: 2
+
+    VacationAccountEntryDto:
+      type: object
+      properties:
+        id:
+          type: string
+          example: 'vac-entry-01'
+        employeeId:
+          type: string
+          example: 'emp-001'
+        year:
+          type: integer
+          example: 2026
+        date:
+          type: string
+          format: date
+          example: '2026-01-01'
+        entryType:
+          type: string
+          enum: [INITIAL, REGULAR, SPECIAL, CORRECTION, DEDUCTION, CARRYOVER]
+          example: 'REGULAR'
+        days:
+          type: number
+          format: double
+          example: 25.0
+        balance:
+          type: number
+          format: double
+          example: 25.0
+        reason:
+          type: string
+          example: 'Annual vacation entitlement 2026'
+        createdBy:
+          type: string
+          example: 'system'
+
+    PagedVacationAccountDto:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/VacationAccountEntryDto'
+        offset:
+          type: integer
+          example: 0
+        limit:
+          type: integer
+          example: 50
+        total:
+          type: integer
+          example: 5
+        size:
+          type: integer
+          example: 5
+
+    VacationCorrectionRequestDto:
+      type: object
+      required:
+        - year
+        - days
+        - reason
+      properties:
+        year:
+          type: integer
+          example: 2026
+        days:
+          type: number
+          format: double
+          example: 2.5
+        reason:
+          type: string
+          example: 'Special anniversary leave bonus'
+
+    TeamDto:
+      type: object
+      properties:
+        id:
+          type: string
+          example: 'team-engineering'
+        name:
+          type: string
+          example: 'Engineering'
+
+    TeamCreateDto:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          example: 'Engineering'
+
+    PagedTeamDto:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/TeamDto'
+        offset:
+          type: integer
+          example: 0
+        limit:
+          type: integer
+          example: 50
+        total:
+          type: integer
+          example: 3
+        size:
+          type: integer
+          example: 3
+
+    LocationDto:
+      type: object
+      properties:
+        id:
+          type: string
+          example: 'loc-zurich'
+        name:
+          type: string
+          example: 'Zurich HQ'
+        timezone:
+          type: string
+          example: 'Europe/Zurich'
+        holidayCalendarId:
+          type: string
+          example: 'hol-ch-zh'
+        holidayCalendarName:
+          type: string
+          example: 'Canton Zurich'
+
+    LocationCreateDto:
+      type: object
+      required:
+        - name
+        - timezone
+        - holidayCalendarId
+      properties:
+        name:
+          type: string
+          example: 'Zurich HQ'
+        timezone:
+          type: string
+          example: 'Europe/Zurich'
+        holidayCalendarId:
+          type: string
+          example: 'hol-ch-zh'
+
+    PagedLocationDto:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/LocationDto'
+        offset:
+          type: integer
+          example: 0
+        limit:
+          type: integer
+          example: 50
+        total:
+          type: integer
+          example: 2
+        size:
+          type: integer
+          example: 2
+
+    AbsenceTypeDto:
+      type: object
+      properties:
+        id:
+          type: string
+          example: 'at-vacation'
+        code:
+          type: string
+          example: 'VACATION'
+        name:
+          type: string
+          example: 'Vacation'
+        countAsTargetTime:
+          type: boolean
+          example: true
+        reduceVacationCredit:
+          type: boolean
+          example: true
+        paid:
+          type: boolean
+          example: true
+        approvalRequired:
+          type: boolean
+          example: true
+        durationTypes:
+          type: array
+          items:
+            type: string
+            enum: [DAYS, HALF_DAY, HOURS]
+          example: ['DAYS', 'HALF_DAY']
+        active:
+          type: boolean
+          example: true
+
+    AbsenceTypeCreateDto:
+      type: object
+      required:
+        - code
+        - name
+      properties:
+        code:
+          type: string
+          example: 'VACATION'
+        name:
+          type: string
+          example: 'Vacation'
+        countAsTargetTime:
+          type: boolean
+          default: true
+          example: true
+        reduceVacationCredit:
+          type: boolean
+          default: true
+          example: true
+        paid:
+          type: boolean
+          default: true
+          example: true
+        approvalRequired:
+          type: boolean
+          default: true
+          example: true
+        durationTypes:
+          type: array
+          items:
+            type: string
+            enum: [DAYS, HALF_DAY, HOURS]
+          example: ['DAYS', 'HALF_DAY']
+        active:
+          type: boolean
+          default: true
+          example: true
+
+    PagedAbsenceTypeDto:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/AbsenceTypeDto'
+        offset:
+          type: integer
+          example: 0
+        limit:
+          type: integer
+          example: 50
+        total:
+          type: integer
+          example: 6
+        size:
+          type: integer
+          example: 6
+
+    HolidayCalendarDto:
+      type: object
+      properties:
+        id:
+          type: string
+          example: 'hol-ch-zh'
+        name:
+          type: string
+          example: 'Canton Zurich'
+
+    HolidayCalendarCreateDto:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          example: 'Canton Zurich'
+
+    PagedHolidayCalendarDto:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/HolidayCalendarDto'
+        offset:
+          type: integer
+          example: 0
+        limit:
+          type: integer
+          example: 50
+        total:
+          type: integer
+          example: 2
+        size:
+          type: integer
+          example: 2
+
+    HolidayDto:
+      type: object
+      properties:
+        id:
+          type: string
+          example: 'hol-2026-08-01'
+        holidayCalendarId:
+          type: string
+          example: 'hol-ch-zh'
+        date:
+          type: string
+          format: date
+          example: '2026-08-01'
+        name:
+          type: string
+          example: 'Swiss National Day'
+        creditFactor:
+          type: number
+          format: double
+          example: 1.0
+
+    HolidayCreateDto:
+      type: object
+      required:
+        - date
+        - name
+        - creditFactor
+      properties:
+        date:
+          type: string
+          format: date
+          example: '2026-08-01'
+        name:
+          type: string
+          example: 'Swiss National Day'
+        creditFactor:
+          type: number
+          format: double
+          example: 1.0
+
+    PagedHolidayDto:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/HolidayDto'
+        offset:
+          type: integer
+          example: 0
+        limit:
+          type: integer
+          example: 50
+        total:
+          type: integer
+          example: 12
+        size:
+          type: integer
+          example: 12
+
+    ScheduleTemplateDto:
+      type: object
+      properties:
+        id:
+          type: string
+          example: 'st-fulltime-40'
+        name:
+          type: string
+          example: '100% Full-Time 40h'
+        monday:
+          type: integer
+          example: 480
+        tuesday:
+          type: integer
+          example: 480
+        wednesday:
+          type: integer
+          example: 480
+        thursday:
+          type: integer
+          example: 480
+        friday:
+          type: integer
+          example: 480
+        saturday:
+          type: integer
+          example: 0
+        sunday:
+          type: integer
+          example: 0
+
+    ScheduleTemplateCreateDto:
+      type: object
+      required:
+        - name
+        - monday
+        - tuesday
+        - wednesday
+        - thursday
+        - friday
+      properties:
+        name:
+          type: string
+          example: '100% Full-Time 40h'
+        monday:
+          type: integer
+          example: 480
+        tuesday:
+          type: integer
+          example: 480
+        wednesday:
+          type: integer
+          example: 480
+        thursday:
+          type: integer
+          example: 480
+        friday:
+          type: integer
+          example: 480
+        saturday:
+          type: integer
+          default: 0
+          example: 0
+        sunday:
+          type: integer
+          default: 0
+          example: 0
+
+    PagedScheduleTemplateDto:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/ScheduleTemplateDto'
+        offset:
+          type: integer
+          example: 0
+        limit:
+          type: integer
+          example: 50
+        total:
+          type: integer
+          example: 4
+        size:
+          type: integer
+          example: 4
+
+    AuditLogDto:
+      type: object
+      properties:
+        id:
+          type: string
+          example: 'audit-001'
+        timestamp:
+          type: string
+          format: date-time
+          example: '2026-08-18T10:30:00+02:00'
+        username:
+          type: string
+          example: 'admin'
+        action:
+          type: string
+          enum: [CREATE, UPDATE, DELETE, SUBMIT, APPROVE, REJECT, CANCEL, CLOSE]
+          example: 'CREATE'
+        entityType:
+          type: string
+          example: 'Employee'
+        entityId:
+          type: string
+          example: 'emp-001'
+        details:
+          type: string
+          example: 'Created employee John Doe'
+
+    PagedAuditLogDto:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/AuditLogDto'
+        offset:
+          type: integer
+          example: 0
+        limit:
+          type: integer
+          example: 50
+        total:
+          type: integer
+          example: 100
+        size:
+          type: integer
+          example: 50
+
+    ConfigurationDto:
+      type: object
+      properties:
+        defaultBreakMinutes:
+          type: integer
+          example: 30
+        autoCloseGracePeriodDays:
+          type: integer
+          example: 5
+        maxOvertimeCarryoverHours:
+          type: integer
+          example: 50
+
+    ManualCorrectionRequestDto:
+      type: object
+      required:
+        - employeeId
+        - date
+        - minutes
+        - reason
+      properties:
+        employeeId:
+          type: string
+          example: 'emp-001'
+        date:
+          type: string
+          format: date
+          example: '2026-08-18'
+        minutes:
+          type: integer
+          example: 60
+        reason:
+          type: string
+          example: 'System downtime compensation'
