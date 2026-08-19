@@ -662,6 +662,317 @@ paths:
           $ref: '#/components/responses/InternalServerError'
 
   # ==========================================
+  # Reports & CSV Export
+  # ==========================================
+  /chronivaro/v1/reports/day:
+    get:
+      summary: Get day report
+      description: Returns daily time breakdown and summaries in JSON or CSV format.
+      operationId: getDayReport
+      tags:
+        - Reports
+      security:
+        - CookieAuth: []
+        - BearerAuth: []
+      parameters:
+        - name: date
+          in: query
+          required: true
+          description: Target date formatted as YYYY-MM-DD
+          schema:
+            type: string
+            format: date
+            example: '2026-08-18'
+        - name: employeeId
+          in: query
+          description: Employee ID (optional, defaults to current user's employee)
+          required: false
+          schema:
+            type: string
+        - name: format
+          in: query
+          description: Output format (json or csv)
+          required: false
+          schema:
+            type: string
+            enum: [json, csv]
+            default: json
+      responses:
+        '200':
+          description: Day report retrieved successfully
+          headers:
+            X-Correlation-Id:
+              $ref: '#/components/headers/X-Correlation-Id'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DaySummaryDto'
+            text/csv:
+              schema:
+                type: string
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /chronivaro/v1/reports/month:
+    get:
+      summary: Get month report
+      description: Returns monthly summary aggregation and daily breakdown in JSON or CSV format.
+      operationId: getMonthReport
+      tags:
+        - Reports
+      security:
+        - CookieAuth: []
+        - BearerAuth: []
+      parameters:
+        - name: yearMonth
+          in: query
+          required: true
+          description: Target month formatted as YYYY-MM
+          schema:
+            type: string
+            example: '2026-08'
+        - name: employeeId
+          in: query
+          description: Employee ID (optional, defaults to current user's employee)
+          required: false
+          schema:
+            type: string
+        - name: format
+          in: query
+          description: Output format (json or csv)
+          required: false
+          schema:
+            type: string
+            enum: [json, csv]
+            default: json
+      responses:
+        '200':
+          description: Month report retrieved successfully
+          headers:
+            X-Correlation-Id:
+              $ref: '#/components/headers/X-Correlation-Id'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MonthSummaryDto'
+            text/csv:
+              schema:
+                type: string
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /chronivaro/v1/reports/vacation:
+    get:
+      summary: Get vacation report
+      description: Returns yearly vacation account summary and journal entries in JSON or CSV format.
+      operationId: getVacationReport
+      tags:
+        - Reports
+      security:
+        - CookieAuth: []
+        - BearerAuth: []
+      parameters:
+        - name: year
+          in: query
+          required: false
+          description: Calendar year (defaults to current year)
+          schema:
+            type: integer
+            example: 2026
+        - name: employeeId
+          in: query
+          description: Employee ID (optional, defaults to current user's employee)
+          required: false
+          schema:
+            type: string
+        - name: format
+          in: query
+          description: Output format (json or csv)
+          required: false
+          schema:
+            type: string
+            enum: [json, csv]
+            default: json
+      responses:
+        '200':
+          description: Vacation report retrieved successfully
+          headers:
+            X-Correlation-Id:
+              $ref: '#/components/headers/X-Correlation-Id'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VacationAccountSummaryDto'
+            text/csv:
+              schema:
+                type: string
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /chronivaro/v1/reports/team:
+    get:
+      summary: Get team report
+      description: Returns monthly time, balance, and missing bookings aggregation for all team members in JSON or CSV format.
+      operationId: getTeamReport
+      tags:
+        - Reports
+      security:
+        - CookieAuth: []
+        - BearerAuth: []
+      parameters:
+        - name: teamId
+          in: query
+          required: true
+          description: Team ID
+          schema:
+            type: string
+            example: 'team-1'
+        - name: yearMonth
+          in: query
+          required: true
+          description: Target month formatted as YYYY-MM
+          schema:
+            type: string
+            example: '2026-08'
+        - name: format
+          in: query
+          description: Output format (json or csv)
+          required: false
+          schema:
+            type: string
+            enum: [json, csv]
+            default: json
+      responses:
+        '200':
+          description: Team report retrieved successfully
+          headers:
+            X-Correlation-Id:
+              $ref: '#/components/headers/X-Correlation-Id'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamReportDto'
+            text/csv:
+              schema:
+                type: string
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /chronivaro/v1/reports/absences:
+    get:
+      summary: Get absence report
+      description: Returns filtered absences report in JSON or CSV format.
+      operationId: getAbsencesReport
+      tags:
+        - Reports
+      security:
+        - CookieAuth: []
+        - BearerAuth: []
+      parameters:
+        - name: teamId
+          in: query
+          description: Filter by team ID
+          required: false
+          schema:
+            type: string
+        - name: employeeId
+          in: query
+          description: Filter by employee ID
+          required: false
+          schema:
+            type: string
+        - name: from
+          in: query
+          description: Start of date range (YYYY-MM-DD)
+          required: false
+          schema:
+            type: string
+            format: date
+        - name: to
+          in: query
+          description: End of date range (YYYY-MM-DD)
+          required: false
+          schema:
+            type: string
+            format: date
+        - name: absenceTypeCode
+          in: query
+          description: Filter by absence type code
+          required: false
+          schema:
+            type: string
+        - name: status
+          in: query
+          description: Filter by absence state
+          required: false
+          schema:
+            type: string
+            enum: [REQUESTED, APPROVED, REJECTED, CANCELLED]
+        - name: format
+          in: query
+          description: Output format (json or csv)
+          required: false
+          schema:
+            type: string
+            enum: [json, csv]
+            default: json
+      responses:
+        '200':
+          description: Absence report retrieved successfully
+          headers:
+            X-Correlation-Id:
+              $ref: '#/components/headers/X-Correlation-Id'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AbsenceReportDto'
+            text/csv:
+              schema:
+                type: string
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # ==========================================
   # Absences
   # ==========================================
   /chronivaro/v1/absences:
@@ -3714,6 +4025,131 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/DaySummaryDto'
+
+    TeamEmployeeSummaryDto:
+      type: object
+      properties:
+        employeeId:
+          type: string
+          example: 'emp-001'
+        employeeName:
+          type: string
+          example: 'Jane Doe'
+        teamId:
+          type: string
+          example: 'team-1'
+        yearMonth:
+          type: string
+          example: '2026-08'
+        targetMinutes:
+          type: integer
+          example: 10080
+        actualMinutes:
+          type: integer
+          example: 10320
+        holidayMinutes:
+          type: integer
+          example: 480
+        absenceMinutes:
+          type: integer
+          example: 0
+        initialBalanceMinutes:
+          type: integer
+          example: 120
+        periodBalanceMinutes:
+          type: integer
+          example: 720
+        endBalanceMinutes:
+          type: integer
+          example: 840
+        periodState:
+          type: string
+          example: 'OPEN'
+        missingBookingsCount:
+          type: integer
+          example: 0
+
+    TeamReportDto:
+      type: object
+      properties:
+        teamId:
+          type: string
+          example: 'team-1'
+        teamName:
+          type: string
+          example: 'Engineering'
+        yearMonth:
+          type: string
+          example: '2026-08'
+        employees:
+          type: array
+          items:
+            $ref: '#/components/schemas/TeamEmployeeSummaryDto'
+
+    AbsenceReportItemDto:
+      type: object
+      properties:
+        id:
+          type: string
+          example: 'abs-001'
+        employeeId:
+          type: string
+          example: 'emp-001'
+        employeeName:
+          type: string
+          example: 'Jane Doe'
+        absenceTypeCode:
+          type: string
+          example: 'VACATION'
+        absenceTypeName:
+          type: string
+          example: 'Vacation'
+        start:
+          type: string
+          example: '2026-08-20'
+        end:
+          type: string
+          example: '2026-08-22'
+        durationType:
+          type: string
+          example: 'DAYS'
+        dayPart:
+          type: string
+          nullable: true
+          example: 'MORNING'
+        minutes:
+          type: integer
+          example: 1440
+        state:
+          type: string
+          example: 'APPROVED'
+        paid:
+          type: boolean
+          example: true
+        comment:
+          type: string
+          nullable: true
+          example: 'Summer vacation'
+        createdAt:
+          type: string
+          nullable: true
+          example: '2026-08-10T08:00:00+02:00'
+        approvedAt:
+          type: string
+          nullable: true
+          example: '2026-08-11T09:00:00+02:00'
+        approvedBy:
+          type: string
+          nullable: true
+          example: 'supervisor_user'
+
+    AbsenceReportDto:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/AbsenceReportItemDto'
 
     # ------------------------------------------
     # Absences
