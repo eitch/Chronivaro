@@ -99,9 +99,11 @@
             <Allow>ch.atexxi.chronivaro.core.service.StopTimerService</Allow>
             <Allow>ch.atexxi.chronivaro.core.service.SubmitPeriodService</Allow>
             <Allow>ch.atexxi.chronivaro.core.service.CalculateVacationEntitlementService</Allow>
+            <Allow>ch.atexxi.chronivaro.core.service.GetVacationAccountSummaryService</Allow>
         </Privilege>
         <Privilege name="li.strolch.search.StrolchSearch" policy="DefaultPrivilege">
             <Allow>ch.atexxi.chronivaro.core.search.TimePeriodSearch</Allow>
+            <Allow>ch.atexxi.chronivaro.core.search.VacationAccountEntrySearch</Allow>
         </Privilege>
     </Role>
 
@@ -118,9 +120,11 @@
             <Allow>ch.atexxi.chronivaro.core.service.RejectPeriodService</Allow>
             <Allow>ch.atexxi.chronivaro.core.service.ReopenPeriodService</Allow>
             <Allow>ch.atexxi.chronivaro.core.service.CalculateVacationEntitlementService</Allow>
+            <Allow>ch.atexxi.chronivaro.core.service.GetVacationAccountSummaryService</Allow>
         </Privilege>
         <Privilege name="li.strolch.search.StrolchSearch" policy="DefaultPrivilege">
             <Allow>ch.atexxi.chronivaro.core.search.TimePeriodSearch</Allow>
+            <Allow>ch.atexxi.chronivaro.core.search.VacationAccountEntrySearch</Allow>
         </Privilege>
     </Role>
 
@@ -142,9 +146,11 @@
             <Allow>ch.atexxi.chronivaro.core.service.CalculateVacationEntitlementService</Allow>
             <Allow>ch.atexxi.chronivaro.core.service.CreditVacationEntitlementService</Allow>
             <Allow>ch.atexxi.chronivaro.core.service.AddVacationCorrectionService</Allow>
+            <Allow>ch.atexxi.chronivaro.core.service.GetVacationAccountSummaryService</Allow>
         </Privilege>
         <Privilege name="li.strolch.search.StrolchSearch" policy="DefaultPrivilege">
             <Allow>ch.atexxi.chronivaro.core.search.TimePeriodSearch</Allow>
+            <Allow>ch.atexxi.chronivaro.core.search.VacationAccountEntrySearch</Allow>
         </Privilege>
     </Role>
 </Roles>
