@@ -3832,7 +3832,7 @@ components:
           example: '2026-08'
         status:
           type: string
-          enum: [OPEN, SUBMITTED, APPROVED, CLOSED]
+          enum: [OPEN, SUBMITTED, APPROVED, CLOSED, REJECTED, LOCKED]
           example: 'APPROVED'
         submittedAt:
           type: string
@@ -3846,6 +3846,21 @@ components:
           type: string
           nullable: true
           example: 'supervisor1'
+        rejectedAt:
+          type: string
+          format: date-time
+          nullable: true
+        rejectedBy:
+          type: string
+          nullable: true
+          example: 'supervisor1'
+        comment:
+          type: string
+          nullable: true
+          example: 'Monthly review completed'
+        calculationSnapshot:
+          type: string
+          nullable: true
 
     PeriodActionRequestDto:
       type: object
