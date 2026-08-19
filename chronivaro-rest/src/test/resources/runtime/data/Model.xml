@@ -162,7 +162,7 @@
     
     <Resource Id="vacation" Name="Vacation" Type="AbsenceType">
         <ParameterBag Id="parameters" Name="Parameters" Type="Parameters">
-            <Parameter Id="code" Name="Code" Type="String" Value="V"/>
+            <Parameter Id="code" Name="Code" Type="String" Value="VACATION"/>
             <Parameter Id="name" Name="Name" Type="String" Value="Vacation"/>
             <Parameter Id="countAsTargetTime" Name="Count As Target Time" Type="Boolean" Value="false"/>
             <Parameter Id="reduceVacationCredit" Name="Reduce Vacation Credit" Type="Boolean" Value="true"/>
