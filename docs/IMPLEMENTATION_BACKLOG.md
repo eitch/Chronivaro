@@ -332,9 +332,18 @@ Task 4 was split into subtasks **4.1**, **4.2.1**, **4.2.2**, **4.2.3**, and **4
 
 ### 8. Complete the immutable vacation journal
 
-- **Status:** `PARTIAL`
+- **Status:** `COMPLETED`
 - **Scope:** Link approved usage to the journal, enforce corrections and the fixed no-negative-balance rule, and complete account/year lookup and audit behaviour.
 - **Acceptance:** Entries are append-only, usage consumes the oldest available balance, usage and corrections reconcile deterministically, insufficient balance is rejected, and rollback/audit tests pass.
+- **Verification:**
+  - Implemented `VacationAccountEntrySearch` extending `ResourceSearch` with fluent filters for `employee`, `vacationType`, `absence`, and year/date ranges.
+  - Implemented `GetVacationAccountSummaryService` resolving employee yearly vacation summaries (`carryOverMinutes`, `entitlementMinutes`, `correctionsMinutes`, `usageMinutes`, `remainingMinutes`) and sorted entry journals.
+  - Enhanced `VacationHelper` with `getVacationEntries` and `getAllVacationEntries` sorted chronological journals and oldest-balance consumption reconciliation.
+  - Updated `AddVacationCorrectionService` to enforce balance checks preventing negative balances on retroactive or current negative corrections.
+  - Updated `ApproveAbsenceService` and `CancelAbsenceService` to maintain complete metadata (`PARAM_COMMENT`, `PARAM_CREATED_BY`, versioning) and audit events for `VACATION_USAGE` and `VACATION_CORRECTION` journal entries.
+  - Configured Strolch service and search privileges in `PrivilegeRoles.xml` for `Employee`, `Supervisor`, `HR`, and `StrolchAdmin`.
+  - Added comprehensive test suite in `VacationJournalTest` covering append-only entries, year-over-year carry-over with oldest-balance consumption, absence approval usage deduction, absence cancellation refund reversal, negative correction rejection on insufficient balance, date-range/type search filtering, and audit logging.
+  - Verified with full test suite passing via `mvn test` (60 tests passing across all reactor modules with 0 failures and 0 errors).
 - **Dependencies:** Tasks 4 and 7.
 
 ### 9. Complete vacation and absence REST surfaces
