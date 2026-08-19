@@ -419,9 +419,17 @@ Task 11 was split into subtasks **11.1**, **11.2**, and **11.3** per the task-si
 
 #### 11.3. Supervisor Approval Queues UI
 
-- **Status:** `MISSING`
+- **Status:** `COMPLETED`
 - **Scope:** Add Vanilla JS views (`ApprovalsView.js`) and API client (`ApprovalsApi.js`) for supervisors and HR to review pending absence requests and submitted time periods with team/employee filtering, atomic approval and rejection with mandatory comments, and pagination.
 - **Acceptance:** Supervisors see only their scoped team members; approval and rejection actions execute cleanly with optimistic concurrency and error handling.
+- **Verification:**
+  - Implemented `ApprovalsApi.js` supporting `getSubmittedPeriods`, `approvePeriod` (with comment/ETag), `rejectPeriod` (with mandatory comment/ETag), `getSubmittedAbsences`, `approveAbsence` (with ETag), and `rejectAbsence` (with mandatory comment/ETag).
+  - Enhanced `NotificationDialog.js` with `static prompt(...)` supporting mandatory text input modals with validation for rejection comments and optional approval comments.
+  - Implemented `ApprovalsView.js` featuring tabbed navigation between Pending Absences and Submitted Periods, team/employee/absence-type/date/month filter bars, pending absences table with duration/date breakdown and atomic approve/reject actions, submitted periods table with calculation snapshot previews and approve/reject actions, and pagination controls.
+  - Registered navigation item `Approvals` in `index.html` (accessible to `Supervisor`, `HR`, and `Administrator` roles) and route `approvals` in `app.js`.
+  - Added CSS styling in `style.css` for tab buttons, filter bars, action buttons (approve green / reject red), snapshot previews, and pagination bars.
+  - Created automated integration test suite in `WebSupervisorApprovalsUiTest` verifying web assets, router registration, DOM structure, supervisor pending absences queue retrieval, absence approval/rejection with mandatory comment, supervisor period queue retrieval, period rejection/resubmission/approval, and non-supervisor authorization enforcement.
+  - Verified with full project test suite passing via `mvn clean test` (70 tests passing with 0 failures and 0 errors across all modules).
 - **Dependencies:** Tasks 6, 10, and 11.2.
 
 ### 12. Implement structured reports and CSV export

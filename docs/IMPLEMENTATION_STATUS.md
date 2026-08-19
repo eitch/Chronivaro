@@ -17,7 +17,7 @@ Audit date: 2026-08-17. `IMPLEMENTATION_SPECIFICATION.md` is authoritative; the 
 - Vacation accounting (sections 6.7, 9.4, 11.3): configurable vacation entitlement policy, proration engine, whole-minute commercial rounding, yearly account summaries with unlimited carry-over, calculation/crediting services, and absence approval balance blocking implemented and verified (Task 7 completed); immutable append-only journal, search query, yearly account summaries with oldest-balance reconciliation, absence cancellation refunds, and negative correction blocking implemented in Core (Task 8 completed); vacation account and absence REST endpoints (`/me/vacation-account`, `/me/absences` filtering/ownership, admin vacation account, calculation, crediting, and corrections) implemented and verified (Task 9 completed); personal absences and vacation account UI views implemented and verified (Task 11.1 completed).
 - Audit logging (sections 5.2, 6.10, 9.3–9.5, 16.3): `ChronivaroAuditHelper` enhanced with full metadata (action, reason, correlation ID from MDC/thread-local, details, date, user, old/new values), `AuditEventSearch` fluent query, and `PurgeAuditEventsService` retention purge logic implemented in Core (Task 4.1 completed); administrative master data mutation services audited (Task 4.2.1 completed); Employee and Schedule services audited (Task 4.2.2 completed); operational Time Tracking, Absence, Vacation, Period, and Configuration services audited (Task 4.2.3 completed); administrative REST endpoint and security implemented (Task 4.3 completed).
 - Administration (sections 3.3–3.4, 12.1): employee/team/location/schedule/holiday/absence-type pages and APIs exist, but global configuration has core support only and no REST/UI administration.
-- UI coverage (sections 12.1–12.2): dashboard, times, presence, personal absences & vacation account (Task 11.1 completed), personal periods & monthly closing (Task 11.2 completed), and administration pages exist; approvals (Task 11.3) and reports (Task 12) UI remain to be implemented.
+- UI coverage (sections 12.1–12.2): dashboard, times, presence, personal absences & vacation account (Task 11.1 completed), personal periods & monthly closing (Task 11.2 completed), supervisor approval queues (Task 11.3 completed), and administration pages exist; reports (Task 12) UI remains to be implemented.
 
 ## Missing
 
@@ -34,13 +34,12 @@ Audit date: 2026-08-17. `IMPLEMENTATION_SPECIFICATION.md` is authoritative; the 
 
 ## Dependency-ordered next steps
 
-1. Add personal workflow and approval UI (Task 11: 11.1 Personal Absences & Vacation Account, 11.2 Period Workflow & Closing, 11.3 Supervisor Approvals).
-2. Implement structured reports and CSV export (Task 12).
-3. Complete global configuration administration (Task 13).
-4. Create `chronivaro-app` and executable packaging (Task 14).
-5. Implement embedded Jetty lifecycle and configuration (Task 15).
-6. Integrate Jersey and serve the frontend from Jetty (Task 16).
-7. Add standalone and non-functional verification (Task 17).
+1. Implement structured reports and CSV export (Task 12).
+2. Complete global configuration administration (Task 13).
+3. Create `chronivaro-app` and executable packaging (Task 14).
+4. Implement embedded Jetty lifecycle and configuration (Task 15).
+5. Integrate Jersey and serve the frontend from Jetty (Task 16).
+6. Add standalone and non-functional verification (Task 17).
 
 The matching dependency-ordered tasks, evidence, dependencies, and acceptance criteria are in `IMPLEMENTATION_BACKLOG.md`.
 
