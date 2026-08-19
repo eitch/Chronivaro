@@ -485,9 +485,16 @@ Task 12 was split into subtasks **12.1** and **12.2** per the task-size and sing
 
 ### 14. Create `chronivaro-app` and executable packaging
 
-- **Status:** `MISSING`
+- **Status:** `COMPLETED`
 - **Scope:** Add the application module and executable artifact with application-owned configuration/startup contracts. Keep Jetty out of Core and REST; remove Tomcat as a runtime requirement.
 - **Acceptance:** The parent builds four modules and the documented artifact launches with `java -jar`.
+- **Verification:**
+  - Created `chronivaro-app` module registered in root `pom.xml` with dependencies on `chronivaro-core`, `chronivaro-rest`, Strolch runtime/persistence, and Jetty 12 EE10.
+  - Configured `maven-shade-plugin` in `chronivaro-app/pom.xml` to produce shaded executable artifact `chronivaro.jar` with `ch.atexxi.chronivaro.app.ChronivaroApp` entry point and merged SPI service descriptors.
+  - Implemented `ChronivaroAppConfig` supporting CLI args (`--port`, `--bind`, `--context-path`, `--no-http`, `--runtime`, `--env`, `--web-resources`), system properties, and environment variable overrides.
+  - Implemented `ChronivaroApp` orchestrating the Strolch Agent and embedded HTTP lifecycle, graceful shutdown hooks, and classpath static frontend resource resolution from `chronivaro-web`.
+  - Added test suites `ChronivaroAppConfigTest` (5 tests) and `ChronivaroAppTest` (2 tests) verifying CLI configuration parsing, Strolch agent bootstrapping without HTTP, and embedded HTTP server startup on ephemeral ports.
+  - Verified executable jar startup directly with `java -jar chronivaro-app/target/chronivaro.jar` launching in 352ms, and full project build passing with 94 tests (0 failures, 0 errors across all 4 modules).
 - **Dependencies:** Tasks 2.1–2.3, 3, and the existing modules.
 
 ### 15. Implement embedded Jetty lifecycle and configuration

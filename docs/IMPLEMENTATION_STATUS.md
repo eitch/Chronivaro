@@ -4,7 +4,7 @@ Audit date: 2026-08-17. `IMPLEMENTATION_SPECIFICATION.md` is authoritative; the 
 
 ## Implemented
 
-- MVP project structure, Maven parent, three modules, JDK 25, UTF-8, and Strolch BOM (spec sections 14 and 20.1): `Chronivaro/pom.xml`.
+- MVP project structure, Maven parent, four modules (`chronivaro-core`, `chronivaro-rest`, `chronivaro-web`, `chronivaro-app`), JDK 25, UTF-8, Strolch BOM, and executable shaded fat-JAR packaging (`chronivaro.jar`) (spec sections 14, 15.1, and 20.1): `Chronivaro/pom.xml` and `chronivaro-app/pom.xml` (Task 14 completed).
 - Employee, team, location, schedule, holiday-calendar, WorkDay, WorkEntry, absence-type, absence, and period model/service foundations: `Chronivaro/runtime/data/Templates.xml` and `chronivaro-core/src/main/java/ch/atexxi/chronivaro/core`.
 - Historical schedule lookup and overlap prevention: `ScheduleHelper`, `WorkDayHelper`, and `CreateScheduleService`.
 - Timer start/stop, same-day validation, midnight splitting, forgotten-timer capping, multiple blocks, and working-location defaults/overrides: `StartTimerService`, `StopTimerService`, `WorkEntryHelper`, `WorkingLocationDefault*`, and `chronivaro-web/src/main/webapp/js/pages/DashboardView.js`.
@@ -34,10 +34,9 @@ Audit date: 2026-08-17. `IMPLEMENTATION_SPECIFICATION.md` is authoritative; the 
 
 ## Dependency-ordered next steps
 
-1. Create `chronivaro-app` and executable packaging (Task 14).
-2. Implement embedded Jetty lifecycle and configuration (Task 15).
-3. Integrate Jersey and serve the frontend from Jetty (Task 16).
-4. Add standalone and non-functional verification (Task 17).
+1. Implement embedded Jetty lifecycle and configuration (Task 15).
+2. Integrate Jersey and serve the frontend from Jetty (Task 16).
+3. Add standalone and non-functional verification (Task 17).
 
 The matching dependency-ordered tasks, evidence, dependencies, and acceptance criteria are in `IMPLEMENTATION_BACKLOG.md`.
 
