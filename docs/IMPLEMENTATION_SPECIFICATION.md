@@ -81,16 +81,23 @@ Der erste produktiv nutzbare Umfang enthält:
 13. Audit-Log
 14. CSV-Export
 
-### 4.2 Spätere Ausbaustufen
+### 4.2 Erweiterungen des implementierten Grundumfangs
+
+Folgende Erweiterungen gehören zum aktuellen Produktscope und sind als reguläre Anforderungen dieser Spezifikation umzusetzen:
+
+- mehrsprachige Benutzeroberfläche mit initialer Unterstützung für Deutsch und Englisch
+- native PDF-Exporte für Monatsreport, Ferienübersicht und Abwesenheitsreport
+- globale Unternehmensdarstellung mit Firmenname und optionalem Firmenlogo
+
+### 4.3 Spätere Ausbaustufen
 
 - Projekt-, Kunden-, Auftrags- oder Tätigkeitserfassung
 - Zuschläge für Nacht-, Wochenend- oder Feiertagsarbeit
-- native Excel- und PDF-Exporte
+- native Excel-Exporte
 - Dokumente zu Abwesenheiten, beispielsweise Arztzeugnisse
 - Benachrichtigungen und Erinnerungen
 - Kalenderintegration
 - Import aus bestehenden Zeiterfassungssystemen
-- Mehrsprachigkeit
 - Mobile-optimierte Offline-Erfassung
 
 ## 5. Fachliche Grundsätze
@@ -234,6 +241,13 @@ Konfigurierbare Beispiele:
 | `visibleOnPublicStatus` | ob der genaue Typ sichtbar sein darf; standardmässig `false` |
 | `active` | für neue Erfassungen verfügbar |
 
+Lokalisierungsregel:
+
+- `code` bleibt sprachunabhängig und ist der stabile technische Bezeichner.
+- Der bestehende fachlich konfigurierte `name` wird vorerst nicht übersetzt.
+- Statische Enum-Werte und andere feste Systembegriffe werden über i18n-Schlüssel lokalisiert.
+- Benutzererfasste Werte, insbesondere Kommentare, Namen, Teambezeichnungen und Standortbezeichnungen, werden nicht automatisch übersetzt.
+
 ### 6.6 Absence – Abwesenheit
 
 | Attribut | Beschreibung |
@@ -337,6 +351,24 @@ Mindestens zu protokollieren:
 - neuer Wert
 - fachliche Begründung, sofern erforderlich
 - Korrelations-ID der auslösenden Anfrage
+
+### 6.11 Globale Anwendungskonfiguration
+
+Zusätzlich zu den bereits bestehenden globalen Einstellungen unterstützt Chronivaro mindestens folgende produktweite Darstellungs- und Lokalisierungswerte:
+
+| Attribut | Beschreibung |
+| --- | --- |
+| `defaultLanguage` | Standardsprache der Anwendung; initial `de` oder `en` |
+| `companyName` | global angezeigter Firmenname |
+| `companyLogo` | optionales globales Firmenlogo |
+
+Regeln:
+
+- Die initial unterstützten Sprachen sind Deutsch (`de`) und Englisch (`en`).
+- Weitere Sprachen müssen ohne Änderung der fachlichen Kernlogik ergänzbar sein.
+- `companyName` und `companyLogo` gelten global und sind nicht benutzer-, team- oder reportspezifisch.
+- Ist ein Firmenlogo konfiguriert, wird es sowohl in der Anwendung als auch in unterstützten PDF-Reports angezeigt.
+- Ist kein Firmenlogo konfiguriert, dürfen UI und PDF-Ausgabe keine leeren oder fehlerhaften Platzhalter anzeigen.
 
 ## 7. Berechnungsregeln
 
@@ -548,9 +580,65 @@ Die Darstellung muss Vorgesetzten ermöglichen, lange Arbeitsblöcke und die daz
 - offene Genehmigungen
 - Abwesenheiten nach Typ, abhängig von der Berechtigung
 
-### 11.5 Export
+### 11.5 Abwesenheitsreport
 
-Der MVP unterstützt CSV mit UTF-8 und optionalem BOM für Excel-Kompatibilität. Datums-, Zeit- und Zahlenformate sind eindeutig dokumentiert. Exporte berücksichtigen dieselben Berechtigungen wie die Bildschirmansicht.
+Der Abwesenheitsreport stellt Abwesenheiten für den gewählten Zeitraum und den berechtigten Mitarbeiter- beziehungsweise Teamkontext dar. Sichtbarkeit und Detailgrad folgen denselben Berechtigungs- und Datenschutzregeln wie die entsprechende Bildschirmansicht. Freitext-Kommentare werden standardmässig nicht in den Report übernommen.
+
+### 11.6 Export
+
+Chronivaro unterstützt CSV sowie native PDF-Ausgabe. Datums-, Zeit- und Zahlenformate sind eindeutig dokumentiert. Sämtliche Exporte berücksichtigen dieselben Berechtigungen, Filter und fachlichen Berechnungen wie die entsprechende Bildschirmansicht.
+
+#### 11.6.1 CSV
+
+CSV wird mit UTF-8 und optionalem BOM für Excel-Kompatibilität erzeugt.
+
+#### 11.6.2 Native PDF-Ausgabe
+
+Native PDF-Ausgabe wird initial für folgende Reports unterstützt:
+
+- Monatsreport
+- Ferienübersicht
+- Abwesenheitsreport
+
+Für PDF-Ausgaben gelten folgende Regeln:
+
+- PDFs werden bei Bedarf serverseitig erzeugt und direkt an den Client ausgeliefert; erzeugte PDF-Dateien werden nicht dauerhaft in Chronivaro gespeichert.
+- PDF, CSV und Bildschirmansicht verwenden dieselbe fachliche Report-Datenbasis. Berechnungen, Filter und Berechtigungen dürfen zwischen den Ausgabeformaten nicht voneinander abweichen.
+- Für genehmigte beziehungsweise gesperrte Perioden wird, soweit vorhanden, der unveränderliche `calculationSnapshot` als Grundlage verwendet.
+- Die aktuelle UI-Sprache bestimmt die Sprache von Reporttitel, Überschriften, statischen Bezeichnungen und sonstigen systemgenerierten Texten.
+- Datumswerte werden im Format `yyyy-MM-dd` dargestellt.
+- Zeitdauern werden als `HH:mm` dargestellt.
+- PDF-Seiten verwenden A4. Portrait ist der Standard; bei breiten Reportlayouts darf Landscape verwendet werden.
+- Verwendete Schriftarten werden in die PDF-Datei eingebettet.
+- PDF/A-Konformität ist nicht erforderlich.
+- Digitale Signaturen sind nicht Bestandteil dieser Ausbaustufe. Chronivaro bleibt die autoritative Quelle für Genehmigungs- und Periodenstatus.
+- PDF-Exporte selbst erzeugen keinen fachlichen Audit-Event.
+- Freitext-Kommentare werden standardmässig nicht exportiert.
+- Sensible Abwesenheitsinformationen werden nur ausgegeben, wenn der exportierende Benutzer für dieselben Informationen auch in der Anwendung berechtigt ist.
+- Negative Saldi werden visuell hervorgehoben. Die negative Bedeutung muss auch bei monochromem Ausdruck eindeutig erkennbar bleiben und darf nicht ausschliesslich durch Farbe vermittelt werden.
+- Dateinamen werden deterministisch aus Reporttyp, relevantem Mitarbeiter- beziehungsweise Kontextbezug und Berichtszeitraum gebildet.
+
+Jeder unterstützte PDF-Report enthält einen konsistenten Kopf- beziehungsweise Fussbereich mit mindestens:
+
+- Firmenname
+- optionalem konfiguriertem Firmenlogo
+- Reporttitel
+- Berichtszeitraum
+- Erstellungszeitpunkt
+- Seitennummerierung
+
+Persönliche Reports enthalten zusätzlich:
+
+- Anzeigename des Mitarbeiters
+- Personalnummer
+- Team
+- Standort
+
+Genehmigte Monatsreports enthalten zusätzlich:
+
+- Genehmigungsstatus
+- Genehmigungsdatum
+- Genehmiger
 
 ## 12. UI-Anforderungen
 
@@ -587,13 +675,14 @@ Die UI wird mit HTML, CSS und Vanilla JavaScript umgesetzt. Es wird kein Fronten
    - Zeitraum und Mitarbeiter/Team auswählen
    - Soll-/Ist-Vergleich
    - CSV-Export
+   - PDF-Export für Monatsreport, Ferienübersicht und Abwesenheitsreport
 8. **Administration**
    - Mitarbeiter und Teams
    - Registrierungsprozess auslösen
    - Arbeitspläne
    - Standorte und Feiertage
    - Abwesenheitsarten
-   - globale Einstellungen
+   - globale Einstellungen einschliesslich Standardsprache, Firmenname und optionalem Firmenlogo
 
 ### 12.2 UI-Grundsätze
 
@@ -603,10 +692,83 @@ Die UI wird mit HTML, CSS und Vanilla JavaScript umgesetzt. Es wird kein Fronten
 - Status nicht ausschliesslich durch Farbe vermitteln
 - verständliche Fehlermeldungen direkt am betroffenen Feld
 - Bestätigung vor fachlich weitreichenden Aktionen
-- Datum und Zeit in lokaler Darstellung, Übertragung in eindeutigem ISO-Format
+- Datumsdarstellung in der UI vorerst einheitlich im Format `yyyy-MM-dd`; Übertragung in eindeutigem ISO-Format
 - Lade-, Leer- und Fehlerzustände für jede asynchrone Ansicht
 
-### 12.3 JavaScript-Struktur
+### 12.3 Mehrsprachigkeit und Sprachwahl
+
+Die Chronivaro-Benutzeroberfläche unterstützt initial Deutsch und Englisch. Die technische Internationalisierung muss so aufgebaut sein, dass zusätzliche Sprachen durch Ergänzen von Übersetzungsressourcen und Konfiguration hinzugefügt werden können, ohne die fachliche Kernlogik zu ändern.
+
+Zu übersetzen sind mindestens:
+
+- statische UI-Bezeichnungen
+- Navigation
+- Buttons und Aktionen
+- Validierungs- und Fehlermeldungen
+- menschenlesbare REST-Fehlermeldungen
+- E-Mails und zukünftige Benachrichtigungen
+- Reportüberschriften
+- PDF- und zukünftige Excel-Exporte
+- statische Enum-Bezeichnungen und andere feste Systemwerte
+
+Nicht automatisch übersetzt werden:
+
+- benutzererfasste Kommentare und Freitexte
+- Mitarbeiter- und Personennamen
+- Teamnamen
+- Standortnamen
+- konfigurierte Abwesenheitsnamen
+- konfigurierte Feiertagsnamen
+
+#### 12.3.1 Sprachwahl vor dem Login
+
+Der Login-Bildschirm stellt eine explizite Sprachauswahl bereit. Vor dem Login wird die effektive Sprache in folgender Priorität bestimmt:
+
+1. explizit auf dem aktuellen Login-Bildschirm gewählte Sprache
+2. gültiger Wert im Browser Storage
+3. global konfigurierte Standardsprache
+
+Eine explizite Auswahl auf dem Login-Bildschirm hat immer Vorrang. Nach erfolgreichem Login wird diese Auswahl sowohl im Browser Storage als auch im Sprachattribut des Strolch-Benutzers gespeichert und wird damit zur neuen persistenten Benutzersprache.
+
+#### 12.3.2 Sprachwahl nach dem Login
+
+Nach erfolgreichem Login wird die effektive Sprache in folgender Priorität bestimmt:
+
+1. explizit auf dem Login-Bildschirm gewählte Sprache für den aktuellen Login-Vorgang
+2. gültiger Wert im Browser Storage
+3. im Strolch-Benutzer gespeicherte Sprache
+4. global konfigurierte Standardsprache
+
+Der angemeldete Benutzer kann die Sprache über eine Menüeinstellung ändern. Eine solche Änderung wird unmittelbar angewendet und sowohl im Browser Storage als auch auf dem Strolch-Benutzer gespeichert. Dadurch bleibt die Sprache sitzungs- und geräteübergreifend erhalten, sofern auf einem konkreten Browser kein abweichender gültiger Browser-Storage-Wert gesetzt ist.
+
+#### 12.3.3 Übersetzungsschlüssel und Fallback
+
+- Übersetzbare Systemtexte werden über stabile i18n-Schlüssel referenziert.
+- Fachliche Codes und Enum-Werte bleiben sprachunabhängig.
+- Die Auflösung unterstützt Sprach-Tags und verwendet folgende Fallback-Kette:
+
+```text
+angeforderter Sprach-Tag → Basissprache → konfigurierte Standardsprache → Übersetzungsschlüssel
+```
+
+Beispiel:
+
+```text
+de-CH → de → konfigurierte Standardsprache → Übersetzungsschlüssel
+```
+
+- URLs bleiben sprachneutral und enthalten keinen Sprachpräfix.
+- Sprache und Locale werden in dieser Ausbaustufe nicht als getrennte fachliche Konzepte modelliert.
+- Die Datumsdarstellung bleibt unabhängig von der Sprache vorerst `yyyy-MM-dd`.
+
+#### 12.3.4 Übersetzungsqualität
+
+- Deutsch und Englisch sind verpflichtend vollständig unterstützte Sprachen.
+- Jeder verpflichtende Übersetzungsschlüssel muss in beiden Sprachen vorhanden sein.
+- Fehlende Schlüssel in Deutsch oder Englisch, doppelte Schlüssel sowie syntaktisch ungültige Übersetzungsressourcen lassen die automatisierten Übersetzungstests und damit den Maven-Build fehlschlagen.
+- Weitere Sprachen dürfen als unvollständig gekennzeichnet werden und die definierte Fallback-Logik verwenden, ohne den Build allein aufgrund fehlender optionaler Übersetzungen fehlschlagen zu lassen.
+
+### 12.4 JavaScript-Struktur
 
 Empfohlene Struktur:
 
@@ -619,6 +781,7 @@ chronivaro-web/src/main/webapp/
 └── js/
     ├── api/
     ├── components/
+    ├── i18n/
     ├── pages/
     ├── state/
     ├── utils/
@@ -636,7 +799,8 @@ JavaScript wird als native ES-Module organisiert. API-Zugriffe laufen über eine
 - ISO-8601 für Datum und Zeit
 - Zeitpunkte mit Offset, beispielsweise `2026-08-04T08:15:00+02:00`
 - fachliche Datumswerte als `YYYY-MM-DD`
-- standardisierte Fehlerantworten
+- standardisierte Fehlerantworten mit sprachunabhängigem `errorCode` und lokalisierter menschenlesbarer `message`
+- der Webclient übermittelt die aktuell ausgewählte Sprache über den Standard-HTTP-Header `Accept-Language`; serverseitig erzeugte menschenlesbare Texte verwenden dieselbe Fallback-Logik wie die UI
 - serverseitige Berechtigungsprüfung bei jedem Endpunkt
 - optimistische Nebenläufigkeitskontrolle für bearbeitbare Entitäten
 - Pagination für Listen mit potenziell vielen Einträgen
@@ -690,7 +854,9 @@ POST   /approvals/absences/{id}/reject
 
 ```text
 GET    /me/vacation-account?year={year}
+GET    /me/vacation-account.pdf?year={year}
 GET    /employees/{id}/vacation-account?year={year}
+GET    /employees/{id}/vacation-account.pdf?year={year}
 POST   /employees/{id}/vacation-adjustments
 ```
 
@@ -711,7 +877,9 @@ POST   /approvals/periods/{id}/reject
 POST   /periods/{id}/reopen
 GET    /reports/time-balance
 GET    /reports/time-balance.csv
+GET    /reports/time-balance.pdf
 GET    /reports/absences
+GET    /reports/absences.pdf
 ```
 
 #### Administration
@@ -798,7 +966,8 @@ Enthält:
 - Request- und Response-DTOs
 - Mapping zwischen DTOs und Core-Modell
 - Authentifizierung und Autorisierung am API-Rand
-- zentrale Fehlerabbildung
+- zentrale Fehlerabbildung und Lokalisierung menschenlesbarer REST-Fehlermeldungen
+- Report-Renderer für serverseitige Exportformate, insbesondere PDF
 - OpenAPI-Dokumentation
 - REST-Integrationstests
 
@@ -812,6 +981,8 @@ Enthält:
 - UI-Komponenten und Seiten
 - REST-Client
 - clientseitige Eingabevalidierung als Benutzerhilfe
+- i18n-Ressourcen und clientseitige Sprachauflösung
+- globale Darstellung von Firmenname und optionalem Firmenlogo in einem dauerhaft sichtbaren Anwendungs- beziehungsweise Headerbereich
 - statische Assets
 
 Die serverseitige Validierung bleibt verbindlich.
@@ -1059,7 +1230,7 @@ Mindestens folgende Berechtigungen werden getrennt geprüft:
 
 - Krankheits- und Unfallinformationen sind besonders restriktiv sichtbar.
 - Audit-Daten sind nur für berechtigte Rollen zugänglich.
-- Reports und Exporte folgen denselben Zugriffsregeln wie die Anwendung.
+- Reports und Exporte folgen denselben Zugriffsregeln wie die Anwendung; ein alternatives Ausgabeformat darf keine zusätzlichen Daten offenlegen.
 - Aufbewahrungs- und Löschfristen sind vor Produktivbetrieb organisatorisch festzulegen.
 - Kommentare dürfen nicht für unnötige medizinische Details verwendet werden.
 
@@ -1095,6 +1266,21 @@ Zielwerte für das MVP bei normaler Unternehmensgrösse:
 - responsive Nutzung ab einer sinnvollen Smartphone-Breite
 - keine Abhängigkeit von proprietären Browsererweiterungen
 
+### 18.5 Internationalisierung
+
+- Deutsch und Englisch werden vollständig unterstützt.
+- Übersetzungsressourcen verwenden UTF-8.
+- Neue Sprachen müssen ohne Änderung der fachlichen Kernlogik ergänzt werden können.
+- Sprachwechsel nach dem Login erfolgt ohne erneute Authentifizierung und wird persistent gespeichert.
+- Stabile technische Codes, REST-Fehlercodes und fachliche IDs sind sprachunabhängig.
+
+### 18.6 PDF-Ausgabe
+
+- PDF-Erzeugung erfolgt vollständig serverseitig und darf keine Browser- oder proprietären Office-Komponenten voraussetzen.
+- Die PDF-Ausgabe muss deterministisch aus der jeweiligen Report-Datenbasis erzeugt werden.
+- Eingebettete Schriftarten müssen die für Deutsch und Englisch benötigten Zeichen vollständig darstellen können.
+- Ein nicht konfiguriertes Firmenlogo darf die Reportgenerierung nicht verhindern. Eine ungültige Logo-Konfiguration muss bei der Konfigurationsvalidierung abgelehnt werden.
+
 ## 19. Teststrategie
 
 ### 19.1 Unit-Tests im Core
@@ -1126,6 +1312,9 @@ Mindestens folgende Fälle:
 - Nebenläufigkeitskonflikte
 - gesperrte Perioden
 - CSV-Export und Encoding
+- PDF-Export für Monatsreport, Ferienübersicht und Abwesenheitsreport
+- identische Berechtigungsgrenzen zwischen UI, CSV und PDF
+- Lokalisierung von REST-Fehlermeldungen bei stabilem `errorCode`
 
 ### 19.3 UI-Tests
 
@@ -1137,8 +1326,25 @@ Mindestens folgende Fälle:
 - Fehler-, Leer- und Ladezustände
 - Tastaturbedienung
 - Statusdarstellung zusätzlich zur Farbe
+- Login-Sprachauswahl und korrekte Priorität gegenüber Browser Storage und Strolch-Benutzersprache
+- Sprachwechsel nach Login und Persistenz in Browser Storage sowie auf dem Strolch-Benutzer
+- vollständige deutsche und englische UI-Texte ohne fehlende Übersetzungsschlüssel
+- Anzeige von Firmenname und optionalem Firmenlogo in der globalen Anwendung
 
-### 19.4 Runtime- und HTTP-Integrationstests
+### 19.4 Übersetzungs- und Exporttests
+
+- jeder verpflichtende i18n-Schlüssel ist in Deutsch und Englisch vorhanden
+- doppelte oder syntaktisch ungültige Übersetzungsschlüssel führen zu einem fehlgeschlagenen Build
+- Fallback von Sprach-Tag auf Basissprache, Standardsprache und schliesslich Übersetzungsschlüssel
+- PDF-Titel und statische Bezeichnungen entsprechen der aktuell ausgewählten UI-Sprache
+- PDF-Datumswerte verwenden `yyyy-MM-dd` und Zeitdauern `HH:mm`
+- genehmigte Monatsreports enthalten Status, Genehmigungsdatum und Genehmiger
+- persönliche PDF-Reports enthalten Anzeigename, Personalnummer, Team und Standort
+- negative Saldi sind auch ohne Farbdarstellung eindeutig als negativ erkennbar
+- PDF-Erzeugung funktioniert mit und ohne konfiguriertes Firmenlogo
+- PDF-Ausgaben enthalten keine Freitext-Kommentare, sofern dies nicht für einen konkreten Report ausdrücklich vorgesehen ist
+
+### 19.5 Runtime- und HTTP-Integrationstests
 
 - Start und Stop der Anwendung mit Embedded Jetty
 - REST-Zugriff über `/rest/chronivaro/v1`
@@ -1170,6 +1376,27 @@ Das MVP gilt als fachlich abnahmebereit, wenn:
 17. Chronivaro ohne externen Servlet-Container als eigenständige Java-Anwendung gestartet werden kann;
 18. Embedded Jetty sowohl das Frontend als auch die bestehende REST API bereitstellt;
 19. Start, HTTP-Betrieb und kontrollierter Shutdown der Embedded-Jetty-Laufzeit automatisiert getestet sind.
+
+### 20.1 Akzeptanzkriterien für die aktuellen Erweiterungen
+
+Die Erweiterungen gemäss Abschnitt 4.2 gelten als abnahmebereit, wenn:
+
+1. der Login-Bildschirm eine explizite Auswahl zwischen Deutsch und Englisch erlaubt;
+2. eine explizit beim Login gewählte Sprache gegenüber Browser Storage und gespeicherter Benutzersprache Vorrang hat;
+3. die nach Login wirksame Sprache gemäss definierter Priorität aus Login-Auswahl, Browser Storage, Strolch-Benutzersprache und Standardsprache bestimmt wird;
+4. ein Sprachwechsel nach Login unmittelbar wirksam wird und sowohl im Browser Storage als auch im Strolch-Benutzer persistiert wird;
+5. alle verpflichtenden statischen UI-Texte, Validierungsmeldungen und menschenlesbaren REST-Fehlermeldungen in Deutsch und Englisch verfügbar sind;
+6. fehlende verpflichtende deutsche oder englische Übersetzungsschlüssel den Build fehlschlagen lassen;
+7. zusätzliche Sprachen über Übersetzungsressourcen und Konfiguration ergänzt werden können, ohne die fachliche Kernlogik zu ändern;
+8. Firmenname und optionales Firmenlogo global konfigurierbar und in der Anwendung sichtbar sind;
+9. Monatsreport, Ferienübersicht und Abwesenheitsreport nativ als PDF exportiert werden können;
+10. PDF-Exporte dieselben Daten, Filter, Berechnungen und Berechtigungen wie die entsprechenden Bildschirmansichten verwenden;
+11. persönliche PDFs Anzeigename, Personalnummer, Team und Standort enthalten;
+12. genehmigte Monatsreports Status, Genehmigungsdatum und Genehmiger enthalten;
+13. PDF-Ausgaben Firmenname und, sofern konfiguriert, Firmenlogo enthalten;
+14. PDF-Ausgaben in der aktuell ausgewählten UI-Sprache erzeugt werden;
+15. negative Saldi visuell hervorgehoben und auch monochrom eindeutig als negativ erkennbar sind;
+16. PDF-Dateien on demand erzeugt und nicht dauerhaft gespeichert werden.
 
 ## 21. Vorgeschlagene Implementierungsreihenfolge
 
@@ -1219,6 +1446,17 @@ Das MVP gilt als fachlich abnahmebereit, wenn:
 - Berechtigungs- und Datenschutztests
 - Performance-, Browser- und Abnahmetests
 
+### Phase 7 – Mehrsprachigkeit und native PDF-Ausgabe
+
+- i18n-Infrastruktur und Übersetzungsressourcen für Deutsch und Englisch
+- Sprachwahl auf Login-Seite und nach Login
+- Persistenz der Benutzersprache in Browser Storage und Strolch-Benutzer
+- Lokalisierung von UI-, Validierungs- und REST-Fehlermeldungen
+- globale Konfiguration von Firmenname und optionalem Firmenlogo sowie Anzeige in der Anwendung
+- gemeinsames serverseitiges Report-Modell für UI/CSV/PDF sicherstellen
+- native PDF-Ausgabe für Monatsreport, Ferienübersicht und Abwesenheitsreport
+- automatisierte Übersetzungs- und PDF-Tests
+
 ## 22. Offene Produktentscheidungen
 
 Vor oder während der Implementierung sind folgende Punkte verbindlich zu entscheiden:
@@ -1259,4 +1497,6 @@ Eine Funktion ist abgeschlossen, wenn:
 - Konfiguration und Betriebshinweise dokumentiert sind;
 - der Maven-Build mit JDK 25 reproduzierbar erfolgreich ist;
 - die Anwendung ohne externen Servlet-Container startbar ist;
-- Frontend und REST API über den eingebetteten Jetty-Server erreichbar sind.
+- Frontend und REST API über den eingebetteten Jetty-Server erreichbar sind;
+- bei übersetzbaren Funktionen Deutsch und Englisch vollständig abgedeckt sind und die i18n-Prüfungen erfolgreich laufen;
+- bei PDF-fähigen Reports die Ausgabe für die definierten Formate automatisiert getestet ist und dieselben Berechtigungs- und Berechnungsregeln wie die Bildschirmansicht verwendet.
