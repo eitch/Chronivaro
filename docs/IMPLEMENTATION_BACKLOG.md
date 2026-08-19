@@ -526,9 +526,22 @@ Task 12 was split into subtasks **12.1** and **12.2** per the task-size and sing
 
 ### 17. Add standalone and non-functional verification
 
-- **Status:** `MISSING`
+- **Status:** `COMPLETED`
 - **Scope:** Add application integration tests and operational documentation for executable startup, frontend/REST reachability, bind failure, shutdown, health/readiness, structured logs, metrics, performance, accessibility, and reproducible JDK 25 acceptance runs.
 - **Acceptance:** `java -jar chronivaro.jar` (or documented equivalent) starts without Tomcat; lifecycle/HTTP smoke tests pass and operational limitations are documented.
+- **Verification:**
+  - Implemented unauthenticated system health (`/rest/chronivaro/v1/system/health`), readiness (`/rest/chronivaro/v1/system/readiness`), version (`/rest/chronivaro/v1/system/version` and alias `/rest/chronivaro/v1/version`), and metrics (`/rest/chronivaro/v1/system/metrics`) endpoints in `SystemResource` and DTO records (`HealthDto`, `ReadinessDto`, `VersionDto`, `SystemMetricsDto`).
+  - Whitelisted system probe endpoints in `ChronivaroAuthenticationRequestFilter` and documented them in `docs/openapi.yaml`.
+  - Configured structured logging pattern with MDC correlation ID (`%X{correlationId:-NONE}`) in `logback.xml` and validated request header propagation (`X-Correlation-Id`).
+  - Added comprehensive integration and non-functional test suite in `ChronivaroAppTest` validating:
+    - Unauthenticated health, readiness, version, and JVM metrics probe retrieval.
+    - Explicit and generated `X-Correlation-Id` header propagation and structured error responses.
+    - SLA response time performance benchmarks (< 2000ms for day/month reports, < 5000ms for team reports, server-side pagination with `PagedResultDto`).
+    - Role-based privacy scoping (unauthorized employee access blocked on administrative audit logs and configuration updates with 401/403).
+    - Web UI accessibility standards (mobile viewport meta tag, HTML `lang` attribute, semantic `<nav>` and `<main id="app">` landmarks).
+    - Idempotent stop, bind failure handling, and JVM shutdown hook coordination.
+  - Authored comprehensive root `README.md` and `docs/OPERATIONS.md` covering architecture, standalone launch, CLI flags/environment variables, system monitoring, observability, SLA performance benchmarks, data retention and privacy policies, and disaster recovery.
+  - Verified with full multi-module reactor test suite passing via `mvn clean test` (19 tests passing with 0 failures and 0 errors across all modules).
 - **Dependencies:** Tasks 4, 11–13, and 14–16.
 
 ## Explicitly removed or not applicable
