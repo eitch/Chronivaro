@@ -1,6 +1,7 @@
 package ch.atexxi.chronivaro.core.service;
 
 import ch.atexxi.chronivaro.core.model.ChronivaroAuditHelper;
+import ch.atexxi.chronivaro.core.model.ChronivaroModelHelper;
 import li.strolch.model.Resource;
 import li.strolch.persistence.api.Operation;
 import li.strolch.persistence.api.StrolchTransaction;
@@ -28,8 +29,8 @@ public class RejectAbsenceService extends AbstractService<RejectAbsenceService.R
 			}
 
 			// Authorisation check: supervisor may only act on employees within their permitted scope
-			Resource employee = tx.getResourceByRelation(absence, PARAM_EMPLOYEE, true);
-			tx.assertHasPrivilege(Operation.UPDATE, employee);
+			String employeeId = absence.getRelationId(PARAM_EMPLOYEE);
+			ChronivaroModelHelper.assertCanManageEmployee(tx, employeeId);
 
 			absence = absence.getClone();
 			absence.setString(PARAM_STATE, STATE_REJECTED);

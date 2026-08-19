@@ -1,5 +1,8 @@
 package ch.atexxi.chronivaro.rest.resource;
 
+import ch.atexxi.chronivaro.core.model.AbsenceHelper;
+import ch.atexxi.chronivaro.core.model.ChronivaroModelHelper;
+import ch.atexxi.chronivaro.core.search.AbsenceSearch;
 import ch.atexxi.chronivaro.core.search.TimePeriodSearch;
 import ch.atexxi.chronivaro.core.service.ApproveAbsenceService;
 import ch.atexxi.chronivaro.core.service.ApprovePeriodService;
@@ -28,7 +31,9 @@ import li.strolch.service.StringArgument;
 import li.strolch.service.api.ServiceHandler;
 import li.strolch.service.api.ServiceResult;
 
-import java.util.List;
+import java.time.LocalDate;
+import java.time.ZonedDateTime;
+import java.util.*;
 
 import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
 import static li.strolch.utils.helper.StringHelper.isEmpty;
@@ -42,15 +47,44 @@ public class ApprovalsResource {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getSubmittedPeriods(
 			@Context HttpServletRequest request,
+			@QueryParam("teamId") String teamId,
+			@QueryParam("employeeId") String employeeId,
+			@QueryParam("yearMonth") String yearMonth,
 			@QueryParam("offset") Integer offset,
 			@QueryParam("limit") Integer limit) {
 
 		Certificate cert = (Certificate) request.getAttribute(StrolchRestfulConstants.STROLCH_CERTIFICATE);
 		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
-			SearchResult<Resource> searchResult = new TimePeriodSearch()
-					.forState(STATE_SUBMITTED)
-					.search(tx);
+			List<String> supervisedEmployeeIds = ChronivaroModelHelper.getSupervisedEmployeeIds(tx, cert);
+			if (supervisedEmployeeIds.isEmpty()) {
+				List<Resource> empty = List.of();
+				return PaginationHelper.toPagedOrListResponse(empty, offset, limit, ChronivaroMapper::periodToDto);
+			}
 
+			Set<String> targetEmployeeIds = new HashSet<>(supervisedEmployeeIds);
+			if (isNotEmpty(teamId)) {
+				List<String> teamEmployeeIds = tx.streamResources(TYPE_EMPLOYEE)
+						.filter(e -> teamId.equals(e.getRelationId(PARAM_PRIMARY_TEAM)))
+						.map(Resource::getId)
+						.toList();
+				targetEmployeeIds.retainAll(teamEmployeeIds);
+			}
+			if (isNotEmpty(employeeId)) {
+				targetEmployeeIds.retainAll(Set.of(employeeId));
+			}
+			if (targetEmployeeIds.isEmpty()) {
+				List<Resource> empty = List.of();
+				return PaginationHelper.toPagedOrListResponse(empty, offset, limit, ChronivaroMapper::periodToDto);
+			}
+
+			TimePeriodSearch search = new TimePeriodSearch()
+					.forState(STATE_SUBMITTED)
+					.forEmployees(targetEmployeeIds);
+			if (isNotEmpty(yearMonth)) {
+				search.forYearMonth(yearMonth);
+			}
+
+			SearchResult<Resource> searchResult = search.search(tx);
 			return PaginationHelper.toPagedOrListResponse(searchResult, offset, limit, ChronivaroMapper::periodToDto);
 		}
 	}
@@ -129,13 +163,89 @@ public class ApprovalsResource {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getSubmittedAbsences(
 			@Context HttpServletRequest request,
+			@QueryParam("teamId") String teamId,
+			@QueryParam("employeeId") String employeeId,
+			@QueryParam("absenceTypeCode") String absenceTypeCode,
+			@QueryParam("from") String fromStr,
+			@QueryParam("to") String toStr,
 			@QueryParam("offset") Integer offset,
 			@QueryParam("limit") Integer limit) {
 
 		Certificate cert = (Certificate) request.getAttribute(StrolchRestfulConstants.STROLCH_CERTIFICATE);
+		LocalDate fromDate = null;
+		if (isNotEmpty(fromStr)) {
+			try {
+				fromDate = fromStr.contains("T") ? ZonedDateTime.parse(fromStr).toLocalDate() : LocalDate.parse(fromStr);
+			} catch (Exception e) {
+				return ChronivaroRestHelper.toErrorResponse(Response.Status.BAD_REQUEST, "INVALID_PARAMETER",
+						"Invalid 'from' date format: " + fromStr);
+			}
+		}
+
+		LocalDate toDate = null;
+		if (isNotEmpty(toStr)) {
+			try {
+				toDate = toStr.contains("T") ? ZonedDateTime.parse(toStr).toLocalDate() : LocalDate.parse(toStr);
+			} catch (Exception e) {
+				return ChronivaroRestHelper.toErrorResponse(Response.Status.BAD_REQUEST, "INVALID_PARAMETER",
+						"Invalid 'to' date format: " + toStr);
+			}
+		}
+
+		final LocalDate fFrom = fromDate;
+		final LocalDate fTo = toDate;
+
 		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
-			List<Resource> submittedAbsences = tx.streamResources(TYPE_ABSENCE)
-					.filter(a -> STATE_SUBMITTED.equals(a.getString(PARAM_STATE)))
+			List<String> supervisedEmployeeIds = ChronivaroModelHelper.getSupervisedEmployeeIds(tx, cert);
+			if (supervisedEmployeeIds.isEmpty()) {
+				List<Resource> empty = List.of();
+				return PaginationHelper.toPagedOrListResponse(empty, offset, limit, absence -> {
+					Resource type = tx.getResourceByRelation(absence, PARAM_ABSENCE_TYPE, true);
+					return ChronivaroMapper.toDto(absence, type.getString(PARAM_CODE));
+				});
+			}
+
+			Set<String> targetEmployeeIds = new HashSet<>(supervisedEmployeeIds);
+			if (isNotEmpty(teamId)) {
+				List<String> teamEmployeeIds = tx.streamResources(TYPE_EMPLOYEE)
+						.filter(e -> teamId.equals(e.getRelationId(PARAM_PRIMARY_TEAM)))
+						.map(Resource::getId)
+						.toList();
+				targetEmployeeIds.retainAll(teamEmployeeIds);
+			}
+			if (isNotEmpty(employeeId)) {
+				targetEmployeeIds.retainAll(Set.of(employeeId));
+			}
+			if (targetEmployeeIds.isEmpty()) {
+				List<Resource> empty = List.of();
+				return PaginationHelper.toPagedOrListResponse(empty, offset, limit, absence -> {
+					Resource type = tx.getResourceByRelation(absence, PARAM_ABSENCE_TYPE, true);
+					return ChronivaroMapper.toDto(absence, type.getString(PARAM_CODE));
+				});
+			}
+
+			String absenceTypeId = null;
+			if (isNotEmpty(absenceTypeCode)) {
+				Resource type = AbsenceHelper.getAbsenceType(tx, absenceTypeCode);
+				absenceTypeId = type.getId();
+			}
+
+			AbsenceSearch search = new AbsenceSearch()
+					.forState(STATE_SUBMITTED)
+					.forEmployees(targetEmployeeIds);
+			if (isNotEmpty(absenceTypeId)) {
+				search.forAbsenceType(absenceTypeId);
+			}
+
+			List<Resource> submittedAbsences = search.search(tx).toList().stream()
+					.filter(a -> {
+						if (fFrom != null && a.getDate(PARAM_END).toLocalDate().isBefore(fFrom))
+							return false;
+						if (fTo != null && a.getDate(PARAM_START).toLocalDate().isAfter(fTo))
+							return false;
+						return true;
+					})
+					.sorted(Comparator.comparing(a -> a.getDate(PARAM_START)))
 					.toList();
 
 			return PaginationHelper.toPagedOrListResponse(submittedAbsences, offset, limit, absence -> {
@@ -179,16 +289,21 @@ public class ApprovalsResource {
 
 		Certificate cert = (Certificate) request.getAttribute(StrolchRestfulConstants.STROLCH_CERTIFICATE);
 
+		PeriodActionRequestDto dto = isNotEmpty(data) ?
+				ChronivaroRestHelper.createGson().fromJson(data, PeriodActionRequestDto.class) : null;
+
+		String comment = dto != null ? dto.comment() : null;
+		if (isEmpty(comment)) {
+			return ChronivaroRestHelper.toErrorResponse(Response.Status.BAD_REQUEST, "VALIDATION_ERROR",
+					"Rejection reason must be provided in comment");
+		}
+
 		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
 			Resource absence = tx.getResourceBy(TYPE_ABSENCE, id, true);
 			ConcurrencyHelper.validateIfMatch(request, absence);
 		}
 
-		PeriodActionRequestDto dto = isNotEmpty(data) ?
-				ChronivaroRestHelper.createGson().fromJson(data, PeriodActionRequestDto.class) : null;
-
 		ServiceHandler serviceHandler = ChronivaroRestHelper.getServiceHandler();
-		String comment = dto != null ? dto.comment() : null;
 		ServiceResult result = serviceHandler.doService(cert, new RejectAbsenceService(),
 				new RejectAbsenceService.RejectAbsenceArgument(id, comment));
 		if (result.isOk()) {

@@ -38,6 +38,7 @@ public class ChronivaroConstants {
 	public static final String PARAM_EMPLOYEE = "employee";
 	public static final String PARAM_ABSENCE = "absence";
 	public static final String PARAM_TEAM = "team";
+	public static final String PARAM_LEADER = "leader";
 	public static final String PARAM_CURRENT_SCHEDULE = "currentSchedule";
 	public static final String PARAM_SCHEDULE = "schedule";
 	public static final String PARAM_WORK_DAY = "workDay";
@@ -159,4 +160,5 @@ public class ChronivaroConstants {
 	public static final String ROLE_SUPERVISOR = "Supervisor";
 	public static final String ROLE_HR = "HR";
 	public static final String ROLE_ADMIN = "StrolchAdmin";
+	public static final String ROLE_ADMINISTRATOR = "Administrator";
 }

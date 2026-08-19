@@ -3,6 +3,7 @@ package ch.atexxi.chronivaro.core.search;
 import li.strolch.search.ResourceSearch;
 
 import java.time.YearMonth;
+import java.util.Collection;
 
 import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
 import static li.strolch.search.PredicatesSupport.startsWith;
@@ -17,6 +18,12 @@ public class TimePeriodSearch extends ResourceSearch {
 	public TimePeriodSearch forEmployee(String employeeId) {
 		if (isNotEmpty(employeeId))
 			where(param(BAG_RELATIONS, PARAM_EMPLOYEE, isEqualTo(employeeId)));
+		return this;
+	}
+
+	public TimePeriodSearch forEmployees(Collection<String> employeeIds) {
+		if (employeeIds != null && !employeeIds.isEmpty())
+			where(param(BAG_RELATIONS, PARAM_EMPLOYEE, isIn(employeeIds)));
 		return this;
 	}
 

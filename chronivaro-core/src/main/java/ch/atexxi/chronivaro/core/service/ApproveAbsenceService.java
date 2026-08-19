@@ -1,7 +1,7 @@
 package ch.atexxi.chronivaro.core.service;
 
-import ch.atexxi.chronivaro.core.model.AbsenceHelper;
 import ch.atexxi.chronivaro.core.model.ChronivaroAuditHelper;
+import ch.atexxi.chronivaro.core.model.ChronivaroModelHelper;
 import ch.atexxi.chronivaro.core.model.ScheduleHelper;
 import ch.atexxi.chronivaro.core.model.VacationHelper;
 import li.strolch.model.Resource;
@@ -30,15 +30,17 @@ public class ApproveAbsenceService extends AbstractService<StringArgument, Servi
 				throw new IllegalStateException("Absence is not in state SUBMITTED!");
 			}
 
+			String employeeId = absence.getRelationId(PARAM_EMPLOYEE);
+			ChronivaroModelHelper.assertCanManageEmployee(tx, employeeId);
+
 			absence.setString(PARAM_STATE, STATE_APPROVED);
 			bumpVersion(absence, tx);
 			tx.update(absence);
 			ChronivaroAuditHelper.audit(tx, TYPE_ABSENCE, absence.getId(), AUDIT_ACTION_APPROVE,
-					"Approved absence " + absence.getId() + " for employee " + absence.getRelationId(PARAM_EMPLOYEE));
+					"Approved absence " + absence.getId() + " for employee " + employeeId);
 
 			// If it's a vacation absence, check balance and create a vacation account entry
 			if (VacationHelper.isVacationAbsence(tx, absence)) {
-				String employeeId = absence.getRelationId(PARAM_EMPLOYEE);
 				LocalDate start = absence.getDate(PARAM_START).toLocalDate();
 				LocalDate end = absence.getDate(PARAM_END).toLocalDate();
 

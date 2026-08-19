@@ -1,6 +1,7 @@
 package ch.atexxi.chronivaro.core.service;
 
 import ch.atexxi.chronivaro.core.model.ChronivaroAuditHelper;
+import ch.atexxi.chronivaro.core.model.ChronivaroModelHelper;
 import ch.atexxi.chronivaro.core.model.PeriodHelper;
 import li.strolch.model.Resource;
 import li.strolch.persistence.api.StrolchTransaction;
@@ -38,6 +39,8 @@ public class ApprovePeriodService extends AbstractService<PeriodActionArgument, 
 			}
 
 			String employeeId = period.getRelationId(PARAM_EMPLOYEE);
+			ChronivaroModelHelper.assertCanManageEmployee(tx, employeeId);
+
 			YearMonth ym = YearMonth.parse(period.getString(PARAM_YEAR_MONTH));
 
 			period.setString(PARAM_STATE, STATE_APPROVED);
