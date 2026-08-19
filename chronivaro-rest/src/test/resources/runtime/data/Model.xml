@@ -26,7 +26,12 @@
 
     <Resource Id="team-1" Name="Engineering" Type="Team">
         <ParameterBag Id="parameters" Name="Parameters" Type="Parameters">
-            <Parameter Id="name" Name="Name" Type="String" Value=""/>
+            <Parameter Id="name" Name="Name" Type="String" Value="Engineering"/>
+        </ParameterBag>
+    </Resource>
+    <Resource Id="team-2" Name="Marketing" Type="Team">
+        <ParameterBag Id="parameters" Name="Parameters" Type="Parameters">
+            <Parameter Id="name" Name="Name" Type="String" Value="Marketing"/>
         </ParameterBag>
     </Resource>
 
@@ -95,6 +100,40 @@
         <ParameterBag Id="relations" Name="Relations" Type="Relations">
             <Parameter Id="location" Name="Location" Type="String" Interpretation="Resource-Ref" Uom="Location" Value="location-1"/>
             <Parameter Id="primaryTeam" Name="Primary Team" Type="String" Interpretation="Resource-Ref" Uom="Team" Value="team-1"/>
+            <Parameter Id="currentWorkDay" Name="Current Work Day" Type="String" Interpretation="Resource-Ref" Uom="WorkDay" Value=""/>
+            <Parameter Id="currentSchedule" Name="Current Schedule" Type="String" Interpretation="Resource-Ref" Uom="EmploymentSchedule"
+                       Value="schedEmployee_emp"/>
+        </ParameterBag>
+    </Resource>
+
+    <Resource Id="supervisor_emp" Name="Supervisor User" Type="Employee">
+        <ParameterBag Id="parameters" Name="Parameters" Type="Parameters">
+            <Parameter Id="active" Name="Active" Type="Boolean" Value="true"/>
+            <Parameter Id="joinDate" Name="Join Date" Type="Date" Value="2025-01-01T00:00:00.000+01:00"/>
+            <Parameter Id="timezone" Name="Timezone" Type="String" Value="Europe/Zurich"/>
+            <Parameter Id="userId" Name="User ID" Type="String" Value="supervisor"/>
+            <Parameter Id="username" Name="Username" Type="String" Value="supervisor"/>
+        </ParameterBag>
+        <ParameterBag Id="relations" Name="Relations" Type="Relations">
+            <Parameter Id="location" Name="Location" Type="String" Interpretation="Resource-Ref" Uom="Location" Value="location-1"/>
+            <Parameter Id="primaryTeam" Name="Primary Team" Type="String" Interpretation="Resource-Ref" Uom="Team" Value="team-1"/>
+            <Parameter Id="currentWorkDay" Name="Current Work Day" Type="String" Interpretation="Resource-Ref" Uom="WorkDay" Value=""/>
+            <Parameter Id="currentSchedule" Name="Current Schedule" Type="String" Interpretation="Resource-Ref" Uom="EmploymentSchedule"
+                       Value="schedEmployee_emp"/>
+        </ParameterBag>
+    </Resource>
+
+    <Resource Id="marketing_emp" Name="Marketing User" Type="Employee">
+        <ParameterBag Id="parameters" Name="Parameters" Type="Parameters">
+            <Parameter Id="active" Name="Active" Type="Boolean" Value="true"/>
+            <Parameter Id="joinDate" Name="Join Date" Type="Date" Value="2025-01-01T00:00:00.000+01:00"/>
+            <Parameter Id="timezone" Name="Timezone" Type="String" Value="Europe/Zurich"/>
+            <Parameter Id="userId" Name="User ID" Type="String" Value="marketing_user"/>
+            <Parameter Id="username" Name="Username" Type="String" Value="marketing_user"/>
+        </ParameterBag>
+        <ParameterBag Id="relations" Name="Relations" Type="Relations">
+            <Parameter Id="location" Name="Location" Type="String" Interpretation="Resource-Ref" Uom="Location" Value="location-1"/>
+            <Parameter Id="primaryTeam" Name="Primary Team" Type="String" Interpretation="Resource-Ref" Uom="Team" Value="team-2"/>
             <Parameter Id="currentWorkDay" Name="Current Work Day" Type="String" Interpretation="Resource-Ref" Uom="WorkDay" Value=""/>
             <Parameter Id="currentSchedule" Name="Current Schedule" Type="String" Interpretation="Resource-Ref" Uom="EmploymentSchedule"
                        Value="schedEmployee_emp"/>
