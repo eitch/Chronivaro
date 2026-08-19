@@ -348,9 +348,20 @@ Task 4 was split into subtasks **4.1**, **4.2.1**, **4.2.2**, **4.2.3**, and **4
 
 ### 9. Complete vacation and absence REST surfaces
 
-- **Status:** `PARTIAL`
+- **Status:** `COMPLETED`
 - **Scope:** Complete `/me/absences`, vacation-account, and related status routes, DTOs, authorization, pagination, and error/concurrency handling.
 - **Acceptance:** Documented routes return calculated values; invalid dates/statuses and unauthorized cross-user access are rejected.
+- **Verification:**
+  - Implemented `VacationAccountEntryDto`, `VacationAccountSummaryDto`, `VacationEntitlementCalculationDto`, and `VacationEntitlementCreditDto` in `chronivaro-rest`.
+  - Added mapper functions `vacationEntryToDto` and `vacationSummaryToDto` in `ChronivaroMapper`.
+  - Implemented `GET /chronivaro/v1/me/vacation-account` in `ChronivaroResource` returning full yearly summary breakdown and journal entries for the current employee with year resolution.
+  - Enhanced `GET /chronivaro/v1/me/absences` in `ChronivaroResource` to support date range (`from`, `to`), `status`, `absenceTypeCode`, and pagination (`offset`, `limit`).
+  - Implemented cross-user ownership verification and concurrency control on `GET /chronivaro/v1/me/absences/{id}`, `PUT /chronivaro/v1/me/absences/{id}`, and `POST /chronivaro/v1/me/absences/{id}/cancel` (rejecting cross-user access with 403 Forbidden and stale updates with 409 Conflict).
+  - Updated `RequestAbsenceService` to return `StringResult(absenceId)` on creation and returned created `AbsenceDto` with ETag.
+  - Implemented `GET /chronivaro/v1/admin/employees/{id}/vacation-account` supporting both `summary=true` breakdowns and paged journal entry lists.
+  - Implemented `POST /chronivaro/v1/admin/employees/{id}/vacation-entitlement/calculate` and `POST /chronivaro/v1/admin/employees/{id}/vacation-entitlement/credit` in `EmployeeResource`.
+  - Added comprehensive integration tests in `VacationAndAbsenceRestTest` covering personal vacation accounts, admin vacation accounts with pagination, calculations, credits, corrections, absence date/type/status filtering, optimistic concurrency, and cross-user authorization enforcement.
+  - Verified with full project test suite passing via `mvn test` (59 tests passing across all reactor modules with 0 failures and 0 errors).
 - **Dependencies:** Tasks 2.1, 2.2, 3, 6, and 8.
 
 ### 10. Build supervisor approval queues
