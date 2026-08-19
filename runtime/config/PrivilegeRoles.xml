@@ -33,6 +33,7 @@
             <Allow>ch.atexxi.chronivaro.core.service.StartTimerService</Allow>
             <Allow>ch.atexxi.chronivaro.core.service.StopTimerService</Allow>
             <Allow>ch.atexxi.chronivaro.core.service.SubmitPeriodService</Allow>
+            <Allow>ch.atexxi.chronivaro.core.service.CalculateVacationEntitlementService</Allow>
         </Privilege>
         <Privilege name="li.strolch.search.StrolchSearch" policy="DefaultPrivilege">
             <Allow>ch.atexxi.chronivaro.core.search.TimePeriodSearch</Allow>
@@ -51,6 +52,7 @@
             <Allow>ch.atexxi.chronivaro.core.service.ApprovePeriodService</Allow>
             <Allow>ch.atexxi.chronivaro.core.service.RejectPeriodService</Allow>
             <Allow>ch.atexxi.chronivaro.core.service.ReopenPeriodService</Allow>
+            <Allow>ch.atexxi.chronivaro.core.service.CalculateVacationEntitlementService</Allow>
         </Privilege>
         <Privilege name="li.strolch.search.StrolchSearch" policy="DefaultPrivilege">
             <Allow>ch.atexxi.chronivaro.core.search.TimePeriodSearch</Allow>
@@ -69,6 +71,9 @@
             <Allow>ch.atexxi.chronivaro.core.service.RejectPeriodService</Allow>
             <Allow>ch.atexxi.chronivaro.core.service.ReopenPeriodService</Allow>
             <Allow>ch.atexxi.chronivaro.core.service.LockPeriodService</Allow>
+            <Allow>ch.atexxi.chronivaro.core.service.CalculateVacationEntitlementService</Allow>
+            <Allow>ch.atexxi.chronivaro.core.service.CreditVacationEntitlementService</Allow>
+            <Allow>ch.atexxi.chronivaro.core.service.AddVacationCorrectionService</Allow>
         </Privilege>
         <Privilege name="li.strolch.search.StrolchSearch" policy="DefaultPrivilege">
             <Allow>ch.atexxi.chronivaro.core.search.TimePeriodSearch</Allow>
