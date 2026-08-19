@@ -169,6 +169,26 @@ public class VacationHelper {
 				correctionsMinutes, usageMinutes, remainingMinutes);
 	}
 
+	public static java.util.List<Resource> getVacationEntries(StrolchTransaction tx, String employeeId, int year) {
+		LocalDate yearStart = LocalDate.of(year, 1, 1);
+		LocalDate yearEnd = LocalDate.of(year, 12, 31);
+		return tx.streamResources(TYPE_VACATION_ACCOUNT_ENTRY)
+				.filter(e -> e.getRelationId(PARAM_EMPLOYEE).equals(employeeId))
+				.filter(e -> {
+					LocalDate date = e.getDate(PARAM_DATE).toLocalDate();
+					return !date.isBefore(yearStart) && !date.isAfter(yearEnd);
+				})
+				.sorted(java.util.Comparator.comparing(e -> e.getDate(PARAM_DATE)))
+				.toList();
+	}
+
+	public static java.util.List<Resource> getAllVacationEntries(StrolchTransaction tx, String employeeId) {
+		return tx.streamResources(TYPE_VACATION_ACCOUNT_ENTRY)
+				.filter(e -> e.getRelationId(PARAM_EMPLOYEE).equals(employeeId))
+				.sorted(java.util.Comparator.comparing(e -> e.getDate(PARAM_DATE)))
+				.toList();
+	}
+
 	public static Optional<Resource> findEntitlementEntry(StrolchTransaction tx, String employeeId, int year) {
 		LocalDate yearStart = LocalDate.of(year, 1, 1);
 		LocalDate yearEnd = LocalDate.of(year, 12, 31);

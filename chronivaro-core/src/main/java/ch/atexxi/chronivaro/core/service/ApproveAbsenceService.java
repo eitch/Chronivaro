@@ -58,6 +58,8 @@ public class ApproveAbsenceService extends AbstractService<StringArgument, Servi
 					entry.setDate(PARAM_DATE, absence.getDate(PARAM_START));
 					entry.setString(PARAM_VACATION_TYPE, VACATION_USAGE);
 					entry.setInteger(PARAM_VALUE, -totalMinutes);
+					entry.setString(PARAM_COMMENT, "Vacation usage for absence " + absence.getId());
+					entry.setString(PARAM_CREATED_BY, tx.getCertificate().getUsername());
 
 					initVersion(entry, tx);
 					tx.add(entry);

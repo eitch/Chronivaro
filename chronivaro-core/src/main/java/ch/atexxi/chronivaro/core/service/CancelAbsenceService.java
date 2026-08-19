@@ -93,6 +93,8 @@ public class CancelAbsenceService extends AbstractService<StringArgument, Servic
 						entry.setDate(PARAM_DATE, absence.getDate(PARAM_START));
 						entry.setString(PARAM_VACATION_TYPE, VACATION_CORRECTION);
 						entry.setInteger(PARAM_VALUE, totalMinutes);
+						entry.setString(PARAM_COMMENT, "Vacation cancellation refund for absence " + absence.getId());
+						entry.setString(PARAM_CREATED_BY, tx.getCertificate().getUsername());
 
 						initVersion(entry, tx);
 						tx.add(entry);

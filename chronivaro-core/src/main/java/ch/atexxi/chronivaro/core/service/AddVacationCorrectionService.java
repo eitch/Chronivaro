@@ -2,6 +2,7 @@ package ch.atexxi.chronivaro.core.service;
 
 import ch.atexxi.chronivaro.core.model.ChronivaroAuditHelper;
 import ch.atexxi.chronivaro.core.model.ChronivaroModelHelper;
+import ch.atexxi.chronivaro.core.model.VacationHelper;
 import li.strolch.model.Resource;
 import li.strolch.persistence.api.StrolchTransaction;
 import li.strolch.service.api.AbstractService;
@@ -31,6 +32,16 @@ public class AddVacationCorrectionService
 
 			ZonedDateTime entryDate = arg.date != null ? arg.date :
 					ZonedDateTime.now(ChronivaroModelHelper.getEmployeeTimezone(employee));
+
+			if (arg.value < 0) {
+				int requestedDeduction = Math.abs(arg.value);
+				VacationHelper.assertSufficientVacationBalance(tx, arg.employeeId, requestedDeduction, entryDate);
+				int currentBalance = VacationHelper.getVacationBalance(tx, arg.employeeId);
+				if (currentBalance < requestedDeduction) {
+					throw new IllegalStateException("Insufficient vacation balance for employee " + arg.employeeId
+							+ ": current balance is " + currentBalance + " minutes, but correction is " + arg.value + " minutes.");
+				}
+			}
 
 			entry.setRelation(PARAM_EMPLOYEE, employee);
 			entry.setString(PARAM_VACATION_TYPE, VACATION_CORRECTION);
