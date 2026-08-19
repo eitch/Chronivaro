@@ -100,6 +100,7 @@
             <Allow>ch.atexxi.chronivaro.core.service.SubmitPeriodService</Allow>
             <Allow>ch.atexxi.chronivaro.core.service.CalculateVacationEntitlementService</Allow>
             <Allow>ch.atexxi.chronivaro.core.service.GetVacationAccountSummaryService</Allow>
+            <Allow>ch.atexxi.chronivaro.core.service.AbsenceReportService</Allow>
         </Privilege>
         <Privilege name="li.strolch.search.StrolchSearch" policy="DefaultPrivilege">
             <Allow>ch.atexxi.chronivaro.core.search.AbsenceSearch</Allow>
@@ -122,6 +123,10 @@
             <Allow>ch.atexxi.chronivaro.core.service.ReopenPeriodService</Allow>
             <Allow>ch.atexxi.chronivaro.core.service.CalculateVacationEntitlementService</Allow>
             <Allow>ch.atexxi.chronivaro.core.service.GetVacationAccountSummaryService</Allow>
+            <Allow>ch.atexxi.chronivaro.core.service.DaySummaryService</Allow>
+            <Allow>ch.atexxi.chronivaro.core.service.MonthSummaryService</Allow>
+            <Allow>ch.atexxi.chronivaro.core.service.TeamReportService</Allow>
+            <Allow>ch.atexxi.chronivaro.core.service.AbsenceReportService</Allow>
         </Privilege>
         <Privilege name="li.strolch.search.StrolchSearch" policy="DefaultPrivilege">
             <Allow>ch.atexxi.chronivaro.core.search.AbsenceSearch</Allow>
@@ -146,6 +151,8 @@
             <Allow>ch.atexxi.chronivaro.core.service.CreditVacationEntitlementService</Allow>
             <Allow>ch.atexxi.chronivaro.core.service.AddVacationCorrectionService</Allow>
             <Allow>ch.atexxi.chronivaro.core.service.GetVacationAccountSummaryService</Allow>
+            <Allow>ch.atexxi.chronivaro.core.service.TeamReportService</Allow>
+            <Allow>ch.atexxi.chronivaro.core.service.AbsenceReportService</Allow>
         </Privilege>
         <Privilege name="li.strolch.search.StrolchSearch" policy="DefaultPrivilege">
             <Allow>ch.atexxi.chronivaro.core.search.AbsenceSearch</Allow>
