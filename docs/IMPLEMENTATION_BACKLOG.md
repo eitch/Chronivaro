@@ -452,9 +452,17 @@ Task 12 was split into subtasks **12.1** and **12.2** per the task-size and sing
 
 #### 12.2. Reports and Export UI
 
-- **Status:** `MISSING`
+- **Status:** `COMPLETED`
 - **Scope:** Add Vanilla JS views (`ReportsView.js`), report API client (`ReportApi.js`), report type selector (Day, Month, Vacation, Team, Absence), filter controls (Team, Employee, Date/Month/Range), tabular data visualization with break/gap inspection, and CSV download export button.
 - **Acceptance:** Report filters load and execute queries cleanly; tabular views display calculated summary metrics and statuses; CSV download produces proper files with BOM; responsive design, router registration, and automated Web UI tests.
+- **Verification:**
+  - Enhanced `Rest.js` with `getBlob` to support clean streaming and download of binary/CSV payloads with token propagation.
+  - Implemented `ReportApi.js` supporting JSON queries and CSV blob downloads for Day, Month, Vacation, Team, and Absence reports.
+  - Implemented `ReportsView.js` featuring report type tabs (Day, Month, Vacation Account, Team Report, Absences), dynamic filter forms, summary KPI cards, work block & break breakdown, vacation journal entries, team employee aggregation, absence listing, loading/empty/error states, and direct CSV file downloads with UTF-8 BOM.
+  - Registered `Reports` navigation item in `index.html` (accessible to `Employee`, `Supervisor`, `HR`, and `Administrator` roles) and registered `#reports` route in `app.js`.
+  - Added dedicated CSS styling in `style.css` for filter bars, export buttons, report headers, metric cards, break tags, and empty states.
+  - Created automated integration test suite in `WebReportsUiTest` verifying web assets, router registration, DOM structure, Day JSON/CSV export, Month/Vacation JSON reports, Team JSON/CSV export, Absence reports, and authorization scoping restrictions.
+  - Verified with full project test suite passing via `mvn clean test` (80 tests passing with 0 failures and 0 errors across all modules).
 - **Dependencies:** Tasks 11.3 and 12.1.
 
 ### 13. Complete global configuration administration
