@@ -102,6 +102,7 @@
             <Allow>ch.atexxi.chronivaro.core.service.GetVacationAccountSummaryService</Allow>
         </Privilege>
         <Privilege name="li.strolch.search.StrolchSearch" policy="DefaultPrivilege">
+            <Allow>ch.atexxi.chronivaro.core.search.AbsenceSearch</Allow>
             <Allow>ch.atexxi.chronivaro.core.search.TimePeriodSearch</Allow>
             <Allow>ch.atexxi.chronivaro.core.search.VacationAccountEntrySearch</Allow>
         </Privilege>
@@ -123,6 +124,7 @@
             <Allow>ch.atexxi.chronivaro.core.service.GetVacationAccountSummaryService</Allow>
         </Privilege>
         <Privilege name="li.strolch.search.StrolchSearch" policy="DefaultPrivilege">
+            <Allow>ch.atexxi.chronivaro.core.search.AbsenceSearch</Allow>
             <Allow>ch.atexxi.chronivaro.core.search.TimePeriodSearch</Allow>
             <Allow>ch.atexxi.chronivaro.core.search.VacationAccountEntrySearch</Allow>
         </Privilege>
@@ -146,6 +148,7 @@
             <Allow>ch.atexxi.chronivaro.core.service.GetVacationAccountSummaryService</Allow>
         </Privilege>
         <Privilege name="li.strolch.search.StrolchSearch" policy="DefaultPrivilege">
+            <Allow>ch.atexxi.chronivaro.core.search.AbsenceSearch</Allow>
             <Allow>ch.atexxi.chronivaro.core.search.TimePeriodSearch</Allow>
             <Allow>ch.atexxi.chronivaro.core.search.VacationAccountEntrySearch</Allow>
         </Privilege>
