@@ -42,7 +42,7 @@ public class AbsenceHelper {
 	public static Resource getAbsenceType(StrolchTransaction tx, String absenceTypeCode) {
 		return tx
 				.streamResources(TYPE_ABSENCE_TYPE)
-				.filter(t -> t.getString(PARAM_CODE).equals(absenceTypeCode))
+				.filter(t -> t.getString(PARAM_CODE).equalsIgnoreCase(absenceTypeCode))
 				.findFirst()
 				.orElseThrow(() -> new IllegalArgumentException("Absence type not found: " + absenceTypeCode));
 	}

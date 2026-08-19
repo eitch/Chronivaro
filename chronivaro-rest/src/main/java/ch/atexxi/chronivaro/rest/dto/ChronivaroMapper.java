@@ -181,4 +181,37 @@ public class ChronivaroMapper {
 				approvedAt,
 				approvedBy);
 	}
+
+	public static VacationAccountEntryDto vacationEntryToDto(Resource entry) {
+		String absenceId = entry.getRelationId(PARAM_ABSENCE);
+		String comment = entry.hasParameter(PARAM_COMMENT) ? entry.getString(PARAM_COMMENT) : null;
+		String createdBy = entry.hasParameter(PARAM_CREATED_BY) ? entry.getString(PARAM_CREATED_BY) : null;
+		Integer version = entry.hasParameter(PARAM_VERSION) ? entry.getInteger(PARAM_VERSION) : null;
+		return new VacationAccountEntryDto(
+				entry.getId(),
+				entry.getRelationId(PARAM_EMPLOYEE),
+				entry.getDate(PARAM_DATE),
+				entry.getString(PARAM_VACATION_TYPE),
+				entry.getInteger(PARAM_VALUE),
+				absenceId,
+				comment,
+				createdBy,
+				version);
+	}
+
+	public static VacationAccountSummaryDto vacationSummaryToDto(ch.atexxi.chronivaro.core.model.VacationAccountSummary summary,
+			java.util.List<Resource> entries) {
+		java.util.List<VacationAccountEntryDto> entryDtos = entries != null
+				? entries.stream().map(ChronivaroMapper::vacationEntryToDto).toList()
+				: java.util.List.of();
+		return new VacationAccountSummaryDto(
+				summary.employeeId(),
+				summary.year(),
+				summary.carryOverMinutes(),
+				summary.entitlementMinutes(),
+				summary.correctionsMinutes(),
+				summary.usageMinutes(),
+				summary.remainingMinutes(),
+				entryDtos);
+	}
 }

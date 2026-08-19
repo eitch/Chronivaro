@@ -9,6 +9,7 @@ import ch.atexxi.chronivaro.core.service.*;
 import ch.atexxi.chronivaro.rest.dto.AbsenceDto;
 import ch.atexxi.chronivaro.rest.dto.ChronivaroMapper;
 import ch.atexxi.chronivaro.rest.dto.PeriodActionRequestDto;
+import ch.atexxi.chronivaro.rest.dto.VacationAccountSummaryDto;
 import ch.atexxi.chronivaro.rest.dto.WorkEntryDto;
 import ch.atexxi.chronivaro.rest.dto.WorkingLocationDefaultDto;
 import jakarta.servlet.http.HttpServletRequest;
@@ -22,6 +23,7 @@ import li.strolch.persistence.api.StrolchTransaction;
 import li.strolch.privilege.model.Certificate;
 import li.strolch.rest.RestfulStrolchComponent;
 import li.strolch.service.StringArgument;
+import li.strolch.service.StringResult;
 import li.strolch.service.api.ServiceHandler;
 import li.strolch.service.api.ServiceResult;
 
@@ -181,9 +183,40 @@ public class ChronivaroResource {
 	}
 
 	@GET
+	@Path("me/vacation-account")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response getMyVacationAccount(@Context HttpServletRequest request, @QueryParam("year") Integer year) {
+		Certificate cert = (Certificate) request.getAttribute(STROLCH_CERTIFICATE);
+		String employeeId;
+		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
+			Optional<Resource> employee = ChronivaroModelHelper.findEmployeeByUser(tx, cert.getUserId());
+			if (employee.isEmpty())
+				return ChronivaroRestHelper.toErrorResponse(Response.Status.NOT_FOUND, "NOT_FOUND",
+						"Employee not found for current user");
+			employeeId = employee.get().getId();
+		}
+
+		ServiceHandler serviceHandler = ChronivaroRestHelper.getServiceHandler();
+		GetVacationAccountSummaryService.GetVacationAccountSummaryArgument arg =
+				new GetVacationAccountSummaryService.GetVacationAccountSummaryArgument(employeeId, year);
+		GetVacationAccountSummaryService.GetVacationAccountSummaryResult result =
+				serviceHandler.doService(cert, new GetVacationAccountSummaryService(), arg);
+		if (result.isOk()) {
+			VacationAccountSummaryDto dto = ChronivaroMapper.vacationSummaryToDto(result.summary, result.entries);
+			return Response.ok(ChronivaroRestHelper.createGson().toJson(dto), MediaType.APPLICATION_JSON).build();
+		}
+		return ChronivaroRestHelper.toResponse(result);
+	}
+
+	@GET
 	@Path("me/absences")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response getMyAbsences(@Context HttpServletRequest request, @QueryParam("offset") Integer offset,
+	public Response getMyAbsences(@Context HttpServletRequest request,
+			@QueryParam("from") String fromStr,
+			@QueryParam("to") String toStr,
+			@QueryParam("absenceTypeCode") String absenceTypeCode,
+			@QueryParam("status") String status,
+			@QueryParam("offset") Integer offset,
 			@QueryParam("limit") Integer limit) {
 		Certificate cert = (Certificate) request.getAttribute(STROLCH_CERTIFICATE);
 		String employeeId;
@@ -195,10 +228,48 @@ public class ChronivaroResource {
 			employeeId = employee.get().getId();
 		}
 
+		LocalDate fromDate = null;
+		if (isNotEmpty(fromStr)) {
+			try {
+				fromDate = fromStr.contains("T") ? ZonedDateTime.parse(fromStr).toLocalDate() : LocalDate.parse(fromStr);
+			} catch (Exception e) {
+				return ChronivaroRestHelper.toErrorResponse(Response.Status.BAD_REQUEST, "INVALID_PARAMETER",
+						"Invalid 'from' date format: " + fromStr);
+			}
+		}
+
+		LocalDate toDate = null;
+		if (isNotEmpty(toStr)) {
+			try {
+				toDate = toStr.contains("T") ? ZonedDateTime.parse(toStr).toLocalDate() : LocalDate.parse(toStr);
+			} catch (Exception e) {
+				return ChronivaroRestHelper.toErrorResponse(Response.Status.BAD_REQUEST, "INVALID_PARAMETER",
+						"Invalid 'to' date format: " + toStr);
+			}
+		}
+
+		final LocalDate fFrom = fromDate;
+		final LocalDate fTo = toDate;
+
 		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
 			List<Resource> absences = tx
 					.streamResources(TYPE_ABSENCE)
 					.filter(a -> a.getRelationId(PARAM_EMPLOYEE).equals(employeeId))
+					.filter(a -> {
+						if (fFrom != null && a.getDate(PARAM_END).toLocalDate().isBefore(fFrom))
+							return false;
+						if (fTo != null && a.getDate(PARAM_START).toLocalDate().isAfter(fTo))
+							return false;
+						if (isNotEmpty(status) && !a.getString(PARAM_STATE).equalsIgnoreCase(status))
+							return false;
+						if (isNotEmpty(absenceTypeCode)) {
+							Resource type = tx.getResourceByRelation(a, PARAM_ABSENCE_TYPE, false);
+							if (type == null || !type.getString(PARAM_CODE).equalsIgnoreCase(absenceTypeCode))
+								return false;
+						}
+						return true;
+					})
+					.sorted(java.util.Comparator.comparing(a -> a.getDate(PARAM_START)))
 					.toList();
 			return PaginationHelper.toPagedOrListResponse(absences, offset, limit, a -> {
 				Resource type = tx.getResourceByRelation(a, PARAM_ABSENCE_TYPE, true);
@@ -213,7 +284,15 @@ public class ChronivaroResource {
 	public Response getMyAbsence(@Context HttpServletRequest request, @PathParam("id") String id) {
 		Certificate cert = (Certificate) request.getAttribute(STROLCH_CERTIFICATE);
 		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
+			Optional<Resource> employee = ChronivaroModelHelper.findEmployeeByUser(tx, cert.getUserId());
+			if (employee.isEmpty())
+				return ChronivaroRestHelper.toErrorResponse(Response.Status.NOT_FOUND, "NOT_FOUND",
+						"Employee not found for current user");
 			Resource absence = tx.getResourceBy(TYPE_ABSENCE, id, true);
+			if (!absence.getRelationId(PARAM_EMPLOYEE).equals(employee.get().getId())) {
+				return ChronivaroRestHelper.toErrorResponse(Response.Status.FORBIDDEN, "ACCESS_DENIED",
+						"Access denied to absence " + id);
+			}
 			Resource type = tx.getResourceByRelation(absence, PARAM_ABSENCE_TYPE, true);
 			return ConcurrencyHelper.toResponseWithETag(absence, ChronivaroMapper.toDto(absence, type.getString(PARAM_CODE)));
 		}
@@ -247,7 +326,14 @@ public class ChronivaroResource {
 		arg.minutes = dto.minutes() == null ? 0 : dto.minutes();
 		arg.comment = dto.comment();
 
-		ServiceResult result = serviceHandler.doService(cert, new RequestAbsenceService(), arg);
+		StringResult result = serviceHandler.doService(cert, new RequestAbsenceService(), arg);
+		if (result.isOk()) {
+			try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
+				Resource absence = tx.getResourceBy(TYPE_ABSENCE, result.getValue(), true);
+				Resource type = tx.getResourceByRelation(absence, PARAM_ABSENCE_TYPE, true);
+				return ConcurrencyHelper.toResponseWithETag(absence, ChronivaroMapper.toDto(absence, type.getString(PARAM_CODE)));
+			}
+		}
 		return ChronivaroRestHelper.toResponse(result);
 	}
 
@@ -258,7 +344,15 @@ public class ChronivaroResource {
 	public Response updateAbsence(@Context HttpServletRequest request, @PathParam("id") String id, String data) {
 		Certificate cert = (Certificate) request.getAttribute(STROLCH_CERTIFICATE);
 		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
+			Optional<Resource> employee = ChronivaroModelHelper.findEmployeeByUser(tx, cert.getUserId());
+			if (employee.isEmpty())
+				return ChronivaroRestHelper.toErrorResponse(Response.Status.NOT_FOUND, "NOT_FOUND",
+						"Employee not found for current user");
 			Resource absence = tx.getResourceBy(TYPE_ABSENCE, id, true);
+			if (!absence.getRelationId(PARAM_EMPLOYEE).equals(employee.get().getId())) {
+				return ChronivaroRestHelper.toErrorResponse(Response.Status.FORBIDDEN, "ACCESS_DENIED",
+						"Access denied to absence " + id);
+			}
 			ConcurrencyHelper.validateIfMatch(request, absence);
 		}
 
@@ -292,7 +386,15 @@ public class ChronivaroResource {
 	public Response cancelAbsence(@Context HttpServletRequest request, @PathParam("id") String id) {
 		Certificate cert = (Certificate) request.getAttribute(STROLCH_CERTIFICATE);
 		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
+			Optional<Resource> employee = ChronivaroModelHelper.findEmployeeByUser(tx, cert.getUserId());
+			if (employee.isEmpty())
+				return ChronivaroRestHelper.toErrorResponse(Response.Status.NOT_FOUND, "NOT_FOUND",
+						"Employee not found for current user");
 			Resource absence = tx.getResourceBy(TYPE_ABSENCE, id, true);
+			if (!absence.getRelationId(PARAM_EMPLOYEE).equals(employee.get().getId())) {
+				return ChronivaroRestHelper.toErrorResponse(Response.Status.FORBIDDEN, "ACCESS_DENIED",
+						"Access denied to absence " + id);
+			}
 			ConcurrencyHelper.validateIfMatch(request, absence);
 		}
 

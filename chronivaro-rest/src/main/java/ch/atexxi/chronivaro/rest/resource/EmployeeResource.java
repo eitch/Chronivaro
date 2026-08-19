@@ -1,11 +1,9 @@
 package ch.atexxi.chronivaro.rest.resource;
 
+import ch.atexxi.chronivaro.core.model.ChronivaroModelHelper;
 import ch.atexxi.chronivaro.core.model.WorkingLocationDurationType;
 import ch.atexxi.chronivaro.core.service.*;
-import ch.atexxi.chronivaro.rest.dto.ChronivaroMapper;
-import ch.atexxi.chronivaro.rest.dto.EmployeeDto;
-import ch.atexxi.chronivaro.rest.dto.ScheduleDto;
-import ch.atexxi.chronivaro.rest.dto.WorkingLocationDefaultDto;
+import ch.atexxi.chronivaro.rest.dto.*;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.Context;
@@ -21,11 +19,13 @@ import li.strolch.service.api.ServiceHandler;
 import li.strolch.service.api.ServiceResult;
 
 import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.function.Function;
 
 import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
 import static ch.atexxi.chronivaro.rest.dto.ChronivaroMapper.employeeToDto;
+import static li.strolch.utils.helper.StringHelper.isNotEmpty;
 
 @Path("chronivaro/v1/admin/employees")
 public class EmployeeResource {
@@ -288,6 +288,32 @@ public class EmployeeResource {
 				.doService(cert, new RemoveWorkingLocationDefaultService(), new StringArgument(defaultId)));
 	}
 
+	@GET
+	@Path("{id}/vacation-account")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response getVacationAccount(@Context HttpServletRequest request, @PathParam("id") String id,
+			@QueryParam("year") Integer year, @QueryParam("summary") Boolean summary,
+			@QueryParam("offset") Integer offset, @QueryParam("limit") Integer limit) {
+		Certificate cert = (Certificate) request.getAttribute(StrolchRestfulConstants.STROLCH_CERTIFICATE);
+		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
+			tx.getResourceBy(TYPE_EMPLOYEE, id, true);
+		}
+
+		ServiceHandler serviceHandler = ChronivaroRestHelper.getServiceHandler();
+		GetVacationAccountSummaryService.GetVacationAccountSummaryArgument arg =
+				new GetVacationAccountSummaryService.GetVacationAccountSummaryArgument(id, year);
+		GetVacationAccountSummaryService.GetVacationAccountSummaryResult result =
+				serviceHandler.doService(cert, new GetVacationAccountSummaryService(), arg);
+		if (result.isOk()) {
+			if (Boolean.TRUE.equals(summary)) {
+				VacationAccountSummaryDto dto = ChronivaroMapper.vacationSummaryToDto(result.summary, result.entries);
+				return Response.ok(ChronivaroRestHelper.createGson().toJson(dto), MediaType.APPLICATION_JSON).build();
+			}
+			return PaginationHelper.toPagedOrListResponse(result.entries, offset, limit, ChronivaroMapper::vacationEntryToDto);
+		}
+		return ChronivaroRestHelper.toResponse(result);
+	}
+
 	@POST
 	@Path("{id}/vacation-corrections")
 	@Consumes(MediaType.APPLICATION_JSON)
@@ -301,6 +327,67 @@ public class EmployeeResource {
 				.fromJson(data, AddVacationCorrectionService.AddVacationCorrectionArgument.class);
 		arg.employeeId = id;
 		ServiceResult result = serviceHandler.doService(cert, new AddVacationCorrectionService(), arg);
+		return ChronivaroRestHelper.toResponse(result);
+	}
+
+	@POST
+	@Path("{id}/vacation-entitlement/calculate")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response calculateVacationEntitlement(@Context HttpServletRequest request, @PathParam("id") String id,
+			String data) {
+		Certificate cert = (Certificate) request.getAttribute(StrolchRestfulConstants.STROLCH_CERTIFICATE);
+		CalculateVacationEntitlementService.CalculateVacationEntitlementArgument arg = isNotEmpty(data)
+				? ChronivaroRestHelper.createGson().fromJson(data,
+						CalculateVacationEntitlementService.CalculateVacationEntitlementArgument.class)
+				: new CalculateVacationEntitlementService.CalculateVacationEntitlementArgument();
+		arg.employeeId = id;
+		if (arg.year == null) {
+			try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
+				Resource employee = tx.getResourceBy(TYPE_EMPLOYEE, id, true);
+				arg.year = LocalDate.now(ChronivaroModelHelper.getEmployeeTimezone(employee)).getYear();
+			}
+		}
+
+		ServiceHandler serviceHandler = ChronivaroRestHelper.getServiceHandler();
+		CalculateVacationEntitlementService.CalculateVacationEntitlementResult result =
+				serviceHandler.doService(cert, new CalculateVacationEntitlementService(), arg);
+		if (result.isOk()) {
+			VacationEntitlementCalculationDto dto = new VacationEntitlementCalculationDto(id, arg.year,
+					result.entitlementMinutes,
+					result.summary != null ? ChronivaroMapper.vacationSummaryToDto(result.summary, null) : null);
+			return Response.ok(ChronivaroRestHelper.createGson().toJson(dto), MediaType.APPLICATION_JSON).build();
+		}
+		return ChronivaroRestHelper.toResponse(result);
+	}
+
+	@POST
+	@Path("{id}/vacation-entitlement/credit")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response creditVacationEntitlement(@Context HttpServletRequest request, @PathParam("id") String id,
+			String data) {
+		Certificate cert = (Certificate) request.getAttribute(StrolchRestfulConstants.STROLCH_CERTIFICATE);
+		CreditVacationEntitlementService.CreditVacationEntitlementArgument arg = isNotEmpty(data)
+				? ChronivaroRestHelper.createGson().fromJson(data,
+						CreditVacationEntitlementService.CreditVacationEntitlementArgument.class)
+				: new CreditVacationEntitlementService.CreditVacationEntitlementArgument();
+		arg.employeeId = id;
+		if (arg.year == null) {
+			try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
+				Resource employee = tx.getResourceBy(TYPE_EMPLOYEE, id, true);
+				arg.year = LocalDate.now(ChronivaroModelHelper.getEmployeeTimezone(employee)).getYear();
+			}
+		}
+
+		ServiceHandler serviceHandler = ChronivaroRestHelper.getServiceHandler();
+		CreditVacationEntitlementService.CreditVacationEntitlementResult result =
+				serviceHandler.doService(cert, new CreditVacationEntitlementService(), arg);
+		if (result.isOk()) {
+			VacationEntitlementCreditDto dto = new VacationEntitlementCreditDto(id, arg.year,
+					result.entitlementMinutes, result.entryId);
+			return Response.ok(ChronivaroRestHelper.createGson().toJson(dto), MediaType.APPLICATION_JSON).build();
+		}
 		return ChronivaroRestHelper.toResponse(result);
 	}
 

@@ -5,9 +5,10 @@ import ch.atexxi.chronivaro.core.model.ChronivaroAuditHelper;
 import ch.atexxi.chronivaro.core.model.PeriodHelper;
 import li.strolch.model.Resource;
 import li.strolch.persistence.api.StrolchTransaction;
+import li.strolch.service.StringResult;
 import li.strolch.service.api.AbstractService;
 import li.strolch.service.api.ServiceArgument;
-import li.strolch.service.api.ServiceResult;
+import li.strolch.service.api.ServiceResultState;
 import li.strolch.utils.dbc.DBC;
 
 import java.time.ZonedDateTime;
@@ -16,7 +17,7 @@ import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
 import static ch.atexxi.chronivaro.core.model.ChronivaroVersionHelper.initVersion;
 
 public class RequestAbsenceService
-		extends AbstractService<RequestAbsenceService.RequestAbsenceArgument, ServiceResult> {
+		extends AbstractService<RequestAbsenceService.RequestAbsenceArgument, StringResult> {
 
 	public static class RequestAbsenceArgument extends ServiceArgument {
 		public String employeeId;
@@ -30,13 +31,14 @@ public class RequestAbsenceService
 	}
 
 	@Override
-	protected ServiceResult internalDoService(RequestAbsenceArgument arg) throws Exception {
+	protected StringResult internalDoService(RequestAbsenceArgument arg) throws Exception {
 		DBC.PRE.assertNotEmpty("employeeId must be set", arg.employeeId);
 		DBC.PRE.assertNotEmpty("absenceTypeCode must be set", arg.absenceTypeCode);
 		DBC.PRE.assertNotNull("start must be set", arg.start);
 		DBC.PRE.assertNotNull("end must be set", arg.end);
 		DBC.PRE.assertNotEmpty("durationType must be set", arg.durationType);
 
+		String absenceId;
 		try (StrolchTransaction tx = openArgOrUserTx(arg)) {
 			PeriodHelper.assertPeriodOpen(tx, arg.employeeId, arg.start.toLocalDate());
 			if (!arg.start.toLocalDate().equals(arg.end.toLocalDate())) {
@@ -63,6 +65,7 @@ public class RequestAbsenceService
 
 			initVersion(absence, tx);
 			tx.add(absence);
+			absenceId = absence.getId();
 
 			ChronivaroAuditHelper.audit(tx, TYPE_ABSENCE, absence.getId(), AUDIT_ACTION_SUBMIT, arg.comment,
 					"Requested absence for employee " + arg.employeeId + " (" + arg.absenceTypeCode + " from "
@@ -71,7 +74,7 @@ public class RequestAbsenceService
 			tx.commitOnClose();
 		}
 
-		return ServiceResult.success();
+		return new StringResult(absenceId);
 	}
 
 	@Override
@@ -80,7 +83,7 @@ public class RequestAbsenceService
 	}
 
 	@Override
-	public ServiceResult getResultInstance() {
-		return new ServiceResult();
+	public StringResult getResultInstance() {
+		return new StringResult(ServiceResultState.FAILED);
 	}
 }
