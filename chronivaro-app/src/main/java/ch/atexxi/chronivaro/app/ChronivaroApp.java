@@ -94,6 +94,7 @@ public class ChronivaroApp {
 				this.config.bindAddress(), this.config.port(), this.config.contextPath());
 
 		this.server = new Server(new InetSocketAddress(this.config.bindAddress(), this.config.port()));
+		this.server.setStopTimeout(5000L);
 
 		ServletContextHandler contextHandler = new ServletContextHandler(ServletContextHandler.SESSIONS);
 		contextHandler.setContextPath(this.config.contextPath());
@@ -225,14 +226,20 @@ public class ChronivaroApp {
 		return this.config;
 	}
 
+	public Thread registerShutdownHook() {
+		Thread hook = new Thread(() -> {
+			logger.info("Shutdown hook triggered, stopping {}...", APP_NAME);
+			stop();
+		}, APP_NAME + "-shutdown-hook");
+		Runtime.getRuntime().addShutdownHook(hook);
+		return hook;
+	}
+
 	public static void main(String[] args) {
 		ChronivaroAppConfig config = ChronivaroAppConfig.fromArgsAndEnv(args);
 		ChronivaroApp app = new ChronivaroApp(config);
 
-		Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-			logger.info("Shutdown hook triggered, stopping Chronivaro...");
-			app.stop();
-		}));
+		app.registerShutdownHook();
 
 		try {
 			app.start();
