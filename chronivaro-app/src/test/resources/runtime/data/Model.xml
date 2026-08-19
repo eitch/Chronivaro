@@ -12,4 +12,207 @@
         </ParameterBag>
     </Resource>
 
+    <Resource Id="calendar-1" Name="Calendar 1" Type="HolidayCalendar">
+        <ParameterBag Id="parameters" Name="Parameters" Type="Parameters">
+            <Parameter Id="name" Name="Name" Type="String" Value="dd"/>
+        </ParameterBag>
+    </Resource>
+    <Resource Id="calendar-2" Name="Calendar 2" Type="HolidayCalendar">
+        <ParameterBag Id="parameters" Name="Parameters" Type="Parameters">
+            <Parameter Id="name" Name="Name" Type="String" Value="dd"/>
+        </ParameterBag>
+    </Resource>
+
+    <Resource Id="location-1" Name="Zurich" Type="Location">
+        <ParameterBag Id="parameters" Name="Parameters" Type="Parameters">
+            <Parameter Id="name" Name="Name" Type="String" Value=""/>
+            <Parameter Id="timezone" Name="Timezone" Type="String" Value="Europe/Zurich"/>
+        </ParameterBag>
+        <ParameterBag Id="relations" Name="Relations" Type="Relations">
+            <Parameter Id="holidayCalendar" Name="Holiday Calendar" Type="String" Interpretation="Resource-Ref" Uom="HolidayCalendar" Value="calendar-1"/>
+        </ParameterBag>
+    </Resource>
+
+    <Resource Id="team-1" Name="Engineering" Type="Team">
+        <ParameterBag Id="parameters" Name="Parameters" Type="Parameters">
+            <Parameter Id="name" Name="Name" Type="String" Value="Engineering"/>
+        </ParameterBag>
+    </Resource>
+    <Resource Id="team-2" Name="Marketing" Type="Team">
+        <ParameterBag Id="parameters" Name="Parameters" Type="Parameters">
+            <Parameter Id="name" Name="Name" Type="String" Value="Marketing"/>
+        </ParameterBag>
+    </Resource>
+
+    <Resource Id="schedAdmin_emp" Name="Standard Monday-Friday 8h" Type="EmploymentSchedule">
+        <ParameterBag Id="parameters" Name="Parameters" Type="Parameters">
+            <Parameter Id="name" Name="Name" Type="String" Value="Standard Monday-Friday 8h"/>
+            <Parameter Id="validFrom" Name="Valid From" Type="Date" Value="1970-01-01T00:00:00.000+01:00"/>
+            <Parameter Id="validTo" Name="Valid To" Type="Date" Value="2026-12-31T23:59:59.999+01:00"/>
+            <Parameter Id="dailyTargetMinutesMonday" Name="Daily Target Minutes Monday" Type="Integer" Value="480"/>
+            <Parameter Id="dailyTargetMinutesTuesday" Name="Daily Target Minutes Tuesday" Type="Integer" Value="480"/>
+            <Parameter Id="dailyTargetMinutesWednesday" Name="Daily Target Minutes Wednesday" Type="Integer" Value="480"/>
+            <Parameter Id="dailyTargetMinutesThursday" Name="Daily Target Minutes Thursday" Type="Integer" Value="480"/>
+            <Parameter Id="dailyTargetMinutesFriday" Name="Daily Target Minutes Friday" Type="Integer" Value="480"/>
+            <Parameter Id="dailyTargetMinutesSaturday" Name="Daily Target Minutes Saturday" Type="Integer" Value="0"/>
+            <Parameter Id="dailyTargetMinutesSunday" Name="Daily Target Minutes Sunday" Type="Integer" Value="0"/>
+        </ParameterBag>
+        <ParameterBag Id="relations" Name="Relations" Type="Relations">
+            <Parameter Id="employee" Name="Employee" Type="String" Interpretation="Resource-Ref" Uom="Employee" Value="admin_emp"/>
+        </ParameterBag>
+    </Resource>
+
+    <Resource Id="admin_emp" Name="Admin User" Type="Employee">
+        <ParameterBag Id="parameters" Name="Parameters" Type="Parameters">
+            <Parameter Id="active" Name="Active" Type="Boolean" Value="true"/>
+            <Parameter Id="joinDate" Name="Join Date" Type="Date" Value="2025-01-01T00:00:00.000+01:00"/>
+            <Parameter Id="timezone" Name="Timezone" Type="String" Value="Europe/Zurich"/>
+            <Parameter Id="userId" Name="User ID" Type="String" Value="admin"/>
+            <Parameter Id="username" Name="Username" Type="String" Value="admin"/>
+        </ParameterBag>
+        <ParameterBag Id="relations" Name="Relations" Type="Relations">
+            <Parameter Id="location" Name="Location" Type="String" Interpretation="Resource-Ref" Uom="Location" Value="location-1"/>
+            <Parameter Id="primaryTeam" Name="Primary Team" Type="String" Interpretation="Resource-Ref" Uom="Team" Value="team-1"/>
+            <Parameter Id="currentWorkDay" Name="Current Work Day" Type="String" Interpretation="Resource-Ref" Uom="WorkDay" Value=""/>
+            <Parameter Id="currentSchedule" Name="Current Schedule" Type="String" Interpretation="Resource-Ref" Uom="EmploymentSchedule"
+                       Value="schedAdmin_emp"/>
+        </ParameterBag>
+    </Resource>
+
+    <Resource Id="schedEmployee_emp" Name="Standard Monday-Friday 8h" Type="EmploymentSchedule">
+        <ParameterBag Id="parameters" Name="Parameters" Type="Parameters">
+            <Parameter Id="name" Name="Name" Type="String" Value="Standard Monday-Friday 8h"/>
+            <Parameter Id="validFrom" Name="Valid From" Type="Date" Value="1970-01-01T00:00:00.000+01:00"/>
+            <Parameter Id="validTo" Name="Valid To" Type="Date" Value="2026-12-31T23:59:59.999+01:00"/>
+            <Parameter Id="dailyTargetMinutesMonday" Name="Daily Target Minutes Monday" Type="Integer" Value="480"/>
+            <Parameter Id="dailyTargetMinutesTuesday" Name="Daily Target Minutes Tuesday" Type="Integer" Value="480"/>
+            <Parameter Id="dailyTargetMinutesWednesday" Name="Daily Target Minutes Wednesday" Type="Integer" Value="480"/>
+            <Parameter Id="dailyTargetMinutesThursday" Name="Daily Target Minutes Thursday" Type="Integer" Value="480"/>
+            <Parameter Id="dailyTargetMinutesFriday" Name="Daily Target Minutes Friday" Type="Integer" Value="480"/>
+            <Parameter Id="dailyTargetMinutesSaturday" Name="Daily Target Minutes Saturday" Type="Integer" Value="0"/>
+            <Parameter Id="dailyTargetMinutesSunday" Name="Daily Target Minutes Sunday" Type="Integer" Value="0"/>
+        </ParameterBag>
+        <ParameterBag Id="relations" Name="Relations" Type="Relations">
+            <Parameter Id="employee" Name="Employee" Type="String" Interpretation="Resource-Ref" Uom="Employee" Value="employee_emp"/>
+        </ParameterBag>
+    </Resource>
+
+    <Resource Id="employee_emp" Name="Employee User" Type="Employee">
+        <ParameterBag Id="parameters" Name="Parameters" Type="Parameters">
+            <Parameter Id="active" Name="Active" Type="Boolean" Value="true"/>
+            <Parameter Id="joinDate" Name="Join Date" Type="Date" Value="2025-01-01T00:00:00.000+01:00"/>
+            <Parameter Id="timezone" Name="Timezone" Type="String" Value="Europe/Zurich"/>
+            <Parameter Id="userId" Name="User ID" Type="String" Value="employee"/>
+            <Parameter Id="username" Name="Username" Type="String" Value="employee"/>
+        </ParameterBag>
+        <ParameterBag Id="relations" Name="Relations" Type="Relations">
+            <Parameter Id="location" Name="Location" Type="String" Interpretation="Resource-Ref" Uom="Location" Value="location-1"/>
+            <Parameter Id="primaryTeam" Name="Primary Team" Type="String" Interpretation="Resource-Ref" Uom="Team" Value="team-1"/>
+            <Parameter Id="currentWorkDay" Name="Current Work Day" Type="String" Interpretation="Resource-Ref" Uom="WorkDay" Value=""/>
+            <Parameter Id="currentSchedule" Name="Current Schedule" Type="String" Interpretation="Resource-Ref" Uom="EmploymentSchedule"
+                       Value="schedEmployee_emp"/>
+        </ParameterBag>
+    </Resource>
+
+    <Resource Id="schedSupervisor_emp" Name="Standard Monday-Friday 8h" Type="EmploymentSchedule">
+        <ParameterBag Id="parameters" Name="Parameters" Type="Parameters">
+            <Parameter Id="name" Name="Name" Type="String" Value="Standard Monday-Friday 8h"/>
+            <Parameter Id="validFrom" Name="Valid From" Type="Date" Value="1970-01-01T00:00:00.000+01:00"/>
+            <Parameter Id="validTo" Name="Valid To" Type="Date" Value="2026-12-31T23:59:59.999+01:00"/>
+            <Parameter Id="dailyTargetMinutesMonday" Name="Daily Target Minutes Monday" Type="Integer" Value="480"/>
+            <Parameter Id="dailyTargetMinutesTuesday" Name="Daily Target Minutes Tuesday" Type="Integer" Value="480"/>
+            <Parameter Id="dailyTargetMinutesWednesday" Name="Daily Target Minutes Wednesday" Type="Integer" Value="480"/>
+            <Parameter Id="dailyTargetMinutesThursday" Name="Daily Target Minutes Thursday" Type="Integer" Value="480"/>
+            <Parameter Id="dailyTargetMinutesFriday" Name="Daily Target Minutes Friday" Type="Integer" Value="480"/>
+            <Parameter Id="dailyTargetMinutesSaturday" Name="Daily Target Minutes Saturday" Type="Integer" Value="0"/>
+            <Parameter Id="dailyTargetMinutesSunday" Name="Daily Target Minutes Sunday" Type="Integer" Value="0"/>
+        </ParameterBag>
+        <ParameterBag Id="relations" Name="Relations" Type="Relations">
+            <Parameter Id="employee" Name="Employee" Type="String" Interpretation="Resource-Ref" Uom="Employee" Value="supervisor_emp"/>
+        </ParameterBag>
+    </Resource>
+
+    <Resource Id="supervisor_emp" Name="Supervisor User" Type="Employee">
+        <ParameterBag Id="parameters" Name="Parameters" Type="Parameters">
+            <Parameter Id="active" Name="Active" Type="Boolean" Value="true"/>
+            <Parameter Id="joinDate" Name="Join Date" Type="Date" Value="2025-01-01T00:00:00.000+01:00"/>
+            <Parameter Id="timezone" Name="Timezone" Type="String" Value="Europe/Zurich"/>
+            <Parameter Id="userId" Name="User ID" Type="String" Value="supervisor"/>
+            <Parameter Id="username" Name="Username" Type="String" Value="supervisor"/>
+        </ParameterBag>
+        <ParameterBag Id="relations" Name="Relations" Type="Relations">
+            <Parameter Id="location" Name="Location" Type="String" Interpretation="Resource-Ref" Uom="Location" Value="location-1"/>
+            <Parameter Id="primaryTeam" Name="Primary Team" Type="String" Interpretation="Resource-Ref" Uom="Team" Value="team-1"/>
+            <Parameter Id="secondaryTeams" Name="Secondary Teams" Type="StringList" Interpretation="Resource-Ref" Uom="Team"
+                       Value=""/>
+            <Parameter Id="supervisedTeams" Name="Supervised Teams" Type="StringList" Interpretation="Resource-Ref" Uom="Team"
+                       Value="team-1"/>
+            <Parameter Id="currentWorkDay" Name="Current Work Day" Type="String" Interpretation="Resource-Ref" Uom="WorkDay" Value=""/>
+            <Parameter Id="currentSchedule" Name="Current Schedule" Type="String" Interpretation="Resource-Ref" Uom="EmploymentSchedule"
+                       Value="schedSupervisor_emp"/>
+        </ParameterBag>
+    </Resource>
+
+    <Resource Id="schedHr_emp" Name="Standard Monday-Friday 8h" Type="EmploymentSchedule">
+        <ParameterBag Id="parameters" Name="Parameters" Type="Parameters">
+            <Parameter Id="name" Name="Name" Type="String" Value="Standard Monday-Friday 8h"/>
+            <Parameter Id="validFrom" Name="Valid From" Type="Date" Value="1970-01-01T00:00:00.000+01:00"/>
+            <Parameter Id="validTo" Name="Valid To" Type="Date" Value="2026-12-31T23:59:59.999+01:00"/>
+            <Parameter Id="dailyTargetMinutesMonday" Name="Daily Target Minutes Monday" Type="Integer" Value="480"/>
+            <Parameter Id="dailyTargetMinutesTuesday" Name="Daily Target Minutes Tuesday" Type="Integer" Value="480"/>
+            <Parameter Id="dailyTargetMinutesWednesday" Name="Daily Target Minutes Wednesday" Type="Integer" Value="480"/>
+            <Parameter Id="dailyTargetMinutesThursday" Name="Daily Target Minutes Thursday" Type="Integer" Value="480"/>
+            <Parameter Id="dailyTargetMinutesFriday" Name="Daily Target Minutes Friday" Type="Integer" Value="480"/>
+            <Parameter Id="dailyTargetMinutesSaturday" Name="Daily Target Minutes Saturday" Type="Integer" Value="0"/>
+            <Parameter Id="dailyTargetMinutesSunday" Name="Daily Target Minutes Sunday" Type="Integer" Value="0"/>
+        </ParameterBag>
+        <ParameterBag Id="relations" Name="Relations" Type="Relations">
+            <Parameter Id="employee" Name="Employee" Type="String" Interpretation="Resource-Ref" Uom="Employee" Value="hr_emp"/>
+        </ParameterBag>
+    </Resource>
+
+    <Resource Id="hr_emp" Name="HR User" Type="Employee">
+        <ParameterBag Id="parameters" Name="Parameters" Type="Parameters">
+            <Parameter Id="active" Name="Active" Type="Boolean" Value="true"/>
+            <Parameter Id="joinDate" Name="Join Date" Type="Date" Value="2025-01-01T00:00:00.000+01:00"/>
+            <Parameter Id="timezone" Name="Timezone" Type="String" Value="Europe/Zurich"/>
+            <Parameter Id="userId" Name="User ID" Type="String" Value="hr"/>
+            <Parameter Id="username" Name="Username" Type="String" Value="hr"/>
+        </ParameterBag>
+        <ParameterBag Id="relations" Name="Relations" Type="Relations">
+            <Parameter Id="location" Name="Location" Type="String" Interpretation="Resource-Ref" Uom="Location" Value="location-1"/>
+            <Parameter Id="primaryTeam" Name="Primary Team" Type="String" Interpretation="Resource-Ref" Uom="Team" Value="team-1"/>
+            <Parameter Id="currentWorkDay" Name="Current Work Day" Type="String" Interpretation="Resource-Ref" Uom="WorkDay" Value=""/>
+            <Parameter Id="currentSchedule" Name="Current Schedule" Type="String" Interpretation="Resource-Ref" Uom="EmploymentSchedule"
+                       Value="schedHr_emp"/>
+        </ParameterBag>
+    </Resource>
+
+    <!-- Absence Types -->
+    <Resource Id="VACATION" Name="Vacation" Type="AbsenceType">
+        <ParameterBag Id="parameters" Name="Parameters" Type="Parameters">
+            <Parameter Id="name" Name="Name" Type="String" Value="Vacation"/>
+            <Parameter Id="paid" Name="Paid" Type="Boolean" Value="true"/>
+            <Parameter Id="reducesTargetTime" Name="Reduces Target Time" Type="Boolean" Value="false"/>
+            <Parameter Id="reducesVacationDays" Name="Reduces Vacation Days" Type="Boolean" Value="true"/>
+            <Parameter Id="requiresApproval" Name="Requires Approval" Type="Boolean" Value="true"/>
+            <Parameter Id="allowPartialDays" Name="Allow Partial Days" Type="Boolean" Value="true"/>
+            <Parameter Id="colorCode" Name="Color Code" Type="String" Value="#3B82F6"/>
+            <Parameter Id="active" Name="Active" Type="Boolean" Value="true"/>
+        </ParameterBag>
+    </Resource>
+
+    <Resource Id="SICK" Name="Sick Leave" Type="AbsenceType">
+        <ParameterBag Id="parameters" Name="Parameters" Type="Parameters">
+            <Parameter Id="name" Name="Name" Type="String" Value="Sick Leave"/>
+            <Parameter Id="paid" Name="Paid" Type="Boolean" Value="true"/>
+            <Parameter Id="reducesTargetTime" Name="Reduces Target Time" Type="Boolean" Value="true"/>
+            <Parameter Id="reducesVacationDays" Name="Reduces Vacation Days" Type="Boolean" Value="false"/>
+            <Parameter Id="requiresApproval" Name="Requires Approval" Type="Boolean" Value="true"/>
+            <Parameter Id="allowPartialDays" Name="Allow Partial Days" Type="Boolean" Value="true"/>
+            <Parameter Id="colorCode" Name="Color Code" Type="String" Value="#EF4444"/>
+            <Parameter Id="active" Name="Active" Type="Boolean" Value="true"/>
+        </ParameterBag>
+    </Resource>
+
 </StrolchModel>

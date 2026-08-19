@@ -12,7 +12,11 @@
             <Role>Employee</Role>
             <Role>Supervisor</Role>
             <Role>HR</Role>
+            <Role>ModelAccessor</Role>
         </Roles>
+        <Properties>
+            <Property name="realm" value="strolch"/>
+        </Properties>
     </User>
     <User userId="agent" username="agent">
         <Firstname>Agent</Firstname>
@@ -21,6 +25,10 @@
         <Locale>en</Locale>
         <Roles>
             <Role>StrolchAdmin</Role>
+            <Role>ModelAccessor</Role>
         </Roles>
+        <Properties>
+            <Property name="realm" value="strolch"/>
+        </Properties>
     </User>
 </Users>
