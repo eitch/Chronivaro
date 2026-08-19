@@ -13,7 +13,7 @@ Audit date: 2026-08-17. `IMPLEMENTATION_SPECIFICATION.md` is authoritative; the 
 
 ## Partially implemented
 
-- Period workflow (spec sections 6.9, 9.5, 10.1, 13.2): Core period lifecycle completed with auto-creation, submission, approval, rejection, reopening with reason, calculation snapshots, audit trails, period closure locking, and `TimePeriodSearch` (Task 5 completed); REST personal, period, approvals, and admin workflow endpoints with concurrency control and role authorization implemented and verified (Task 6 completed).
+- Period workflow (spec sections 6.9, 9.5, 10.1, 13.2): Core period lifecycle completed with auto-creation, submission, approval, rejection, reopening with reason, calculation snapshots, audit trails, period closure locking, and `TimePeriodSearch` (Task 5 completed); REST personal, period, approvals, and admin workflow endpoints with concurrency control and role authorization implemented and verified (Task 6 completed); supervisor approval queues with primary-team scoping, self-approval prevention, cross-team access denial, and pagination implemented and verified (Task 10 completed).
 - Vacation accounting (sections 6.7, 9.4, 11.3): configurable vacation entitlement policy, proration engine, whole-minute commercial rounding, yearly account summaries with unlimited carry-over, calculation/crediting services, and absence approval balance blocking implemented and verified (Task 7 completed); immutable append-only journal, search query, yearly account summaries with oldest-balance reconciliation, absence cancellation refunds, and negative correction blocking implemented in Core (Task 8 completed); vacation account and absence REST endpoints (`/me/vacation-account`, `/me/absences` filtering/ownership, admin vacation account, calculation, crediting, and corrections) implemented and verified (Task 9 completed); UI views remaining.
 - Audit logging (sections 5.2, 6.10, 9.3–9.5, 16.3): `ChronivaroAuditHelper` enhanced with full metadata (action, reason, correlation ID from MDC/thread-local, details, date, user, old/new values), `AuditEventSearch` fluent query, and `PurgeAuditEventsService` retention purge logic implemented in Core (Task 4.1 completed); administrative master data mutation services audited (Task 4.2.1 completed); Employee and Schedule services audited (Task 4.2.2 completed); operational Time Tracking, Absence, Vacation, Period, and Configuration services audited (Task 4.2.3 completed); administrative REST endpoint and security implemented (Task 4.3 completed).
 - Administration (sections 3.3–3.4, 12.1): employee/team/location/schedule/holiday/absence-type pages and APIs exist, but global configuration has core support only and no REST/UI administration.
@@ -22,8 +22,6 @@ Audit date: 2026-08-17. `IMPLEMENTATION_SPECIFICATION.md` is authoritative; the 
 ## Missing
 
 - Structured time-balance and absence reporting, report REST endpoints, CSV serialization, and report UI (sections 11.2, 11.4–11.5, 13.2): no `ReportResource`, report query/service, CSV implementation, or report page was found.
-- Supervisor approval queue/API/UI for absences and submitted periods (sections 3.2, 12.1, 13.2): no approval queue query/resource/view was found.
-- Automated vacation entitlement engine and configurable policy values (section 6.7.1), subject to the open parameters listed below.
 - Registration of all required audit fields and audit access controls (sections 6.10 and 16.3), beyond the partial helper implementation.
 - REST-wide specification conventions: standard error payload with field errors/correlation ID (Task 2.1), pagination contracts/helpers (Task 2.2), optimistic concurrency control (Task 2.3), and OpenAPI documentation (Task 3) implemented; integration coverage remaining (sections 13.1, 14.2, 18.2).
 - Non-functional production controls: structured correlation-ID logs, metrics, health/readiness checks, documented retention/deletion policy, performance evidence, and responsive/accessibility verification (sections 16.3 and 17).
@@ -36,14 +34,13 @@ Audit date: 2026-08-17. `IMPLEMENTATION_SPECIFICATION.md` is authoritative; the 
 
 ## Dependency-ordered next steps
 
-1. Build scoped supervisor approval queues (Task 10).
-2. Add personal workflow and approval UI (Task 11).
-3. Implement structured reports and CSV export (Task 12).
-4. Complete global configuration administration (Task 13).
-5. Create `chronivaro-app` and executable packaging (Task 14).
-6. Implement embedded Jetty lifecycle and configuration (Task 15).
-7. Integrate Jersey and serve the frontend from Jetty (Task 16).
-8. Add standalone and non-functional verification (Task 17).
+1. Add personal workflow and approval UI (Task 11).
+2. Implement structured reports and CSV export (Task 12).
+3. Complete global configuration administration (Task 13).
+4. Create `chronivaro-app` and executable packaging (Task 14).
+5. Implement embedded Jetty lifecycle and configuration (Task 15).
+6. Integrate Jersey and serve the frontend from Jetty (Task 16).
+7. Add standalone and non-functional verification (Task 17).
 
 The matching dependency-ordered tasks, evidence, dependencies, and acceptance criteria are in `IMPLEMENTATION_BACKLOG.md`.
 

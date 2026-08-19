@@ -366,9 +366,18 @@ Task 4 was split into subtasks **4.1**, **4.2.1**, **4.2.2**, **4.2.3**, and **4
 
 ### 10. Build supervisor approval queues
 
-- **Status:** `MISSING`
+- **Status:** `COMPLETED`
 - **Scope:** Add scoped Core searches/services and REST resources for absence and submitted-period approval queues using the decided approver rules.
 - **Acceptance:** Results are scope-limited and paginated; transitions are atomic and audited; queue and authorization tests pass.
+- **Verification:**
+  - Implemented `AbsenceSearch` in `chronivaro-core` supporting fluent queries by state, employee, multiple employees, and absence type with Strolch privilege assertions.
+  - Enhanced `TimePeriodSearch` to support `forEmployees(Collection<String> employeeIds)`.
+  - Implemented supervisor scoping and authorization helpers in `ChronivaroModelHelper` (`getSupervisedEmployeeIds`, `findEmployeesByTeam`, `assertCanManageEmployee` with self-approval prevention).
+  - Enforced supervisor authorization and self-approval restrictions in `ApproveAbsenceService`, `RejectAbsenceService`, `ApprovePeriodService`, and `RejectPeriodService`.
+  - Enriched `ApprovalsResource` (`GET /chronivaro/v1/approvals/periods` and `GET /chronivaro/v1/approvals/absences`) with team/employee/date/type filtering, supervisor scope limiting, pagination, and atomic approval/rejection handling.
+  - Configured Strolch search and service privileges in `PrivilegeRoles.xml` for `Employee`, `Supervisor`, and `HR`.
+  - Added comprehensive REST integration test suite in `ApprovalsQueueTest` covering queue scoping, cross-team approval rejections (403 Forbidden), self-approval rejections (403 Forbidden), HR escalations, rejections with mandatory comments, and pagination.
+  - Verified with full project test suite passing via `mvn clean test` (62 tests passing with 0 failures and 0 errors across all modules).
 - **Dependencies:** Tasks 2.1, 2.2, 4, 5, 6, and 9.
 
 ### 11. Add personal workflow and approval UI
