@@ -5139,15 +5139,24 @@ components:
     ConfigurationDto:
       type: object
       properties:
-        defaultBreakMinutes:
+        weeklyTargetMinutes:
           type: integer
-          example: 30
-        autoCloseGracePeriodDays:
+          example: 2520
+        annualVacationDays:
           type: integer
-          example: 5
-        maxOvertimeCarryoverHours:
+          example: 25
+        minutesPerVacationDay:
           type: integer
-          example: 50
+          example: 480
+        vacationAbsenceTypeCode:
+          type: string
+          example: 'VACATION'
+        version:
+          type: integer
+          example: 1
+        updatedBy:
+          type: string
+          example: 'admin'
 
     ManualCorrectionRequestDto:
       type: object
