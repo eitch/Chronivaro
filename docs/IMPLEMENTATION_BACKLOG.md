@@ -499,9 +499,15 @@ Task 12 was split into subtasks **12.1** and **12.2** per the task-size and sing
 
 ### 15. Implement embedded Jetty lifecycle and configuration
 
-- **Status:** `MISSING`
+- **Status:** `COMPLETED`
 - **Scope:** In `chronivaro-app`, start/stop embedded Eclipse Jetty with configurable enablement, bind address/port, optional context path, and frontend resource location; coordinate signal shutdown with Strolch cleanup.
 - **Acceptance:** Startup, bind failure, controlled shutdown, and resource release are deterministic and tested; no external Jetty XML or Tomcat is required.
+- **Verification:**
+  - Configured embedded Eclipse Jetty 12 lifecycle in `ChronivaroApp` with graceful stop timeout (`setStopTimeout(5000L)`), safe shutdown coordination via `registerShutdownHook()`, and idempotent `stop()`.
+  - Implemented configurable HTTP enablement (`--no-http`), bind address (`--bind`), dynamic and fixed port allocation (`--port`), context path (`--context-path`), and static frontend resource location (`--web-resources`).
+  - Added deterministic failure handling on port binding conflicts (`java.net.BindException`), ensuring Strolch agent and server resources are cleanly destroyed without thread or socket leaks.
+  - Added comprehensive test suite in `ChronivaroAppTest` covering HTTP disabled/enabled start, ephemeral port binding, port conflict failure and clean rollback, custom context paths, custom static web resource paths, idempotent stop, and shutdown hook registration.
+  - Verified with full test suite passing via `mvn clean test` (98 tests passing with 0 failures and 0 errors across all 5 reactor modules).
 - **Dependencies:** Task 14.
 
 ### 16. Integrate Jersey and serve the frontend from Jetty
