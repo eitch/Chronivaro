@@ -434,10 +434,28 @@ Task 11 was split into subtasks **11.1**, **11.2**, and **11.3** per the task-si
 
 ### 12. Implement structured reports and CSV export
 
-- **Status:** `MISSING`
-- **Scope:** Add Core report queries/services, REST resources, stable CSV serialization, and UI for day/month/time-balance and absence reports.
-- **Acceptance:** Reports use calculated values, respect authorization/date filters, produce deterministic CSV, and have Core/REST/UI tests.
+Task 12 was split into subtasks **12.1** and **12.2** per the task-size and single-concept rules (avoiding changes across 10+ files simultaneously and separating Core/REST backend calculation & CSV serialization from Web UI visualization).
+
+#### 12.1. Core and REST Report Endpoints and CSV Export
+
+- **Status:** `DONE`
+- **Scope:** Implement Core report services (`TeamReportService`, `AbsenceReportService`), deterministic CSV export serializer (`CsvExportHelper`), report DTOs, and REST resource (`ReportsResource` under `/chronivaro/v1/reports`) supporting Day, Month, Vacation, Team, and Absence reports in JSON and RFC 4180 UTF-8 CSV with BOM, role-based authorization scoping, and OpenAPI specification.
+- **Acceptance:** Reports use calculated values from Core models; CSV exports are deterministic, properly escaped, and include UTF-8 BOM; authorization scoping restricts Employees to self, Supervisors to supervised teams, and HR/Admin to all; verified by Core and REST integration tests.
+- **Verification:**
+  - Implemented `TeamReport` record and `TeamReportService` aggregating monthly employee actuals, target hours, balance progression, missing bookings detection, and period lifecycle state.
+  - Implemented `AbsenceReportItem` record and `AbsenceReportService` retrieving filtered absences with duration, day part, paid flags, and approval metadata.
+  - Implemented `CsvExportHelper` with UTF-8 BOM (`\uFEFF`), RFC 4180 comma/quote/newline escaping, and duration formatting for Day, Month, Vacation, Team, and Absence reports.
+  - Added REST endpoints in `ReportsResource` under `/chronivaro/v1/reports/day`, `/chronivaro/v1/reports/month`, `/chronivaro/v1/reports/vacation`, `/chronivaro/v1/reports/team`, and `/chronivaro/v1/reports/absences` supporting JSON and `text/csv; charset=utf-8` responses.
+  - Configured service and query privileges in `PrivilegeRoles.xml` and updated `docs/openapi.yaml`.
+  - Added test suites in `ReportServiceTest` (Core) and `ReportsResourceTest` (REST) and verified with full project test suite passing (`mvn clean test` with 75 tests passing, 0 failures, 0 errors).
 - **Dependencies:** Tasks 3, 5, 8, and 9.
+
+#### 12.2. Reports and Export UI
+
+- **Status:** `MISSING`
+- **Scope:** Add Vanilla JS views (`ReportsView.js`), report API client (`ReportApi.js`), report type selector (Day, Month, Vacation, Team, Absence), filter controls (Team, Employee, Date/Month/Range), tabular data visualization with break/gap inspection, and CSV download export button.
+- **Acceptance:** Report filters load and execute queries cleanly; tabular views display calculated summary metrics and statuses; CSV download produces proper files with BOM; responsive design, router registration, and automated Web UI tests.
+- **Dependencies:** Tasks 11.3 and 12.1.
 
 ### 13. Complete global configuration administration
 

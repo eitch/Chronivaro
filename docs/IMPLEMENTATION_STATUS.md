@@ -34,7 +34,7 @@ Audit date: 2026-08-17. `IMPLEMENTATION_SPECIFICATION.md` is authoritative; the 
 
 ## Dependency-ordered next steps
 
-1. Implement structured reports and CSV export (Task 12).
+1. Implement structured reports and CSV export (Task 12.1 Core/REST backend & CSV serialization completed; Task 12.2 UI missing).
 2. Complete global configuration administration (Task 13).
 3. Create `chronivaro-app` and executable packaging (Task 14).
 4. Implement embedded Jetty lifecycle and configuration (Task 15).
