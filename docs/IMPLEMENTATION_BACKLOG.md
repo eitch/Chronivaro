@@ -382,10 +382,38 @@ Task 4 was split into subtasks **4.1**, **4.2.1**, **4.2.2**, **4.2.3**, and **4
 
 ### 11. Add personal workflow and approval UI
 
-- **Status:** `MISSING`
-- **Scope:** Add Vanilla JS views and API clients for personal absences, vacation accounts, period workflow, and supervisor approvals.
-- **Acceptance:** Loading, empty, success, error, and accessibility states are covered; server authorization remains authoritative; browser integration tests cover main workflows.
+Task 11 was split into subtasks **11.1**, **11.2**, and **11.3** per the task-size and single-concept rules (avoiding changes across 10+ files simultaneously and separating employee self-service from supervisor approvals).
+
+#### 11.1. Personal Absences and Vacation Account UI
+
+- **Status:** `COMPLETED`
+- **Scope:** Add Vanilla JS views (`MyAbsencesView.js`) and API clients (`AbsenceApi.js`, `VacationApi.js`) for submitting absence requests (with date ranges, duration types, half-day parts, hours/minutes, absence type selection, comments), viewing personal absence history with statuses/reasons and cancellation actions, and viewing the personal vacation account summary (yearly entitlement, carry-over, corrections, usage, remaining balance) and immutable journal entries with year filtering.
+- **Acceptance:** Loading, empty, success, error, and validation states are covered; server authorization remains authoritative; integration with application router and navigation.
+- **Verification:**
+  - Implemented `Rest.js` enhancements supporting custom headers (e.g. `If-Match` for optimistic concurrency) and comprehensive error parsing.
+  - Implemented `AbsenceApi.js` supporting `getMyAbsences` (with date range, status, type filters), `getAbsenceTypes`, `requestAbsence`, `getAbsence`, and `cancelAbsence` (with `If-Match` ETag and reason).
+  - Implemented `VacationAccountApi.js` supporting `getMyVacationAccount(year)`.
+  - Implemented `Format.js` extensions `durationDays`, `date`, and `dateTime`.
+  - Implemented `MyAbsencesView.js` featuring vacation summary metrics cards (Entitlement, Carry-Over, Adjustments, Usage, Remaining balance), collapsible immutable vacation journal table with year navigation, personal absences history table with status badges (`SUBMITTED`, `APPROVED`, `REJECTED`, `CANCELLED`), cancellation action prompts, filter bar, and absence request modal dialog with dynamic duration options and validation.
+  - Registered navigation link in `index.html` and router mapping in `app.js`.
+  - Added CSS styling in `style.css` for vacation cards, journal tables, status badges, filter bars, and modal forms.
+  - Created automated test `WebPersonalAbsenceUiTest` verifying web assets, router registration, DOM structure, and full personal absence/vacation REST integration workflow.
+  - Verified with full project test suite passing via `mvn clean test` (64 tests passing with 0 failures and 0 errors across all modules).
 - **Dependencies:** Tasks 6, 9, and 10.
+
+#### 11.2. Personal Period Workflow and Monthly Closing UI
+
+- **Status:** `MISSING`
+- **Scope:** Add Vanilla JS views (`MyPeriodsView.js` / period closing controls) and API client (`PeriodApi.js`) for viewing monthly period summary snapshots, current lifecycle state (`OPEN`, `SUBMITTED`, `APPROVED`, `REJECTED`, `LOCKED`), rejection reasons, submitting monthly periods for supervisor approval, and navigating period history.
+- **Acceptance:** Lifecycle states, calculation snapshots, and submission workflows are rendered with loading/empty/error states.
+- **Dependencies:** Tasks 6 and 11.1.
+
+#### 11.3. Supervisor Approval Queues UI
+
+- **Status:** `MISSING`
+- **Scope:** Add Vanilla JS views (`ApprovalsView.js`) and API client (`ApprovalsApi.js`) for supervisors and HR to review pending absence requests and submitted time periods with team/employee filtering, atomic approval and rejection with mandatory comments, and pagination.
+- **Acceptance:** Supervisors see only their scoped team members; approval and rejection actions execute cleanly with optimistic concurrency and error handling.
+- **Dependencies:** Tasks 6, 10, and 11.2.
 
 ### 12. Implement structured reports and CSV export
 
