@@ -403,9 +403,18 @@ Task 11 was split into subtasks **11.1**, **11.2**, and **11.3** per the task-si
 
 #### 11.2. Personal Period Workflow and Monthly Closing UI
 
-- **Status:** `MISSING`
+- **Status:** `COMPLETED`
 - **Scope:** Add Vanilla JS views (`MyPeriodsView.js` / period closing controls) and API client (`PeriodApi.js`) for viewing monthly period summary snapshots, current lifecycle state (`OPEN`, `SUBMITTED`, `APPROVED`, `REJECTED`, `LOCKED`), rejection reasons, submitting monthly periods for supervisor approval, and navigating period history.
 - **Acceptance:** Lifecycle states, calculation snapshots, and submission workflows are rendered with loading/empty/error states.
+- **Verification:**
+  - Implemented `PeriodApi.js` supporting `getMyPeriodStatus(yearMonth)`, `submitMyPeriod(yearMonth, comment, etag)`, `getMonthSummary(yearMonth)`, and `getPeriodStatus(yearMonth, employeeId)`.
+  - Implemented `MyPeriodsView.js` featuring month picker and navigation controls, lifecycle status banner with timestamps/rejection reason alerts, monthly balance summary cards, calculation snapshot details viewer, daily time breakdown table, and period submission workflow with confirmation dialog and comment support.
+  - Enhanced `PeriodStatusDto` and `ChronivaroMapper.periodToDto` to include rejection metadata (`rejectedAt`, `rejectedBy`), `comment`, and `calculationSnapshot`.
+  - Updated `openapi.yaml` to document expanded `PeriodStatusDto` schema with rejection reasons and calculation snapshots.
+  - Added navigation item `Monthly Closing` in `index.html` (accessible to `Employee` role) and route `my-periods` in `app.js`.
+  - Added CSS styling in `style.css` for month navigation, status banners, rejection alerts, summary grids, snapshot details, and info notices.
+  - Created automated integration test suite in `WebPersonalPeriodUiTest` verifying web assets, router registration, DOM structure, and full personal period submission / supervisor rejection / resubmission / approval lifecycle workflow.
+  - Verified with full project test suite passing via `mvn test` (66 tests passing with 0 failures and 0 errors across all modules).
 - **Dependencies:** Tasks 6 and 11.1.
 
 #### 11.3. Supervisor Approval Queues UI
