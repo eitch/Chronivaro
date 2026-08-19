@@ -25,6 +25,7 @@ public class ChronivaroRestfulClasses {
 		restfulClasses.add(HolidayCalendarsResource.class);
 		restfulClasses.add(LocationResource.class);
 		restfulClasses.add(PeriodResource.class);
+		restfulClasses.add(ReportsResource.class);
 		restfulClasses.add(ScheduleTemplateResource.class);
 		restfulClasses.add(TeamResource.class);
 		return restfulClasses;

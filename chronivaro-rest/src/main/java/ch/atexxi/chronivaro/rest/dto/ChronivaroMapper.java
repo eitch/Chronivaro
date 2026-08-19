@@ -230,4 +230,51 @@ public class ChronivaroMapper {
 				summary.remainingMinutes(),
 				entryDtos);
 	}
+
+	public static TeamReportDto teamReportToDto(ch.atexxi.chronivaro.core.report.TeamReport report) {
+		java.util.List<TeamReportDto.TeamEmployeeSummaryDto> emps = report.employeeSummaries() != null
+				? report.employeeSummaries().stream().map(e -> new TeamReportDto.TeamEmployeeSummaryDto(
+						e.employeeId(),
+						e.employeeName(),
+						e.teamId(),
+						e.yearMonth().toString(),
+						e.targetMinutes(),
+						e.actualMinutes(),
+						e.holidayMinutes(),
+						e.absenceMinutes(),
+						e.initialBalanceMinutes(),
+						e.periodBalanceMinutes(),
+						e.endBalanceMinutes(),
+						e.periodState(),
+						e.missingBookingsCount()
+				)).toList()
+				: java.util.List.of();
+
+		return new TeamReportDto(report.teamId(), report.teamName(), report.yearMonth().toString(), emps);
+	}
+
+	public static AbsenceReportDto absenceReportToDto(java.util.List<ch.atexxi.chronivaro.core.report.AbsenceReportItem> items) {
+		java.util.List<AbsenceReportDto.AbsenceReportItemDto> itemDtos = items != null
+				? items.stream().map(item -> new AbsenceReportDto.AbsenceReportItemDto(
+						item.id(),
+						item.employeeId(),
+						item.employeeName(),
+						item.absenceTypeCode(),
+						item.absenceTypeName(),
+						item.start() != null ? item.start().toString() : null,
+						item.end() != null ? item.end().toString() : null,
+						item.durationType(),
+						item.dayPart(),
+						item.minutes(),
+						item.state(),
+						item.paid(),
+						item.comment(),
+						item.submittedAt() != null ? item.submittedAt().toString() : null,
+						item.approvedAt() != null ? item.approvedAt().toString() : null,
+						item.approvedBy()
+				)).toList()
+				: java.util.List.of();
+
+		return new AbsenceReportDto(itemDtos);
+	}
 }

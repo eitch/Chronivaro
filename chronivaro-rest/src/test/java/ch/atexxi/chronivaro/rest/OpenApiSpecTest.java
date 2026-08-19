@@ -42,7 +42,9 @@ public class OpenApiSpecTest {
 				"HolidayCalendarDto:",
 				"HolidayDto:",
 				"AuditLogDto:",
-				"ConfigurationDto:"
+				"ConfigurationDto:",
+				"TeamReportDto:",
+				"AbsenceReportDto:"
 		);
 
 		for (String schema : requiredSchemas) {
@@ -73,6 +75,11 @@ public class OpenApiSpecTest {
 				"/chronivaro/v1/work-entries/{id}:",
 				"/chronivaro/v1/summary/day/{date}:",
 				"/chronivaro/v1/summary/month/{yearMonth}:",
+				"/chronivaro/v1/reports/day:",
+				"/chronivaro/v1/reports/month:",
+				"/chronivaro/v1/reports/vacation:",
+				"/chronivaro/v1/reports/team:",
+				"/chronivaro/v1/reports/absences:",
 				"/chronivaro/v1/absences:",
 				"/chronivaro/v1/absences/{id}:",
 				"/chronivaro/v1/absences/{id}/approve:",
