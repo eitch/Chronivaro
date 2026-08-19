@@ -273,6 +273,12 @@ public class OperationalServicesAuditTest {
 	@Test
 	public void shouldAuditAbsenceLifecycleAndVacationAccounting() {
 		ServiceHandler serviceHandler = runtimeMock.getServiceHandler();
+
+		// Credit vacation entitlement first so approval does not fail on balance check
+		serviceHandler.doService(adminCert, new CreditVacationEntitlementService(),
+				new CreditVacationEntitlementService.CreditVacationEntitlementArgument(employeeId, 2026, false));
+		clearAuditEventsOnly();
+
 		String corrId = "corr-absence-lifecycle";
 		ChronivaroAuditHelper.setCorrelationId(corrId);
 

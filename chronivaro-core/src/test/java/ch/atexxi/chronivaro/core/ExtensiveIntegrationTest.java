@@ -174,6 +174,11 @@ public class ExtensiveIntegrationTest {
 		typeArg.durationTypes = List.of(DURATION_HOURS, DURATION_HALF_DAY, DURATION_FULL_DAY);
 		assertTrue(serviceHandler.doService(certificate, new CreateAbsenceTypeService(), typeArg).isOk());
 
+		// Credit vacation entitlement for employee
+		CreditVacationEntitlementService.CreditVacationEntitlementArgument creditArg =
+				new CreditVacationEntitlementService.CreditVacationEntitlementArgument(employeeId, 2026, false);
+		assertTrue(serviceHandler.doService(certificate, new CreditVacationEntitlementService(), creditArg).isOk());
+
 		RequestAbsenceService.RequestAbsenceArgument absenceArg = new RequestAbsenceService.RequestAbsenceArgument();
 		absenceArg.employeeId = employeeId;
 		absenceArg.absenceTypeCode = "vacation";

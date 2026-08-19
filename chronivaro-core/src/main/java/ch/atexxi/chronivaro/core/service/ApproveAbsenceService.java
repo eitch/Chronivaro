@@ -3,6 +3,7 @@ package ch.atexxi.chronivaro.core.service;
 import ch.atexxi.chronivaro.core.model.AbsenceHelper;
 import ch.atexxi.chronivaro.core.model.ChronivaroAuditHelper;
 import ch.atexxi.chronivaro.core.model.ScheduleHelper;
+import ch.atexxi.chronivaro.core.model.VacationHelper;
 import li.strolch.model.Resource;
 import li.strolch.persistence.api.StrolchTransaction;
 import li.strolch.service.StringArgument;
@@ -35,9 +36,8 @@ public class ApproveAbsenceService extends AbstractService<StringArgument, Servi
 			ChronivaroAuditHelper.audit(tx, TYPE_ABSENCE, absence.getId(), AUDIT_ACTION_APPROVE,
 					"Approved absence " + absence.getId() + " for employee " + absence.getRelationId(PARAM_EMPLOYEE));
 
-			// If it's a vacation absence, create a vacation account entry
-			Resource absenceType = tx.getResourceByRelation(absence, PARAM_ABSENCE_TYPE, true);
-			if (absenceType.getBoolean(PARAM_REDUCE_VACATION_CREDIT)) {
+			// If it's a vacation absence, check balance and create a vacation account entry
+			if (VacationHelper.isVacationAbsence(tx, absence)) {
 				String employeeId = absence.getRelationId(PARAM_EMPLOYEE);
 				LocalDate start = absence.getDate(PARAM_START).toLocalDate();
 				LocalDate end = absence.getDate(PARAM_END).toLocalDate();
@@ -48,6 +48,8 @@ public class ApproveAbsenceService extends AbstractService<StringArgument, Servi
 				}
 
 				if (totalMinutes > 0) {
+					VacationHelper.assertSufficientVacationBalance(tx, employeeId, totalMinutes, absence.getDate(PARAM_START));
+
 					Resource entry = tx.getResourceTemplate(TYPE_VACATION_ACCOUNT_ENTRY, true);
 					entry.setName("Vacation Usage " + absence.getId());
 

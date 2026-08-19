@@ -12,6 +12,7 @@ import li.strolch.utils.dbc.DBC;
 import java.time.ZonedDateTime;
 
 import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
+import static ch.atexxi.chronivaro.core.model.ChronivaroVersionHelper.initVersion;
 
 public class AddVacationCorrectionService
 		extends AbstractService<AddVacationCorrectionService.AddVacationCorrectionArgument, ServiceResult> {
@@ -28,15 +29,17 @@ public class AddVacationCorrectionService
 			Resource entry = tx.getResourceTemplate(TYPE_VACATION_ACCOUNT_ENTRY, true);
 			entry.setName("Vacation Correction " + arg.employeeId);
 
-			ZonedDateTime now = ZonedDateTime.now(ChronivaroModelHelper.getEmployeeTimezone(employee));
+			ZonedDateTime entryDate = arg.date != null ? arg.date :
+					ZonedDateTime.now(ChronivaroModelHelper.getEmployeeTimezone(employee));
 
 			entry.setRelation(PARAM_EMPLOYEE, employee);
 			entry.setString(PARAM_VACATION_TYPE, VACATION_CORRECTION);
-			entry.setDate(PARAM_DATE, now);
+			entry.setDate(PARAM_DATE, entryDate);
 			entry.setInteger(PARAM_VALUE, arg.value);
 			entry.setString(PARAM_COMMENT, arg.comment);
 			entry.setString(PARAM_CREATED_BY, tx.getCertificate().getUsername());
 
+			initVersion(entry, tx);
 			tx.add(entry);
 
 			ChronivaroAuditHelper.audit(tx, TYPE_VACATION_ACCOUNT_ENTRY, entry.getId(), AUDIT_ACTION_CREATE, arg.comment,
@@ -62,5 +65,6 @@ public class AddVacationCorrectionService
 		public String employeeId;
 		public Integer value;
 		public String comment;
+		public ZonedDateTime date;
 	}
 }
