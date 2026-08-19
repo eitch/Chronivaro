@@ -1,40 +1,47 @@
 # Chronivaro Implementation Status
 
-Audit date: 2026-08-17. `IMPLEMENTATION_SPECIFICATION.md` is authoritative; the existing backlog was not used as evidence.
+Audit date: 2026-08-19. `IMPLEMENTATION_SPECIFICATION.md` is authoritative; the repository is authoritative for current implementation state.
 
-## Implemented
+---
 
-- MVP project structure, Maven parent, four modules (`chronivaro-core`, `chronivaro-rest`, `chronivaro-web`, `chronivaro-app`), JDK 25, UTF-8, Strolch BOM, and executable shaded fat-JAR packaging (`chronivaro.jar`) (spec sections 14, 15.1, and 20.1): `Chronivaro/pom.xml` and `chronivaro-app/pom.xml` (Task 14 completed); embedded Eclipse Jetty lifecycle with configurable enablement, bind address/port, context path, web resource location, clean stop/graceful shutdown, and port conflict failure handling implemented and verified (Task 15 completed); unified same-server Jersey JAX-RS REST integration under `/rest/chronivaro/v1` and static frontend web resource delivery at `/` with strict architectural separation implemented and verified (Task 16 completed).
-- Employee, team, location, schedule, holiday-calendar, WorkDay, WorkEntry, absence-type, absence, and period model/service foundations: `Chronivaro/runtime/data/Templates.xml` and `chronivaro-core/src/main/java/ch/atexxi/chronivaro/core`.
-- Historical schedule lookup and overlap prevention: `ScheduleHelper`, `WorkDayHelper`, and `CreateScheduleService`.
-- Timer start/stop, same-day validation, midnight splitting, forgotten-timer capping, multiple blocks, and working-location defaults/overrides: `StartTimerService`, `StopTimerService`, `WorkEntryHelper`, `WorkingLocationDefault*`, and `chronivaro-web/src/main/webapp/js/pages/DashboardView.js`.
-- Absence self-service, submit/reject/approve/cancel services, registration flow, presence query/UI, holiday calendar CRUD, and role configuration: corresponding core services, REST resources, `PrivilegeRoles.xml`, and `PresenceView.js`.
-- Day and month summary calculations exist: `DaySummaryService`, `MonthSummaryService`, `DaySummaryDto`, and `/me/day-summary/{date}` plus `/me/month-summary/{yearMonth}`.
+## Implemented (Baseline)
 
-## Partially implemented
+- **Architecture & Deployment (Sections 4.1, 14, 15.1–15.9, 16, 20.1):** 4-module Maven reactor (`chronivaro-core`, `chronivaro-rest`, `chronivaro-web`, `chronivaro-app`), JDK 25, embedded Eclipse Jetty 12 lifecycle, static frontend web asset delivery at `/`, Jersey JAX-RS REST integration under `/rest/chronivaro/v1`, executable standalone fat-JAR (`chronivaro.jar`).
+- **Master Data & Registration (Sections 6.1, 6.8, 9.6, 13.7):** `Employee`, `Team`, `Location`, `EmploymentScheduleVersion`, `HolidayCalendar`, Strolch user creation with `SET_PASSWORD` challenge, and token-based initial password setting.
+- **Time Tracking Foundation (Sections 6.3, 6.4, 6.4.1, 7.1–7.4, 9.1, 9.2):** WorkDay/WorkEntry model, dynamic target time calculation, multi-interval start/stop timer, midnight 24:00 splitting, forgotten timer auto-capping to daily target, and weekly working location defaults.
+- **Presence & Privacy (Section 8):** Real-time binary `WORKING`/`NOT_WORKING` presence status with sensitive absence detail filtering for non-privileged viewers.
+- **Audit Logging & Retention (Sections 6.10, 12, 13.6):** Full audit trail recording entity lifecycle events, parameter mutations, correlation IDs, user details, and retention purge service.
+- **Reporting Foundation & CSV Export (Sections 11.1–11.5, 12.1–12.2, 13.8):** Core calculation engines, Web UI report viewers, and deterministic RFC 4180 UTF-8 BOM CSV exports for Day, Month, Vacation, Team, and Absence reports.
+- **System Probes & Operations (Sections 13.2, 19, 20):** Unauthenticated health, readiness, version, and metrics probe endpoints; structured logging with MDC correlation IDs.
 
-- Period workflow (spec sections 6.9, 9.5, 10.1, 13.2): Core period lifecycle completed with auto-creation, submission, approval, rejection, reopening with reason, calculation snapshots, audit trails, period closure locking, and `TimePeriodSearch` (Task 5 completed); REST personal, period, approvals, and admin workflow endpoints with concurrency control and role authorization implemented and verified (Task 6 completed); supervisor approval queues with primary-team scoping, self-approval prevention, cross-team access denial, and pagination implemented and verified (Task 10 completed).
-- Vacation accounting (sections 6.7, 9.4, 11.3): configurable vacation entitlement policy, proration engine, whole-minute commercial rounding, yearly account summaries with unlimited carry-over, calculation/crediting services, and absence approval balance blocking implemented and verified (Task 7 completed); immutable append-only journal, search query, yearly account summaries with oldest-balance reconciliation, absence cancellation refunds, and negative correction blocking implemented in Core (Task 8 completed); vacation account and absence REST endpoints (`/me/vacation-account`, `/me/absences` filtering/ownership, admin vacation account, calculation, crediting, and corrections) implemented and verified (Task 9 completed); personal absences and vacation account UI views implemented and verified (Task 11.1 completed).
-- Audit logging (sections 5.2, 6.10, 9.3–9.5, 16.3): `ChronivaroAuditHelper` enhanced with full metadata (action, reason, correlation ID from MDC/thread-local, details, date, user, old/new values), `AuditEventSearch` fluent query, and `PurgeAuditEventsService` retention purge logic implemented in Core (Task 4.1 completed); administrative master data mutation services audited (Task 4.2.1 completed); Employee and Schedule services audited (Task 4.2.2 completed); operational Time Tracking, Absence, Vacation, Period, and Configuration services audited (Task 4.2.3 completed); administrative REST endpoint and security implemented (Task 4.3 completed).
-- Administration (sections 3.3–3.4, 12.1): employee/team/location/schedule/holiday/absence-type pages and APIs exist, and global configuration REST and UI administration with optimistic concurrency control and validation is completed and verified (Task 13 completed).
-- UI coverage (sections 12.1–12.2): dashboard, times, presence, personal absences & vacation account (Task 11.1 completed), personal periods & monthly closing (Task 11.2 completed), supervisor approval queues (Task 11.3 completed), global system configuration administration (Task 13 completed), administration pages, and structured reports & CSV export UI (Task 12.2 completed) exist.
-- Structured time-balance, absence, vacation, and team reports with CSV serialization and UI (sections 11.1–11.5, 13.2): Core report services, deterministic RFC 4180 UTF-8 BOM CSV export serializer, REST resources under `/chronivaro/v1/reports`, and Web UI views & API client implemented and verified (Tasks 12.1 and 12.2 completed).
+---
 
-## Missing
+## Incomplete / Partially Implemented (Backlog Items 1–4)
 
-- None. All 17 implementation backlog tasks and non-functional verifications are complete and tested.
+- **Working Location Half-Day Constraints & Schedule Version Resolution (Sections 6.4, 10.1):** Manual work entry creation does not resolve historical schedule versions by entry date, accepts zero-duration entries, mutates `currentWorkDayId` for past dates, and lacks morning/afternoon location uniqueness validation (**Task 1**).
+- **Absence Types & Draft Lifecycle (Sections 6.5, 6.6, 9.4, 10.1, 13.2):** Absence types lack `commentRequired` and `visibleOnPublicStatus` metadata; absence request workflow lacks comment enforcement and `DRAFT` status / explicit submission workflow (**Task 2**).
+- **Vacation Journal Immutability & Year-End Carry-Over (Sections 6.7, 6.7.1, 11.3):** Recalculation mutates existing records in-place rather than appending `CORRECTION` entries; year-end carry-over transition and non-expiring balance roll-forward service is not automated (**Task 3**).
+- **Period Calculation Snapshots & Balance Carry-Forward (Sections 6.9, 11.2, 11.6.2):** Month summaries always recompute live data rather than reading the immutable `calculationSnapshot` for approved/locked periods; `initialBalance` is hardcoded to 0 instead of carrying forward prior period ending balance (**Task 4**).
 
-## Specification ambiguity resolved
+---
 
-- Vacation calculation and accounting rules are resolved in section 6.7.1 and section 22: 25 days annual entitlement (480 min/day), commercial rounding to whole minute, technical code `VACATION`, unlimited carry-over, oldest-balance consumption, and no negative vacation balances.
-- Product decisions for MVP are resolved in section 22: negative time balances allowed, no rounding, employee assigned to one primary team with supervisor approval, cancellation workflow with reversing journal entries, `Europe/Zurich` default timezone, single legal entity, and home office visible as optional working location.
-- Standard REST endpoints are fixed in section 13.2, including `/approvals/absences` and `/approvals/periods`.
+## Missing Requirements (Backlog Items 5–7)
 
-## Dependency-ordered next steps
+- **Global Application Branding & Configuration (Sections 6.11, 18):** `companyName`, `companyLogo`, and `defaultLanguage` are missing from `GlobalConfiguration` model, REST endpoints, and UI navigation header (**Task 5**).
+- **Multi-Language (i18n) Infrastructure & DE/EN Localization (Sections 4.2, 12.3, 16, 18.5):** No translation dictionaries, i18n resolution engine, language switcher, or translation key parity build tests exist (**Task 6.1 & 6.2**).
+- **Native PDF Report Generation (Sections 4.2, 11.6.2, 17, 18.6):** Server-side PDF generation engine (OpenPDF/PDFBox) and PDF endpoints for Month, Vacation, and Absence reports are missing (**Task 7.1 & 7.2**).
 
-- All MVP backlog tasks (1 through 17) have been implemented, tested, and verified.
+---
 
-## Verification basis
+## Specification Ambiguities Clarified
 
-- Repository inspection covered `chronivaro-core`, `chronivaro-rest`, `chronivaro-web`, `chronivaro-app`, runtime templates/configuration, test suites, and `pom.xml`.
-- Verified with full Maven reactor test suite (`mvn clean test`) passing cleanly across all modules (19 tests run with 0 failures and 0 errors).
+1. **Working Location Half-Day Split Boundary (Sections 6.4 & 6.4.1):** Cutoff between `MORNING` and `AFTERNOON` defined as 12:30 (or schedule midpoint).
+2. **REST Route Naming Discrepancies (Sections 13.2 & 13.8):** Query parameters (`?format=pdf`), `Accept` headers, and route aliases are supported.
+3. **Negative Vacation Balances (Section 6.7.1 Rule 13):** Strictly prohibited; approvals exceeding available entitlement are blocked.
+
+---
+
+## Verification Basis
+
+- Comprehensive repository inspection across `chronivaro-core`, `chronivaro-rest`, `chronivaro-web`, `chronivaro-app`, configuration templates, and documentation.
+- All existing reactor test suites passing cleanly (`mvn clean test`).

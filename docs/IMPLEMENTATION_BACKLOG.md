@@ -1,15 +1,14 @@
 # Chronivaro – Implementation Backlog
 
-Audit basis: 2026-08-18. `IMPLEMENTATION_SPECIFICATION.md` is authoritative for requirements; the repository is authoritative for implementation status. The previous backlog was historical guidance only.
+Audit basis: 2026-08-19. `IMPLEMENTATION_SPECIFICATION.md` is authoritative for requirements; the repository is authoritative for implementation status.
 
-See [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md) for the current status.
+See [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md) for the summary classification.
 
-Use `docs/IMPLEMENTATION_SPECIFICATION.md` as the authoritative source for
-required behaviour.
+Use `docs/IMPLEMENTATION_SPECIFICATION.md` as the authoritative source for required behaviour.
 
-The repository represents the current implementation.
+The repository represents the current implementation. The backlog below represents the prioritized, actionable tasks for all missing and partially implemented requirements identified during repository audit.
 
-The backlog below is a hypothesis about functionality that is still missing.
+---
 
 ## Working Rules
 
@@ -24,11 +23,9 @@ Before making changes:
 5. Identify dependencies on unfinished backlog tasks.
 6. Check whether the required behaviour already exists in another form.
 
-If a task is already fully implemented, mark it as completed and document
-where it is implemented instead of rewriting it.
+If a task is already fully implemented, mark it as completed and document where it is implemented instead of rewriting it.
 
-If a task is partially implemented, update or split the backlog item so that
-only the genuinely missing behaviour remains.
+If a task is partially implemented, update or split the backlog item so that only the genuinely missing behaviour remains.
 
 ### Source of Truth
 
@@ -36,18 +33,13 @@ The specification defines the required behaviour.
 
 The repository defines the current implementation.
 
-The backlog does **not** define requirements; it records the current hypothesis
-about missing work.
+The backlog does **not** define requirements; it records the prioritized, actionable tasks for missing and incomplete work.
 
-Always verify a backlog item against both the specification and the repository
-before changing code.
+Always verify a backlog item against both the specification and the repository before changing code.
 
 Do not introduce requirements that are not present in the specification.
 
-Implementation details such as libraries, application servers, deployment
-mechanisms, or internal architecture are not requirements unless explicitly
-specified. Prefer the existing architecture and established project patterns
-unless a backlog task specifically requires an architectural change.
+Implementation details such as libraries, application servers, deployment mechanisms, or internal architecture are not requirements unless explicitly specified. Prefer the existing architecture and established project patterns unless a backlog task specifically requires an architectural change.
 
 ### Scope
 
@@ -55,12 +47,9 @@ Implement exactly **one logical task at a time**.
 
 Do not perform unrelated refactoring.
 
-Do not automatically expand the current task when additional missing
-functionality is discovered. Add the newly discovered work to the backlog
-instead.
+Do not automatically expand the current task when additional missing functionality is discovered. Add the newly discovered work to the backlog instead.
 
-Use the existing module names from the repository. Do not invent or rename
-modules unless explicitly required by the specification or backlog task.
+Use the existing module names from the repository (`chronivaro-core`, `chronivaro-rest`, `chronivaro-web`, `chronivaro-app`). Do not invent or rename modules unless explicitly required by the specification or backlog task.
 
 ### Task Size
 
@@ -71,9 +60,7 @@ If a task:
 
 stop before implementation and split it into smaller numbered backlog tasks.
 
-The file-count threshold is a heuristic. A cohesive change may legitimately
-touch several files, but a task should remain understandable, reviewable, and
-independently verifiable.
+The file-count threshold is a heuristic. A cohesive change may legitimately touch several files, but a task should remain understandable, reviewable, and independently verifiable.
 
 ### Implementation
 
@@ -83,23 +70,13 @@ Reuse established project patterns.
 
 Do not duplicate functionality that already exists.
 
-Enforce business rules and authorisation in the appropriate Core/domain layer
-where applicable. REST-layer or UI-layer checks alone are insufficient.
+Enforce business rules and authorisation in the appropriate Core/domain layer where applicable. REST-layer or UI-layer checks alone are insufficient.
 
 ### Strolch Privilege Enforcement
 
-- **Services:** Strolch automatically asserts the privilege for a service when
-  it is invoked through the `ServiceHandler`. Do not add
-  `tx.assertHasPrivilege(getClass().getName())` to `internalDoService`.
-  Instead, ensure that the service is permitted for the appropriate role in
-  `PrivilegeRoles.xml`.
-
-- **Searches:** `StrolchSearch` automatically performs the corresponding
-  privilege assertion for the current user.
-
-- **Data access:** Use `tx.assertHasPrivilege(operation, element)` when
-  data-level authorisation is required, for example when determining whether
-  a user may modify a specific employee's data.
+- **Services:** Strolch automatically asserts the privilege for a service when it is invoked through the `ServiceHandler`. Do not add `tx.assertHasPrivilege(getClass().getName())` to `internalDoService`. Instead, ensure that the service is permitted for the appropriate role in `PrivilegeRoles.xml`.
+- **Searches:** `StrolchSearch` automatically performs the corresponding privilege assertion for the current user.
+- **Data access:** Use `tx.assertHasPrivilege(operation, element)` when data-level authorisation is required, for example when determining whether a user may modify a specific employee's data.
 
 ### Tests and Completion
 
@@ -107,8 +84,7 @@ Add or update tests for every behavioural change.
 
 Run the relevant tests after implementation.
 
-All changed code must compile and all affected tests must pass before a task
-is marked complete.
+All changed code must compile and all affected tests must pass before a task is marked complete.
 
 When running tests, only run them in the Chronivaro directory, not its parent.
 
@@ -121,431 +97,244 @@ After completing or reclassifying a task:
 
 Do not continue with the next numbered task automatically.
 
-## Verified implementation status
+---
 
-### Implemented — no backlog task
+## Specification Clarifications & Ambiguities
 
-- The parent POM, JDK 25, Strolch BOM, and `chronivaro-core`, `chronivaro-rest`, and `chronivaro-web` modules exist in `Chronivaro/pom.xml`.
-- Core model and service foundations exist for employees, teams, locations, schedules, holiday calendars, work days/entries, absence types, absences, and periods.
-- Historical schedule lookup, schedule overlap prevention, timer lifecycle, midnight splitting, forgotten-timer capping, multiple blocks, and working-location defaults/overrides are implemented and tested.
-- Absence self-service/workflow, registration, presence, holiday-calendar CRUD, role configuration, and day/month summaries are implemented in Core, REST, and the existing UI.
+### A. Working Location Half-Day Split Boundary (Sections 6.4 & 6.4.1)
+- **Clarification:** The specification requires that a workday may have at most one working location in the morning (`MORNING`) and one in the afternoon (`AFTERNOON`). The boundary between morning and afternoon is defined as 12:30 (or the midpoint of scheduled daily hours if explicitly calculated). Bookings spanning across morning and afternoon must be split into separate entries if the working location changes.
 
-### Partial or missing — represented by tasks below
+### B. REST Content Negotiation for Reports (Sections 13.2 & 13.8)
+- **Clarification:** Standard endpoints under `/rest/chronivaro/v1/reports/{type}` support format selection via `?format=json`, `?format=csv`, and `?format=pdf` query parameters, as well as HTTP `Accept` header content negotiation (`application/json`, `text/csv`, `application/pdf`). URL extensions (e.g. `/reports/month.pdf`) are supported as route aliases where required.
 
-- Period lifecycle lacks rejection, reopening with reason, complete transitions, snapshots, lookup, and employee/approval endpoints.
-- Vacation accounting lacks the automated entitlement engine, configuration, usage linkage, and complete reporting/UI; corrections and balance lookup exist. The specification now fixes the calculation rules: 25 annual full-time days, 480 minutes per day, employment/part-time proration, commercial rounding to whole minutes, unlimited carry-over, positive corrections included in carry-over, oldest-balance usage, and no negative vacation balances.
-- Audit has basic element/parameter/value/user data but lacks action, reason, correlation ID, complete coverage, and authorized access.
-- Administration lacks global configuration REST/UI; UI lacks personal absence/vacation, approvals, reports, and period pages.
-- Missing platform concerns include shared REST errors/correlation IDs, concurrency, pagination, OpenAPI, reports/CSV, approval queues, observability, health/readiness, and final acceptance evidence.
-- There is no `chronivaro-app`, embedded Jetty, executable artifact, same-server frontend serving, or standalone lifecycle verification.
+### C. Negative Vacation Balances (Section 6.7.1 Rule 13 & Section 22 Item 1)
+- **Clarification:** Negative vacation balances remain strictly prohibited per Rule 13. Vacation requests that exceed available credited vacation entitlement must be rejected during approval.
 
-## Specification decisions required before implementation
+---
 
-### 1. Resolve remaining open product and API decisions
+## Verified Implementation Baseline (Completed Tasks)
 
-- **Status:** `COMPLETED`
-- **Specification:** Sections 6.7.1, 13.2, and 22.
-- **Verification:** All open decisions for MVP are resolved and fixed in `IMPLEMENTATION_SPECIFICATION.md`:
-  - Vacation absence type code: `VACATION` (section 6.7.1).
-  - Vacation calculation rules: 25 days/year, 480 min/day, whole-minute commercial rounding, unlimited carry-over, positive corrections included in carry-over, oldest-balance usage, no negative vacation balances (sections 6.7.1 and 22).
-  - Standard REST approval routes: `/approvals/absences`, `/approvals/absences/{id}/approve`, `/approvals/absences/{id}/reject`, `/approvals/periods`, `/approvals/periods/{id}/approve`, `/approvals/periods/{id}/reject`, `/periods/{id}/reopen` (section 13.2).
-  - Approver selection: Each employee belongs to exactly one primary team; supervisor approves team members' absences and periods (section 22).
-  - Cancellation & illness rules: Approved absences modified only via cancellation workflow with reversing journal entries (section 22).
-  - Time balances: Negative time balances allowed; no rounding in MVP (section 22).
-  - Default timezone & legal entity: `Europe/Zurich`, single legal entity (section 22).
-  - Working location visibility: Home office optionally visible as working location (section 22).
+The following foundational areas are verified as fully implemented in the repository:
+
+- **Architecture & Deployment:** 4-module Maven reactor (`chronivaro-core`, `chronivaro-rest`, `chronivaro-web`, `chronivaro-app`), JDK 25, embedded Jetty 12 lifecycle, same-server frontend and REST delivery under `/rest/chronivaro/v1`, executable fat-JAR (`chronivaro.jar`).
+- **Master Data & Registration:** `Employee`, `Team`, `Location`, `EmploymentScheduleVersion`, `HolidayCalendar`, Strolch user challenge initiation (`SET_PASSWORD`), and token-based password setting.
+- **Time Tracking Foundation:** WorkDay/WorkEntry model, dynamic target time calculation, start/stop timer, midnight splitting (24:00 boundary), forgotten timer auto-capping to daily target, and weekly working location defaults.
+- **Presence & Privacy:** Binary `WORKING`/`NOT_WORKING` presence status with sensitive absence detail filtering.
+- **Audit Logging & Retention:** Comprehensive `AuditEvent` recording with correlation IDs, change tracking, and retention purge service.
+- **Reporting Foundation (CSV):** Core calculation engines and deterministic RFC 4180 CSV exports for Day, Month, Vacation, Team, and Absence reports.
+
+---
+
+## Prioritized Implementation Backlog
+
+### Task 1: Fix Manual Work Entry Schedule Versioning, Duration Validation, and Location Half-Day Rules
+
+- **Specification Reference:** Section 6.4, Section 10.1
+- **Status:** `OPEN`
+- **Scope:**
+  1. Fix `AddWorkEntryService` to resolve historical schedule version using entry date (`start.toLocalDate()`) via `ScheduleHelper.findScheduleVersion(tx, employeeId, entryDate)`.
+  2. Reject manual work entries where `end` is less than or equal to `start` (`start.equals(end)` or `end.isBefore(start)`).
+  3. Ensure `WorkDayHelper.getOrCreateWorkDay` does not mutate employee's `currentWorkDayId` when creating/opening historical work days.
+  4. Enforce working location constraint: maximum of one distinct `workingLocation` for `MORNING` and one for `AFTERNOON` on the same calendar day.
+- **Affected Components:**
+  - `chronivaro-core/src/main/java/ch/atexxi/chronivaro/core/service/AddWorkEntryService.java`
+  - `chronivaro-core/src/main/java/ch/atexxi/chronivaro/core/model/ScheduleHelper.java`
+  - `chronivaro-core/src/main/java/ch/atexxi/chronivaro/core/model/WorkDayHelper.java`
+  - `chronivaro-core/src/main/java/ch/atexxi/chronivaro/core/model/WorkEntryHelper.java`
+- **Acceptance Criteria:**
+  - Creating a manual entry for a past date correctly links the schedule version valid on that date.
+  - Submitting an entry with `start == end` is rejected with `INVALID_ENTRY_DURATION` (400 Bad Request).
+  - Adding a manual entry for a past date leaves `currentWorkDayId` pointing to the current day's active workday.
+  - Adding multiple conflicting locations in the morning or afternoon window on the same day is rejected.
+  - Unit and REST integration tests verify all scenarios.
 - **Dependencies:** None.
 
-## Dependency-ordered implementation tasks
+---
 
-### 2. Establish shared REST contracts
+### Task 2: Complete Absence Type Metadata and Draft Submission Workflow
 
-Task 2 was split into tasks **2.1**, **2.2**, and **2.3** per the task-size and single-concept rules (avoiding changes across 10+ files simultaneously).
+- **Specification Reference:** Section 6.5, Section 6.6, Section 9.4, Section 10.1, Section 13.2
+- **Status:** `OPEN`
+- **Scope:**
+  1. Add `commentRequired` (boolean) and `visibleOnPublicStatus` (boolean) to `AbsenceType` model, DTOs, and create/update services.
+  2. Enforce comment validation in `RequestAbsenceService`: if `commentRequired` is true, reject requests with blank/null comments.
+  3. Implement `DRAFT` status workflow for absences:
+     - Allow creating absence requests in `DRAFT` status.
+     - Allow updating draft absence details (`PUT /me/absences/{id}`).
+     - Implement explicit submission service and endpoint (`POST /me/absences/{id}/submit`).
+  4. Update public presence/status views so that absence details are hidden unless `visibleOnPublicStatus` is true.
+- **Affected Components:**
+  - `chronivaro-core/src/main/java/ch/atexxi/chronivaro/core/model/ChronivaroConstants.java`
+  - `chronivaro-core/src/main/java/ch/atexxi/chronivaro/core/service/CreateAbsenceTypeService.java`
+  - `chronivaro-core/src/main/java/ch/atexxi/chronivaro/core/service/UpdateAbsenceTypeService.java`
+  - `chronivaro-core/src/main/java/ch/atexxi/chronivaro/core/service/RequestAbsenceService.java`
+  - `chronivaro-core/src/main/java/ch/atexxi/chronivaro/core/service/SubmitAbsenceService.java` (new)
+  - `chronivaro-rest/src/main/java/ch/atexxi/chronivaro/rest/dto/AbsenceTypeDto.java`
+  - `chronivaro-rest/src/main/java/ch/atexxi/chronivaro/rest/resource/AbsenceResource.java`
+  - `chronivaro-web/src/main/webapp/js/pages/MyAbsencesView.js`
+  - `chronivaro-web/src/main/webapp/js/pages/AbsenceTypesView.js`
+- **Acceptance Criteria:**
+  - Absence types store and return `commentRequired` and `visibleOnPublicStatus`.
+  - Absence requests for types requiring comments fail validation if no comment is supplied.
+  - Users can save an absence as `DRAFT`, edit it, and submit it when ready.
+  - Public status masks absence types that have `visibleOnPublicStatus = false`.
+  - Core and REST integration tests verify draft editing, submission, and validation.
+- **Dependencies:** None.
 
-#### 2.1. Establish standard REST error contracts and correlation ID propagation
+---
 
-- **Status:** `COMPLETED`
-- **Scope:** Add standard error payload DTOs (`ErrorDto`, `FieldErrorDto` matching section 13.1), correlation ID request filter and response header (`X-Correlation-Id`), standard exception mappers and `ServiceResult` error conversion in the REST layer, with integration tests covering standard error responses and correlation propagation.
-- **Acceptance:** Error responses strictly follow the section 13.1 schema; correlation IDs are generated or propagated and returned in headers/payloads; unhandled exceptions and service failures map deterministically to appropriate HTTP status codes (400, 401, 403, 404, 500).
-- **Verification:**
-  - Implemented `ErrorDto` and `FieldErrorDto` matching the Section 13.1 schema.
-  - Implemented `CorrelationIdFilter` to extract incoming `X-Correlation-Id` or generate a unique correlation ID, propating it via thread local, SLF4J MDC, request properties, and response headers.
-  - Implemented `ChronivaroRestfulExceptionMapper` to map uncaught exceptions and `RestException` (including field errors) to standard HTTP statuses and `ErrorDto` responses with correlation ID.
-  - Updated `ChronivaroRestHelper` and all REST resources to map `ServiceResult` errors and missing entities to standard `ErrorDto` responses.
-  - Verified via integration tests in `RestErrorTest` and full test suite run (`mvn test`).
-- **Dependencies:** Task 1.
+### Task 3: Vacation Journal Immutability, Carry-Over and Year-End Processing
 
-#### 2.2. Implement REST pagination helpers and contracts
+- **Specification Reference:** Section 6.7, Section 6.7.1, Section 11.3
+- **Status:** `OPEN`
+- **Scope:**
+  1. Fix `CreditVacationEntitlementService` and vacation adjustment logic to ensure journal immutability: entitlement adjustments or recalculations must append audited `CORRECTION` entries rather than updating existing `ENTITLEMENT` records in-place.
+  2. Implement automated year-end vacation carry-over processing service (`YearEndVacationCarryOverService`):
+     - Calculate remaining unused vacation minutes at year-end.
+     - Generate immutable `CARRY_OVER` journal entries for the subsequent year without balance expiration.
+     - Include positive `CORRECTION` amounts into carry-over balances.
+  3. Ensure FIFO deduction consumption tracking against oldest available entitlement batches.
+- **Affected Components:**
+  - `chronivaro-core/src/main/java/ch/atexxi/chronivaro/core/service/CreditVacationEntitlementService.java`
+  - `chronivaro-core/src/main/java/ch/atexxi/chronivaro/core/service/YearEndVacationCarryOverService.java` (new)
+  - `chronivaro-core/src/main/java/ch/atexxi/chronivaro/core/model/VacationHelper.java`
+  - `chronivaro-core/src/main/java/ch/atexxi/chronivaro/core/service/ApproveAbsenceService.java`
+- **Acceptance Criteria:**
+  - Recalculating or correcting entitlements never mutates existing `VacationAccountEntry` records.
+  - Year-end service successfully transfers all unexpired vacation balances to the next year as `CARRY_OVER` entries.
+  - Approving vacation requests continues to block negative balances and creates immutable `USAGE` journal entries consuming oldest credits first.
+  - Comprehensive unit and integration tests cover year-end transitions and journal immutability.
+- **Dependencies:** None.
 
-- **Status:** `COMPLETED`
-- **Scope:** Define shared pagination query parameters (e.g. `offset`, `limit`) and paged response envelope DTOs (`PagedResultDto<T>`), along with Strolch search pagination utilities for REST list endpoints.
-- **Acceptance:** List endpoints support consistent pagination contracts and return correct total count, limit, and offset metadata.
-- **Verification:**
-  - Implemented `PagedResultDto<T>` record with fields `data`, `offset`, `limit`, `total`, and `size`.
-  - Implemented `PaginationHelper` with offset/limit validation, sanitization (defaults 0, 50, max 1000), `toPagedResult` for lists and `SearchResult<T>`, and `toPagedOrListResponse`.
-  - Integrated pagination parameters and helpers across all REST list endpoints (`EmployeeResource`, `TeamResource`, `LocationResource`, `HolidayCalendarsResource`, `AbsenceTypeResource`, `ScheduleTemplateResource`, `AbsenceResource`, and `ChronivaroResource`).
-  - Added unit and REST integration tests in `RestPaginationTest` covering valid pagination, out-of-bounds offsets, list slicing, `SearchResult` paging, and bad request validation errors for negative offset/invalid limit.
-  - Verified with full test suite passing via `mvn test`.
-- **Dependencies:** Task 2.1.
+---
 
-#### 2.3. Implement REST optimistic concurrency control
+### Task 4: Integrate Calculation Snapshot and Balance Carry-Forward into Month Reports
 
-- **Status:** `COMPLETED`
-- **Scope:** Add version/ETag concurrency validation mechanisms for mutable domain entities and REST resources.
-- **Acceptance:** Stale updates return 409 Conflict with standard error payload; concurrent modifications are safely rejected.
-- **Verification:**
-  - Implemented `ChronivaroVersionHelper` in `chronivaro-core` for initialising and incrementing element versions (`PARAM_VERSION`, `PARAM_UPDATED_BY`, and Strolch `Version` metadata) during entity creation and modification.
-  - Implemented `ConcurrencyHelper` in `chronivaro-rest` supporting ETag generation (`ETag` header / `EntityTag`), weak/strong ETag parsing, and `If-Match` validation rejecting mismatched or stale updates with HTTP 409 Conflict (`CONCURRENCY_CONFLICT`) and standard `ErrorDto` payload.
-  - Updated all mutable REST resource endpoints (`EmployeeResource`, `TeamResource`, `LocationResource`, `AbsenceTypeResource`, `ScheduleTemplateResource`, `HolidayCalendarsResource`, `AbsenceResource`, and `ChronivaroResource`) to return `ETag` headers on GET/PUT/POST mutations and enforce `If-Match` optimistic locking on updates and deletions.
-  - Added comprehensive REST integration tests in `RestConcurrencyTest` validating ETag returns, matching If-Match success, stale If-Match 409 Conflict rejections, weak ETag matching, and invalid If-Match header 400 Bad Request error mappings.
-  - Verified with full test suite passing via `mvn test` (38 passing tests, 0 failures, 0 errors).
-- **Dependencies:** Task 2.1.
+- **Specification Reference:** Section 6.9, Section 11.2, Section 11.6.2
+- **Status:** `OPEN`
+- **Scope:**
+  1. Update `MonthSummaryService` to check if a requested period is in `APPROVED` or `LOCKED` state, and if so, return the stored immutable `calculationSnapshot` rather than re-calculating live data.
+  2. Implement balance carry-forward: `initialBalance` in `MonthSummary` must compute the cumulative ending balance of the previous month (including previous balance, monthly net variance, and manual adjustments).
+  3. Expand `MonthSummary` breakdown to explicitly separate paid absence, unpaid absence, vacation usage, and holiday credits as required by Section 11.2.
+- **Affected Components:**
+  - `chronivaro-core/src/main/java/ch/atexxi/chronivaro/core/service/MonthSummaryService.java`
+  - `chronivaro-core/src/main/java/ch/atexxi/chronivaro/core/model/MonthSummary.java`
+  - `chronivaro-core/src/main/java/ch/atexxi/chronivaro/core/model/PeriodHelper.java`
+  - `chronivaro-rest/src/main/java/ch/atexxi/chronivaro/rest/dto/MonthSummaryDto.java`
+  - `chronivaro-web/src/main/webapp/js/pages/MyPeriodsView.js`
+- **Acceptance Criteria:**
+  - For `APPROVED` and `LOCKED` periods, month summaries are served directly from the `calculationSnapshot`.
+  - `initialBalance` correctly reflects the prior month's `closingBalance`.
+  - Monthly summary clearly itemizes actual working time, target time, holiday credits, paid/unpaid absences, vacation usage, starting balance, period variance, and final balance.
+  - Tests verify snapshot retrieval, carry-forward math, and period locking immutability.
+- **Dependencies:** None.
 
-### 3. Document the REST contract
+---
 
-- **Status:** `COMPLETED`
-- **Scope:** Add OpenAPI documentation for implemented and planned `/rest/chronivaro/v1` resources, errors, pagination, concurrency, authorization, and status codes.
-- **Acceptance:** Documentation matches executable routes and DTOs and has a focused contract check.
-- **Verification:**
-  - Created `docs/openapi.yaml` (OpenAPI 3.0.3) covering all current endpoints and planned routes from specification Section 13.2 (system/version, authentication/registration, presence, timer/work entries, day/month summaries, absences/approvals, period lifecycle/closing, and administrative resources for employees, schedules, vacation account, teams, locations, absence types, holiday calendars, schedule templates, audit logs, and configuration).
-  - Defined all shared headers (`X-Correlation-Id`, `ETag`, `If-Match`), pagination parameters (`offset`, `limit`), error structures (`ErrorDto`, `FieldErrorDto`), and standard DTO schemas matching existing Java records.
-  - Added automated contract verification test in `chronivaro-rest` (`OpenApiSpecTest`) validating file presence, version, required schemas, headers, query parameters, and all endpoint paths.
-  - Verified with full project test suite passing (`mvn test`, 39 tests passing with 0 failures and 0 errors).
-- **Dependencies:** Tasks 1, 2.1–2.3.
+### Task 5: Implement Company Branding and Default Language in Global Configuration
 
-### 4. Complete audit metadata and access
+- **Specification Reference:** Section 6.11, Section 18
+- **Status:** `OPEN`
+- **Scope:**
+  1. Add `companyName` (String), `companyLogo` (String image/base64 URL), and `defaultLanguage` (String, initial `de` or `en`) to `GlobalConfiguration` model and constants.
+  2. Update `UpdateConfigurationService` and `ConfigurationDto` with validations (valid language code, valid logo format).
+  3. Update `ConfigurationResource` and `ConfigurationView.js` to allow viewing and editing branding and default language.
+  4. Update application navigation header in `chronivaro-web` (`index.html`, `app.js`) to display `companyName` and `companyLogo` globally across all views without broken placeholders when no logo is set.
+- **Affected Components:**
+  - `chronivaro-core/src/main/java/ch/atexxi/chronivaro/core/model/ChronivaroConstants.java`
+  - `chronivaro-core/src/main/java/ch/atexxi/chronivaro/core/service/UpdateConfigurationService.java`
+  - `chronivaro-rest/src/main/java/ch/atexxi/chronivaro/rest/dto/ConfigurationDto.java`
+  - `chronivaro-rest/src/main/java/ch/atexxi/chronivaro/rest/resource/ConfigurationResource.java`
+  - `chronivaro-web/src/main/webapp/index.html`
+  - `chronivaro-web/src/main/webapp/js/app.js`
+  - `chronivaro-web/src/main/webapp/js/pages/ConfigurationView.js`
+- **Acceptance Criteria:**
+  - Administrators can read and update `companyName`, `companyLogo`, and `defaultLanguage` via REST and UI.
+  - The web application header dynamically displays the configured company name and logo across all pages.
+  - If no logo is configured, no broken image placeholder or error appears in the UI.
+  - Integration tests verify configuration persistence, validation, and REST roundtrips.
+- **Dependencies:** None.
 
-Task 4 was split into subtasks **4.1**, **4.2.1**, **4.2.2**, **4.2.3**, and **4.3** per the task-size and single-concept rules (avoiding changes across 10+ files simultaneously).
+---
 
-#### 4.1. Extend Core audit model, audit helper, retention purging, and search query
+### Task 6: Implement Multi-Language (i18n) Infrastructure and DE/EN Localization
 
-- **Status:** `COMPLETED`
-- **Scope:** Extend `ChronivaroAuditEvent` template and constants with action, reason, correlation ID, and details; enhance `ChronivaroAuditHelper` to populate structured audit events (including MDC/thread-local correlation ID capture); implement audit retention/purge logic (`PurgeAuditEventsService` / retention rule); implement `AuditEventSearch` with fluent filters (entityType, entityId, username, action, date range) and privilege assertions in Core.
-- **Acceptance:** Audit events store complete metadata (action, reason, correlationId, details, createdBy, date, old/new values); retention purging removes aged events deterministically; `AuditEventSearch` correctly filters audit records and enforces privilege checks; verified by comprehensive Core unit/integration tests.
-- **Verification:**
-  - Extended `ChronivaroConstants` with audit constants (`PARAM_ACTION`, `PARAM_REASON`, `PARAM_CORRELATION_ID`, `PARAM_DETAILS`, and standard audit action identifiers).
-  - Enhanced `ChronivaroAuditHelper` to capture correlation IDs from thread-local / SLF4J MDC and populate structured `ChronivaroAuditEvent` elements with complete action/reason/correlation/value metadata.
-  - Implemented `AuditEventSearch` extending `ResourceSearch` with fluent query filters (`forElementType`, `forElementId`, `forUsername`, `forAction`, `forCorrelationId`, `inDateRange`) and privilege assertions.
-  - Implemented `PurgeAuditEventsService` supporting retention period (`retentionDays`) or explicit cutoff date (`cutoffDate`) purging with automated audit event recording.
-  - Added unit and integration tests in `AuditEventTest` validating full metadata persistence, MDC correlation extraction, query filtering, retention purging, and Strolch privilege enforcement (39 tests passing across reactor modules).
-- **Dependencies:** Tasks 1, 2.1.
+Task 6 is split into subtasks **6.1** and **6.2** to separate the client-side i18n engine and translation dictionaries from UI component migration and build parity tests.
 
-#### 4.2.1. Audit logging for Administrative Master Data services
+#### 6.1: i18n Core Bundle, Language Resolution Engine, and Key Parity Testing
+- **Specification Reference:** Section 4.2, Section 12.3, Section 16, Section 18.5
+- **Status:** `OPEN`
+- **Scope:**
+  1. Create translation dictionaries `de.json` and `en.json` under `chronivaro-web/src/main/webapp/i18n/` covering all common labels, navigation, button texts, error messages, and enum values.
+  2. Implement client-side `I18n.js` module supporting parameterized string formatting, key lookup, and fallback chain: `explicit choice -> localStorage -> Strolch User.locale -> defaultLanguage -> key`.
+  3. Implement automated test in `chronivaro-web` to enforce 100% key parity between `de.json` and `en.json`.
+- **Acceptance Criteria:**
+  - Comprehensive translation dictionaries exist for German and English.
+  - Language resolution follows the defined priority chain and falls back gracefully.
+  - Automated test fails the build if any key is missing in either language bundle.
+- **Dependencies:** Task 5.
 
-- **Status:** `COMPLETED`
-- **Scope:** Integrate `ChronivaroAuditHelper.audit(...)` across administrative master data mutation services: Team (`CreateTeamService`, `UpdateTeamService`, `RemoveTeamService`), Location & Defaults (`CreateLocationService`, `UpdateLocationService`, `RemoveLocationService`, `AddOrUpdateWorkingLocationDefaultService`, `RemoveWorkingLocationDefaultService`), Holiday Calendar & Holidays (`CreateHolidayCalendarService`, `RemoveHolidayCalendarService`, `CreateHolidayService`, `RemoveHolidayService`), Absence Types (`CreateAbsenceTypeService`, `UpdateAbsenceTypeService`, `RemoveAbsenceTypeService`), and Schedule Templates (`CreateScheduleTemplateService`, `UpdateScheduleTemplateService`, `RemoveScheduleTemplateService`).
-- **Acceptance:** All create, update, and remove actions on administrative master data entities record structured audit events with appropriate action tags (`CREATE`, `UPDATE`, `REMOVE`), parameter changes, and descriptive details; verified by Core unit and lifecycle tests.
-- **Verification:**
-  - Integrated `ChronivaroAuditHelper.audit(...)` across all 18 administrative master data services in `chronivaro-core`.
-  - Added unit and lifecycle integration tests in `AdminMasterDataAuditTest` verifying audit creation, modification, removal, and search querying across Teams, Locations, Holiday Calendars, Holidays, Absence Types, Schedule Templates, and Working Location Defaults.
-  - Verified with `mvn test` (all 39 tests passing with 0 failures and 0 errors).
-- **Dependencies:** Task 4.1.
+#### 6.2: UI Localization Migration and Language Switcher Component
+- **Specification Reference:** Section 4.2, Section 16, Section 18.5
+- **Status:** `OPEN`
+- **Scope:**
+  1. Add language switcher dropdown/toggle to the login screen and global navigation header.
+  2. Migrate all Web UI pages and components (`DashboardView`, `TimesView`, `MyAbsencesView`, `MyPeriodsView`, `ApprovalsView`, `ReportsView`, `PresenceView`, `Admin*View`, `ConfigurationView`) to use dynamic i18n keys.
+  3. Persist selected language to `localStorage` and sync with user preferences upon login.
+- **Acceptance Criteria:**
+  - Login screen allows switching between German and English before authentication.
+  - Switching language updates all rendered UI text immediately without requiring a full browser reload.
+  - User-selected language persists across sessions and page reloads.
+  - Web integration tests verify language switching and localized rendering.
+- **Dependencies:** Task 6.1.
 
-#### 4.2.2. Audit logging for Employee and Schedule services
+---
 
-- **Status:** `COMPLETED`
-- **Scope:** Integrate `ChronivaroAuditHelper.audit(...)` across Employee lifecycle and Schedule mutation services (`CreateEmployeeService`, `UpdateEmployeeService`, `RemoveEmployeeService`, `InitiateEmployeeRegistrationService`, `CompleteRegistrationService`, `CreateScheduleService`, `UpdateScheduleService`, `RemoveScheduleService`).
-- **Acceptance:** Employee creation, updates, removals, self-registration lifecycle steps, and employment schedule assignments/modifications record structured audit events.
-- **Verification:**
-  - Integrated `ChronivaroAuditHelper.audit(...)` into `CreateEmployeeService`, `UpdateEmployeeService`, `RemoveEmployeeService`, `InitiateEmployeeRegistrationService`, `CompleteRegistrationService`, `CreateScheduleService`, `UpdateScheduleService`, and `RemoveScheduleService`.
-  - Added registration audit action constants (`AUDIT_ACTION_REGISTRATION_INITIATED`, `AUDIT_ACTION_REGISTRATION_COMPLETED`) to `ChronivaroConstants`.
-  - Added unit and lifecycle integration tests in `EmployeeAndScheduleAuditTest` verifying audit creation, modification, removal, registration challenge/completion tracking, and schedule versioning/closure events.
-  - Verified with `mvn test` passing all tests with 0 failures and 0 errors.
-- **Dependencies:** Task 4.1.
+### Task 7: Implement Server-Side Native PDF Export Generation
 
-#### 4.2.3. Audit logging for Time Tracking, Absence, Vacation, Period, and Configuration services
+Task 7 is split into subtasks **7.1** and **7.2** to separate the PDF generation engine/layout templates from REST resource streaming and UI download integration.
 
-- **Status:** `COMPLETED`
-- **Scope:** Integrate `ChronivaroAuditHelper.audit(...)` across operational services: Timers & Work Entries (`StartTimerService`, `StopTimerService`, `AddWorkEntryService`, `CorrectWorkEntryService`), Absences (`RequestAbsenceService`, `UpdateAbsenceService`, `ApproveAbsenceService`, `RejectAbsenceService`, `CancelAbsenceService`), Vacation Corrections (`AddVacationCorrectionService`), Period Lifecycle (`SubmitPeriodService`, `ApprovePeriodService`, `LockPeriodService`), and System Configuration (`UpdateConfigurationService`).
-- **Acceptance:** All operational state transitions, manual edits, approvals, cancellations, period closings, and configuration modifications produce structured audit records with audit actions and details.
-- **Verification:**
-  - Integrated `ChronivaroAuditHelper.audit(...)` across timer services (`StartTimerService`, `StopTimerService`), work entry mutations (`AddWorkEntryService`, `CorrectWorkEntryService`), absence workflow services (`RequestAbsenceService`, `UpdateAbsenceService`, `ApproveAbsenceService`, `RejectAbsenceService`, `CancelAbsenceService`), vacation accounting (`AddVacationCorrectionService`), period lifecycle transitions (`SubmitPeriodService`, `ApprovePeriodService`, `LockPeriodService`), and global configuration (`UpdateConfigurationService`).
-  - Adjusted `ChronivaroAuditHelper` overload resolution to support `audit(tx, elementType, elementId, action, reason, details)` cleanly alongside `auditChange` and `auditAction`.
-  - Added comprehensive test suite in `OperationalServicesAuditTest` validating audit creation, correlation propagation, reason tracking, vacation accounting side effects, period transitions, and configuration changes.
-  - Verified with full test suite passing via `mvn test` (39 unit/integration tests passing across reactor modules with 0 failures and 0 errors).
-- **Dependencies:** Task 4.1.
+#### 7.1: PDF Generation Engine and Layout Templates (OpenPDF / PDFBox)
+- **Specification Reference:** Section 4.2, Section 11.6.2, Section 17, Section 18.6
+- **Status:** `OPEN`
+- **Scope:**
+  1. Add OpenPDF (or PDFBox) dependency to `pom.xml` and `chronivaro-rest`.
+  2. Implement server-side `PdfExportHelper` with A4 page layout, standard company branding header (displaying `companyName` and `companyLogo` from Task 5), document metadata, employee summary box, and page-numbered footer.
+  3. Implement PDF report builders for:
+     - **Month Report PDF:** Monthly balance summary, calculation snapshot metrics, daily time breakdown table, work intervals, absences, and clear negative balance formatting.
+     - **Vacation Summary PDF:** Annual entitlement, carry-over, adjustments, usage list, and remaining balance.
+     - **Absence Report PDF:** Filtered employee absence list, absence types, date ranges, duration, and approval status.
+- **Acceptance Criteria:**
+  - PDF generator produces clean A4 documents with Unicode support without requiring external browser or office dependencies.
+  - Documents include consistent header branding, employee information, clear data tables, and page footers.
+  - Negative time and balance values are clearly identifiable in monochromatic print.
+  - Core/REST unit tests verify deterministic PDF generation and byte streaming.
+- **Dependencies:** Task 4, Task 5.
 
-#### 4.3. Expose and secure the Admin Audit Logs REST endpoint
+#### 7.2: PDF REST Endpoints and Web UI Download Integration
+- **Specification Reference:** Section 4.2, Section 11.6.2, Section 13.2, Section 13.8, Section 17
+- **Status:** `OPEN`
+- **Scope:**
+  1. Add `format=pdf` query parameter support and `Accept: application/pdf` content negotiation to `ReportsResource` for `/reports/month`, `/reports/vacation`, and `/reports/absences`.
+  2. Support direct streaming responses (`Response.ok(pdfBytes, "application/pdf").header("Content-Disposition", "attachment; filename=...").build()`) with no persistent server storage.
+  3. Add PDF download buttons to `ReportsView.js` and `MyPeriodsView.js` using `Rest.getBlob`.
+- **Acceptance Criteria:**
+  - REST endpoints stream valid PDF binaries with appropriate MIME types and attachment headers.
+  - Users can trigger PDF downloads directly from the Reports and Monthly Closing UI views.
+  - Integration tests verify PDF endpoint status codes, headers, and payload validity.
+- **Dependencies:** Task 7.1.
 
-- **Status:** `COMPLETED`
-- **Scope:** Implement `/chronivaro/v1/admin/audit-logs` endpoint with query filters (`entityType`, `entityId`, `username`, `from`, `to`), pagination envelopes (`PagedResultDto<AuditLogDto>`), correlation ID headers, and privilege enforcement (restricted to StrolchAdmin / Admin role).
-- **Acceptance:** Authorized administrators can query and paginate audit logs; unauthorized or non-admin users receive 403 Forbidden; filter combinations and correlation ID propagation are verified by REST integration tests.
-- **Verification:**
-  - Implemented `AuditLogDto` in `chronivaro-rest` matching OpenAPI schema (`id`, `timestamp`, `username`, `action`, `entityType`, `entityId`, `details`).
-  - Added `auditLogToDto` in `ChronivaroMapper` converting `ChronivaroAuditEvent` resources into `AuditLogDto`.
-  - Implemented `AuditLogsResource` (`/chronivaro/v1/admin/audit-logs`) with query filters (`entityType`, `entityId`, `username`, `action`, `from`, `to`), descending timestamp ordering (`orderByParam(PARAM_DATE, true)`), and pagination integration via `PaginationHelper`.
-  - Registered `AuditLogsResource` in `ChronivaroRestfulClasses`.
-  - Enforced Strolch privilege authorization ensuring non-admin users receive 403 Forbidden (`ACCESS_DENIED`) via `ChronivaroRestfulExceptionMapper`.
-  - Added comprehensive REST integration tests in `AuditLogsResourceTest` covering admin queries, filtering, date range parsing, pagination envelopes, 403 Forbidden checks for non-admin employees, 401 Unauthorized for unauthenticated requests, and 400 Bad Request on invalid date formats.
-  - Verified with full test suite passing via `mvn test` (46 unit/integration tests passing across reactor modules with 0 failures and 0 errors).
-- **Dependencies:** Tasks 2.1, 2.2, 3, 4.1, 4.2.1, 4.2.2, 4.2.3.
+---
 
-### 5. Finish the period lifecycle in Core
+## Explicitly Excluded / Post-MVP Out of Scope
 
-- **Status:** `COMPLETED`
-- **Scope:** Implement lookup, submit/reject/reopen-with-reason, transition validation, snapshots, remaining services, warnings, and rollback using existing transaction patterns.
-- **Acceptance:** Valid transitions succeed, invalid transitions do not mutate, reopening requires a reason, snapshots preserve history, and Core tests cover errors and rollback.
-- **Verification:**
-  - Implemented `PeriodHelper` with `getPeriodId`, `findPeriod`, `getOrCreatePeriod`, `isPeriodClosed`, `assertPeriodOpen`, and `createCalculationSnapshot` (capturing month summary target, actual, holiday, absence, and balance calculations).
-  - Implemented `PeriodActionArgument` supporting period resolution by `periodId` or `(employeeId, yearMonth)` and comment/reason payloads.
-  - Implemented `SubmitPeriodService`, `ApprovePeriodService`, `RejectPeriodService`, `ReopenPeriodService`, and `LockPeriodService` validating state transitions (`OPEN`/`REJECTED` -> `SUBMITTED` -> `APPROVED` -> `LOCKED`, with `REOPEN` -> `OPEN`), recording timestamps (`submittedAt`, `approvedAt`, `approvedBy`, `rejectedAt`, `rejectedBy`), capturing calculation snapshots, asserting mandatory rejection/reopening reasons, bumping version metadata, and auditing all transitions via `ChronivaroAuditHelper`.
-  - Enforced period closure locking across operational mutation services (`AddWorkEntryService`, `CorrectWorkEntryService`, `StartTimerService`, `RequestAbsenceService`, `UpdateAbsenceService`, `CancelAbsenceService`) using `PeriodHelper.assertPeriodOpen`.
-  - Implemented `TimePeriodSearch` providing fluent queries by `employee`, `yearMonth`, `state`, and `year`.
-  - Configured role privileges for `Employee`, `Supervisor`, `HR`, and `Administrator` in `PrivilegeRoles.xml`.
-  - Added comprehensive unit and integration tests in `PeriodLifecycleServiceTest` and updated `OperationalServicesAuditTest`, `PeriodResource`, and `ChronivaroResource`.
-  - Verified with full test suite passing via `mvn test` (46 unit/integration tests passing across reactor modules with 0 failures and 0 errors).
-- **Dependencies:** Tasks 1, 2.1, and 4.
+The following items are defined in Section 4.3 as post-MVP expansions and are not part of the active implementation backlog:
 
-### 6. Expose personal and period workflow REST endpoints
-
-- **Status:** `COMPLETED`
-- **Scope:** Complete employee period/status endpoints and agreed approval routes while preserving existing REST contracts and HTTP semantics.
-- **Acceptance:** Employee, supervisor, and administrator access is enforced server-side; integration tests cover transitions, conflicts, forbidden access, and standard errors.
-- **Verification:**
-  - Implemented `PeriodStatusDto` and `PeriodActionRequestDto` matching OpenAPI and specification data models.
-  - Added `periodToDto` mapping in `ChronivaroMapper`.
-  - Implemented `PeriodResource` (`/chronivaro/v1/periods`) supporting `GET /status`, `POST /submit`, `POST /approve`, `POST /reject`, `POST /reopen`, and `POST /{id}/reopen` with ETag validation, Gson deserialization, and standard error handling.
-  - Implemented `AdminPeriodResource` (`/chronivaro/v1/admin/periods`) supporting `POST /{id}/approve`, `POST /{id}/reject`, `POST /{id}/reopen`, and `POST /{id}/lock`.
-  - Implemented `ApprovalsResource` (`/chronivaro/v1/approvals`) supporting `GET /periods` (paged list of submitted periods), `POST /periods/{id}/approve`, `POST /periods/{id}/reject`, `GET /absences` (paged list of submitted absences), `POST /absences/{id}/approve`, and `POST /absences/{id}/reject`.
-  - Added personal period endpoints in `ChronivaroResource` (`GET /chronivaro/v1/me/periods/{yearMonth}`, `POST /chronivaro/v1/me/periods/{yearMonth}/submit`, and `POST /chronivaro/v1/me/periods/{id}/submit`).
-  - Registered new resources in `ChronivaroRestfulClasses`.
-  - Added comprehensive integration tests in `PeriodResourceTest` covering status lookup/auto-creation, submission, approvals queue retrieval, supervisor approval, rejection with mandatory comment, reopening with mandatory comment, HR period locking, Strolch role privilege enforcement (403 Forbidden for unauthorized actions), concurrency control (409 Conflict with stale If-Match ETag), unauthenticated 401 handling, and 400 Bad Request parameter validation.
-  - Verified with full test suite passing via `mvn test` (56 tests passing across all reactor modules with 0 failures and 0 errors).
-- **Dependencies:** Tasks 2.1, 2.2, 3, and 5.
-
-### 7. Implement configurable vacation entitlement policy
-
-- **Status:** `COMPLETED`
-- **Scope:** Implement the section 6.7.1 entitlement, proration, year-boundary, carry-over, oldest-balance usage, and no-negative-balance rules as configurable Core logic; use Task 1 only for the vacation type identifier if it remains unresolved.
-- **Acceptance:** The 25-day/480-minute defaults, configurable values, employment-period and part-time proration, commercial whole-minute rounding, unlimited carry-over, positive-correction carry-over, oldest-balance consumption, and insufficient-balance blocking are reproducible and covered by boundary tests; changes are audited.
-- **Verification:**
-  - Added vacation parameters and default configuration constants (`PARAM_ANNUAL_VACATION_DAYS`, `PARAM_MINUTES_PER_VACATION_DAY`, `PARAM_VACATION_ABSENCE_TYPE_CODE`, `DEFAULT_ANNUAL_VACATION_DAYS`, `DEFAULT_MINUTES_PER_VACATION_DAY`, `DEFAULT_VACATION_ABSENCE_TYPE_CODE`) in `ChronivaroConstants` and XML templates/models.
-  - Implemented `VacationAccountSummary` record providing complete yearly account breakdown (`carryOverMinutes`, `entitlementMinutes`, `correctionsMinutes`, `usageMinutes`, `remainingMinutes`).
-  - Implemented `VacationHelper` calculation and accounting engine handling annual entitlement calculation with schedule and employment proration, leap-year boundary handling, commercial whole-minute rounding (`Math.round`), balance query, account breakdown, and balance sufficiency assertions.
-  - Implemented `CalculateVacationEntitlementService` and `CreditVacationEntitlementService` with versioning and audit trail recording.
-  - Updated `UpdateConfigurationService` to support runtime configuration of `annualVacationDays`, `minutesPerVacationDay`, `vacationAbsenceTypeCode`, and `weeklyTargetMinutes`.
-  - Updated `ApproveAbsenceService` to enforce vacation balance sufficiency (`assertSufficientVacationBalance`), preventing negative balances on vacation approval as specified in section 6.7.1.
-  - Updated Strolch role privilege definitions in `PrivilegeRoles.xml` for `Employee`, `Supervisor`, `HR`, and `StrolchAdmin`.
-  - Added comprehensive test suite in `VacationEntitlementServiceTest` covering standard full-year calculation, leap years, part-time proration, mid-year entry and exit, schedule changes, custom configuration parameters, service crediting/recalculation, audit verification, yearly journal summaries with carry-over, and absence approval blocking on insufficient balance.
-  - Verified with full test suite passing via `mvn test` (56 tests passing across all reactor modules with 0 failures and 0 errors).
-- **Dependencies:** Tasks 1 and 4.
-
-### 8. Complete the immutable vacation journal
-
-- **Status:** `COMPLETED`
-- **Scope:** Link approved usage to the journal, enforce corrections and the fixed no-negative-balance rule, and complete account/year lookup and audit behaviour.
-- **Acceptance:** Entries are append-only, usage consumes the oldest available balance, usage and corrections reconcile deterministically, insufficient balance is rejected, and rollback/audit tests pass.
-- **Verification:**
-  - Implemented `VacationAccountEntrySearch` extending `ResourceSearch` with fluent filters for `employee`, `vacationType`, `absence`, and year/date ranges.
-  - Implemented `GetVacationAccountSummaryService` resolving employee yearly vacation summaries (`carryOverMinutes`, `entitlementMinutes`, `correctionsMinutes`, `usageMinutes`, `remainingMinutes`) and sorted entry journals.
-  - Enhanced `VacationHelper` with `getVacationEntries` and `getAllVacationEntries` sorted chronological journals and oldest-balance consumption reconciliation.
-  - Updated `AddVacationCorrectionService` to enforce balance checks preventing negative balances on retroactive or current negative corrections.
-  - Updated `ApproveAbsenceService` and `CancelAbsenceService` to maintain complete metadata (`PARAM_COMMENT`, `PARAM_CREATED_BY`, versioning) and audit events for `VACATION_USAGE` and `VACATION_CORRECTION` journal entries.
-  - Configured Strolch service and search privileges in `PrivilegeRoles.xml` for `Employee`, `Supervisor`, `HR`, and `StrolchAdmin`.
-  - Added comprehensive test suite in `VacationJournalTest` covering append-only entries, year-over-year carry-over with oldest-balance consumption, absence approval usage deduction, absence cancellation refund reversal, negative correction rejection on insufficient balance, date-range/type search filtering, and audit logging.
-  - Verified with full test suite passing via `mvn test` (60 tests passing across all reactor modules with 0 failures and 0 errors).
-- **Dependencies:** Tasks 4 and 7.
-
-### 9. Complete vacation and absence REST surfaces
-
-- **Status:** `COMPLETED`
-- **Scope:** Complete `/me/absences`, vacation-account, and related status routes, DTOs, authorization, pagination, and error/concurrency handling.
-- **Acceptance:** Documented routes return calculated values; invalid dates/statuses and unauthorized cross-user access are rejected.
-- **Verification:**
-  - Implemented `VacationAccountEntryDto`, `VacationAccountSummaryDto`, `VacationEntitlementCalculationDto`, and `VacationEntitlementCreditDto` in `chronivaro-rest`.
-  - Added mapper functions `vacationEntryToDto` and `vacationSummaryToDto` in `ChronivaroMapper`.
-  - Implemented `GET /chronivaro/v1/me/vacation-account` in `ChronivaroResource` returning full yearly summary breakdown and journal entries for the current employee with year resolution.
-  - Enhanced `GET /chronivaro/v1/me/absences` in `ChronivaroResource` to support date range (`from`, `to`), `status`, `absenceTypeCode`, and pagination (`offset`, `limit`).
-  - Implemented cross-user ownership verification and concurrency control on `GET /chronivaro/v1/me/absences/{id}`, `PUT /chronivaro/v1/me/absences/{id}`, and `POST /chronivaro/v1/me/absences/{id}/cancel` (rejecting cross-user access with 403 Forbidden and stale updates with 409 Conflict).
-  - Updated `RequestAbsenceService` to return `StringResult(absenceId)` on creation and returned created `AbsenceDto` with ETag.
-  - Implemented `GET /chronivaro/v1/admin/employees/{id}/vacation-account` supporting both `summary=true` breakdowns and paged journal entry lists.
-  - Implemented `POST /chronivaro/v1/admin/employees/{id}/vacation-entitlement/calculate` and `POST /chronivaro/v1/admin/employees/{id}/vacation-entitlement/credit` in `EmployeeResource`.
-  - Added comprehensive integration tests in `VacationAndAbsenceRestTest` covering personal vacation accounts, admin vacation accounts with pagination, calculations, credits, corrections, absence date/type/status filtering, optimistic concurrency, and cross-user authorization enforcement.
-  - Verified with full project test suite passing via `mvn test` (59 tests passing across all reactor modules with 0 failures and 0 errors).
-- **Dependencies:** Tasks 2.1, 2.2, 3, 6, and 8.
-
-### 10. Build supervisor approval queues
-
-- **Status:** `COMPLETED`
-- **Scope:** Add scoped Core searches/services and REST resources for absence and submitted-period approval queues using the decided approver rules.
-- **Acceptance:** Results are scope-limited and paginated; transitions are atomic and audited; queue and authorization tests pass.
-- **Verification:**
-  - Implemented `AbsenceSearch` in `chronivaro-core` supporting fluent queries by state, employee, multiple employees, and absence type with Strolch privilege assertions.
-  - Enhanced `TimePeriodSearch` to support `forEmployees(Collection<String> employeeIds)`.
-  - Implemented supervisor scoping and authorization helpers in `ChronivaroModelHelper` (`getSupervisedEmployeeIds`, `findEmployeesByTeam`, `assertCanManageEmployee` with self-approval prevention).
-  - Enforced supervisor authorization and self-approval restrictions in `ApproveAbsenceService`, `RejectAbsenceService`, `ApprovePeriodService`, and `RejectPeriodService`.
-  - Enriched `ApprovalsResource` (`GET /chronivaro/v1/approvals/periods` and `GET /chronivaro/v1/approvals/absences`) with team/employee/date/type filtering, supervisor scope limiting, pagination, and atomic approval/rejection handling.
-  - Configured Strolch search and service privileges in `PrivilegeRoles.xml` for `Employee`, `Supervisor`, and `HR`.
-  - Added comprehensive REST integration test suite in `ApprovalsQueueTest` covering queue scoping, cross-team approval rejections (403 Forbidden), self-approval rejections (403 Forbidden), HR escalations, rejections with mandatory comments, and pagination.
-  - Verified with full project test suite passing via `mvn clean test` (62 tests passing with 0 failures and 0 errors across all modules).
-- **Dependencies:** Tasks 2.1, 2.2, 4, 5, 6, and 9.
-
-### 11. Add personal workflow and approval UI
-
-Task 11 was split into subtasks **11.1**, **11.2**, and **11.3** per the task-size and single-concept rules (avoiding changes across 10+ files simultaneously and separating employee self-service from supervisor approvals).
-
-#### 11.1. Personal Absences and Vacation Account UI
-
-- **Status:** `COMPLETED`
-- **Scope:** Add Vanilla JS views (`MyAbsencesView.js`) and API clients (`AbsenceApi.js`, `VacationApi.js`) for submitting absence requests (with date ranges, duration types, half-day parts, hours/minutes, absence type selection, comments), viewing personal absence history with statuses/reasons and cancellation actions, and viewing the personal vacation account summary (yearly entitlement, carry-over, corrections, usage, remaining balance) and immutable journal entries with year filtering.
-- **Acceptance:** Loading, empty, success, error, and validation states are covered; server authorization remains authoritative; integration with application router and navigation.
-- **Verification:**
-  - Implemented `Rest.js` enhancements supporting custom headers (e.g. `If-Match` for optimistic concurrency) and comprehensive error parsing.
-  - Implemented `AbsenceApi.js` supporting `getMyAbsences` (with date range, status, type filters), `getAbsenceTypes`, `requestAbsence`, `getAbsence`, and `cancelAbsence` (with `If-Match` ETag and reason).
-  - Implemented `VacationAccountApi.js` supporting `getMyVacationAccount(year)`.
-  - Implemented `Format.js` extensions `durationDays`, `date`, and `dateTime`.
-  - Implemented `MyAbsencesView.js` featuring vacation summary metrics cards (Entitlement, Carry-Over, Adjustments, Usage, Remaining balance), collapsible immutable vacation journal table with year navigation, personal absences history table with status badges (`SUBMITTED`, `APPROVED`, `REJECTED`, `CANCELLED`), cancellation action prompts, filter bar, and absence request modal dialog with dynamic duration options and validation.
-  - Registered navigation link in `index.html` and router mapping in `app.js`.
-  - Added CSS styling in `style.css` for vacation cards, journal tables, status badges, filter bars, and modal forms.
-  - Created automated test `WebPersonalAbsenceUiTest` verifying web assets, router registration, DOM structure, and full personal absence/vacation REST integration workflow.
-  - Verified with full project test suite passing via `mvn clean test` (64 tests passing with 0 failures and 0 errors across all modules).
-- **Dependencies:** Tasks 6, 9, and 10.
-
-#### 11.2. Personal Period Workflow and Monthly Closing UI
-
-- **Status:** `COMPLETED`
-- **Scope:** Add Vanilla JS views (`MyPeriodsView.js` / period closing controls) and API client (`PeriodApi.js`) for viewing monthly period summary snapshots, current lifecycle state (`OPEN`, `SUBMITTED`, `APPROVED`, `REJECTED`, `LOCKED`), rejection reasons, submitting monthly periods for supervisor approval, and navigating period history.
-- **Acceptance:** Lifecycle states, calculation snapshots, and submission workflows are rendered with loading/empty/error states.
-- **Verification:**
-  - Implemented `PeriodApi.js` supporting `getMyPeriodStatus(yearMonth)`, `submitMyPeriod(yearMonth, comment, etag)`, `getMonthSummary(yearMonth)`, and `getPeriodStatus(yearMonth, employeeId)`.
-  - Implemented `MyPeriodsView.js` featuring month picker and navigation controls, lifecycle status banner with timestamps/rejection reason alerts, monthly balance summary cards, calculation snapshot details viewer, daily time breakdown table, and period submission workflow with confirmation dialog and comment support.
-  - Enhanced `PeriodStatusDto` and `ChronivaroMapper.periodToDto` to include rejection metadata (`rejectedAt`, `rejectedBy`), `comment`, and `calculationSnapshot`.
-  - Updated `openapi.yaml` to document expanded `PeriodStatusDto` schema with rejection reasons and calculation snapshots.
-  - Added navigation item `Monthly Closing` in `index.html` (accessible to `Employee` role) and route `my-periods` in `app.js`.
-  - Added CSS styling in `style.css` for month navigation, status banners, rejection alerts, summary grids, snapshot details, and info notices.
-  - Created automated integration test suite in `WebPersonalPeriodUiTest` verifying web assets, router registration, DOM structure, and full personal period submission / supervisor rejection / resubmission / approval lifecycle workflow.
-  - Verified with full project test suite passing via `mvn test` (66 tests passing with 0 failures and 0 errors across all modules).
-- **Dependencies:** Tasks 6 and 11.1.
-
-#### 11.3. Supervisor Approval Queues UI
-
-- **Status:** `COMPLETED`
-- **Scope:** Add Vanilla JS views (`ApprovalsView.js`) and API client (`ApprovalsApi.js`) for supervisors and HR to review pending absence requests and submitted time periods with team/employee filtering, atomic approval and rejection with mandatory comments, and pagination.
-- **Acceptance:** Supervisors see only their scoped team members; approval and rejection actions execute cleanly with optimistic concurrency and error handling.
-- **Verification:**
-  - Implemented `ApprovalsApi.js` supporting `getSubmittedPeriods`, `approvePeriod` (with comment/ETag), `rejectPeriod` (with mandatory comment/ETag), `getSubmittedAbsences`, `approveAbsence` (with ETag), and `rejectAbsence` (with mandatory comment/ETag).
-  - Enhanced `NotificationDialog.js` with `static prompt(...)` supporting mandatory text input modals with validation for rejection comments and optional approval comments.
-  - Implemented `ApprovalsView.js` featuring tabbed navigation between Pending Absences and Submitted Periods, team/employee/absence-type/date/month filter bars, pending absences table with duration/date breakdown and atomic approve/reject actions, submitted periods table with calculation snapshot previews and approve/reject actions, and pagination controls.
-  - Registered navigation item `Approvals` in `index.html` (accessible to `Supervisor`, `HR`, and `Administrator` roles) and route `approvals` in `app.js`.
-  - Added CSS styling in `style.css` for tab buttons, filter bars, action buttons (approve green / reject red), snapshot previews, and pagination bars.
-  - Created automated integration test suite in `WebSupervisorApprovalsUiTest` verifying web assets, router registration, DOM structure, supervisor pending absences queue retrieval, absence approval/rejection with mandatory comment, supervisor period queue retrieval, period rejection/resubmission/approval, and non-supervisor authorization enforcement.
-  - Verified with full project test suite passing via `mvn clean test` (70 tests passing with 0 failures and 0 errors across all modules).
-- **Dependencies:** Tasks 6, 10, and 11.2.
-
-### 12. Implement structured reports and CSV export
-
-Task 12 was split into subtasks **12.1** and **12.2** per the task-size and single-concept rules (avoiding changes across 10+ files simultaneously and separating Core/REST backend calculation & CSV serialization from Web UI visualization).
-
-#### 12.1. Core and REST Report Endpoints and CSV Export
-
-- **Status:** `DONE`
-- **Scope:** Implement Core report services (`TeamReportService`, `AbsenceReportService`), deterministic CSV export serializer (`CsvExportHelper`), report DTOs, and REST resource (`ReportsResource` under `/chronivaro/v1/reports`) supporting Day, Month, Vacation, Team, and Absence reports in JSON and RFC 4180 UTF-8 CSV with BOM, role-based authorization scoping, and OpenAPI specification.
-- **Acceptance:** Reports use calculated values from Core models; CSV exports are deterministic, properly escaped, and include UTF-8 BOM; authorization scoping restricts Employees to self, Supervisors to supervised teams, and HR/Admin to all; verified by Core and REST integration tests.
-- **Verification:**
-  - Implemented `TeamReport` record and `TeamReportService` aggregating monthly employee actuals, target hours, balance progression, missing bookings detection, and period lifecycle state.
-  - Implemented `AbsenceReportItem` record and `AbsenceReportService` retrieving filtered absences with duration, day part, paid flags, and approval metadata.
-  - Implemented `CsvExportHelper` with UTF-8 BOM (`\uFEFF`), RFC 4180 comma/quote/newline escaping, and duration formatting for Day, Month, Vacation, Team, and Absence reports.
-  - Added REST endpoints in `ReportsResource` under `/chronivaro/v1/reports/day`, `/chronivaro/v1/reports/month`, `/chronivaro/v1/reports/vacation`, `/chronivaro/v1/reports/team`, and `/chronivaro/v1/reports/absences` supporting JSON and `text/csv; charset=utf-8` responses.
-  - Configured service and query privileges in `PrivilegeRoles.xml` and updated `docs/openapi.yaml`.
-  - Added test suites in `ReportServiceTest` (Core) and `ReportsResourceTest` (REST) and verified with full project test suite passing (`mvn clean test` with 75 tests passing, 0 failures, 0 errors).
-- **Dependencies:** Tasks 3, 5, 8, and 9.
-
-#### 12.2. Reports and Export UI
-
-- **Status:** `COMPLETED`
-- **Scope:** Add Vanilla JS views (`ReportsView.js`), report API client (`ReportApi.js`), report type selector (Day, Month, Vacation, Team, Absence), filter controls (Team, Employee, Date/Month/Range), tabular data visualization with break/gap inspection, and CSV download export button.
-- **Acceptance:** Report filters load and execute queries cleanly; tabular views display calculated summary metrics and statuses; CSV download produces proper files with BOM; responsive design, router registration, and automated Web UI tests.
-- **Verification:**
-  - Enhanced `Rest.js` with `getBlob` to support clean streaming and download of binary/CSV payloads with token propagation.
-  - Implemented `ReportApi.js` supporting JSON queries and CSV blob downloads for Day, Month, Vacation, Team, and Absence reports.
-  - Implemented `ReportsView.js` featuring report type tabs (Day, Month, Vacation Account, Team Report, Absences), dynamic filter forms, summary KPI cards, work block & break breakdown, vacation journal entries, team employee aggregation, absence listing, loading/empty/error states, and direct CSV file downloads with UTF-8 BOM.
-  - Registered `Reports` navigation item in `index.html` (accessible to `Employee`, `Supervisor`, `HR`, and `Administrator` roles) and registered `#reports` route in `app.js`.
-  - Added dedicated CSS styling in `style.css` for filter bars, export buttons, report headers, metric cards, break tags, and empty states.
-  - Created automated integration test suite in `WebReportsUiTest` verifying web assets, router registration, DOM structure, Day JSON/CSV export, Month/Vacation JSON reports, Team JSON/CSV export, Absence reports, and authorization scoping restrictions.
-  - Verified with full project test suite passing via `mvn clean test` (80 tests passing with 0 failures and 0 errors across all modules).
-- **Dependencies:** Tasks 11.3 and 12.1.
-
-### 13. Complete global configuration administration
-
-- **Status:** `COMPLETED`
-- **Scope:** Expose supported Core configuration through authorized REST and UI with validation, optimistic concurrency control, audit metadata, and Web UI page.
-- **Acceptance:** Administrators can update only supported values; invalid values fail consistently and changes are audited; Web UI enables inspection and modification with optimistic concurrency.
-- **Verification:**
-  - Added strict parameter range validations in `UpdateConfigurationService` (weekly target minutes 0–10080, annual vacation days 0–365, minutes per vacation day 1–1440, non-blank vacation absence type code).
-  - Implemented `ConfigurationDto` in `chronivaro-rest` and `ChronivaroMapper.configurationToDto` mapping the `GlobalConfiguration` resource.
-  - Implemented `ConfigurationResource` (`/chronivaro/v1/admin/configuration`) supporting `GET` (with `ETag`) and `PUT` (with `If-Match` optimistic concurrency control) restricted to `Administrator` / `StrolchAdmin` roles.
-  - Registered `ConfigurationResource` in `ChronivaroRestfulClasses` and updated `docs/openapi.yaml` schema and endpoints.
-  - Implemented `ConfigurationApi.js` supporting `getConfiguration` and `updateConfiguration` with `If-Match`.
-  - Implemented `ConfigurationView.js` featuring global settings form (weekly target, vacation days, minutes per vacation day, absence type code), version and updater badges, live hours conversion hints, optimistic concurrency validation, reload and save actions, and notification dialogs.
-  - Registered `Configuration` navigation item in `index.html` (accessible to `Administrator` role) and route `#configuration` in `app.js`.
-  - Added dedicated styling in `style.css` for `.configuration-container`, `.config-card`, `.config-form`, and `.config-metadata`.
-  - Added test suites in `ConfigurationServiceTest` (Core), `ConfigurationResourceTest` (REST), and `WebConfigurationUiTest` (Web UI assets, routing, DOM structure, and full lifecycle integration).
-  - Verified with full test suite passing via `mvn clean test` (83 tests passing with 0 failures and 0 errors across all reactor modules).
-- **Dependencies:** Tasks 2.1, 3, 4, and 7.
-
-### 14. Create `chronivaro-app` and executable packaging
-
-- **Status:** `COMPLETED`
-- **Scope:** Add the application module and executable artifact with application-owned configuration/startup contracts. Keep Jetty out of Core and REST; remove Tomcat as a runtime requirement.
-- **Acceptance:** The parent builds four modules and the documented artifact launches with `java -jar`.
-- **Verification:**
-  - Created `chronivaro-app` module registered in root `pom.xml` with dependencies on `chronivaro-core`, `chronivaro-rest`, Strolch runtime/persistence, and Jetty 12 EE10.
-  - Configured `maven-shade-plugin` in `chronivaro-app/pom.xml` to produce shaded executable artifact `chronivaro.jar` with `ch.atexxi.chronivaro.app.ChronivaroApp` entry point and merged SPI service descriptors.
-  - Implemented `ChronivaroAppConfig` supporting CLI args (`--port`, `--bind`, `--context-path`, `--no-http`, `--runtime`, `--env`, `--web-resources`), system properties, and environment variable overrides.
-  - Implemented `ChronivaroApp` orchestrating the Strolch Agent and embedded HTTP lifecycle, graceful shutdown hooks, and classpath static frontend resource resolution from `chronivaro-web`.
-  - Added test suites `ChronivaroAppConfigTest` (5 tests) and `ChronivaroAppTest` (2 tests) verifying CLI configuration parsing, Strolch agent bootstrapping without HTTP, and embedded HTTP server startup on ephemeral ports.
-  - Verified executable jar startup directly with `java -jar chronivaro-app/target/chronivaro.jar` launching in 352ms, and full project build passing with 94 tests (0 failures, 0 errors across all 4 modules).
-- **Dependencies:** Tasks 2.1–2.3, 3, and the existing modules.
-
-### 15. Implement embedded Jetty lifecycle and configuration
-
-- **Status:** `COMPLETED`
-- **Scope:** In `chronivaro-app`, start/stop embedded Eclipse Jetty with configurable enablement, bind address/port, optional context path, and frontend resource location; coordinate signal shutdown with Strolch cleanup.
-- **Acceptance:** Startup, bind failure, controlled shutdown, and resource release are deterministic and tested; no external Jetty XML or Tomcat is required.
-- **Verification:**
-  - Configured embedded Eclipse Jetty 12 lifecycle in `ChronivaroApp` with graceful stop timeout (`setStopTimeout(5000L)`), safe shutdown coordination via `registerShutdownHook()`, and idempotent `stop()`.
-  - Implemented configurable HTTP enablement (`--no-http`), bind address (`--bind`), dynamic and fixed port allocation (`--port`), context path (`--context-path`), and static frontend resource location (`--web-resources`).
-  - Added deterministic failure handling on port binding conflicts (`java.net.BindException`), ensuring Strolch agent and server resources are cleanly destroyed without thread or socket leaks.
-  - Added comprehensive test suite in `ChronivaroAppTest` covering HTTP disabled/enabled start, ephemeral port binding, port conflict failure and clean rollback, custom context paths, custom static web resource paths, idempotent stop, and shutdown hook registration.
-  - Verified with full test suite passing via `mvn clean test` (98 tests passing with 0 failures and 0 errors across all 5 reactor modules).
-- **Dependencies:** Task 14.
-
-### 16. Integrate Jersey and serve the frontend from Jetty
-
-- **Status:** `COMPLETED`
-- **Scope:** Register existing JAX-RS resources under `/rest/chronivaro/v1` and serve `chronivaro-web` at `/`, including `/assets/...`, from the same server without Jetty APIs in REST.
-- **Acceptance:** Existing REST contracts remain unchanged; HTTP smoke tests reach `/` and REST from one server; separation rules are verified.
-- **Verification:**
-  - Integrated Jersey JAX-RS servlet container mounted under `/rest/*` in `ChronivaroApp`, registering all Chronivaro REST resources and exception/auth providers via `ChronivaroRestfulClasses`.
-  - Configured static frontend resource handling in `ChronivaroApp` serving `chronivaro-web` web assets at `/` with welcome file `index.html`, stylesheet `/assets/css/style.css`, favicon `/assets/icons/favicon.svg`, and JS modules under `/js/...` with directory listing disabled.
-  - Supported dual-mode static resource resolution from classpath (packaged fat-JAR) and file system paths (`chronivaro-web/src/main/webapp` and custom locations).
-  - Preserved strict architectural layering with zero Jetty dependencies in `chronivaro-core` and `chronivaro-rest`.
-  - Added comprehensive HTTP smoke and integration test suite in `ChronivaroAppTest` verifying same-server frontend delivery (`/`, `/index.html`, `/assets/css/style.css`, `/js/app.js`, missing asset 404), Jersey REST API routing (`/rest/strolch/authentication`, `/rest/chronivaro/v1/admin/configuration`, `/rest/chronivaro/v1/admin/employees`, `/rest/chronivaro/v1/presence`, `/rest/chronivaro/v1/reports/day`, unauthenticated 401, non-existent REST 404), and reflection-based architectural separation checks.
-  - Verified with full project test suite passing via `mvn clean test` across all reactor modules.
-- **Dependencies:** Tasks 3, 14, and 15.
-
-### 17. Add standalone and non-functional verification
-
-- **Status:** `COMPLETED`
-- **Scope:** Add application integration tests and operational documentation for executable startup, frontend/REST reachability, bind failure, shutdown, health/readiness, structured logs, metrics, performance, accessibility, and reproducible JDK 25 acceptance runs.
-- **Acceptance:** `java -jar chronivaro.jar` (or documented equivalent) starts without Tomcat; lifecycle/HTTP smoke tests pass and operational limitations are documented.
-- **Verification:**
-  - Implemented unauthenticated system health (`/rest/chronivaro/v1/system/health`), readiness (`/rest/chronivaro/v1/system/readiness`), version (`/rest/chronivaro/v1/system/version` and alias `/rest/chronivaro/v1/version`), and metrics (`/rest/chronivaro/v1/system/metrics`) endpoints in `SystemResource` and DTO records (`HealthDto`, `ReadinessDto`, `VersionDto`, `SystemMetricsDto`).
-  - Whitelisted system probe endpoints in `ChronivaroAuthenticationRequestFilter` and documented them in `docs/openapi.yaml`.
-  - Configured structured logging pattern with MDC correlation ID (`%X{correlationId:-NONE}`) in `logback.xml` and validated request header propagation (`X-Correlation-Id`).
-  - Added comprehensive integration and non-functional test suite in `ChronivaroAppTest` validating:
-    - Unauthenticated health, readiness, version, and JVM metrics probe retrieval.
-    - Explicit and generated `X-Correlation-Id` header propagation and structured error responses.
-    - SLA response time performance benchmarks (< 2000ms for day/month reports, < 5000ms for team reports, server-side pagination with `PagedResultDto`).
-    - Role-based privacy scoping (unauthorized employee access blocked on administrative audit logs and configuration updates with 401/403).
-    - Web UI accessibility standards (mobile viewport meta tag, HTML `lang` attribute, semantic `<nav>` and `<main id="app">` landmarks).
-    - Idempotent stop, bind failure handling, and JVM shutdown hook coordination.
-  - Authored comprehensive root `README.md` and `docs/OPERATIONS.md` covering architecture, standalone launch, CLI flags/environment variables, system monitoring, observability, SLA performance benchmarks, data retention and privacy policies, and disaster recovery.
-  - Verified with full multi-module reactor test suite passing via `mvn clean test` (19 tests passing with 0 failures and 0 errors across all modules).
-- **Dependencies:** Tasks 4, 11–13, and 14–16.
-
-## Explicitly removed or not applicable
-
-- Do not recreate implemented timer, schedule, absence, presence, holiday, registration, role, or summary functionality.
-- Do not add Tomcat migration tasks or preserve WAR deployment as a required runtime path. Remove or make remaining WAR configuration non-essential only within Tasks 14–16.
-- Do not invent remaining product/API decisions; implement the clarified vacation rules in section 6.7.1 directly.
+- Project, customer, order, or activity tracking
+- Night, weekend, or holiday wage surcharges
+- Native Excel (.xlsx) export
+- Absence attachments and medical certificate uploads
+- Automated notifications and email reminders
+- Calendar integration (iCal/Exchange)
+- Legacy time-tracking system import utilities
+- Offline-capable mobile client
