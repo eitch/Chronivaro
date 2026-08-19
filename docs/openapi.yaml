@@ -36,6 +36,95 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
 
+  /chronivaro/v1/system/health:
+    get:
+      summary: Get system health status
+      description: Liveness probe returning whether the Strolch agent and server are running.
+      operationId: getSystemHealth
+      tags:
+        - System
+      responses:
+        '200':
+          description: System health status retrieved successfully
+          headers:
+            X-Correlation-Id:
+              $ref: '#/components/headers/X-Correlation-Id'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthDto'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /chronivaro/v1/system/readiness:
+    get:
+      summary: Get system readiness status
+      description: Readiness probe returning 200 when realms and components are initialized and ready to serve traffic.
+      operationId: getSystemReadiness
+      tags:
+        - System
+      responses:
+        '200':
+          description: System is ready to accept traffic
+          headers:
+            X-Correlation-Id:
+              $ref: '#/components/headers/X-Correlation-Id'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReadinessDto'
+        '503':
+          description: System is not ready
+          headers:
+            X-Correlation-Id:
+              $ref: '#/components/headers/X-Correlation-Id'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReadinessDto'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /chronivaro/v1/system/version:
+    get:
+      summary: Get system version metadata
+      description: Returns the application version, build timestamp, environment mode, and Strolch version.
+      operationId: getSystemVersion
+      tags:
+        - System
+      responses:
+        '200':
+          description: Version metadata retrieved successfully
+          headers:
+            X-Correlation-Id:
+              $ref: '#/components/headers/X-Correlation-Id'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VersionDto'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /chronivaro/v1/system/metrics:
+    get:
+      summary: Get system and JVM telemetry metrics
+      description: Returns JVM heap, non-heap, thread pool, CPU load, and system metrics.
+      operationId: getSystemMetrics
+      tags:
+        - System
+      responses:
+        '200':
+          description: System metrics retrieved successfully
+          headers:
+            X-Correlation-Id:
+              $ref: '#/components/headers/X-Correlation-Id'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SystemMetricsDto'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
   /chronivaro/v1/auth/login:
     post:
       summary: User login
@@ -3637,6 +3726,85 @@ components:
         strolchVersion:
           type: string
           example: '2.7.0-SNAPSHOT'
+
+    HealthDto:
+      type: object
+      properties:
+        status:
+          type: string
+          example: 'UP'
+        agentState:
+          type: string
+          example: 'RUNNING'
+        uptimeMs:
+          type: integer
+          format: int64
+          example: 45230
+        timestamp:
+          type: string
+          example: '2026-08-19T13:30:00.000+02:00'
+
+    ReadinessDto:
+      type: object
+      properties:
+        status:
+          type: string
+          example: 'READY'
+        agentState:
+          type: string
+          example: 'RUNNING'
+        activeRealms:
+          type: array
+          items:
+            type: string
+          example: ['strolch']
+        timestamp:
+          type: string
+          example: '2026-08-19T13:30:00.000+02:00'
+
+    SystemMetricsDto:
+      type: object
+      properties:
+        heapUsedBytes:
+          type: integer
+          format: int64
+          example: 84934656
+        heapMaxBytes:
+          type: integer
+          format: int64
+          example: 4294967296
+        heapFreeBytes:
+          type: integer
+          format: int64
+          example: 182452224
+        nonHeapUsedBytes:
+          type: integer
+          format: int64
+          example: 52428800
+        activeThreads:
+          type: integer
+          example: 24
+        peakThreadCount:
+          type: integer
+          example: 32
+        totalStartedThreadCount:
+          type: integer
+          format: int64
+          example: 58
+        availableProcessors:
+          type: integer
+          example: 8
+        systemLoadAverage:
+          type: number
+          format: double
+          example: 1.45
+        uptimeMs:
+          type: integer
+          format: int64
+          example: 45230
+        timestamp:
+          type: string
+          example: '2026-08-19T13:30:00.000+02:00'
 
     # ------------------------------------------
     # Auth & Users
