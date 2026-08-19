@@ -16,6 +16,36 @@ export default class Rest {
         return Rest.fetch(url, 'DELETE', null, customHeaders);
     }
 
+    static async getBlob(url, customHeaders = {}) {
+        const headers = {
+            'Accept': 'text/csv, application/octet-stream, */*',
+            ...customHeaders
+        };
+
+        const authToken = localStorage.getItem('authToken');
+        if (authToken) {
+            headers['Authorization'] = authToken;
+        }
+
+        const response = await fetch(url, {
+            method: 'GET',
+            headers
+        });
+
+        if (response.status === 401) {
+            localStorage.removeItem('authToken');
+            window.dispatchEvent(new CustomEvent('unauthorized'));
+            throw new Error('Unauthorized');
+        }
+
+        if (!response.ok) {
+            const errorText = await response.text().catch(() => response.statusText);
+            throw new Error(errorText || response.statusText);
+        }
+
+        return response.blob();
+    }
+
     static async fetch(url, method, body, customHeaders = {}) {
         const headers = {
             'Content-Type': 'application/json',
