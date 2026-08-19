@@ -22,13 +22,13 @@ public class StartTimerService extends AbstractService<StartTimerService.Argumen
 	@Override
 	protected ServiceResult internalDoService(Argument arg) throws Exception {
 		DBC.PRE.assertNotEmpty("employeeId must be set", arg.employeeId);
-		if (!arg.workingLocation.name().isEmpty())
+		if (arg.workingLocation != null && !arg.workingLocation.name().isEmpty())
 			WorkingLocation.valueOf(arg.workingLocation.name());
 
 		try (StrolchTransaction tx = openArgOrUserTx(arg)) {
 			Resource employee = ChronivaroModelHelper.getEmployee(tx, arg.employeeId);
 
-			ZonedDateTime now = ZonedDateTime.now(ChronivaroModelHelper.getEmployeeTimezone(employee));
+			ZonedDateTime now = arg.time != null ? arg.time : ZonedDateTime.now(ChronivaroModelHelper.getEmployeeTimezone(employee));
 			PeriodHelper.assertPeriodOpen(tx, employee.getId(), now.toLocalDate());
 			String username = tx.getCertificate().getUsername();
 
@@ -46,13 +46,15 @@ public class StartTimerService extends AbstractService<StartTimerService.Argumen
 			workEntry.setDate(PARAM_START, now);
 			workEntry.setString(PARAM_SOURCE, SOURCE_TIMER);
 			workEntry.setString(PARAM_CREATED_BY, username);
-			workEntry.setString(PARAM_WORKING_LOCATION, arg.workingLocation);
+			workEntry.setString(PARAM_WORKING_LOCATION, arg.workingLocation == null ? "" : arg.workingLocation.name());
 
 			Resource scheduleVersion = tx.getResourceBy(TYPE_EMPLOYMENT_SCHEDULE, workDay.getRelationId(PARAM_SCHEDULE),
 					true);
 			workEntry.setRelation(PARAM_SCHEDULE, scheduleVersion);
 
 			WorkEntryHelper.validateNoOverlap(tx, employee.getId(), now, null, null);
+			WorkEntryHelper.validateWorkingLocation(tx, employee.getId(), now, null,
+					arg.workingLocation == null ? null : arg.workingLocation.name(), null);
 
 			tx.add(workEntry);
 			workDay.addRelation(PARAM_WORK_ENTRIES, workEntry);
@@ -80,6 +82,7 @@ public class StartTimerService extends AbstractService<StartTimerService.Argumen
 	public static class Argument extends ServiceArgument {
 		public String employeeId;
 		public WorkingLocation workingLocation;
+		public ZonedDateTime time;
 
 		public Argument() {
 
@@ -88,6 +91,12 @@ public class StartTimerService extends AbstractService<StartTimerService.Argumen
 		public Argument(String employeeId, WorkingLocation workingLocation) {
 			this.employeeId = employeeId;
 			this.workingLocation = workingLocation;
+		}
+
+		public Argument(String employeeId, WorkingLocation workingLocation, ZonedDateTime time) {
+			this.employeeId = employeeId;
+			this.workingLocation = workingLocation;
+			this.time = time;
 		}
 	}
 }

@@ -28,9 +28,11 @@ public class AddWorkEntryService extends AbstractService<AddWorkEntryService.Add
 
 		try (StrolchTransaction tx = openArgOrUserTx(arg)) {
 			PeriodHelper.assertPeriodOpen(tx, arg.employeeId, arg.start.toLocalDate());
-			if (arg.end.isBefore(arg.start))
-				throw new IllegalStateException("End time cannot be before start time!");
+			if (arg.end.isBefore(arg.start) || arg.end.isEqual(arg.start))
+				throw new IllegalArgumentException("Work entry end time must be after start time!");
 			WorkEntryHelper.validateNoOverlap(tx, arg.employeeId, arg.start, arg.end, null);
+			WorkEntryHelper.validateWorkingLocation(tx, arg.employeeId, arg.start, arg.end,
+					arg.workingLocation == null ? null : arg.workingLocation.name(), null);
 
 			Resource employee = tx.getResourceBy(TYPE_EMPLOYEE, arg.employeeId, true);
 			Resource workDay = WorkDayHelper.getOrCreateWorkDay(tx, employee, arg.start);
@@ -48,7 +50,9 @@ public class AddWorkEntryService extends AbstractService<AddWorkEntryService.Add
 				workEntry.setString(PARAM_COMMENT, arg.comment);
 			workEntry.setString(PARAM_WORKING_LOCATION, arg.workingLocation == null ? "" : arg.workingLocation.name());
 
-			Resource scheduleVersion = ScheduleHelper.findScheduleVersion(tx, arg.employeeId).orElseThrow();
+			Resource scheduleVersion = ScheduleHelper.findScheduleVersion(tx, arg.employeeId, arg.start.toLocalDate())
+					.orElseThrow(() -> new IllegalStateException("No schedule version found for employee " + arg.employeeId
+							+ " on " + arg.start.toLocalDate()));
 			workEntry.setRelation(PARAM_SCHEDULE, scheduleVersion);
 
 			initVersion(workEntry, tx);

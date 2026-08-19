@@ -30,7 +30,8 @@ public class ChronivaroResourceTest extends AbstractChronivaroRestfulTest {
 				{
 				  "start": "2025-01-01T08:00:00+01:00",
 				  "end": "2025-01-01T12:00:00+01:00",
-				  "comment": "Test work entry"
+				  "comment": "Test work entry",
+				  "workingLocation": "OFFICE"
 				}
 				""";
 		try (Response response = target()
@@ -41,9 +42,40 @@ public class ChronivaroResourceTest extends AbstractChronivaroRestfulTest {
 			assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
 		}
 
-		// Correct work entry (assuming we can find the ID, but for a simple integration test,
-		// we just check if the endpoint is reachable and returns 200/404/etc as expected)
-		// Since we don't have the ID easily here without more setup, we'll just check the Add for now.
+		// Zero duration
+		String zeroDurationJson = """
+				{
+				  "start": "2025-01-02T08:00:00+01:00",
+				  "end": "2025-01-02T08:00:00+01:00",
+				  "comment": "Zero duration work entry"
+				}
+				""";
+		try (Response response = target()
+				.path("chronivaro/v1/me/work-entries")
+				.request(MediaType.APPLICATION_JSON)
+				.header("Authorization", authToken)
+				.post(Entity.json(zeroDurationJson))) {
+			assertEquals(Response.Status.BAD_REQUEST.getStatusCode(), response.getStatus());
+			String body = response.readEntity(String.class);
+			org.junit.Assert.assertTrue(body.contains("INVALID_ENTRY_DURATION"));
+		}
+
+		// Conflicting morning location
+		String morningConflictJson = """
+				{
+				  "start": "2025-01-01T12:00:00+01:00",
+				  "end": "2025-01-01T12:30:00+01:00",
+				  "comment": "Conflicting morning location",
+				  "workingLocation": "HOME_OFFICE"
+				}
+				""";
+		try (Response response = target()
+				.path("chronivaro/v1/me/work-entries")
+				.request(MediaType.APPLICATION_JSON)
+				.header("Authorization", authToken)
+				.post(Entity.json(morningConflictJson))) {
+			assertEquals(Response.Status.BAD_REQUEST.getStatusCode(), response.getStatus());
+		}
 	}
 
 	@Test

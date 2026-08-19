@@ -15,31 +15,22 @@ public class WorkDayHelper {
 
 	public static Resource getOrCreateWorkDay(StrolchTransaction tx, Resource employee, ZonedDateTime now) {
 		LocalDate date = now.toLocalDate();
-		String workDayId = employee.getRelationId(PARAM_CURRENT_WORK_DAY);
+		LocalDate today = LocalDate.now(now.getZone());
+		String expectedWorkDayId = employee.getId() + "-" + date.format(DateTimeFormatter.ISO_LOCAL_DATE);
 
-		if (workDayId != null && !workDayId.isEmpty()) {
-			Resource workDay = tx.getResourceBy(TYPE_WORK_DAY, workDayId, false);
-			if (workDay != null && workDay.getDate(PARAM_DATE).toLocalDate().equals(date)) {
-				return workDay;
+		Resource existingWorkDay = tx.getResourceBy(TYPE_WORK_DAY, expectedWorkDayId, false);
+		if (existingWorkDay != null) {
+			if (date.equals(today) && !expectedWorkDayId.equals(employee.getRelationId(PARAM_CURRENT_WORK_DAY))) {
+				Resource employeeClone = tx.readLock(employee);
+				employeeClone.setRelation(PARAM_CURRENT_WORK_DAY, existingWorkDay);
+				tx.update(employeeClone);
 			}
-		}
-
-		// Not found or not for today, search by date and employee just in case
-		Optional<Resource> existingWorkDay = tx.streamResources(TYPE_WORK_DAY)
-				.filter(wd -> wd.getRelationId(PARAM_EMPLOYEE).equals(employee.getId()))
-				.filter(wd -> wd.getDate(PARAM_DATE).toLocalDate().equals(date))
-				.findFirst();
-
-		if (existingWorkDay.isPresent()) {
-			Resource workDay = existingWorkDay.get();
-			employee.setRelation(PARAM_CURRENT_WORK_DAY, workDay);
-			tx.update(employee);
-			return workDay;
+			return tx.readLock(existingWorkDay);
 		}
 
 		// Create new WorkDay
 		Resource workDay = tx.getResourceTemplate(TYPE_WORK_DAY, true);
-		workDay.setId(employee.getId() + "-" + date.format(DateTimeFormatter.ISO_LOCAL_DATE));
+		workDay.setId(expectedWorkDayId);
 		workDay.setName("WorkDay " + employee.getName() + " " + date);
 		workDay.setDate(PARAM_DATE, date.atStartOfDay(now.getZone()));
 		workDay.setRelation(PARAM_EMPLOYEE, employee);
@@ -50,8 +41,11 @@ public class WorkDayHelper {
 
 		tx.add(workDay);
 
-		employee.setRelation(PARAM_CURRENT_WORK_DAY, workDay);
-		tx.update(employee);
+		if (date.equals(today)) {
+			Resource employeeClone = tx.readLock(employee);
+			employeeClone.setRelation(PARAM_CURRENT_WORK_DAY, workDay);
+			tx.update(employeeClone);
+		}
 
 		return workDay;
 	}

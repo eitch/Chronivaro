@@ -131,6 +131,11 @@ public class ChronivaroResource {
 		ServiceHandler serviceHandler = ChronivaroRestHelper.getServiceHandler();
 		WorkEntryDto dto = ChronivaroRestHelper.createGson().fromJson(data, WorkEntryDto.class);
 
+		if (dto.start() != null && dto.end() != null && (dto.end().isBefore(dto.start()) || dto.end().isEqual(dto.start()))) {
+			return ChronivaroRestHelper.toErrorResponse(Response.Status.BAD_REQUEST, "INVALID_ENTRY_DURATION",
+					"Work entry end time must be strictly after start time");
+		}
+
 		String employeeId;
 		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
 			Optional<Resource> employee = ChronivaroModelHelper.findEmployeeByUser(tx, cert.getUserId());
@@ -164,6 +169,11 @@ public class ChronivaroResource {
 
 		ServiceHandler serviceHandler = ChronivaroRestHelper.getServiceHandler();
 		WorkEntryDto dto = ChronivaroRestHelper.createGson().fromJson(data, WorkEntryDto.class);
+
+		if (dto.start() != null && dto.end() != null && (dto.end().isBefore(dto.start()) || dto.end().isEqual(dto.start()))) {
+			return ChronivaroRestHelper.toErrorResponse(Response.Status.BAD_REQUEST, "INVALID_ENTRY_DURATION",
+					"Work entry end time must be strictly after start time");
+		}
 
 		CorrectWorkEntryService.CorrectWorkEntryArgument arg = new CorrectWorkEntryService.CorrectWorkEntryArgument();
 		arg.workEntryId = id;

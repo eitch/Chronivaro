@@ -42,10 +42,12 @@ public class CorrectWorkEntryService
 				PeriodHelper.assertPeriodOpen(tx, employeeId, arg.start.toLocalDate());
 			}
 
-			if (arg.end.isBefore(arg.start)) {
-				throw new IllegalStateException("End time cannot be before start time!");
+			if (arg.end.isBefore(arg.start) || arg.end.isEqual(arg.start)) {
+				throw new IllegalArgumentException("Work entry end time must be after start time!");
 			}
 			WorkEntryHelper.validateNoOverlap(tx, employeeId, arg.start, arg.end, workEntry.getId());
+			WorkEntryHelper.validateWorkingLocation(tx, employeeId, arg.start, arg.end,
+					arg.workingLocation == null ? null : arg.workingLocation.name(), workEntry.getId());
 
 			if (!arg.start.toLocalDate().equals(oldStart.toLocalDate())) {
 				Resource employee = tx.getResourceBy(TYPE_EMPLOYEE, employeeId, true);
@@ -66,7 +68,9 @@ public class CorrectWorkEntryService
 			workEntry.setString(PARAM_SOURCE, SOURCE_MANUAL);
 			workEntry.setString(PARAM_WORKING_LOCATION, arg.workingLocation == null ? "" : arg.workingLocation.name());
 
-			Resource scheduleVersion = ScheduleHelper.findScheduleVersion(tx, employeeId).orElseThrow();
+			Resource scheduleVersion = ScheduleHelper.findScheduleVersion(tx, employeeId, arg.start.toLocalDate())
+					.orElseThrow(() -> new IllegalStateException("No schedule version found for employee " + employeeId
+							+ " on " + arg.start.toLocalDate()));
 			workEntry.setRelation(PARAM_SCHEDULE, scheduleVersion);
 
 			bumpVersion(workEntry, tx);

@@ -111,11 +111,16 @@ public class TimerWorkDayTest {
 		}
 
 		ServiceHandler serviceHandler = runtimeMock.getServiceHandler();
-		StartTimerService.Argument morningArgument = new StartTimerService.Argument(employeeId, WorkingLocation.HOME_OFFICE);
+		ZonedDateTime morningTime = LocalDate.now().atTime(9, 0).atZone(java.time.ZoneId.systemDefault());
+		ZonedDateTime morningEndTime = LocalDate.now().atTime(11, 30).atZone(java.time.ZoneId.systemDefault());
+		ZonedDateTime afternoonTime = LocalDate.now().atTime(13, 30).atZone(java.time.ZoneId.systemDefault());
+
+		StartTimerService.Argument morningArgument = new StartTimerService.Argument(employeeId, WorkingLocation.HOME_OFFICE, morningTime);
 		assertTrue(serviceHandler.doService(certificate, new StartTimerService(), morningArgument).isOk());
 		StopTimerService.StopTimerArgument stopArgument = new StopTimerService.StopTimerArgument(employeeId);
+		stopArgument.time = morningEndTime;
 		assertTrue(serviceHandler.doService(certificate, new StopTimerService(), stopArgument).isOk());
-		StartTimerService.Argument afternoonArgument = new StartTimerService.Argument(employeeId, WorkingLocation.CUSTOMER);
+		StartTimerService.Argument afternoonArgument = new StartTimerService.Argument(employeeId, WorkingLocation.CUSTOMER, afternoonTime);
 		assertTrue(serviceHandler.doService(certificate, new StartTimerService(), afternoonArgument).isOk());
 
 		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
