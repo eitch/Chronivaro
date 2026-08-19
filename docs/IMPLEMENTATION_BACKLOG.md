@@ -315,9 +315,19 @@ Task 4 was split into subtasks **4.1**, **4.2.1**, **4.2.2**, **4.2.3**, and **4
 
 ### 7. Implement configurable vacation entitlement policy
 
-- **Status:** `MISSING`
+- **Status:** `COMPLETED`
 - **Scope:** Implement the section 6.7.1 entitlement, proration, year-boundary, carry-over, oldest-balance usage, and no-negative-balance rules as configurable Core logic; use Task 1 only for the vacation type identifier if it remains unresolved.
 - **Acceptance:** The 25-day/480-minute defaults, configurable values, employment-period and part-time proration, commercial whole-minute rounding, unlimited carry-over, positive-correction carry-over, oldest-balance consumption, and insufficient-balance blocking are reproducible and covered by boundary tests; changes are audited.
+- **Verification:**
+  - Added vacation parameters and default configuration constants (`PARAM_ANNUAL_VACATION_DAYS`, `PARAM_MINUTES_PER_VACATION_DAY`, `PARAM_VACATION_ABSENCE_TYPE_CODE`, `DEFAULT_ANNUAL_VACATION_DAYS`, `DEFAULT_MINUTES_PER_VACATION_DAY`, `DEFAULT_VACATION_ABSENCE_TYPE_CODE`) in `ChronivaroConstants` and XML templates/models.
+  - Implemented `VacationAccountSummary` record providing complete yearly account breakdown (`carryOverMinutes`, `entitlementMinutes`, `correctionsMinutes`, `usageMinutes`, `remainingMinutes`).
+  - Implemented `VacationHelper` calculation and accounting engine handling annual entitlement calculation with schedule and employment proration, leap-year boundary handling, commercial whole-minute rounding (`Math.round`), balance query, account breakdown, and balance sufficiency assertions.
+  - Implemented `CalculateVacationEntitlementService` and `CreditVacationEntitlementService` with versioning and audit trail recording.
+  - Updated `UpdateConfigurationService` to support runtime configuration of `annualVacationDays`, `minutesPerVacationDay`, `vacationAbsenceTypeCode`, and `weeklyTargetMinutes`.
+  - Updated `ApproveAbsenceService` to enforce vacation balance sufficiency (`assertSufficientVacationBalance`), preventing negative balances on vacation approval as specified in section 6.7.1.
+  - Updated Strolch role privilege definitions in `PrivilegeRoles.xml` for `Employee`, `Supervisor`, `HR`, and `StrolchAdmin`.
+  - Added comprehensive test suite in `VacationEntitlementServiceTest` covering standard full-year calculation, leap years, part-time proration, mid-year entry and exit, schedule changes, custom configuration parameters, service crediting/recalculation, audit verification, yearly journal summaries with carry-over, and absence approval blocking on insufficient balance.
+  - Verified with full test suite passing via `mvn test` (56 tests passing across all reactor modules with 0 failures and 0 errors).
 - **Dependencies:** Tasks 1 and 4.
 
 ### 8. Complete the immutable vacation journal

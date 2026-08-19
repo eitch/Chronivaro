@@ -14,7 +14,7 @@ Audit date: 2026-08-17. `IMPLEMENTATION_SPECIFICATION.md` is authoritative; the 
 ## Partially implemented
 
 - Period workflow (spec sections 6.9, 9.5, 10.1, 13.2): Core period lifecycle completed with auto-creation, submission, approval, rejection, reopening with reason, calculation snapshots, audit trails, period closure locking, and `TimePeriodSearch` (Task 5 completed); REST personal, period, approvals, and admin workflow endpoints with concurrency control and role authorization implemented and verified (Task 6 completed).
-- Vacation accounting (sections 6.7, 9.4, 11.3): immutable-style correction support and balance lookup exist in `VacationHelper` and `AddVacationCorrectionService`, but entitlement, carry-over, usage linkage, approval balance blocking, and complete account reporting/UI are absent.
+- Vacation accounting (sections 6.7, 9.4, 11.3): configurable vacation entitlement policy, proration engine, whole-minute commercial rounding, yearly account summaries with unlimited carry-over, calculation/crediting services, and absence approval balance blocking implemented and verified (Task 7 completed); complete immutable journal lookup and account reporting endpoints remaining.
 - Audit logging (sections 5.2, 6.10, 9.3–9.5, 16.3): `ChronivaroAuditHelper` enhanced with full metadata (action, reason, correlation ID from MDC/thread-local, details, date, user, old/new values), `AuditEventSearch` fluent query, and `PurgeAuditEventsService` retention purge logic implemented in Core (Task 4.1 completed); administrative master data mutation services audited (Task 4.2.1 completed); Employee and Schedule services audited (Task 4.2.2 completed); operational Time Tracking, Absence, Vacation, Period, and Configuration services audited (Task 4.2.3 completed); administrative REST endpoint and security implemented (Task 4.3 completed).
 - Administration (sections 3.3–3.4, 12.1): employee/team/location/schedule/holiday/absence-type pages and APIs exist, but global configuration has core support only and no REST/UI administration.
 - UI coverage (sections 12.1–12.2): dashboard, times, presence, and administration pages exist; personal absences, vacations, approvals, reports, period workflow, and explicit loading/empty/error/accessibility coverage remain incomplete.
@@ -36,7 +36,7 @@ Audit date: 2026-08-17. `IMPLEMENTATION_SPECIFICATION.md` is authoritative; the 
 
 ## Dependency-ordered next steps
 
-1. Implement configurable vacation entitlement and immutable journal accounting (Tasks 7 and 8).
+1. Complete the immutable vacation journal and lookup behaviour (Task 8).
 2. Complete vacation and absence REST surfaces (Task 9).
 3. Add scoped supervisor approval queues and the approvals UI (Task 10).
 4. Add personal absence and vacation pages (Task 11).
