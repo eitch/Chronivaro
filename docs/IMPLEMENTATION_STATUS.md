@@ -4,7 +4,7 @@ Audit date: 2026-08-17. `IMPLEMENTATION_SPECIFICATION.md` is authoritative; the 
 
 ## Implemented
 
-- MVP project structure, Maven parent, four modules (`chronivaro-core`, `chronivaro-rest`, `chronivaro-web`, `chronivaro-app`), JDK 25, UTF-8, Strolch BOM, and executable shaded fat-JAR packaging (`chronivaro.jar`) (spec sections 14, 15.1, and 20.1): `Chronivaro/pom.xml` and `chronivaro-app/pom.xml` (Task 14 completed); embedded Eclipse Jetty lifecycle with configurable enablement, bind address/port, context path, web resource location, clean stop/graceful shutdown, and port conflict failure handling implemented and verified (Task 15 completed).
+- MVP project structure, Maven parent, four modules (`chronivaro-core`, `chronivaro-rest`, `chronivaro-web`, `chronivaro-app`), JDK 25, UTF-8, Strolch BOM, and executable shaded fat-JAR packaging (`chronivaro.jar`) (spec sections 14, 15.1, and 20.1): `Chronivaro/pom.xml` and `chronivaro-app/pom.xml` (Task 14 completed); embedded Eclipse Jetty lifecycle with configurable enablement, bind address/port, context path, web resource location, clean stop/graceful shutdown, and port conflict failure handling implemented and verified (Task 15 completed); unified same-server Jersey JAX-RS REST integration under `/rest/chronivaro/v1` and static frontend web resource delivery at `/` with strict architectural separation implemented and verified (Task 16 completed).
 - Employee, team, location, schedule, holiday-calendar, WorkDay, WorkEntry, absence-type, absence, and period model/service foundations: `Chronivaro/runtime/data/Templates.xml` and `chronivaro-core/src/main/java/ch/atexxi/chronivaro/core`.
 - Historical schedule lookup and overlap prevention: `ScheduleHelper`, `WorkDayHelper`, and `CreateScheduleService`.
 - Timer start/stop, same-day validation, midnight splitting, forgotten-timer capping, multiple blocks, and working-location defaults/overrides: `StartTimerService`, `StopTimerService`, `WorkEntryHelper`, `WorkingLocationDefault*`, and `chronivaro-web/src/main/webapp/js/pages/DashboardView.js`.
@@ -34,8 +34,7 @@ Audit date: 2026-08-17. `IMPLEMENTATION_SPECIFICATION.md` is authoritative; the 
 
 ## Dependency-ordered next steps
 
-1. Integrate Jersey and serve the frontend from Jetty (Task 16).
-2. Add standalone and non-functional verification (Task 17).
+1. Add standalone and non-functional verification (Task 17).
 
 The matching dependency-ordered tasks, evidence, dependencies, and acceptance criteria are in `IMPLEMENTATION_BACKLOG.md`.
 

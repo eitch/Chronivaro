@@ -512,9 +512,16 @@ Task 12 was split into subtasks **12.1** and **12.2** per the task-size and sing
 
 ### 16. Integrate Jersey and serve the frontend from Jetty
 
-- **Status:** `MISSING`
+- **Status:** `COMPLETED`
 - **Scope:** Register existing JAX-RS resources under `/rest/chronivaro/v1` and serve `chronivaro-web` at `/`, including `/assets/...`, from the same server without Jetty APIs in REST.
 - **Acceptance:** Existing REST contracts remain unchanged; HTTP smoke tests reach `/` and REST from one server; separation rules are verified.
+- **Verification:**
+  - Integrated Jersey JAX-RS servlet container mounted under `/rest/*` in `ChronivaroApp`, registering all Chronivaro REST resources and exception/auth providers via `ChronivaroRestfulClasses`.
+  - Configured static frontend resource handling in `ChronivaroApp` serving `chronivaro-web` web assets at `/` with welcome file `index.html`, stylesheet `/assets/css/style.css`, favicon `/assets/icons/favicon.svg`, and JS modules under `/js/...` with directory listing disabled.
+  - Supported dual-mode static resource resolution from classpath (packaged fat-JAR) and file system paths (`chronivaro-web/src/main/webapp` and custom locations).
+  - Preserved strict architectural layering with zero Jetty dependencies in `chronivaro-core` and `chronivaro-rest`.
+  - Added comprehensive HTTP smoke and integration test suite in `ChronivaroAppTest` verifying same-server frontend delivery (`/`, `/index.html`, `/assets/css/style.css`, `/js/app.js`, missing asset 404), Jersey REST API routing (`/rest/strolch/authentication`, `/rest/chronivaro/v1/admin/configuration`, `/rest/chronivaro/v1/admin/employees`, `/rest/chronivaro/v1/presence`, `/rest/chronivaro/v1/reports/day`, unauthenticated 401, non-existent REST 404), and reflection-based architectural separation checks.
+  - Verified with full project test suite passing via `mvn clean test` across all reactor modules.
 - **Dependencies:** Tasks 3, 14, and 15.
 
 ### 17. Add standalone and non-functional verification
