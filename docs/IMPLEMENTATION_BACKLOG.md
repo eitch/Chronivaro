@@ -467,9 +467,20 @@ Task 12 was split into subtasks **12.1** and **12.2** per the task-size and sing
 
 ### 13. Complete global configuration administration
 
-- **Status:** `PARTIAL`
-- **Scope:** Expose supported Core configuration through authorized REST and UI with validation and audit metadata.
-- **Acceptance:** Administrators can update only supported values; invalid values fail consistently and changes are audited.
+- **Status:** `COMPLETED`
+- **Scope:** Expose supported Core configuration through authorized REST and UI with validation, optimistic concurrency control, audit metadata, and Web UI page.
+- **Acceptance:** Administrators can update only supported values; invalid values fail consistently and changes are audited; Web UI enables inspection and modification with optimistic concurrency.
+- **Verification:**
+  - Added strict parameter range validations in `UpdateConfigurationService` (weekly target minutes 0–10080, annual vacation days 0–365, minutes per vacation day 1–1440, non-blank vacation absence type code).
+  - Implemented `ConfigurationDto` in `chronivaro-rest` and `ChronivaroMapper.configurationToDto` mapping the `GlobalConfiguration` resource.
+  - Implemented `ConfigurationResource` (`/chronivaro/v1/admin/configuration`) supporting `GET` (with `ETag`) and `PUT` (with `If-Match` optimistic concurrency control) restricted to `Administrator` / `StrolchAdmin` roles.
+  - Registered `ConfigurationResource` in `ChronivaroRestfulClasses` and updated `docs/openapi.yaml` schema and endpoints.
+  - Implemented `ConfigurationApi.js` supporting `getConfiguration` and `updateConfiguration` with `If-Match`.
+  - Implemented `ConfigurationView.js` featuring global settings form (weekly target, vacation days, minutes per vacation day, absence type code), version and updater badges, live hours conversion hints, optimistic concurrency validation, reload and save actions, and notification dialogs.
+  - Registered `Configuration` navigation item in `index.html` (accessible to `Administrator` role) and route `#configuration` in `app.js`.
+  - Added dedicated styling in `style.css` for `.configuration-container`, `.config-card`, `.config-form`, and `.config-metadata`.
+  - Added test suites in `ConfigurationServiceTest` (Core), `ConfigurationResourceTest` (REST), and `WebConfigurationUiTest` (Web UI assets, routing, DOM structure, and full lifecycle integration).
+  - Verified with full test suite passing via `mvn clean test` (83 tests passing with 0 failures and 0 errors across all reactor modules).
 - **Dependencies:** Tasks 2.1, 3, 4, and 7.
 
 ### 14. Create `chronivaro-app` and executable packaging
