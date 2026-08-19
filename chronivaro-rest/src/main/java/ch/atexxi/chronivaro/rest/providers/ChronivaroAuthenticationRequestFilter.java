@@ -10,6 +10,11 @@ public class ChronivaroAuthenticationRequestFilter extends AuthenticationRequest
 	protected Set<String> getUnsecuredPaths() {
 		Set<String> unsecuredPaths = super.getUnsecuredPaths();
 		unsecuredPaths.add("chronivaro/v1/complete-registration");
+		unsecuredPaths.add("chronivaro/v1/version");
+		unsecuredPaths.add("chronivaro/v1/system/version");
+		unsecuredPaths.add("chronivaro/v1/system/health");
+		unsecuredPaths.add("chronivaro/v1/system/readiness");
+		unsecuredPaths.add("chronivaro/v1/system/metrics");
 		return unsecuredPaths;
 	}
 }

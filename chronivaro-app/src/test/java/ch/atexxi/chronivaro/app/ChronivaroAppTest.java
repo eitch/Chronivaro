@@ -410,6 +410,350 @@ public class ChronivaroAppTest {
 	}
 
 	@Test
+	public void shouldServeSystemHealthReadinessVersionAndMetricsEndpointsWithoutAuth() throws Exception {
+		ChronivaroAppConfig config = new ChronivaroAppConfig(
+				true,
+				"127.0.0.1",
+				0,
+				"/",
+				null,
+				TARGET_PATH,
+				"dev"
+		);
+
+		this.app = new ChronivaroApp(config);
+		this.app.start();
+
+		assertTrue(this.app.isRunning());
+		int boundPort = this.app.getPort();
+		HttpClient httpClient = HttpClient.newHttpClient();
+
+		// 1. Health probe (/rest/chronivaro/v1/system/health)
+		HttpRequest healthReq = HttpRequest.newBuilder()
+				.uri(URI.create("http://127.0.0.1:" + boundPort + "/rest/chronivaro/v1/system/health"))
+				.header("Accept", "application/json")
+				.GET()
+				.build();
+		HttpResponse<String> healthRes = httpClient.send(healthReq, HttpResponse.BodyHandlers.ofString());
+		assertEquals(200, healthRes.statusCode());
+		JsonObject healthJson = JsonParser.parseString(healthRes.body()).getAsJsonObject();
+		assertEquals("UP", healthJson.get("status").getAsString());
+		assertTrue("agentState should be STARTED or RUNNING, got: " + healthJson.get("agentState").getAsString(),
+				"STARTED".equals(healthJson.get("agentState").getAsString()) || "RUNNING".equals(healthJson.get("agentState").getAsString()));
+		assertTrue(healthJson.get("uptimeMs").getAsLong() >= 0);
+		assertTrue(healthJson.has("timestamp"));
+
+		// 2. Readiness probe (/rest/chronivaro/v1/system/readiness)
+		HttpRequest readinessReq = HttpRequest.newBuilder()
+				.uri(URI.create("http://127.0.0.1:" + boundPort + "/rest/chronivaro/v1/system/readiness"))
+				.header("Accept", "application/json")
+				.GET()
+				.build();
+		HttpResponse<String> readinessRes = httpClient.send(readinessReq, HttpResponse.BodyHandlers.ofString());
+		assertEquals(200, readinessRes.statusCode());
+		JsonObject readinessJson = JsonParser.parseString(readinessRes.body()).getAsJsonObject();
+		assertEquals("READY", readinessJson.get("status").getAsString());
+		assertTrue("agentState should be STARTED or RUNNING, got: " + readinessJson.get("agentState").getAsString(),
+				"STARTED".equals(readinessJson.get("agentState").getAsString()) || "RUNNING".equals(readinessJson.get("agentState").getAsString()));
+		assertTrue(readinessJson.has("activeRealms"));
+		assertTrue(readinessJson.get("activeRealms").getAsJsonArray().size() > 0);
+
+		// 3. Version probe (/rest/chronivaro/v1/system/version)
+		HttpRequest versionReq = HttpRequest.newBuilder()
+				.uri(URI.create("http://127.0.0.1:" + boundPort + "/rest/chronivaro/v1/system/version"))
+				.header("Accept", "application/json")
+				.GET()
+				.build();
+		HttpResponse<String> versionRes = httpClient.send(versionReq, HttpResponse.BodyHandlers.ofString());
+		assertEquals(200, versionRes.statusCode());
+		JsonObject versionJson = JsonParser.parseString(versionRes.body()).getAsJsonObject();
+		assertTrue(versionJson.has("version"));
+		assertTrue(versionJson.has("buildTimestamp"));
+		assertTrue(versionJson.has("environment"));
+
+		// 4. Root version alias (/rest/chronivaro/v1/version)
+		HttpRequest versionAliasReq = HttpRequest.newBuilder()
+				.uri(URI.create("http://127.0.0.1:" + boundPort + "/rest/chronivaro/v1/version"))
+				.header("Accept", "application/json")
+				.GET()
+				.build();
+		HttpResponse<String> versionAliasRes = httpClient.send(versionAliasReq, HttpResponse.BodyHandlers.ofString());
+		assertEquals(200, versionAliasRes.statusCode());
+
+		// 5. System metrics probe (/rest/chronivaro/v1/system/metrics)
+		HttpRequest metricsReq = HttpRequest.newBuilder()
+				.uri(URI.create("http://127.0.0.1:" + boundPort + "/rest/chronivaro/v1/system/metrics"))
+				.header("Accept", "application/json")
+				.GET()
+				.build();
+		HttpResponse<String> metricsRes = httpClient.send(metricsReq, HttpResponse.BodyHandlers.ofString());
+		assertEquals(200, metricsRes.statusCode());
+		JsonObject metricsJson = JsonParser.parseString(metricsRes.body()).getAsJsonObject();
+		assertTrue(metricsJson.get("heapUsedBytes").getAsLong() > 0);
+		assertTrue(metricsJson.get("heapMaxBytes").getAsLong() > 0);
+		assertTrue(metricsJson.get("activeThreads").getAsInt() > 0);
+		assertTrue(metricsJson.get("availableProcessors").getAsInt() > 0);
+		assertTrue(metricsJson.has("uptimeMs"));
+
+		this.app.stop();
+		assertFalse(this.app.isRunning());
+	}
+
+	@Test
+	public void shouldPropagateCorrelationIdAndStructuredErrorResponses() throws Exception {
+		ChronivaroAppConfig config = new ChronivaroAppConfig(
+				true,
+				"127.0.0.1",
+				0,
+				"/",
+				null,
+				TARGET_PATH,
+				"dev"
+		);
+
+		this.app = new ChronivaroApp(config);
+		this.app.start();
+
+		int boundPort = this.app.getPort();
+		HttpClient httpClient = HttpClient.newHttpClient();
+
+		// 1. Explicit correlation ID propagation on successful request
+		String customCorrId = "corr-test-custom-12345";
+		HttpRequest customCorrReq = HttpRequest.newBuilder()
+				.uri(URI.create("http://127.0.0.1:" + boundPort + "/rest/chronivaro/v1/system/health"))
+				.header("X-Correlation-Id", customCorrId)
+				.GET()
+				.build();
+		HttpResponse<String> customCorrRes = httpClient.send(customCorrReq, HttpResponse.BodyHandlers.ofString());
+		assertEquals(200, customCorrRes.statusCode());
+		assertTrue(customCorrRes.headers().firstValue("X-Correlation-Id").isPresent());
+		assertEquals(customCorrId, customCorrRes.headers().firstValue("X-Correlation-Id").get());
+
+		// 2. Generated correlation ID when none provided
+		HttpRequest autoCorrReq = HttpRequest.newBuilder()
+				.uri(URI.create("http://127.0.0.1:" + boundPort + "/rest/chronivaro/v1/system/health"))
+				.GET()
+				.build();
+		HttpResponse<String> autoCorrRes = httpClient.send(autoCorrReq, HttpResponse.BodyHandlers.ofString());
+		assertEquals(200, autoCorrRes.statusCode());
+		assertTrue(autoCorrRes.headers().firstValue("X-Correlation-Id").isPresent());
+		String generatedCorrId = autoCorrRes.headers().firstValue("X-Correlation-Id").get();
+		assertNotNull(generatedCorrId);
+		assertFalse(generatedCorrId.isEmpty());
+
+		// 3. Correlation ID preservation on unauthenticated error
+		String errCorrId = "corr-err-unauth-456";
+		HttpRequest unauthReq = HttpRequest.newBuilder()
+				.uri(URI.create("http://127.0.0.1:" + boundPort + "/rest/chronivaro/v1/admin/configuration"))
+				.header("X-Correlation-Id", errCorrId)
+				.GET()
+				.build();
+		HttpResponse<String> unauthRes = httpClient.send(unauthReq, HttpResponse.BodyHandlers.ofString());
+		assertEquals(401, unauthRes.statusCode());
+		assertTrue(unauthRes.headers().firstValue("X-Correlation-Id").isPresent());
+		assertEquals(errCorrId, unauthRes.headers().firstValue("X-Correlation-Id").get());
+
+		this.app.stop();
+		assertFalse(this.app.isRunning());
+	}
+
+	@Test
+	public void shouldMeetPerformanceAndPaginationRequirements() throws Exception {
+		ChronivaroAppConfig config = new ChronivaroAppConfig(
+				true,
+				"127.0.0.1",
+				0,
+				"/",
+				null,
+				TARGET_PATH,
+				"dev"
+		);
+
+		this.app = new ChronivaroApp(config);
+		this.app.start();
+
+		int boundPort = this.app.getPort();
+		HttpClient httpClient = HttpClient.newHttpClient();
+
+		// Authenticate
+		JsonObject authPayload = new JsonObject();
+		authPayload.addProperty("username", "admin");
+		authPayload.addProperty("password", Base64.getEncoder().encodeToString("admin".getBytes()));
+
+		HttpRequest authReq = HttpRequest.newBuilder()
+				.uri(URI.create("http://127.0.0.1:" + boundPort + "/rest/strolch/authentication"))
+				.header("Content-Type", "application/json")
+				.POST(HttpRequest.BodyPublishers.ofString(authPayload.toString()))
+				.build();
+		HttpResponse<String> authRes = httpClient.send(authReq, HttpResponse.BodyHandlers.ofString());
+		String authToken = JsonParser.parseString(authRes.body()).getAsJsonObject().get("authToken").getAsString();
+
+		// 1. Day report SLA (< 2000ms)
+		long startDay = System.currentTimeMillis();
+		HttpRequest dayReq = HttpRequest.newBuilder()
+				.uri(URI.create("http://127.0.0.1:" + boundPort + "/rest/chronivaro/v1/reports/day?date=2026-08-19"))
+				.header("Authorization", authToken)
+				.GET()
+				.build();
+		HttpResponse<String> dayRes = httpClient.send(dayReq, HttpResponse.BodyHandlers.ofString());
+		long durationDay = System.currentTimeMillis() - startDay;
+		assertEquals(200, dayRes.statusCode());
+		assertTrue("Day report response took " + durationDay + "ms (SLA: <2000ms)", durationDay < 2000);
+
+		// 2. Month report SLA (< 2000ms)
+		long startMonth = System.currentTimeMillis();
+		HttpRequest monthReq = HttpRequest.newBuilder()
+				.uri(URI.create("http://127.0.0.1:" + boundPort + "/rest/chronivaro/v1/reports/month?yearMonth=2026-08"))
+				.header("Authorization", authToken)
+				.GET()
+				.build();
+		HttpResponse<String> monthRes = httpClient.send(monthReq, HttpResponse.BodyHandlers.ofString());
+		long durationMonth = System.currentTimeMillis() - startMonth;
+		assertEquals(200, monthRes.statusCode());
+		assertTrue("Month report response took " + durationMonth + "ms (SLA: <2000ms)", durationMonth < 2000);
+
+		// 3. Team report SLA (< 5000ms)
+		long startTeam = System.currentTimeMillis();
+		HttpRequest teamReq = HttpRequest.newBuilder()
+				.uri(URI.create("http://127.0.0.1:" + boundPort + "/rest/chronivaro/v1/reports/team?teamId=team-1&yearMonth=2026-08"))
+				.header("Authorization", authToken)
+				.GET()
+				.build();
+		HttpResponse<String> teamRes = httpClient.send(teamReq, HttpResponse.BodyHandlers.ofString());
+		long durationTeam = System.currentTimeMillis() - startTeam;
+		assertEquals(200, teamRes.statusCode());
+		assertTrue("Team report response took " + durationTeam + "ms (SLA: <5000ms)", durationTeam < 5000);
+
+		// 4. Server-side pagination query
+		HttpRequest pagedReq = HttpRequest.newBuilder()
+				.uri(URI.create("http://127.0.0.1:" + boundPort + "/rest/chronivaro/v1/presence?offset=0&limit=2"))
+				.header("Authorization", authToken)
+				.GET()
+				.build();
+		HttpResponse<String> pagedRes = httpClient.send(pagedReq, HttpResponse.BodyHandlers.ofString());
+		assertEquals(200, pagedRes.statusCode());
+		JsonObject pagedJson = JsonParser.parseString(pagedRes.body()).getAsJsonObject();
+		assertTrue(pagedJson.has("data"));
+		assertTrue(pagedJson.has("offset"));
+		assertTrue(pagedJson.has("limit"));
+		assertTrue(pagedJson.has("total"));
+		assertEquals(0, pagedJson.get("offset").getAsInt());
+		assertEquals(2, pagedJson.get("limit").getAsInt());
+		assertTrue(pagedJson.get("data").getAsJsonArray().size() <= 2);
+
+		this.app.stop();
+		assertFalse(this.app.isRunning());
+	}
+
+	@Test
+	public void shouldEnforceRoleBasedDataPrivacyAcrossRoles() throws Exception {
+		ChronivaroAppConfig config = new ChronivaroAppConfig(
+				true,
+				"127.0.0.1",
+				0,
+				"/",
+				null,
+				TARGET_PATH,
+				"dev"
+		);
+
+		this.app = new ChronivaroApp(config);
+		this.app.start();
+
+		int boundPort = this.app.getPort();
+		HttpClient httpClient = HttpClient.newHttpClient();
+
+		// Employee login
+		JsonObject empAuthPayload = new JsonObject();
+		empAuthPayload.addProperty("username", "employee");
+		empAuthPayload.addProperty("password", Base64.getEncoder().encodeToString("admin".getBytes()));
+
+		HttpRequest empAuthReq = HttpRequest.newBuilder()
+				.uri(URI.create("http://127.0.0.1:" + boundPort + "/rest/strolch/authentication"))
+				.header("Content-Type", "application/json")
+				.POST(HttpRequest.BodyPublishers.ofString(empAuthPayload.toString()))
+				.build();
+		HttpResponse<String> empAuthRes = httpClient.send(empAuthReq, HttpResponse.BodyHandlers.ofString());
+		String empToken = JsonParser.parseString(empAuthRes.body()).getAsJsonObject().get("authToken").getAsString();
+
+		// Employee attempting to access administrative audit logs should be forbidden (403 or 401)
+		HttpRequest auditReq = HttpRequest.newBuilder()
+				.uri(URI.create("http://127.0.0.1:" + boundPort + "/rest/chronivaro/v1/admin/audit-logs"))
+				.header("Authorization", empToken)
+				.GET()
+				.build();
+		HttpResponse<String> auditRes = httpClient.send(auditReq, HttpResponse.BodyHandlers.ofString());
+		assertTrue("Expected 401 or 403 for unauthorized audit log access, got: " + auditRes.statusCode(),
+				auditRes.statusCode() == 401 || auditRes.statusCode() == 403);
+
+		// Employee attempting to update configuration should be forbidden
+		JsonObject configPayload = new JsonObject();
+		configPayload.addProperty("weeklyTargetMinutes", 2400);
+		configPayload.addProperty("annualVacationDays", 25);
+		configPayload.addProperty("minutesPerVacationDay", 480);
+		configPayload.addProperty("vacationAbsenceCode", "VACATION");
+
+		HttpRequest updateConfigReq = HttpRequest.newBuilder()
+				.uri(URI.create("http://127.0.0.1:" + boundPort + "/rest/chronivaro/v1/admin/configuration"))
+				.header("Authorization", empToken)
+				.header("Content-Type", "application/json")
+				.header("If-Match", "\"0\"")
+				.PUT(HttpRequest.BodyPublishers.ofString(configPayload.toString()))
+				.build();
+		HttpResponse<String> updateConfigRes = httpClient.send(updateConfigReq, HttpResponse.BodyHandlers.ofString());
+		assertTrue("Expected 401 or 403 for unauthorized config update, got: " + updateConfigRes.statusCode(),
+				updateConfigRes.statusCode() == 401 || updateConfigRes.statusCode() == 403);
+
+		this.app.stop();
+		assertFalse(this.app.isRunning());
+	}
+
+	@Test
+	public void shouldComplyWithWebUiAccessibilityAndResponsiveStandards() throws Exception {
+		ChronivaroAppConfig config = new ChronivaroAppConfig(
+				true,
+				"127.0.0.1",
+				0,
+				"/",
+				null,
+				TARGET_PATH,
+				"dev"
+		);
+
+		this.app = new ChronivaroApp(config);
+		this.app.start();
+
+		int boundPort = this.app.getPort();
+		HttpClient httpClient = HttpClient.newHttpClient();
+
+		// Fetch index.html
+		HttpRequest indexReq = HttpRequest.newBuilder()
+				.uri(URI.create("http://127.0.0.1:" + boundPort + "/index.html"))
+				.GET()
+				.build();
+		HttpResponse<String> indexRes = httpClient.send(indexReq, HttpResponse.BodyHandlers.ofString());
+		assertEquals(200, indexRes.statusCode());
+		String html = indexRes.body();
+
+		// 1. Viewport meta tag for mobile responsiveness
+		assertTrue("index.html must include mobile viewport meta tag",
+				html.contains("<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">"));
+
+		// 2. HTML language attribute for screen readers
+		assertTrue("index.html must declare lang attribute", html.contains("<html lang=\"en\">"));
+
+		// 3. Navigation and Main landmarks
+		assertTrue("index.html must include semantic navigation landmark", html.contains("<nav"));
+		assertTrue("index.html must include semantic main landmark", html.contains("<main id=\"app\""));
+
+		// 4. Accessible branding and header
+		assertTrue(html.contains("<header") || html.contains("header"));
+
+		this.app.stop();
+		assertFalse(this.app.isRunning());
+	}
+
+	@Test
 	public void shouldPreserveArchitecturalSeparationWithoutJettyInCoreOrRest() {
 		// Verify that chronivaro-core and chronivaro-rest classes have no dependencies on org.eclipse.jetty
 		Class<?>[] nonJettyClasses = new Class<?>[]{
