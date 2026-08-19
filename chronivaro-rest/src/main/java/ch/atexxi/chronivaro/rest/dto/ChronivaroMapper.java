@@ -173,13 +173,29 @@ public class ChronivaroMapper {
 		String approvedBy = period.hasParameter(PARAM_APPROVED_BY)
 				&& !period.getString(PARAM_APPROVED_BY).isEmpty()
 				? period.getString(PARAM_APPROVED_BY) : null;
+		ZonedDateTime rejectedAt = period.hasParameter(PARAM_REJECTED_AT)
+				&& period.getDate(PARAM_REJECTED_AT).getYear() > 1970
+				? period.getDate(PARAM_REJECTED_AT) : null;
+		String rejectedBy = period.hasParameter(PARAM_REJECTED_BY)
+				&& !period.getString(PARAM_REJECTED_BY).isEmpty()
+				? period.getString(PARAM_REJECTED_BY) : null;
+		String comment = period.hasParameter(PARAM_COMMENT)
+				&& !period.getString(PARAM_COMMENT).isEmpty()
+				? period.getString(PARAM_COMMENT) : null;
+		String calculationSnapshot = period.hasParameter(PARAM_CALCULATION_SNAPSHOT)
+				&& !period.getString(PARAM_CALCULATION_SNAPSHOT).isEmpty()
+				? period.getString(PARAM_CALCULATION_SNAPSHOT) : null;
 		return new PeriodStatusDto(
 				period.getRelationId(PARAM_EMPLOYEE),
 				period.getString(PARAM_YEAR_MONTH),
 				period.getString(PARAM_STATE),
 				submittedAt,
 				approvedAt,
-				approvedBy);
+				approvedBy,
+				rejectedAt,
+				rejectedBy,
+				comment,
+				calculationSnapshot);
 	}
 
 	public static VacationAccountEntryDto vacationEntryToDto(Resource entry) {
