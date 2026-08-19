@@ -133,6 +133,18 @@
         </ParameterBag>
     </Resource>
 
+    <Resource Id="admin_vacation_entry" Name="Admin Vacation Entitlement" Type="VacationAccountEntry">
+        <ParameterBag Id="parameters" Name="Parameters" Type="Parameters">
+            <Parameter Id="date" Name="Date" Type="Date" Value="2025-01-01T00:00:00.000+01:00"/>
+            <Parameter Id="vacationType" Name="Vacation Type" Type="String" Value="ENTITLEMENT"/>
+            <Parameter Id="value" Name="Value" Type="Integer" Value="12000"/>
+            <Parameter Id="comment" Name="Comment" Type="String" Value="Initial entitlement"/>
+        </ParameterBag>
+        <ParameterBag Id="relations" Name="Relations" Type="Relations">
+            <Parameter Id="employee" Name="Employee" Type="String" Interpretation="Resource-Ref" Uom="Employee" Value="admin_emp"/>
+        </ParameterBag>
+    </Resource>
+
     <Resource Id="test-absence" Name="Test Absence" Type="Absence">
         <ParameterBag Id="parameters" Name="Parameters" Type="Parameters">
             <Parameter Id="start" Name="Start" Type="Date" Value="2025-01-01T08:00:00.000+01:00"/>
