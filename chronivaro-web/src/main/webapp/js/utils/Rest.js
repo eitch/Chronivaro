@@ -1,25 +1,26 @@
 export default class Rest {
 
-    static get(url) {
-        return Rest.fetch(url, 'GET');
+    static get(url, customHeaders = {}) {
+        return Rest.fetch(url, 'GET', null, customHeaders);
     }
 
-    static post(url, body) {
-        return Rest.fetch(url, 'POST', body);
+    static post(url, body, customHeaders = {}) {
+        return Rest.fetch(url, 'POST', body, customHeaders);
     }
 
-    static put(url, body) {
-        return Rest.fetch(url, 'PUT', body);
+    static put(url, body, customHeaders = {}) {
+        return Rest.fetch(url, 'PUT', body, customHeaders);
     }
 
-    static delete(url) {
-        return Rest.fetch(url, 'DELETE');
+    static delete(url, customHeaders = {}) {
+        return Rest.fetch(url, 'DELETE', null, customHeaders);
     }
 
-    static async fetch(url, method, body) {
+    static async fetch(url, method, body, customHeaders = {}) {
         const headers = {
             'Content-Type': 'application/json',
-            'Accept': 'application/json'
+            'Accept': 'application/json',
+            ...customHeaders
         };
 
         const authToken = localStorage.getItem('authToken');
@@ -46,7 +47,7 @@ export default class Rest {
 
         if (!response.ok) {
             const error = await response.json().catch(() => ({msg: response.statusText}));
-            throw new Error(error.msg || response.statusText);
+            throw new Error(error.message || error.msg || response.statusText);
         }
 
         if (response.status === 204) {

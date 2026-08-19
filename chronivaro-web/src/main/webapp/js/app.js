@@ -3,6 +3,7 @@ import LoginView from './pages/LoginView.js';
 import DashboardView from './pages/DashboardView.js';
 import PresenceView from './pages/PresenceView.js';
 import MyTimesView from './pages/MyTimesView.js';
+import MyAbsencesView from './pages/MyAbsencesView.js';
 import EmployeesView from './pages/EmployeesView.js';
 import TeamsView from './pages/TeamsView.js';
 import LocationsView from './pages/LocationsView.js';
@@ -113,6 +114,9 @@ class ChronivaroApp {
                 break;
             case 'my-times':
                 view = new MyTimesView(this);
+                break;
+            case 'my-absences':
+                view = new MyAbsencesView(this);
                 break;
             case 'employees':
                 view = new EmployeesView(this);
