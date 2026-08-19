@@ -1,5 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Roles>
+    <Role name="Administrator">
+        <Privilege name="li.strolch.service.api.Service" policy="DefaultPrivilege">
+            <AllAllowed>true</AllAllowed>
+            <Allow>ch.atexxi.chronivaro.core.service.UpdateConfigurationService</Allow>
+        </Privilege>
+        <Privilege name="li.strolch.search.StrolchSearch" policy="DefaultPrivilege">
+            <AllAllowed>true</AllAllowed>
+        </Privilege>
+        <Privilege name="GetResource" policy="ModelPrivilege">
+            <AllAllowed>true</AllAllowed>
+        </Privilege>
+        <Privilege name="UpdateResource" policy="ModelPrivilege">
+            <AllAllowed>true</AllAllowed>
+        </Privilege>
+        <Privilege name="AddResource" policy="ModelPrivilege">
+            <AllAllowed>true</AllAllowed>
+        </Privilege>
+        <Privilege name="RemoveResource" policy="ModelPrivilege">
+            <AllAllowed>true</AllAllowed>
+        </Privilege>
+    </Role>
+
     <Role name="StrolchAdmin">
         <Privilege name="li.strolch.privilege.policy.DefaultPrivilege" policy="DefaultPrivilege">
             <AllAllowed>true</AllAllowed>
