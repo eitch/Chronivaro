@@ -135,14 +135,15 @@ public class ChronivaroApp {
 			contextHandler.setBaseResourceAsPath(resourceDir.toPath());
 		} else {
 			URL webappUrl = getClass().getResource("/webapp");
-			if (webappUrl != null) {
+			Resource classPathRes = webappUrl != null ? resourceFactory.newResource(webappUrl.toURI()) : null;
+			if (classPathRes != null && classPathRes.exists()) {
 				logger.info("Serving static web resources from classpath: {}", webappUrl);
-				Resource classPathRes = resourceFactory.newClassLoaderResource("webapp");
-				if (classPathRes != null && classPathRes.exists()) {
-					contextHandler.setBaseResource(classPathRes);
-				}
+				contextHandler.setBaseResource(classPathRes);
 			} else {
 				File localWebapp = new File("chronivaro-web/src/main/webapp");
+				if (!localWebapp.exists()) {
+					localWebapp = new File("../chronivaro-web/src/main/webapp");
+				}
 				if (localWebapp.exists()) {
 					logger.info("Serving static web resources from relative path: {}", localWebapp.getAbsolutePath());
 					contextHandler.setBaseResourceAsPath(localWebapp.toPath());
