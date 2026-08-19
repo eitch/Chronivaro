@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<StrolchModel xmlns="https://strolch.li/schema/StrolchModel.xsd">
+
+    <IncludeFile file="../../../../runtime/data/Templates.xml"/>
+
+    <Resource Id="configuration" Name="Global Configuration" Type="GlobalConfiguration">
+        <ParameterBag Id="parameters" Name="Parameters" Type="Parameters">
+            <Parameter Id="weeklyTargetMinutes" Name="Global Weekly Target Minutes" Type="Integer" Value="2520"/>
+            <Parameter Id="annualVacationDays" Name="Annual Vacation Days" Type="Integer" Value="25"/>
+            <Parameter Id="minutesPerVacationDay" Name="Minutes Per Vacation Day" Type="Integer" Value="480"/>
+            <Parameter Id="vacationAbsenceTypeCode" Name="Vacation Absence Type Code" Type="String" Value="VACATION"/>
+        </ParameterBag>
+    </Resource>
+
+</StrolchModel>

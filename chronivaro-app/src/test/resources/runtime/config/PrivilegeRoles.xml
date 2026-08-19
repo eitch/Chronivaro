@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Roles>
+    <Role name="Administrator">
+        <Privilege name="li.strolch.service.api.Service" policy="DefaultPrivilege">
+            <AllAllowed>true</AllAllowed>
+            <Allow>ch.atexxi.chronivaro.core.service.UpdateConfigurationService</Allow>
+        </Privilege>
+        <Privilege name="li.strolch.search.StrolchSearch" policy="DefaultPrivilege">
+            <AllAllowed>true</AllAllowed>
+        </Privilege>
+        <Privilege name="GetResource" policy="ModelPrivilege">
+            <AllAllowed>true</AllAllowed>
+        </Privilege>
+        <Privilege name="UpdateResource" policy="ModelPrivilege">
+            <AllAllowed>true</AllAllowed>
+        </Privilege>
+        <Privilege name="AddResource" policy="ModelPrivilege">
+            <AllAllowed>true</AllAllowed>
+        </Privilege>
+        <Privilege name="RemoveResource" policy="ModelPrivilege">
+            <AllAllowed>true</AllAllowed>
+        </Privilege>
+    </Role>
+
+    <Role name="StrolchAdmin">
+        <Privilege name="li.strolch.privilege.policy.DefaultPrivilege" policy="DefaultPrivilege">
+            <AllAllowed>true</AllAllowed>
+        </Privilege>
+        <Privilege name="li.strolch.search.StrolchSearch" policy="DefaultPrivilege">
+            <AllAllowed>true</AllAllowed>
+        </Privilege>
+        <Privilege name="li.strolch.service.api.Service" policy="DefaultPrivilege">
+            <AllAllowed>true</AllAllowed>
+        </Privilege>
+        <Privilege name="AddResource" policy="DefaultPrivilege">
+            <AllAllowed>true</AllAllowed>
+        </Privilege>
+        <Privilege name="GetResource" policy="DefaultPrivilege">
+            <AllAllowed>true</AllAllowed>
+        </Privilege>
+        <Privilege name="UpdateResource" policy="DefaultPrivilege">
+            <AllAllowed>true</AllAllowed>
+        </Privilege>
+        <Privilege name="RemoveResource" policy="DefaultPrivilege">
+            <AllAllowed>true</AllAllowed>
+        </Privilege>
+        <Privilege name="li.strolch.privilege.handler.SystemAction" policy="DefaultPrivilege">
+            <AllAllowed>true</AllAllowed>
+        </Privilege>
+        <Privilege name="PrivilegeAction" policy="DefaultPrivilege">
+            <AllAllowed>true</AllAllowed>
+        </Privilege>
+        <Privilege name="PrivilegeAddUser" policy="UserAccessPrivilege">
+            <AllAllowed>true</AllAllowed>
+        </Privilege>
+        <Privilege name="PrivilegeGetUser" policy="UserAccessPrivilege">
+            <AllAllowed>true</AllAllowed>
+        </Privilege>
+        <Privilege name="PrivilegeRemoveUser" policy="UserAccessPrivilege">
+            <AllAllowed>true</AllAllowed>
+        </Privilege>
+        <Privilege name="PrivilegeModifyUser" policy="UserAccessPrivilege">
+            <AllAllowed>true</AllAllowed>
+        </Privilege>
+    </Role>
+
+    <Role name="ModelAccessor">
+        <Privilege name="li.strolch.search.StrolchSearch" policy="DefaultPrivilege">
+            <Allow>internal</Allow>
+        </Privilege>
+        <Privilege name="AddActivity" policy="ModelPrivilege">
+            <AllAllowed>true</AllAllowed>
+        </Privilege>
+        <Privilege name="AddOrder" policy="ModelPrivilege">
+            <AllAllowed>true</AllAllowed>
+        </Privilege>
+        <Privilege name="AddResource" policy="ModelPrivilege">
+            <AllAllowed>true</AllAllowed>
+        </Privilege>
+        <Privilege name="GetActivity" policy="ModelPrivilege">
+            <AllAllowed>true</AllAllowed>
+        </Privilege>
+        <Privilege name="GetOrder" policy="ModelPrivilege">
+            <AllAllowed>true</AllAllowed>
+        </Privilege>
+        <Privilege name="GetResource" policy="ModelPrivilege">
+            <AllAllowed>true</AllAllowed>
+        </Privilege>
+        <Privilege name="RemoveActivity" policy="ModelPrivilege">
+            <AllAllowed>true</AllAllowed>
+        </Privilege>
+        <Privilege name="RemoveOrder" policy="ModelPrivilege">
+            <AllAllowed>true</AllAllowed>
+        </Privilege>
+        <Privilege name="RemoveResource" policy="ModelPrivilege">
+            <AllAllowed>true</AllAllowed>
+        </Privilege>
+        <Privilege name="UpdateActivity" policy="ModelPrivilege">
+            <AllAllowed>true</AllAllowed>
+        </Privilege>
+        <Privilege name="UpdateOrder" policy="ModelPrivilege">
+            <AllAllowed>true</AllAllowed>
+        </Privilege>
+        <Privilege name="UpdateResource" policy="ModelPrivilege">
+            <AllAllowed>true</AllAllowed>
+        </Privilege>
+    </Role>
+
+    <Role name="Employee">
+        <Privilege name="li.strolch.privilege.policy.DefaultPrivilege" policy="DefaultPrivilege">
+            <AllAllowed>true</AllAllowed>
+        </Privilege>
+        <Privilege name="li.strolch.service.api.Service" policy="DefaultPrivilege">
+            <Allow>li.strolch.user.service.UpdateUserPasswordService</Allow>
+            <Allow>ch.atexxi.chronivaro.core.service.DaySummaryService</Allow>
+            <Allow>ch.atexxi.chronivaro.core.service.MonthSummaryService</Allow>
+            <Allow>ch.atexxi.chronivaro.core.service.RequestAbsenceService</Allow>
+            <Allow>ch.atexxi.chronivaro.core.service.UpdateAbsenceService</Allow>
+            <Allow>ch.atexxi.chronivaro.core.service.CancelAbsenceService</Allow>
+            <Allow>ch.atexxi.chronivaro.core.service.StartTimerService</Allow>
+            <Allow>ch.atexxi.chronivaro.core.service.StopTimerService</Allow>
+            <Allow>ch.atexxi.chronivaro.core.service.SubmitPeriodService</Allow>
+            <Allow>ch.atexxi.chronivaro.core.service.CalculateVacationEntitlementService</Allow>
+            <Allow>ch.atexxi.chronivaro.core.service.GetVacationAccountSummaryService</Allow>
+            <Allow>ch.atexxi.chronivaro.core.service.AbsenceReportService</Allow>
+        </Privilege>
+        <Privilege name="li.strolch.search.StrolchSearch" policy="DefaultPrivilege">
+            <Allow>ch.atexxi.chronivaro.core.search.AbsenceSearch</Allow>
+            <Allow>ch.atexxi.chronivaro.core.search.TimePeriodSearch</Allow>
+            <Allow>ch.atexxi.chronivaro.core.search.VacationAccountEntrySearch</Allow>
+        </Privilege>
+    </Role>
+
+    <Role name="Supervisor">
+        <Privilege name="li.strolch.privilege.policy.DefaultPrivilege" policy="DefaultPrivilege">
+            <AllAllowed>true</AllAllowed>
+        </Privilege>
+        <Privilege name="li.strolch.service.api.Service" policy="DefaultPrivilege">
+            <Allow>ch.atexxi.chronivaro.core.service.StartTimerService</Allow>
+            <Allow>ch.atexxi.chronivaro.core.service.StopTimerService</Allow>
+            <Allow>ch.atexxi.chronivaro.core.service.AddWorkEntryService</Allow>
+            <Allow>ch.atexxi.chronivaro.core.service.CorrectWorkEntryService</Allow>
+            <Allow>ch.atexxi.chronivaro.core.service.RequestAbsenceService</Allow>
+            <Allow>ch.atexxi.chronivaro.core.service.UpdateAbsenceService</Allow>
+            <Allow>ch.atexxi.chronivaro.core.service.CancelAbsenceService</Allow>
+            <Allow>ch.atexxi.chronivaro.core.service.ApproveAbsenceService</Allow>
+            <Allow>ch.atexxi.chronivaro.core.service.RejectAbsenceService</Allow>
+            <Allow>ch.atexxi.chronivaro.core.service.PresenceService</Allow>
+            <Allow>ch.atexxi.chronivaro.core.service.SubmitPeriodService</Allow>
+            <Allow>ch.atexxi.chronivaro.core.service.ApprovePeriodService</Allow>
+            <Allow>ch.atexxi.chronivaro.core.service.RejectPeriodService</Allow>
+            <Allow>ch.atexxi.chronivaro.core.service.ReopenPeriodService</Allow>
+            <Allow>ch.atexxi.chronivaro.core.service.CalculateVacationEntitlementService</Allow>
+            <Allow>ch.atexxi.chronivaro.core.service.GetVacationAccountSummaryService</Allow>
+            <Allow>ch.atexxi.chronivaro.core.service.DaySummaryService</Allow>
+            <Allow>ch.atexxi.chronivaro.core.service.MonthSummaryService</Allow>
+            <Allow>ch.atexxi.chronivaro.core.service.TeamReportService</Allow>
+            <Allow>ch.atexxi.chronivaro.core.service.AbsenceReportService</Allow>
+        </Privilege>
+        <Privilege name="li.strolch.search.StrolchSearch" policy="DefaultPrivilege">
+            <Allow>ch.atexxi.chronivaro.core.search.AbsenceSearch</Allow>
+            <Allow>ch.atexxi.chronivaro.core.search.TimePeriodSearch</Allow>
+            <Allow>ch.atexxi.chronivaro.core.search.VacationAccountEntrySearch</Allow>
+        </Privilege>
+    </Role>
+
+    <Role name="HR">
+        <Privilege name="li.strolch.privilege.policy.DefaultPrivilege" policy="DefaultPrivilege">
+            <AllAllowed>true</AllAllowed>
+        </Privilege>
+        <Privilege name="li.strolch.service.api.Service" policy="DefaultPrivilege">
+            <Allow>ch.atexxi.chronivaro.core.service.ApproveAbsenceService</Allow>
+            <Allow>ch.atexxi.chronivaro.core.service.RejectAbsenceService</Allow>
+            <Allow>ch.atexxi.chronivaro.core.service.PresenceService</Allow>
+            <Allow>ch.atexxi.chronivaro.core.service.CreateEmployeeService</Allow>
+            <Allow>ch.atexxi.chronivaro.core.service.UpdateEmployeeService</Allow>
+            <Allow>ch.atexxi.chronivaro.core.service.SubmitPeriodService</Allow>
+            <Allow>ch.atexxi.chronivaro.core.service.ApprovePeriodService</Allow>
+            <Allow>ch.atexxi.chronivaro.core.service.RejectPeriodService</Allow>
+            <Allow>ch.atexxi.chronivaro.core.service.ReopenPeriodService</Allow>
+            <Allow>ch.atexxi.chronivaro.core.service.LockPeriodService</Allow>
+            <Allow>ch.atexxi.chronivaro.core.service.CalculateVacationEntitlementService</Allow>
+            <Allow>ch.atexxi.chronivaro.core.service.CreditVacationEntitlementService</Allow>
+            <Allow>ch.atexxi.chronivaro.core.service.AddVacationCorrectionService</Allow>
+            <Allow>ch.atexxi.chronivaro.core.service.GetVacationAccountSummaryService</Allow>
+            <Allow>ch.atexxi.chronivaro.core.service.TeamReportService</Allow>
+            <Allow>ch.atexxi.chronivaro.core.service.AbsenceReportService</Allow>
+        </Privilege>
+        <Privilege name="li.strolch.search.StrolchSearch" policy="DefaultPrivilege">
+            <Allow>ch.atexxi.chronivaro.core.search.AbsenceSearch</Allow>
+            <Allow>ch.atexxi.chronivaro.core.search.TimePeriodSearch</Allow>
+            <Allow>ch.atexxi.chronivaro.core.search.VacationAccountEntrySearch</Allow>
+        </Privilege>
+    </Role>
+</Roles>
