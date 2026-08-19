@@ -21,6 +21,19 @@ public class UpdateConfigurationService extends AbstractService<UpdateConfigurat
 
 	@Override
 	protected ServiceResult internalDoService(UpdateConfigurationArgument arg) throws Exception {
+		if (arg.weeklyTargetMinutes != null && (arg.weeklyTargetMinutes < 0 || arg.weeklyTargetMinutes > 10080)) {
+			throw new IllegalArgumentException("weeklyTargetMinutes must be between 0 and 10080");
+		}
+		if (arg.annualVacationDays != null && (arg.annualVacationDays < 0 || arg.annualVacationDays > 365)) {
+			throw new IllegalArgumentException("annualVacationDays must be between 0 and 365");
+		}
+		if (arg.minutesPerVacationDay != null && (arg.minutesPerVacationDay <= 0 || arg.minutesPerVacationDay > 1440)) {
+			throw new IllegalArgumentException("minutesPerVacationDay must be between 1 and 1440");
+		}
+		if (arg.vacationAbsenceTypeCode != null && arg.vacationAbsenceTypeCode.isBlank()) {
+			throw new IllegalArgumentException("vacationAbsenceTypeCode cannot be blank");
+		}
+
 		try (StrolchTransaction tx = openArgOrUserTx(arg)) {
 			Resource config = tx.getResourceBy(TYPE_GLOBAL_CONFIGURATION, "configuration", true);
 			tx.readLock(config);

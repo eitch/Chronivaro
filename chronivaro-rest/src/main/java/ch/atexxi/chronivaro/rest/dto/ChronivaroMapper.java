@@ -277,4 +277,15 @@ public class ChronivaroMapper {
 
 		return new AbsenceReportDto(itemDtos);
 	}
+
+	public static ConfigurationDto configurationToDto(Resource config) {
+		return new ConfigurationDto(
+				config.hasParameter(PARAM_WEEKLY_TARGET_MINUTES) ? config.getInteger(PARAM_WEEKLY_TARGET_MINUTES) : DEFAULT_WEEKLY_TARGET_MINUTES,
+				config.hasParameter(PARAM_ANNUAL_VACATION_DAYS) ? config.getInteger(PARAM_ANNUAL_VACATION_DAYS) : DEFAULT_ANNUAL_VACATION_DAYS,
+				config.hasParameter(PARAM_MINUTES_PER_VACATION_DAY) ? config.getInteger(PARAM_MINUTES_PER_VACATION_DAY) : DEFAULT_MINUTES_PER_VACATION_DAY,
+				config.hasParameter(PARAM_VACATION_ABSENCE_TYPE_CODE) ? config.getString(PARAM_VACATION_ABSENCE_TYPE_CODE) : DEFAULT_VACATION_ABSENCE_TYPE_CODE,
+				ch.atexxi.chronivaro.core.model.ChronivaroVersionHelper.getVersion(config),
+				config.hasParameter(PARAM_UPDATED_BY) ? config.getString(PARAM_UPDATED_BY) : null
+		);
+	}
 }

@@ -41,6 +41,9 @@ public class ConfigurationServiceTest {
 		UpdateConfigurationService service = new UpdateConfigurationService();
 		UpdateConfigurationService.UpdateConfigurationArgument arg = new UpdateConfigurationService.UpdateConfigurationArgument();
 		arg.weeklyTargetMinutes = 2400;
+		arg.annualVacationDays = 30;
+		arg.minutesPerVacationDay = 500;
+		arg.vacationAbsenceTypeCode = "VAC";
 
 		ServiceResult result = serviceHandler.doService(adminCert, service, arg);
 		assertTrue(result.getMessage(), result.isOk());
@@ -48,6 +51,34 @@ public class ConfigurationServiceTest {
 		try (StrolchTransaction tx = runtimeMock.openUserTx(adminCert, true)) {
 			Resource config = tx.getResourceBy(TYPE_GLOBAL_CONFIGURATION, "configuration", true);
 			assertEquals(2400, config.getInteger(PARAM_WEEKLY_TARGET_MINUTES));
+			assertEquals(30, config.getInteger(ch.atexxi.chronivaro.core.model.ChronivaroConstants.PARAM_ANNUAL_VACATION_DAYS));
+			assertEquals(500, config.getInteger(ch.atexxi.chronivaro.core.model.ChronivaroConstants.PARAM_MINUTES_PER_VACATION_DAY));
+			assertEquals("VAC", config.getString(ch.atexxi.chronivaro.core.model.ChronivaroConstants.PARAM_VACATION_ABSENCE_TYPE_CODE));
 		}
+	}
+
+	@Test
+	public void shouldRejectInvalidConfigurationValues() {
+		ServiceHandler serviceHandler = runtimeMock.getServiceHandler();
+
+		UpdateConfigurationService.UpdateConfigurationArgument invalidWeekly = new UpdateConfigurationService.UpdateConfigurationArgument();
+		invalidWeekly.weeklyTargetMinutes = -5;
+		ServiceResult result1 = serviceHandler.doService(adminCert, new UpdateConfigurationService(), invalidWeekly);
+		assertTrue("Negative weekly target minutes should fail", result1.isNok());
+
+		UpdateConfigurationService.UpdateConfigurationArgument invalidVacationDays = new UpdateConfigurationService.UpdateConfigurationArgument();
+		invalidVacationDays.annualVacationDays = 400;
+		ServiceResult result2 = serviceHandler.doService(adminCert, new UpdateConfigurationService(), invalidVacationDays);
+		assertTrue("Excessive vacation days should fail", result2.isNok());
+
+		UpdateConfigurationService.UpdateConfigurationArgument invalidDayMinutes = new UpdateConfigurationService.UpdateConfigurationArgument();
+		invalidDayMinutes.minutesPerVacationDay = 0;
+		ServiceResult result3 = serviceHandler.doService(adminCert, new UpdateConfigurationService(), invalidDayMinutes);
+		assertTrue("Zero minutes per vacation day should fail", result3.isNok());
+
+		UpdateConfigurationService.UpdateConfigurationArgument blankCode = new UpdateConfigurationService.UpdateConfigurationArgument();
+		blankCode.vacationAbsenceTypeCode = "   ";
+		ServiceResult result4 = serviceHandler.doService(adminCert, new UpdateConfigurationService(), blankCode);
+		assertTrue("Blank absence type code should fail", result4.isNok());
 	}
 }

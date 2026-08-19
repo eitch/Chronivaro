@@ -14,6 +14,7 @@ import AbsenceTypesView from './pages/AbsenceTypesView.js';
 import HolidayCalendarsView from './pages/HolidayCalendarsView.js';
 import SchedulesView from './pages/SchedulesView.js';
 import ScheduleTemplatesView from './pages/ScheduleTemplatesView.js';
+import ConfigurationView from './pages/ConfigurationView.js';
 import CompleteRegistrationView from './pages/CompleteRegistrationView.js';
 
 class ChronivaroApp {
@@ -147,6 +148,9 @@ class ChronivaroApp {
                 break;
             case 'schedule-templates':
                 view = new ScheduleTemplatesView(this);
+                break;
+            case 'configuration':
+                view = new ConfigurationView(this);
                 break;
             case 'schedules':
                 view = new SchedulesView(this);

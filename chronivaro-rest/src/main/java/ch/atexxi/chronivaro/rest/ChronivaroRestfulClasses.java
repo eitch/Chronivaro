@@ -21,6 +21,7 @@ public class ChronivaroRestfulClasses {
 		restfulClasses.add(ApprovalsResource.class);
 		restfulClasses.add(AuditLogsResource.class);
 		restfulClasses.add(ChronivaroResource.class);
+		restfulClasses.add(ConfigurationResource.class);
 		restfulClasses.add(EmployeeResource.class);
 		restfulClasses.add(HolidayCalendarsResource.class);
 		restfulClasses.add(LocationResource.class);
