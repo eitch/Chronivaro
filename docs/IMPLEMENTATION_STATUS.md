@@ -8,7 +8,7 @@ Audit date: 2026-08-19. `IMPLEMENTATION_SPECIFICATION.md` is authoritative; the 
 
 - **Architecture & Deployment (Sections 4.1, 14, 15.1–15.9, 16, 20.1):** 4-module Maven reactor (`chronivaro-core`, `chronivaro-rest`, `chronivaro-web`, `chronivaro-app`), JDK 25, embedded Eclipse Jetty 12 lifecycle, static frontend web asset delivery at `/`, Jersey JAX-RS REST integration under `/rest/chronivaro/v1`, executable standalone fat-JAR (`chronivaro.jar`).
 - **Master Data & Registration (Sections 6.1, 6.8, 9.6, 13.7):** `Employee`, `Team`, `Location`, `EmploymentScheduleVersion`, `HolidayCalendar`, Strolch user creation with `SET_PASSWORD` challenge, and token-based initial password setting.
-- **Time Tracking Foundation (Sections 6.3, 6.4, 6.4.1, 7.1–7.4, 9.1, 9.2):** WorkDay/WorkEntry model, dynamic target time calculation, multi-interval start/stop timer, midnight 24:00 splitting, forgotten timer auto-capping to daily target, and weekly working location defaults.
+- **Time Tracking Foundation (Sections 6.3, 6.4, 6.4.1, 7.1–7.4, 9.1, 9.2):** WorkDay/WorkEntry model, dynamic target time calculation, multi-interval start/stop timer, midnight 24:00 splitting, forgotten timer auto-capping to daily target, weekly working location defaults, historical schedule version resolution by entry date, duration validation, workday preservation for historical dates, and morning/afternoon location uniqueness rules (**Task 1**).
 - **Presence & Privacy (Section 8):** Real-time binary `WORKING`/`NOT_WORKING` presence status with sensitive absence detail filtering for non-privileged viewers.
 - **Audit Logging & Retention (Sections 6.10, 12, 13.6):** Full audit trail recording entity lifecycle events, parameter mutations, correlation IDs, user details, and retention purge service.
 - **Reporting Foundation & CSV Export (Sections 11.1–11.5, 12.1–12.2, 13.8):** Core calculation engines, Web UI report viewers, and deterministic RFC 4180 UTF-8 BOM CSV exports for Day, Month, Vacation, Team, and Absence reports.
@@ -16,9 +16,8 @@ Audit date: 2026-08-19. `IMPLEMENTATION_SPECIFICATION.md` is authoritative; the 
 
 ---
 
-## Incomplete / Partially Implemented (Backlog Items 1–4)
+## Incomplete / Partially Implemented (Backlog Items 2–4)
 
-- **Working Location Half-Day Constraints & Schedule Version Resolution (Sections 6.4, 10.1):** Manual work entry creation does not resolve historical schedule versions by entry date, accepts zero-duration entries, mutates `currentWorkDayId` for past dates, and lacks morning/afternoon location uniqueness validation (**Task 1**).
 - **Absence Types & Draft Lifecycle (Sections 6.5, 6.6, 9.4, 10.1, 13.2):** Absence types lack `commentRequired` and `visibleOnPublicStatus` metadata; absence request workflow lacks comment enforcement and `DRAFT` status / explicit submission workflow (**Task 2**).
 - **Vacation Journal Immutability & Year-End Carry-Over (Sections 6.7, 6.7.1, 11.3):** Recalculation mutates existing records in-place rather than appending `CORRECTION` entries; year-end carry-over transition and non-expiring balance roll-forward service is not automated (**Task 3**).
 - **Period Calculation Snapshots & Balance Carry-Forward (Sections 6.9, 11.2, 11.6.2):** Month summaries always recompute live data rather than reading the immutable `calculationSnapshot` for approved/locked periods; `initialBalance` is hardcoded to 0 instead of carrying forward prior period ending balance (**Task 4**).

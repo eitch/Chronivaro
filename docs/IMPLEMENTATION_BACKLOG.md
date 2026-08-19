@@ -130,7 +130,7 @@ The following foundational areas are verified as fully implemented in the reposi
 ### Task 1: Fix Manual Work Entry Schedule Versioning, Duration Validation, and Location Half-Day Rules
 
 - **Specification Reference:** Section 6.4, Section 10.1
-- **Status:** `OPEN`
+- **Status:** `COMPLETED`
 - **Scope:**
   1. Fix `AddWorkEntryService` to resolve historical schedule version using entry date (`start.toLocalDate()`) via `ScheduleHelper.findScheduleVersion(tx, employeeId, entryDate)`.
   2. Reject manual work entries where `end` is less than or equal to `start` (`start.equals(end)` or `end.isBefore(start)`).
@@ -138,15 +138,22 @@ The following foundational areas are verified as fully implemented in the reposi
   4. Enforce working location constraint: maximum of one distinct `workingLocation` for `MORNING` and one for `AFTERNOON` on the same calendar day.
 - **Affected Components:**
   - `chronivaro-core/src/main/java/ch/atexxi/chronivaro/core/service/AddWorkEntryService.java`
+  - `chronivaro-core/src/main/java/ch/atexxi/chronivaro/core/service/CorrectWorkEntryService.java`
+  - `chronivaro-core/src/main/java/ch/atexxi/chronivaro/core/service/StartTimerService.java`
   - `chronivaro-core/src/main/java/ch/atexxi/chronivaro/core/model/ScheduleHelper.java`
   - `chronivaro-core/src/main/java/ch/atexxi/chronivaro/core/model/WorkDayHelper.java`
   - `chronivaro-core/src/main/java/ch/atexxi/chronivaro/core/model/WorkEntryHelper.java`
+  - `chronivaro-rest/src/main/java/ch/atexxi/chronivaro/rest/resource/ChronivaroResource.java`
 - **Acceptance Criteria:**
   - Creating a manual entry for a past date correctly links the schedule version valid on that date.
   - Submitting an entry with `start == end` is rejected with `INVALID_ENTRY_DURATION` (400 Bad Request).
   - Adding a manual entry for a past date leaves `currentWorkDayId` pointing to the current day's active workday.
   - Adding multiple conflicting locations in the morning or afternoon window on the same day is rejected.
   - Unit and REST integration tests verify all scenarios.
+- **Verification:**
+  - Unit tests in `AddWorkEntryServiceTest`, `TimerWorkDayTest`, and `HistoricalScheduleHelperTest`.
+  - Integration tests in `ChronivaroResourceTest`.
+  - Full reactor test suite passing.
 - **Dependencies:** None.
 
 ---
