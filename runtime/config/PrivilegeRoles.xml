@@ -193,7 +193,7 @@
         </Privilege>
     </Role>
 
-        <Role name="PrivilegeAdmin">
+    <Role name="PrivilegeAdmin">
         <Privilege name="GetSession" policy="UserSessionAccessPrivilege">
             <AllAllowed>true</AllAllowed>
         </Privilege>
@@ -207,7 +207,7 @@
             <Allow>PersistSessions</Allow>
             <Allow>Reload</Allow>
         </Privilege>
-        <Privilege name="PrivilegeAddGroup" policy="RoleAccessPrivilege">
+        <Privilege name="PrivilegeAddGroup" policy="GroupAccessPrivilege">
             <AllAllowed>true</AllAllowed>
         </Privilege>
         <Privilege name="PrivilegeAddRole" policy="RoleAccessPrivilege">
@@ -216,7 +216,7 @@
         <Privilege name="PrivilegeAddUser" policy="UserAccessPrivilege">
             <AllAllowed>true</AllAllowed>
         </Privilege>
-        <Privilege name="PrivilegeGetGroup" policy="RoleAccessPrivilege">
+        <Privilege name="PrivilegeGetGroup" policy="GroupAccessPrivilege">
             <AllAllowed>true</AllAllowed>
         </Privilege>
         <Privilege name="PrivilegeGetRole" policy="RoleAccessPrivilege">
@@ -231,7 +231,7 @@
         <Privilege name="PrivilegeGetGroupPrivileges" policy="UserAccessPrivilege">
             <AllAllowed>true</AllAllowed>
         </Privilege>
-        <Privilege name="PrivilegeModifyGroup" policy="RoleAccessPrivilege">
+        <Privilege name="PrivilegeModifyGroup" policy="GroupAccessPrivilege">
             <AllAllowed>true</AllAllowed>
         </Privilege>
         <Privilege name="PrivilegeModifyRole" policy="RoleAccessPrivilege">
@@ -240,7 +240,7 @@
         <Privilege name="PrivilegeModifyUser" policy="UserAccessPrivilege">
             <AllAllowed>true</AllAllowed>
         </Privilege>
-        <Privilege name="PrivilegeRemoveGroup" policy="RoleAccessPrivilege">
+        <Privilege name="PrivilegeRemoveGroup" policy="GroupAccessPrivilege">
             <AllAllowed>true</AllAllowed>
         </Privilege>
         <Privilege name="PrivilegeRemoveRole" policy="RoleAccessPrivilege">
@@ -274,7 +274,6 @@
             <Allow>li.strolch.service.privilege.users.PrivilegeUpdateUserService</Allow>
         </Privilege>
     </Role>
-
 
     <Role name="ModelAccessor">
         <Privilege name="li.strolch.search.StrolchSearch" policy="DefaultPrivilege">
