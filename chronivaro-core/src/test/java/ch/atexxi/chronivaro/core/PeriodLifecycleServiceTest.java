@@ -1,7 +1,6 @@
 package ch.atexxi.chronivaro.core;
 
-import ch.atexxi.chronivaro.core.model.ChronivaroAuditHelper;
-import ch.atexxi.chronivaro.core.model.WorkingLocation;
+import ch.atexxi.chronivaro.core.model.*;
 import ch.atexxi.chronivaro.core.search.AuditEventSearch;
 import ch.atexxi.chronivaro.core.search.TimePeriodSearch;
 import ch.atexxi.chronivaro.core.service.*;
@@ -62,6 +61,28 @@ public class PeriodLifecycleServiceTest {
 			vacationType.setBoolean(PARAM_PAID, true);
 			vacationType.setBoolean(PARAM_APPROVAL_REQUIRED, true);
 			tx.add(vacationType);
+
+			// Create Absence Type (Paid Sick Leave)
+			Resource sickType = tx.getResourceTemplate(TYPE_ABSENCE_TYPE, true);
+			sickType.setId("period-sick");
+			sickType.setName("Sick Leave");
+			sickType.setString(PARAM_CODE, "SICK");
+			sickType.setBoolean(PARAM_REDUCE_VACATION_CREDIT, false);
+			sickType.setBoolean(PARAM_PAID, true);
+			sickType.setBoolean(PARAM_COUNT_AS_TARGET_TIME, true);
+			sickType.setBoolean(PARAM_APPROVAL_REQUIRED, false);
+			tx.add(sickType);
+
+			// Create Absence Type (Unpaid Leave)
+			Resource unpaidType = tx.getResourceTemplate(TYPE_ABSENCE_TYPE, true);
+			unpaidType.setId("period-unpaid");
+			unpaidType.setName("Unpaid Leave");
+			unpaidType.setString(PARAM_CODE, "UNPAID");
+			unpaidType.setBoolean(PARAM_REDUCE_VACATION_CREDIT, false);
+			unpaidType.setBoolean(PARAM_PAID, false);
+			unpaidType.setBoolean(PARAM_COUNT_AS_TARGET_TIME, false);
+			unpaidType.setBoolean(PARAM_APPROVAL_REQUIRED, true);
+			tx.add(unpaidType);
 
 			// Create Employee
 			Resource employee = tx.getResourceTemplate(TYPE_EMPLOYEE, true);
@@ -363,6 +384,146 @@ public class PeriodLifecycleServiceTest {
 					.toList();
 			assertEquals(1, submitted.size());
 			assertEquals("2026-01", submitted.getFirst().getString(PARAM_YEAR_MONTH));
+		}
+	}
+
+	@Test
+	public void shouldCarryForwardBalancesAcrossConsecutiveMonthsAndPreserveSnapshotImmutability() {
+		ServiceHandler serviceHandler = runtimeMock.getServiceHandler();
+		ZoneId zone = ZoneId.of("Europe/Zurich");
+
+		// Month 1: 2026-01 (Join month) -> Work 1 extra hour on Jan 5th (+60 min period balance)
+		AddWorkEntryService.AddWorkEntryArgument m1Work = new AddWorkEntryService.AddWorkEntryArgument();
+		m1Work.employeeId = employeeId;
+		m1Work.start = LocalDate.of(2026, 1, 5).atTime(8, 0).atZone(zone);
+		m1Work.end = LocalDate.of(2026, 1, 5).atTime(17, 0).atZone(zone); // 9h worked vs 8h target (+60 min)
+		m1Work.comment = "Overtime 1h";
+		m1Work.workingLocation = WorkingLocation.OFFICE;
+		assertTrue(serviceHandler.doService(adminCert, new AddWorkEntryService(), m1Work).isOk());
+
+		// Submit and Approve January 2026 period
+		YearMonth ymJan = YearMonth.of(2026, 1);
+		serviceHandler.doService(adminCert, new SubmitPeriodService(), new PeriodActionArgument(employeeId, ymJan));
+		serviceHandler.doService(adminCert, new ApprovePeriodService(), new PeriodActionArgument(employeeId, ymJan));
+
+		// Verify January summary and snapshot
+		try (StrolchTransaction tx = runtimeMock.openUserTx(adminCert, true)) {
+			MonthSummary janSummary = MonthSummaryService.getMonthSummary(tx, employeeId, ymJan);
+			assertEquals(0, janSummary.initialBalanceMinutes()); // Join month has 0 initial balance
+			assertEquals(540 - (22 * 480), janSummary.getPeriodBalance()); // 540 worked - 10560 target = -10020
+			assertEquals(janSummary.getPeriodBalance(), janSummary.getEndBalance());
+
+			Resource janPeriod = PeriodHelper.getPeriod(tx, employeeId, ymJan, true);
+			assertNotNull(janPeriod.getString(PARAM_CALCULATION_SNAPSHOT));
+		}
+
+		// Month 2: 2026-02 -> Verify February's initialBalanceMinutes equals January's endBalanceMinutes
+		YearMonth ymFeb = YearMonth.of(2026, 2);
+		try (StrolchTransaction tx = runtimeMock.openUserTx(adminCert, true)) {
+			MonthSummary febSummary = MonthSummaryService.getMonthSummary(tx, employeeId, ymFeb);
+			MonthSummary janSummary = MonthSummaryService.getMonthSummary(tx, employeeId, ymJan);
+			assertEquals(janSummary.getEndBalance(), febSummary.initialBalanceMinutes());
+		}
+
+		// Month 2: Add work entry for Feb 2nd (8 hours = 480 min, exactly matching daily target)
+		AddWorkEntryService.AddWorkEntryArgument m2Work = new AddWorkEntryService.AddWorkEntryArgument();
+		m2Work.employeeId = employeeId;
+		m2Work.start = LocalDate.of(2026, 2, 2).atTime(8, 0).atZone(zone);
+		m2Work.end = LocalDate.of(2026, 2, 2).atTime(16, 0).atZone(zone);
+		m2Work.comment = "Standard 8h";
+		m2Work.workingLocation = WorkingLocation.OFFICE;
+		assertTrue(serviceHandler.doService(adminCert, new AddWorkEntryService(), m2Work).isOk());
+
+		// Submit, Approve, and Lock February period
+		serviceHandler.doService(adminCert, new SubmitPeriodService(), new PeriodActionArgument(employeeId, ymFeb));
+		serviceHandler.doService(adminCert, new ApprovePeriodService(), new PeriodActionArgument(employeeId, ymFeb));
+		serviceHandler.doService(adminCert, new LockPeriodService(), new PeriodActionArgument(employeeId, ymFeb));
+
+		// Month 3: 2026-03 -> Verify March's initialBalanceMinutes equals February's snapshot endBalanceMinutes
+		YearMonth ymMar = YearMonth.of(2026, 3);
+		try (StrolchTransaction tx = runtimeMock.openUserTx(adminCert, true)) {
+			MonthSummary febSummary = MonthSummaryService.getMonthSummary(tx, employeeId, ymFeb);
+			MonthSummary marSummary = MonthSummaryService.getMonthSummary(tx, employeeId, ymMar);
+			assertEquals(febSummary.getEndBalance(), marSummary.initialBalanceMinutes());
+		}
+	}
+
+	@Test
+	public void shouldCategorizePaidUnpaidAndVacationAbsencesCorrectly() {
+		ServiceHandler serviceHandler = runtimeMock.getServiceHandler();
+		ZoneId zone = ZoneId.of("Europe/Zurich");
+		YearMonth ym = YearMonth.of(2026, 6);
+
+		// Credit vacation entitlement for 2026
+		serviceHandler.doService(adminCert, new CreditVacationEntitlementService(),
+				new CreditVacationEntitlementService.CreditVacationEntitlementArgument(employeeId, 2026, false));
+
+		// 1. Vacation on June 1st (Full Day: 480 min, reduces vacation credit, paid)
+		RequestAbsenceService.RequestAbsenceArgument vacArg = new RequestAbsenceService.RequestAbsenceArgument();
+		vacArg.employeeId = employeeId;
+		vacArg.absenceTypeCode = "VAC";
+		vacArg.start = LocalDate.of(2026, 6, 1).atStartOfDay(zone);
+		vacArg.end = LocalDate.of(2026, 6, 1).atTime(23, 59, 59).atZone(zone);
+		vacArg.durationType = DURATION_FULL_DAY;
+		vacArg.comment = "Annual Leave";
+		ServiceResult vacRes = serviceHandler.doService(adminCert, new RequestAbsenceService(), vacArg);
+		assertTrue(vacRes.isOk());
+
+		// 2. Paid Sick Leave on June 2nd (Full Day: 480 min, counts as target time, paid)
+		RequestAbsenceService.RequestAbsenceArgument sickArg = new RequestAbsenceService.RequestAbsenceArgument();
+		sickArg.employeeId = employeeId;
+		sickArg.absenceTypeCode = "SICK";
+		sickArg.start = LocalDate.of(2026, 6, 2).atStartOfDay(zone);
+		sickArg.end = LocalDate.of(2026, 6, 2).atTime(23, 59, 59).atZone(zone);
+		sickArg.durationType = DURATION_FULL_DAY;
+		sickArg.comment = "Flu";
+		ServiceResult sickRes = serviceHandler.doService(adminCert, new RequestAbsenceService(), sickArg);
+		assertTrue(sickRes.isOk());
+
+		// 3. Unpaid Leave on June 3rd (Full Day: 480 min, unpaid, does not count as target time)
+		RequestAbsenceService.RequestAbsenceArgument unpaidArg = new RequestAbsenceService.RequestAbsenceArgument();
+		unpaidArg.employeeId = employeeId;
+		unpaidArg.absenceTypeCode = "UNPAID";
+		unpaidArg.start = LocalDate.of(2026, 6, 3).atStartOfDay(zone);
+		unpaidArg.end = LocalDate.of(2026, 6, 3).atTime(23, 59, 59).atZone(zone);
+		unpaidArg.durationType = DURATION_FULL_DAY;
+		unpaidArg.comment = "Unpaid Personal Day";
+		ServiceResult unpaidRes = serviceHandler.doService(adminCert, new RequestAbsenceService(), unpaidArg);
+		assertTrue(unpaidRes.isOk());
+
+		// Approve submitted absences
+		try (StrolchTransaction tx = runtimeMock.openUserTx(adminCert, true)) {
+			List<Resource> absences = tx.streamResources(TYPE_ABSENCE)
+					.filter(a -> employeeId.equals(a.getRelationId(PARAM_EMPLOYEE)))
+					.filter(a -> STATE_SUBMITTED.equals(a.getString(PARAM_STATE)))
+					.toList();
+			for (Resource a : absences) {
+				serviceHandler.doService(adminCert, new ApproveAbsenceService(), new li.strolch.service.StringArgument(a.getId()));
+			}
+		}
+
+		// Verify MonthSummary breakdown
+		try (StrolchTransaction tx = runtimeMock.openUserTx(adminCert, true)) {
+			MonthSummary summary = MonthSummaryService.calculateMonthSummary(tx, employeeId, ym);
+			assertEquals(480, summary.vacationMinutes());
+			assertEquals(480, summary.paidAbsenceMinutes());
+			assertEquals(480, summary.unpaidAbsenceMinutes());
+			assertEquals(960, summary.totalAbsenceMinutes()); // Credited = vacation (480) + paid (480) = 960
+
+			// Verify Day 3 (Unpaid) absenceMinutes in DaySummary is 0 credited time
+			DaySummary day3 = summary.daySummaries().get(2);
+			assertEquals(0, day3.absenceMinutes());
+			assertEquals(-480, day3.getBalance()); // 0 actual + 0 holiday + 0 absence - 480 target = -480
+
+			// Verify Day 2 (Sick) absenceMinutes is 480 credited
+			DaySummary day2 = summary.daySummaries().get(1);
+			assertEquals(480, day2.absenceMinutes());
+			assertEquals(0, day2.getBalance()); // 0 actual + 0 holiday + 480 absence - 480 target = 0
+
+			// Verify Day 1 (Vacation) absenceMinutes is 480 credited
+			DaySummary day1 = summary.daySummaries().get(0);
+			assertEquals(480, day1.absenceMinutes());
+			assertEquals(0, day1.getBalance());
 		}
 	}
 }

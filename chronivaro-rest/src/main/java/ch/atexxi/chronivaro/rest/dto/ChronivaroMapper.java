@@ -9,6 +9,7 @@ import ch.atexxi.chronivaro.core.model.WorkingLocation;
 
 import java.time.Duration;
 import java.time.ZonedDateTime;
+import java.util.List;
 
 import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
 
@@ -61,10 +62,22 @@ public class ChronivaroMapper {
 	}
 
 	public static MonthSummaryDto toDto(MonthSummary summary) {
-		return new MonthSummaryDto(summary.employeeId(), summary.yearMonth(), summary.totalTargetMinutes(),
-				summary.totalActualMinutes(), summary.totalHolidayMinutes(), summary.totalAbsenceMinutes(),
-				summary.initialBalanceMinutes(), summary.getPeriodBalance(), summary.getEndBalance(),
-				summary.daySummaries().stream().map(ChronivaroMapper::toDto).toList());
+		return new MonthSummaryDto(
+				summary.employeeId(),
+				summary.yearMonth(),
+				summary.totalTargetMinutes(),
+				summary.totalActualMinutes(),
+				summary.paidAbsenceMinutes(),
+				summary.unpaidAbsenceMinutes(),
+				summary.vacationMinutes(),
+				summary.totalHolidayMinutes(),
+				summary.totalAbsenceMinutes(),
+				summary.initialBalanceMinutes(),
+				summary.getPeriodBalance(),
+				summary.manualCorrectionsMinutes(),
+				summary.getEndBalance(),
+				summary.daySummaries() != null ? summary.daySummaries().stream().map(ChronivaroMapper::toDto).toList() : List.of()
+		);
 	}
 
 	public static TeamDto teamToDto(Resource team) {

@@ -171,6 +171,9 @@ public class ExtensiveIntegrationTest {
 		typeArg.code = "vacation";
 		typeArg.name = "Vacation";
 		typeArg.active = true;
+		typeArg.reduceVacationCredit = true;
+		typeArg.paid = true;
+		typeArg.approvalRequired = true;
 		typeArg.durationTypes = List.of(DURATION_HOURS, DURATION_HALF_DAY, DURATION_FULL_DAY);
 		assertTrue(serviceHandler.doService(certificate, new CreateAbsenceTypeService(), typeArg).isOk());
 

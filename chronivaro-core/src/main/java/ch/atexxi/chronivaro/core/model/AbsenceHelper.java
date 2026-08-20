@@ -9,8 +9,22 @@ import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
 
 public class AbsenceHelper {
 
-	public static int getAbsenceMinutes(StrolchTransaction tx, String employeeId, LocalDate date) {
-		return tx
+	public record DayAbsenceBreakdown(int paidMinutes, int unpaidMinutes, int vacationMinutes) {
+		public int totalCreditedMinutes() {
+			return paidMinutes + vacationMinutes;
+		}
+
+		public int totalAllMinutes() {
+			return paidMinutes + unpaidMinutes + vacationMinutes;
+		}
+	}
+
+	public static DayAbsenceBreakdown getDayAbsenceBreakdown(StrolchTransaction tx, String employeeId, LocalDate date) {
+		int paid = 0;
+		int unpaid = 0;
+		int vacation = 0;
+
+		java.util.List<Resource> absences = tx
 				.streamResources(TYPE_ABSENCE)
 				.filter(a -> a.getRelationId(PARAM_EMPLOYEE).equals(employeeId))
 				.filter(a -> a.getString(PARAM_STATE).equals(STATE_APPROVED))
@@ -19,8 +33,34 @@ public class AbsenceHelper {
 					LocalDate end = a.getDate(PARAM_END).toLocalDate();
 					return !date.isBefore(start) && !date.isAfter(end);
 				})
-				.mapToInt(a -> calculateMinutesForDay(tx, employeeId, a, date))
-				.sum();
+				.toList();
+
+		for (Resource a : absences) {
+			int min = calculateMinutesForDay(tx, employeeId, a, date);
+			if (min <= 0)
+				continue;
+			Resource absenceType = tx.getResourceByRelation(a, PARAM_ABSENCE_TYPE, false);
+			if (absenceType != null && absenceType.hasParameter(PARAM_REDUCE_VACATION_CREDIT)
+					&& absenceType.getBoolean(PARAM_REDUCE_VACATION_CREDIT)) {
+				vacation += min;
+			} else if (absenceType != null && ((absenceType.hasParameter(PARAM_PAID) && absenceType.getBoolean(PARAM_PAID))
+					|| (absenceType.hasParameter(PARAM_COUNT_AS_TARGET_TIME)
+							&& absenceType.getBoolean(PARAM_COUNT_AS_TARGET_TIME)))) {
+				paid += min;
+			} else if (absenceType != null && (!absenceType.hasParameter(PARAM_PAID) || !absenceType.getBoolean(PARAM_PAID))
+					&& (!absenceType.hasParameter(PARAM_COUNT_AS_TARGET_TIME)
+							|| !absenceType.getBoolean(PARAM_COUNT_AS_TARGET_TIME))) {
+				unpaid += min;
+			} else {
+				paid += min;
+			}
+		}
+
+		return new DayAbsenceBreakdown(paid, unpaid, vacation);
+	}
+
+	public static int getAbsenceMinutes(StrolchTransaction tx, String employeeId, LocalDate date) {
+		return getDayAbsenceBreakdown(tx, employeeId, date).totalCreditedMinutes();
 	}
 
 	private static int calculateMinutesForDay(StrolchTransaction tx, String employeeId, Resource absence,

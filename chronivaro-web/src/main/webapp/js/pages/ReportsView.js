@@ -557,8 +557,8 @@ export default class ReportsView {
 				</div>
 				<div class="summary-card">
 					<div class="card-title">Paid Absences</div>
-					<div class="card-value">${Format.duration(data.totalPaidAbsenceMinutes)}</div>
-					<div class="card-sub">${data.totalPaidAbsenceMinutes} min</div>
+					<div class="card-value">${Format.duration(data.paidAbsenceMinutes ?? data.totalPaidAbsenceMinutes ?? data.totalAbsenceMinutes ?? 0)}</div>
+					<div class="card-sub">${data.paidAbsenceMinutes ?? data.totalPaidAbsenceMinutes ?? data.totalAbsenceMinutes ?? 0} min</div>
 				</div>
 				<div class="summary-card">
 					<div class="card-title">Initial Balance</div>

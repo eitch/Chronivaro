@@ -51,7 +51,7 @@ public class TeamReportService extends AbstractService<TeamReportService.TeamRep
 
 			for (Resource employee : employees) {
 				String empId = employee.getId();
-				MonthSummary monthSummary = MonthSummaryService.calculateMonthSummary(tx, empId, arg.yearMonth);
+				MonthSummary monthSummary = MonthSummaryService.getMonthSummary(tx, empId, arg.yearMonth);
 
 				Optional<Resource> periodOpt = PeriodHelper.findPeriod(tx, empId, arg.yearMonth);
 				String periodState = periodOpt.map(p -> p.getString(PARAM_STATE)).orElse(STATE_OPEN);
