@@ -14,7 +14,6 @@ import java.time.LocalDate;
 import java.util.Optional;
 
 import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
-import static ch.atexxi.chronivaro.core.model.ChronivaroVersionHelper.bumpVersion;
 import static ch.atexxi.chronivaro.core.model.ChronivaroVersionHelper.initVersion;
 
 public class CreditVacationEntitlementService
@@ -67,16 +66,32 @@ public class CreditVacationEntitlementService
 				Resource entry = existing.get();
 				entryId = entry.getId();
 				if (arg.forceRecalculate) {
-					tx.readLock(entry);
-					int oldVal = entry.getInteger(PARAM_VALUE);
-					if (oldVal != entitlementMinutes) {
-						entry = entry.getClone();
-						entry.setInteger(PARAM_VALUE, entitlementMinutes);
-						bumpVersion(entry, tx);
-						tx.update(entry);
-						ChronivaroAuditHelper.audit(tx, TYPE_VACATION_ACCOUNT_ENTRY, entry.getId(), AUDIT_ACTION_UPDATE,
-								"Recalculated vacation entitlement for year " + arg.year + " from " + oldVal
-										+ " to " + entitlementMinutes + " minutes");
+					int currentCredited = entry.getInteger(PARAM_VALUE)
+							+ VacationHelper.getEntitlementAdjustmentCorrections(tx, arg.employeeId, arg.year);
+					int delta = entitlementMinutes - currentCredited;
+					if (delta != 0) {
+						String empName = employee.hasParameter(PARAM_FIRSTNAME) && employee.hasParameter(PARAM_LASTNAME)
+								? employee.getString(PARAM_FIRSTNAME) + " " + employee.getString(PARAM_LASTNAME)
+								: employee.getName();
+						Resource corr = tx.getResourceTemplate(TYPE_VACATION_ACCOUNT_ENTRY, true);
+						corr.setName("Vacation Entitlement Recalculation " + arg.year + " (" + empName + ")");
+						corr.setRelation(PARAM_EMPLOYEE, employee);
+						corr.setString(PARAM_VACATION_TYPE, VACATION_CORRECTION);
+						LocalDate joinDate = ChronivaroModelHelper.getJoinDate(employee);
+						LocalDate creditDate = joinDate.isAfter(LocalDate.of(arg.year, 1, 1)) ? joinDate : LocalDate.of(arg.year, 1, 1);
+						corr.setDate(PARAM_DATE, creditDate.atStartOfDay(ChronivaroModelHelper.getEmployeeTimezone(employee)));
+						corr.setInteger(PARAM_VALUE, delta);
+						corr.setString(PARAM_COMMENT, "Recalculated vacation entitlement adjustment for year " + arg.year
+								+ " (" + (delta > 0 ? "+" + delta : String.valueOf(delta)) + " minutes)");
+						corr.setString(PARAM_CREATED_BY, tx.getCertificate().getUsername());
+
+						initVersion(corr, tx);
+						tx.add(corr);
+						entryId = corr.getId();
+
+						ChronivaroAuditHelper.audit(tx, TYPE_VACATION_ACCOUNT_ENTRY, corr.getId(), AUDIT_ACTION_CREATE,
+								"Recalculated vacation entitlement adjustment for year " + arg.year + " from "
+										+ currentCredited + " to " + entitlementMinutes + " minutes (delta: " + delta + ")");
 					}
 				}
 			} else {
@@ -92,6 +107,7 @@ public class CreditVacationEntitlementService
 				entry.setDate(PARAM_DATE, creditDate.atStartOfDay(ChronivaroModelHelper.getEmployeeTimezone(employee)));
 				entry.setInteger(PARAM_VALUE, entitlementMinutes);
 				entry.setString(PARAM_COMMENT, "Annual vacation entitlement " + arg.year);
+				entry.setString(PARAM_CREATED_BY, tx.getCertificate().getUsername());
 
 				initVersion(entry, tx);
 				tx.add(entry);

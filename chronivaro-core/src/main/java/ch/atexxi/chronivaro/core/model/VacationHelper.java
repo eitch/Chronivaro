@@ -7,6 +7,7 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import java.util.Optional;
+import java.util.OptionalInt;
 
 import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
 
@@ -114,6 +115,24 @@ public class VacationHelper {
 	}
 
 	public static int getVacationBalance(StrolchTransaction tx, String employeeId, ZonedDateTime at) {
+		OptionalInt latestCarryOverYear = tx.streamResources(TYPE_VACATION_ACCOUNT_ENTRY)
+				.filter(e -> e.getRelationId(PARAM_EMPLOYEE).equals(employeeId))
+				.filter(e -> VACATION_CARRY_OVER.equals(e.getString(PARAM_VACATION_TYPE)))
+				.filter(e -> !e.getDate(PARAM_DATE).isAfter(at))
+				.mapToInt(e -> e.getDate(PARAM_DATE).getYear())
+				.max();
+
+		if (latestCarryOverYear.isPresent()) {
+			int cutoffYear = latestCarryOverYear.getAsInt();
+			LocalDate cutoffDate = LocalDate.of(cutoffYear, 1, 1);
+			return tx.streamResources(TYPE_VACATION_ACCOUNT_ENTRY)
+					.filter(e -> e.getRelationId(PARAM_EMPLOYEE).equals(employeeId))
+					.filter(e -> !e.getDate(PARAM_DATE).isAfter(at))
+					.filter(e -> !e.getDate(PARAM_DATE).toLocalDate().isBefore(cutoffDate))
+					.mapToInt(e -> e.getInteger(PARAM_VALUE))
+					.sum();
+		}
+
 		return tx
 				.streamResources(TYPE_VACATION_ACCOUNT_ENTRY)
 				.filter(e -> e.getRelationId(PARAM_EMPLOYEE).equals(employeeId))
@@ -126,13 +145,45 @@ public class VacationHelper {
 		LocalDate yearStart = LocalDate.of(year, 1, 1);
 		LocalDate yearEnd = LocalDate.of(year, 12, 31);
 
-		int carryOverMinutes = tx.streamResources(TYPE_VACATION_ACCOUNT_ENTRY)
+		int carryOverEntriesSum = tx.streamResources(TYPE_VACATION_ACCOUNT_ENTRY)
 				.filter(e -> e.getRelationId(PARAM_EMPLOYEE).equals(employeeId))
-				.filter(e -> e.getDate(PARAM_DATE).toLocalDate().isBefore(yearStart))
+				.filter(e -> VACATION_CARRY_OVER.equals(e.getString(PARAM_VACATION_TYPE)))
+				.filter(e -> {
+					LocalDate date = e.getDate(PARAM_DATE).toLocalDate();
+					return !date.isBefore(yearStart) && !date.isAfter(yearEnd);
+				})
 				.mapToInt(e -> e.getInteger(PARAM_VALUE))
 				.sum();
 
-		int entitlementMinutes = tx.streamResources(TYPE_VACATION_ACCOUNT_ENTRY)
+		int carryOverAdjustmentsSum = tx.streamResources(TYPE_VACATION_ACCOUNT_ENTRY)
+				.filter(e -> e.getRelationId(PARAM_EMPLOYEE).equals(employeeId))
+				.filter(e -> VACATION_CORRECTION.equals(e.getString(PARAM_VACATION_TYPE)))
+				.filter(e -> {
+					LocalDate date = e.getDate(PARAM_DATE).toLocalDate();
+					return !date.isBefore(yearStart) && !date.isAfter(yearEnd);
+				})
+				.filter(e -> e.hasParameter(PARAM_COMMENT) && e.getString(PARAM_COMMENT).startsWith("Carry-over adjustment"))
+				.mapToInt(e -> e.getInteger(PARAM_VALUE))
+				.sum();
+
+		boolean hasCarryOverEntry = tx.streamResources(TYPE_VACATION_ACCOUNT_ENTRY)
+				.anyMatch(e -> e.getRelationId(PARAM_EMPLOYEE).equals(employeeId)
+						&& VACATION_CARRY_OVER.equals(e.getString(PARAM_VACATION_TYPE))
+						&& !e.getDate(PARAM_DATE).toLocalDate().isBefore(yearStart)
+						&& !e.getDate(PARAM_DATE).toLocalDate().isAfter(yearEnd));
+
+		int carryOverMinutes;
+		if (hasCarryOverEntry) {
+			carryOverMinutes = carryOverEntriesSum + carryOverAdjustmentsSum;
+		} else {
+			carryOverMinutes = tx.streamResources(TYPE_VACATION_ACCOUNT_ENTRY)
+					.filter(e -> e.getRelationId(PARAM_EMPLOYEE).equals(employeeId))
+					.filter(e -> e.getDate(PARAM_DATE).toLocalDate().isBefore(yearStart))
+					.mapToInt(e -> e.getInteger(PARAM_VALUE))
+					.sum();
+		}
+
+		int entitlementEntriesSum = tx.streamResources(TYPE_VACATION_ACCOUNT_ENTRY)
 				.filter(e -> e.getRelationId(PARAM_EMPLOYEE).equals(employeeId))
 				.filter(e -> VACATION_ENTITLEMENT.equals(e.getString(PARAM_VACATION_TYPE)))
 				.filter(e -> {
@@ -142,6 +193,9 @@ public class VacationHelper {
 				.mapToInt(e -> e.getInteger(PARAM_VALUE))
 				.sum();
 
+		int entitlementRecalcSum = getEntitlementAdjustmentCorrections(tx, employeeId, year);
+		int entitlementMinutes = entitlementEntriesSum + entitlementRecalcSum;
+
 		int correctionsMinutes = tx.streamResources(TYPE_VACATION_ACCOUNT_ENTRY)
 				.filter(e -> e.getRelationId(PARAM_EMPLOYEE).equals(employeeId))
 				.filter(e -> VACATION_CORRECTION.equals(e.getString(PARAM_VACATION_TYPE)))
@@ -149,6 +203,8 @@ public class VacationHelper {
 					LocalDate date = e.getDate(PARAM_DATE).toLocalDate();
 					return !date.isBefore(yearStart) && !date.isAfter(yearEnd);
 				})
+				.filter(e -> !e.hasParameter(PARAM_COMMENT) || (!e.getString(PARAM_COMMENT).startsWith("Carry-over adjustment")
+						&& !e.getString(PARAM_COMMENT).startsWith("Recalculated vacation entitlement")))
 				.mapToInt(e -> e.getInteger(PARAM_VALUE))
 				.sum();
 
@@ -200,6 +256,34 @@ public class VacationHelper {
 					return !date.isBefore(yearStart) && !date.isAfter(yearEnd);
 				})
 				.findFirst();
+	}
+
+	public static Optional<Resource> findCarryOverEntry(StrolchTransaction tx, String employeeId, int targetYear) {
+		LocalDate yearStart = LocalDate.of(targetYear, 1, 1);
+		LocalDate yearEnd = LocalDate.of(targetYear, 12, 31);
+		return tx.streamResources(TYPE_VACATION_ACCOUNT_ENTRY)
+				.filter(e -> e.getRelationId(PARAM_EMPLOYEE).equals(employeeId))
+				.filter(e -> VACATION_CARRY_OVER.equals(e.getString(PARAM_VACATION_TYPE)))
+				.filter(e -> {
+					LocalDate date = e.getDate(PARAM_DATE).toLocalDate();
+					return !date.isBefore(yearStart) && !date.isAfter(yearEnd);
+				})
+				.findFirst();
+	}
+
+	public static int getEntitlementAdjustmentCorrections(StrolchTransaction tx, String employeeId, int year) {
+		LocalDate yearStart = LocalDate.of(year, 1, 1);
+		LocalDate yearEnd = LocalDate.of(year, 12, 31);
+		return tx.streamResources(TYPE_VACATION_ACCOUNT_ENTRY)
+				.filter(e -> e.getRelationId(PARAM_EMPLOYEE).equals(employeeId))
+				.filter(e -> VACATION_CORRECTION.equals(e.getString(PARAM_VACATION_TYPE)))
+				.filter(e -> {
+					LocalDate date = e.getDate(PARAM_DATE).toLocalDate();
+					return !date.isBefore(yearStart) && !date.isAfter(yearEnd);
+				})
+				.filter(e -> e.hasParameter(PARAM_COMMENT) && e.getString(PARAM_COMMENT).startsWith("Recalculated vacation entitlement"))
+				.mapToInt(e -> e.getInteger(PARAM_VALUE))
+				.sum();
 	}
 
 	public static void assertSufficientVacationBalance(StrolchTransaction tx, String employeeId, int requestedMinutes,
