@@ -298,15 +298,18 @@ Task 6 is split into subtasks **6.1** and **6.2** to separate the client-side i1
 
 #### 6.1: i18n Core Bundle, Language Resolution Engine, and Key Parity Testing
 - **Specification Reference:** Section 4.2, Section 12.3, Section 16, Section 18.5
-- **Status:** `OPEN`
+- **Status:** `COMPLETED`
 - **Scope:**
   1. Create translation dictionaries `de.json` and `en.json` under `chronivaro-web/src/main/webapp/i18n/` covering all common labels, navigation, button texts, error messages, and enum values.
   2. Implement client-side `I18n.js` module supporting parameterized string formatting, key lookup, and fallback chain: `explicit choice -> localStorage -> Strolch User.locale -> defaultLanguage -> key`.
   3. Implement automated test in `chronivaro-web` to enforce 100% key parity between `de.json` and `en.json`.
 - **Acceptance Criteria:**
-  - Comprehensive translation dictionaries exist for German and English.
+  - Comprehensive translation dictionaries exist for German (following Swiss German conventions) and English.
   - Language resolution follows the defined priority chain and falls back gracefully.
   - Automated test fails the build if any key is missing in either language bundle.
+- **Verification:**
+  - Unit tests in `I18nKeyParityTest` in `chronivaro-web` enforcing 100% key parity between `de.json` and `en.json`, no null or empty translations, Swiss German compliance (no `ß`), placeholder consistency, and validating `I18n.js` exports and fallback methods.
+  - Full reactor test suite passing cleanly (`mvn clean test`).
 - **Dependencies:** Task 5.
 
 #### 6.2: UI Localization Migration and Language Switcher Component
