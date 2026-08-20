@@ -349,11 +349,30 @@ Task 6 is split into subtasks **6.1**, **6.2**, **6.3**, and **6.4** to separate
 
 #### 6.4: Administration Views Localization
 - **Specification Reference:** Section 4.2, Section 16, Section 18.5
-- **Status:** `OPEN`
+- **Status:** `COMPLETED`
 - **Scope:**
-  1. Migrate master data and system admin views (`EmployeesView.js`, `TeamsView.js`, `LocationsView.js`, `AbsenceTypesView.js`, `HolidayCalendarsView.js`, `ScheduleTemplatesView.js`, `SchedulesView.js`, `ConfigurationView.js`) to use `I18n.t`.
+  1. Migrate master data and system admin views (`EmployeesView.js`, `TeamsView.js`, `LocationsView.js`, `AbsenceTypesView.js`, `HolidayCalendarsView.js`, `ScheduleTemplatesView.js`, `SchedulesView.js`, `ConfigurationView.js`) to use `I18n.t` for all table headers, form labels, actions, modal dialogues, options, dynamic calculations, and notification dialogues.
+  2. Synchronize all newly introduced translation keys across `en.json` and `de.json` bundles following Swiss German conventions.
+- **Affected Components:**
+  - `chronivaro-web/src/main/webapp/i18n/de.json`
+  - `chronivaro-web/src/main/webapp/i18n/en.json`
+  - `chronivaro-web/src/main/webapp/js/pages/EmployeesView.js`
+  - `chronivaro-web/src/main/webapp/js/pages/TeamsView.js`
+  - `chronivaro-web/src/main/webapp/js/pages/LocationsView.js`
+  - `chronivaro-web/src/main/webapp/js/pages/AbsenceTypesView.js`
+  - `chronivaro-web/src/main/webapp/js/pages/HolidayCalendarsView.js`
+  - `chronivaro-web/src/main/webapp/js/pages/ScheduleTemplatesView.js`
+  - `chronivaro-web/src/main/webapp/js/pages/SchedulesView.js`
+  - `chronivaro-web/src/main/webapp/js/pages/ConfigurationView.js`
+  - `chronivaro-web/src/test/java/ch/atexxi/chronivaro/web/WebLocalizationUiTest.java`
 - **Acceptance Criteria:**
   - All admin views render in the active language and respond to language changes.
+  - Modals, action dropdowns, and confirmation prompts are fully translated.
+  - Dynamic calculations and hints (e.g. weekly working hours) use parameterized i18n messages.
+- **Verification:**
+  - `WebLocalizationUiTest` asserting `I18n.t` usage across all eight administration views.
+  - `I18nKeyParityTest` verifying 100% dictionary synchronization and Swiss German compliance.
+  - Full reactor test suite passing cleanly (`mvn clean test`).
 - **Dependencies:** Task 6.2.
 
 ---
