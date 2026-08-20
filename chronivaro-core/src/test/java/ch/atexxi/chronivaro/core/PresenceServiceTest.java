@@ -174,5 +174,23 @@ public class PresenceServiceTest {
 				.orElseThrow();
 		assertEquals("ABSENT", info3Privacy.absenceTypeCode());
 		assertEquals("Abwesend", info3Privacy.absenceTypeName());
+
+		// When visibleOnPublicStatus is true, supervisor sees the real absence type
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
+			Resource absenceType = tx.getResourceBy(TYPE_ABSENCE_TYPE, "VACATION", true);
+			absenceType.setBoolean(PARAM_VISIBLE_ON_PUBLIC_STATUS, true);
+			tx.update(absenceType);
+			tx.commitOnClose();
+		}
+
+		result = serviceHandler.doService(testCert, new PresenceService(), arg);
+		assertTrue(result.isOk());
+		PresenceService.PresenceInfo info3Public = result.presenceInfos
+				.stream()
+				.filter(i -> i.employeeId().equals("p-emp3"))
+				.findFirst()
+				.orElseThrow();
+		assertEquals("VACATION", info3Public.absenceTypeCode());
+		assertEquals("Vacation", info3Public.absenceTypeName());
 	}
 }

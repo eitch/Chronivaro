@@ -87,6 +87,8 @@ public class ChronivaroMapper {
 		return new AbsenceTypeDto(type.getId(), type.getString(PARAM_CODE), type.getString(PARAM_NAME),
 				type.getBoolean(PARAM_COUNT_AS_TARGET_TIME), type.getBoolean(PARAM_REDUCE_VACATION_CREDIT),
 				type.getBoolean(PARAM_PAID), type.getBoolean(PARAM_APPROVAL_REQUIRED),
+				type.hasParameter(PARAM_COMMENT_REQUIRED) && type.getBoolean(PARAM_COMMENT_REQUIRED),
+				type.hasParameter(PARAM_VISIBLE_ON_PUBLIC_STATUS) && type.getBoolean(PARAM_VISIBLE_ON_PUBLIC_STATUS),
 				type.getStringList(PARAM_DURATION_TYPES), type.getBoolean(PARAM_ACTIVE));
 	}
 

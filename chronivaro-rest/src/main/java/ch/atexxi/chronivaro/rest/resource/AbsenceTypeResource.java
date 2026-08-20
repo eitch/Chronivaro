@@ -62,6 +62,8 @@ public class AbsenceTypeResource {
 		arg.reduceVacationCredit = dto.reduceVacationCredit();
 		arg.paid = dto.paid();
 		arg.approvalRequired = dto.approvalRequired();
+		arg.commentRequired = dto.commentRequired();
+		arg.visibleOnPublicStatus = dto.visibleOnPublicStatus();
 		arg.durationTypes = dto.durationTypes();
 		arg.active = dto.active();
 
@@ -92,6 +94,8 @@ public class AbsenceTypeResource {
 		arg.reduceVacationCredit = dto.reduceVacationCredit();
 		arg.paid = dto.paid();
 		arg.approvalRequired = dto.approvalRequired();
+		arg.commentRequired = dto.commentRequired();
+		arg.visibleOnPublicStatus = dto.visibleOnPublicStatus();
 		arg.durationTypes = dto.durationTypes();
 		arg.active = dto.active();
 

@@ -1,5 +1,6 @@
 package ch.atexxi.chronivaro.rest;
 
+import ch.atexxi.chronivaro.rest.resource.ChronivaroRestHelper;
 import jakarta.ws.rs.client.Entity;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
@@ -119,6 +120,95 @@ public class ChronivaroResourceTest extends AbstractChronivaroRestfulTest {
 				.header("Authorization", authToken)
 				.post(Entity.json(json))) {
 			assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+		}
+
+		// Create absence type requiring comment
+		String reqCommentTypeJson = """
+				{
+				  "id": "special_leave",
+				  "code": "SPECIAL_LEAVE",
+				  "name": "Special Leave",
+				  "active": true,
+				  "approvalRequired": true,
+				  "paid": true,
+				  "commentRequired": true,
+				  "durationTypes": ["FULL_DAY"]
+				}
+				""";
+		try (Response response = target()
+				.path("chronivaro/v1/admin/absence-types")
+				.request(MediaType.APPLICATION_JSON)
+				.header("Authorization", authToken)
+				.post(Entity.json(reqCommentTypeJson))) {
+			assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+		}
+
+		// Try to request without comment -> fails 400 or 500
+		String noCommentJson = """
+				{
+				  "absenceTypeCode": "SPECIAL_LEAVE",
+				  "start": "2025-03-01T00:00:00+01:00",
+				  "end": "2025-03-01T23:59:59+01:00",
+				  "durationType": "FULL_DAY"
+				}
+				""";
+		try (Response response = target()
+				.path("chronivaro/v1/me/absences")
+				.request(MediaType.APPLICATION_JSON)
+				.header("Authorization", authToken)
+				.post(Entity.json(noCommentJson))) {
+			org.junit.Assert.assertTrue(response.getStatus() >= 400);
+		}
+
+		// Request as DRAFT -> succeeds
+		String draftJson = """
+				{
+				  "absenceTypeCode": "SPECIAL_LEAVE",
+				  "start": "2025-03-01T00:00:00+01:00",
+				  "end": "2025-03-01T23:59:59+01:00",
+				  "durationType": "FULL_DAY",
+				  "state": "DRAFT"
+				}
+				""";
+		String absenceId;
+		try (Response response = target()
+				.path("chronivaro/v1/me/absences")
+				.request(MediaType.APPLICATION_JSON)
+				.header("Authorization", authToken)
+				.post(Entity.json(draftJson))) {
+			assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+			com.google.gson.JsonObject obj = ChronivaroRestHelper.createGson().fromJson(response.readEntity(String.class), com.google.gson.JsonObject.class);
+			absenceId = obj.get("id").getAsString();
+			assertEquals("DRAFT", obj.get("state").getAsString());
+		}
+
+		// Update draft with comment
+		String updateDraftJson = """
+				{
+				  "absenceTypeCode": "SPECIAL_LEAVE",
+				  "start": "2025-03-01T00:00:00+01:00",
+				  "end": "2025-03-01T23:59:59+01:00",
+				  "durationType": "FULL_DAY",
+				  "comment": "Family event"
+				}
+				""";
+		try (Response response = target()
+				.path("chronivaro/v1/me/absences/" + absenceId)
+				.request(MediaType.APPLICATION_JSON)
+				.header("Authorization", authToken)
+				.put(Entity.json(updateDraftJson))) {
+			assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+		}
+
+		// Submit draft
+		try (Response response = target()
+				.path("chronivaro/v1/me/absences/" + absenceId + "/submit")
+				.request(MediaType.APPLICATION_JSON)
+				.header("Authorization", authToken)
+				.post(Entity.json(""))) {
+			assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+			com.google.gson.JsonObject obj = ChronivaroRestHelper.createGson().fromJson(response.readEntity(String.class), com.google.gson.JsonObject.class);
+			assertEquals("SUBMITTED", obj.get("state").getAsString());
 		}
 	}
 

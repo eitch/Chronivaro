@@ -46,4 +46,52 @@ public class AbsenceHelper {
 				.findFirst()
 				.orElseThrow(() -> new IllegalArgumentException("Absence type not found: " + absenceTypeCode));
 	}
+
+	public static void validateCommentRequired(Resource absenceType, String comment) {
+		if (absenceType.hasParameter(PARAM_COMMENT_REQUIRED) && absenceType.getBoolean(PARAM_COMMENT_REQUIRED)) {
+			if (comment == null || comment.trim().isEmpty()) {
+				throw new IllegalArgumentException(
+						"Comment is required for absence type " + absenceType.getString(PARAM_CODE));
+			}
+		}
+	}
+
+	public static void validateDurationType(Resource absenceType, String durationType) {
+		if (absenceType.hasParameter(PARAM_DURATION_TYPES) && durationType != null) {
+			java.util.List<String> allowed = absenceType.getStringList(PARAM_DURATION_TYPES);
+			if (allowed != null && !allowed.isEmpty()) {
+				boolean match = allowed.stream().anyMatch(a -> a.equalsIgnoreCase(durationType));
+				if (!match) {
+					throw new IllegalArgumentException("Duration type " + durationType
+							+ " is not allowed for absence type " + absenceType.getString(PARAM_CODE));
+				}
+			}
+		}
+	}
+
+	public static void validateNoOverlap(StrolchTransaction tx, String employeeId, java.time.ZonedDateTime start,
+			java.time.ZonedDateTime end, String excludeId) {
+		LocalDate startDate = start.toLocalDate();
+		LocalDate endDate = end.toLocalDate();
+
+		java.util.List<Resource> overlapping = tx
+				.streamResources(TYPE_ABSENCE)
+				.filter(a -> a.getRelationId(PARAM_EMPLOYEE).equals(employeeId))
+				.filter(a -> excludeId == null || !a.getId().equals(excludeId))
+				.filter(a -> {
+					String state = a.getString(PARAM_STATE);
+					return state.equals(STATE_SUBMITTED) || state.equals(STATE_APPROVED);
+				})
+				.filter(a -> {
+					LocalDate aStart = a.getDate(PARAM_START).toLocalDate();
+					LocalDate aEnd = a.getDate(PARAM_END).toLocalDate();
+					return !startDate.isAfter(aEnd) && !endDate.isBefore(aStart);
+				})
+				.toList();
+
+		if (!overlapping.isEmpty()) {
+			throw new IllegalArgumentException(
+					"Absence overlaps with an existing active absence: " + overlapping.getFirst().getId());
+		}
+	}
 }

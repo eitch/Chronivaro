@@ -39,8 +39,9 @@ public class UpdateAbsenceService extends AbstractService<UpdateAbsenceService.U
 			Resource absence = tx.getResourceBy(TYPE_ABSENCE, arg.absenceId, true);
 			tx.readLock(absence);
 
-			if (!absence.getString(PARAM_STATE).equals(STATE_SUBMITTED)) {
-				throw new IllegalStateException("Only absences in state SUBMITTED can be updated!");
+			String currentState = absence.getString(PARAM_STATE);
+			if (!currentState.equals(STATE_DRAFT) && !currentState.equals(STATE_SUBMITTED)) {
+				throw new IllegalStateException("Only absences in state DRAFT or SUBMITTED can be updated!");
 			}
 
 			Resource employee = tx.getResourceByRelation(absence, PARAM_EMPLOYEE, true);
@@ -73,6 +74,16 @@ public class UpdateAbsenceService extends AbstractService<UpdateAbsenceService.U
 			if (arg.dayPart != null) absence.setString(PARAM_DAY_PART, arg.dayPart);
 			if (arg.minutes != null) absence.setInteger(PARAM_MINUTES, arg.minutes);
 			if (arg.comment != null) absence.setString(PARAM_COMMENT, arg.comment);
+
+			Resource finalAbsenceType = tx.getResourceByRelation(absence, PARAM_ABSENCE_TYPE, true);
+			AbsenceHelper.validateDurationType(finalAbsenceType, absence.getString(PARAM_DURATION_TYPE));
+
+			if (currentState.equals(STATE_SUBMITTED)) {
+				String finalComment = absence.hasParameter(PARAM_COMMENT) ? absence.getString(PARAM_COMMENT) : "";
+				AbsenceHelper.validateCommentRequired(finalAbsenceType, finalComment);
+				AbsenceHelper.validateNoOverlap(tx, employee.getId(), absence.getDate(PARAM_START), absence.getDate(PARAM_END),
+						absence.getId());
+			}
 
 			bumpVersion(absence, tx);
 			tx.update(absence);

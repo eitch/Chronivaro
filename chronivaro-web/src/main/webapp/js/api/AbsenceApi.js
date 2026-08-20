@@ -26,6 +26,16 @@ export default class AbsenceApi {
         return await Rest.post('rest/chronivaro/v1/me/absences', absence);
     }
 
+    static async updateAbsence(id, absence, version) {
+        const headers = version !== undefined && version !== null ? { 'If-Match': `"${version}"` } : {};
+        return await Rest.put(`rest/chronivaro/v1/me/absences/${id}`, absence, headers);
+    }
+
+    static async submitAbsence(id, version) {
+        const headers = version !== undefined && version !== null ? { 'If-Match': `"${version}"` } : {};
+        return await Rest.post(`rest/chronivaro/v1/me/absences/${id}/submit`, {}, headers);
+    }
+
     static async getAbsence(id) {
         return await Rest.get(`rest/chronivaro/v1/me/absences/${id}`);
     }

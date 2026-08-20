@@ -73,6 +73,8 @@ public class ChronivaroConstants {
 	public static final String PARAM_REDUCE_VACATION_CREDIT = "reduceVacationCredit";
 	public static final String PARAM_PAID = "paid";
 	public static final String PARAM_APPROVAL_REQUIRED = "approvalRequired";
+	public static final String PARAM_COMMENT_REQUIRED = "commentRequired";
+	public static final String PARAM_VISIBLE_ON_PUBLIC_STATUS = "visibleOnPublicStatus";
 	public static final String PARAM_DURATION_TYPES = "durationTypes";
 
 	public static final String PARAM_ABSENCE_TYPE = "absenceType";
@@ -135,6 +137,7 @@ public class ChronivaroConstants {
 	public static final String SOURCE_IMPORT = "IMPORT";
 	public static final String SOURCE_ADMIN = "ADMIN";
 
+	public static final String STATE_DRAFT = "DRAFT";
 	public static final String STATE_OPEN = "OPEN";
 	public static final String STATE_SUBMITTED = "SUBMITTED";
 	public static final String STATE_APPROVED = "APPROVED";

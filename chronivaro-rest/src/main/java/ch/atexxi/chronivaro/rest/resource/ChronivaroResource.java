@@ -335,6 +335,7 @@ public class ChronivaroResource {
 		arg.dayPart = dto.dayPart();
 		arg.minutes = dto.minutes() == null ? 0 : dto.minutes();
 		arg.comment = dto.comment();
+		arg.state = dto.state();
 
 		StringResult result = serviceHandler.doService(cert, new RequestAbsenceService(), arg);
 		if (result.isOk()) {
@@ -380,6 +381,36 @@ public class ChronivaroResource {
 		arg.comment = dto.comment();
 
 		ServiceResult result = serviceHandler.doService(cert, new UpdateAbsenceService(), arg);
+		if (result.isOk()) {
+			try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
+				Resource absence = tx.getResourceBy(TYPE_ABSENCE, id, true);
+				Resource type = tx.getResourceByRelation(absence, PARAM_ABSENCE_TYPE, true);
+				return ConcurrencyHelper.toResponseWithETag(absence, ChronivaroMapper.toDto(absence, type.getString(PARAM_CODE)));
+			}
+		}
+		return ChronivaroRestHelper.toResponse(result);
+	}
+
+	@POST
+	@Path("me/absences/{id}/submit")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response submitAbsence(@Context HttpServletRequest request, @PathParam("id") String id) {
+		Certificate cert = (Certificate) request.getAttribute(STROLCH_CERTIFICATE);
+		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
+			Optional<Resource> employee = ChronivaroModelHelper.findEmployeeByUser(tx, cert.getUserId());
+			if (employee.isEmpty())
+				return ChronivaroRestHelper.toErrorResponse(Response.Status.NOT_FOUND, "NOT_FOUND",
+						"Employee not found for current user");
+			Resource absence = tx.getResourceBy(TYPE_ABSENCE, id, true);
+			if (!absence.getRelationId(PARAM_EMPLOYEE).equals(employee.get().getId())) {
+				return ChronivaroRestHelper.toErrorResponse(Response.Status.FORBIDDEN, "ACCESS_DENIED",
+						"Access denied to absence " + id);
+			}
+			ConcurrencyHelper.validateIfMatch(request, absence);
+		}
+
+		ServiceHandler serviceHandler = ChronivaroRestHelper.getServiceHandler();
+		ServiceResult result = serviceHandler.doService(cert, new SubmitAbsenceService(), new StringArgument(id));
 		if (result.isOk()) {
 			try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
 				Resource absence = tx.getResourceBy(TYPE_ABSENCE, id, true);

@@ -152,4 +152,45 @@ public class UpdateAbsenceServiceTest {
 			assertEquals("Updated by self", absence.getString(PARAM_COMMENT));
 		}
 	}
+
+	@Test
+	public void shouldUpdateDraftAbsence() {
+		String employeeId = "upd-draft-emp";
+
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
+			createEmployee(tx, employeeId, "Update Draft Emp");
+			ChronivaroTestHelper.createAbsenceType(tx, "VACATION3", "Vacation 3");
+			tx.commitOnClose();
+		}
+
+		ServiceHandler serviceHandler = runtimeMock.getServiceHandler();
+
+		// 1. Create Draft
+		RequestAbsenceService.RequestAbsenceArgument reqArg = new RequestAbsenceService.RequestAbsenceArgument();
+		reqArg.employeeId = employeeId;
+		reqArg.absenceTypeCode = "VACATION3";
+		reqArg.start = ZonedDateTime.parse("2026-11-01T08:00:00Z");
+		reqArg.end = ZonedDateTime.parse("2026-11-01T17:00:00Z");
+		reqArg.durationType = DURATION_FULL_DAY;
+		reqArg.asDraft = true;
+
+		li.strolch.service.StringResult reqResult = serviceHandler.doService(certificate, new RequestAbsenceService(),
+				reqArg);
+		assertTrue(reqResult.isOk());
+		String absenceId = reqResult.getValue();
+
+		// 2. Update Draft
+		UpdateAbsenceService.UpdateAbsenceArgument updArg = new UpdateAbsenceService.UpdateAbsenceArgument();
+		updArg.absenceId = absenceId;
+		updArg.comment = "Draft updated comment";
+
+		ServiceResult updResult = serviceHandler.doService(certificate, new UpdateAbsenceService(), updArg);
+		assertTrue(updResult.getMessage(), updResult.isOk());
+
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
+			Resource absence = tx.getResourceBy(TYPE_ABSENCE, absenceId, true);
+			assertEquals(STATE_DRAFT, absence.getString(PARAM_STATE));
+			assertEquals("Draft updated comment", absence.getString(PARAM_COMMENT));
+		}
+	}
 }

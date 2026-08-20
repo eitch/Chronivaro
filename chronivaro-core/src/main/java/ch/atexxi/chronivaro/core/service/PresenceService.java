@@ -87,10 +87,12 @@ public class PresenceService extends AbstractService<PresenceService.PresenceArg
 							Resource a = absence.get();
 							String absenceTypeId = a.getRelationId(PARAM_ABSENCE_TYPE);
 							Resource absenceType = tx.getResourceBy(TYPE_ABSENCE_TYPE, absenceTypeId, true);
+							boolean visibleOnPublic = absenceType.hasParameter(PARAM_VISIBLE_ON_PUBLIC_STATUS)
+									&& absenceType.getBoolean(PARAM_VISIBLE_ON_PUBLIC_STATUS);
 							Restrictable restrictable = new SimpleRestrictable(PRIVILEGE_GET_ABSENCE_REASON,
 									absenceType.getString(PARAM_CODE));
 							boolean hasPrivilege = tx.getPrivilegeContext().hasPrivilege(restrictable);
-							if (hasPrivilege) {
+							if (hasPrivilege || visibleOnPublic) {
 								absenceTypeCode = absenceType.getString(PARAM_CODE);
 								absenceTypeName = absenceType.getName();
 							} else {

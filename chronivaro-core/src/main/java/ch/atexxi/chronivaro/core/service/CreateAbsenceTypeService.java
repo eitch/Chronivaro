@@ -26,6 +26,8 @@ public class CreateAbsenceTypeService
 			type.setBoolean(PARAM_REDUCE_VACATION_CREDIT, arg.reduceVacationCredit);
 			type.setBoolean(PARAM_PAID, arg.paid);
 			type.setBoolean(PARAM_APPROVAL_REQUIRED, arg.approvalRequired);
+			type.setBoolean(PARAM_COMMENT_REQUIRED, arg.commentRequired);
+			type.setBoolean(PARAM_VISIBLE_ON_PUBLIC_STATUS, arg.visibleOnPublicStatus);
 			if (arg.durationTypes != null)
 				type.setStringList(PARAM_DURATION_TYPES, arg.durationTypes);
 			type.setBoolean(PARAM_ACTIVE, arg.active);
@@ -55,6 +57,8 @@ public class CreateAbsenceTypeService
 		public boolean reduceVacationCredit;
 		public boolean paid;
 		public boolean approvalRequired;
+		public boolean commentRequired;
+		public boolean visibleOnPublicStatus;
 		public List<String> durationTypes;
 		public boolean active;
 	}

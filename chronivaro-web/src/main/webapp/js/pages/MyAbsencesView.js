@@ -172,6 +172,7 @@ export default class MyAbsencesView {
                         </div>
                         <div class="modal-actions">
                             <button type="submit" class="primary-btn">Submit Request</button>
+                            <button type="button" id="save-draft-btn" class="secondary-btn">Save as Draft</button>
                             <button type="button" id="close-absence-modal-btn" class="secondary-btn">Cancel</button>
                         </div>
                     </form>
@@ -199,6 +200,7 @@ export default class MyAbsencesView {
 
         const modal = container.querySelector('#absence-modal');
         const requestAbsenceBtn = container.querySelector('#request-absence-btn');
+        const saveDraftBtn = container.querySelector('#save-draft-btn');
         const closeAbsenceModalBtn = container.querySelector('#close-absence-modal-btn');
         const absenceForm = container.querySelector('#absence-form');
         const modalAbsenceType = container.querySelector('#modal-absence-type');
@@ -243,7 +245,7 @@ export default class MyAbsencesView {
                     const opt2 = document.createElement('option');
                     opt2.value = t.code;
                     opt2.textContent = t.name;
-                    opt2.dataset.allowedDurations = JSON.stringify(t.allowedDurations || []);
+                    opt2.dataset.allowedDurations = JSON.stringify(t.durationTypes || t.allowedDurations || []);
                     opt2.dataset.commentRequired = t.commentRequired ? 'true' : 'false';
                     modalAbsenceType.appendChild(opt2);
                 });
@@ -356,7 +358,12 @@ export default class MyAbsencesView {
 
                     // Actions
                     let actionsHtml = '--';
-                    if (absence.status === 'SUBMITTED' || absence.status === 'APPROVED') {
+                    if (absence.status === 'DRAFT') {
+                        actionsHtml = `
+                            <button class="action-btn submit-btn" data-id="${absence.id}" data-version="${absence.version || 0}">Submit</button>
+                            <button class="action-btn cancel-btn" data-id="${absence.id}" data-version="${absence.version || 0}">Cancel</button>
+                        `;
+                    } else if (absence.status === 'SUBMITTED' || absence.status === 'APPROVED') {
                         actionsHtml = `<button class="action-btn cancel-btn" data-id="${absence.id}" data-version="${absence.version || 0}">Cancel</button>`;
                     }
 
@@ -369,6 +376,21 @@ export default class MyAbsencesView {
                         <td>${notes || '--'}</td>
                         <td>${actionsHtml}</td>
                     `;
+
+                    // Attach submit action
+                    const submitBtn = row.querySelector('.submit-btn');
+                    if (submitBtn) {
+                        submitBtn.addEventListener('click', async () => {
+                            try {
+                                await AbsenceApi.submitAbsence(absence.id, absence.version);
+                                await NotificationDialog.info('Absence submitted successfully.');
+                                await loadAbsences();
+                                await loadVacationAccount();
+                            } catch (err) {
+                                NotificationDialog.error(err.message);
+                            }
+                        });
+                    }
 
                     // Attach cancel action
                     const cancelBtn = row.querySelector('.cancel-btn');
@@ -483,6 +505,42 @@ export default class MyAbsencesView {
                 updateModalFields();
             }
             modal.style.display = 'flex';
+        });
+
+        saveDraftBtn.addEventListener('click', async () => {
+            const absenceTypeCode = modalAbsenceType.value;
+            if (!absenceTypeCode) {
+                NotificationDialog.error('Please select an absence type.');
+                return;
+            }
+
+            const startDate = modalStartDate.value;
+            const endDate = modalDurationType.value === 'FULL_DAY' ? modalEndDate.value : startDate;
+            if (startDate > endDate) {
+                NotificationDialog.error('End date cannot be earlier than start date.');
+                return;
+            }
+
+            const payload = {
+                absenceTypeCode,
+                start: startDate + 'T00:00:00.000+01:00',
+                end: endDate + 'T23:59:59.999+01:00',
+                durationType: modalDurationType.value,
+                halfDayPart: modalDurationType.value === 'HALF_DAY' ? modalHalfDayPart.value : undefined,
+                hours: modalDurationType.value === 'HOURS' ? parseFloat(modalHours.value) : undefined,
+                comment: modalComment.value.trim() || undefined,
+                state: 'DRAFT'
+            };
+
+            try {
+                await AbsenceApi.requestAbsence(payload);
+                modal.style.display = 'none';
+                await NotificationDialog.info('Absence saved as draft.');
+                await loadAbsences();
+                await loadVacationAccount();
+            } catch (err) {
+                NotificationDialog.error(err.message);
+            }
         });
 
         closeAbsenceModalBtn.addEventListener('click', () => {

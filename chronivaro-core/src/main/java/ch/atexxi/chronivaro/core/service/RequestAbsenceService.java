@@ -28,6 +28,8 @@ public class RequestAbsenceService
 		public String dayPart;
 		public int minutes;
 		public String comment;
+		public boolean asDraft;
+		public String state;
 	}
 
 	@Override
@@ -46,6 +48,13 @@ public class RequestAbsenceService
 			}
 
 			Resource absenceType = AbsenceHelper.getAbsenceType(tx, arg.absenceTypeCode);
+			AbsenceHelper.validateDurationType(absenceType, arg.durationType);
+
+			boolean isDraft = arg.asDraft || STATE_DRAFT.equalsIgnoreCase(arg.state);
+			if (!isDraft) {
+				AbsenceHelper.validateCommentRequired(absenceType, arg.comment);
+				AbsenceHelper.validateNoOverlap(tx, arg.employeeId, arg.start, arg.end, null);
+			}
 
 			Resource absence = tx.getResourceTemplate(TYPE_ABSENCE, true);
 			absence.setName("Absence " + arg.start);
@@ -61,15 +70,21 @@ public class RequestAbsenceService
 				absence.setInteger(PARAM_MINUTES, arg.minutes);
 			if (arg.comment != null)
 				absence.setString(PARAM_COMMENT, arg.comment);
-			absence.setString(PARAM_STATE, STATE_SUBMITTED);
+			absence.setString(PARAM_STATE, isDraft ? STATE_DRAFT : STATE_SUBMITTED);
 
 			initVersion(absence, tx);
 			tx.add(absence);
 			absenceId = absence.getId();
 
-			ChronivaroAuditHelper.audit(tx, TYPE_ABSENCE, absence.getId(), AUDIT_ACTION_SUBMIT, arg.comment,
-					"Requested absence for employee " + arg.employeeId + " (" + arg.absenceTypeCode + " from "
-							+ arg.start + " to " + arg.end + ")");
+			if (isDraft) {
+				ChronivaroAuditHelper.audit(tx, TYPE_ABSENCE, absence.getId(), AUDIT_ACTION_CREATE, arg.comment,
+						"Created draft absence for employee " + arg.employeeId + " (" + arg.absenceTypeCode + " from "
+								+ arg.start + " to " + arg.end + ")");
+			} else {
+				ChronivaroAuditHelper.audit(tx, TYPE_ABSENCE, absence.getId(), AUDIT_ACTION_SUBMIT, arg.comment,
+						"Requested absence for employee " + arg.employeeId + " (" + arg.absenceTypeCode + " from "
+								+ arg.start + " to " + arg.end + ")");
+			}
 
 			tx.commitOnClose();
 		}

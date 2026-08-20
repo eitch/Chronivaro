@@ -52,6 +52,12 @@ export default class AbsenceTypesView {
 							<label><input type="checkbox" id="at-approval-required"> Approval Required</label>
 						</div>
 						<div class="form-group">
+							<label><input type="checkbox" id="at-comment-required"> Comment Required</label>
+						</div>
+						<div class="form-group">
+							<label><input type="checkbox" id="at-visible-on-public-status"> Visible on Public Status</label>
+						</div>
+						<div class="form-group">
 							<label><input type="checkbox" id="at-count-as-target-time"> Count as Target Time</label>
 						</div>
 						<div class="form-group">
@@ -123,6 +129,8 @@ export default class AbsenceTypesView {
                     container.querySelector('#at-name').value = type.name;
                     container.querySelector('#at-paid').checked = type.paid;
                     container.querySelector('#at-approval-required').checked = type.approvalRequired;
+                    container.querySelector('#at-comment-required').checked = type.commentRequired || false;
+                    container.querySelector('#at-visible-on-public-status').checked = type.visibleOnPublicStatus || false;
                     container.querySelector('#at-count-as-target-time').checked = type.countAsTargetTime;
                     container.querySelector('#at-reduce-vacation-credit').checked = type.reduceVacationCredit;
                     container.querySelector('#at-active').checked = type.active;
@@ -165,6 +173,8 @@ export default class AbsenceTypesView {
                 name: container.querySelector('#at-name').value,
                 paid: container.querySelector('#at-paid').checked,
                 approvalRequired: container.querySelector('#at-approval-required').checked,
+                commentRequired: container.querySelector('#at-comment-required').checked,
+                visibleOnPublicStatus: container.querySelector('#at-visible-on-public-status').checked,
                 countAsTargetTime: container.querySelector('#at-count-as-target-time').checked,
                 reduceVacationCredit: container.querySelector('#at-reduce-vacation-credit').checked,
                 active: container.querySelector('#at-active').checked,

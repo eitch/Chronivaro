@@ -50,6 +50,8 @@ public class AbsenceTypeServiceTest {
 		createArg.reduceVacationCredit = true;
 		createArg.paid = true;
 		createArg.approvalRequired = true;
+		createArg.commentRequired = true;
+		createArg.visibleOnPublicStatus = true;
 		createArg.durationTypes = List.of(DURATION_FULL_DAY, DURATION_HALF_DAY);
 		createArg.active = true;
 
@@ -67,6 +69,8 @@ public class AbsenceTypeServiceTest {
 			assertEquals("VAC", type.getString(PARAM_CODE));
 			assertEquals("Vacation", type.getString(PARAM_NAME));
 			assertTrue(type.getBoolean(PARAM_ACTIVE));
+			assertTrue(type.getBoolean(PARAM_COMMENT_REQUIRED));
+			assertTrue(type.getBoolean(PARAM_VISIBLE_ON_PUBLIC_STATUS));
 			assertEquals(2, type.getStringList(PARAM_DURATION_TYPES).size());
 		}
 
@@ -80,6 +84,8 @@ public class AbsenceTypeServiceTest {
 		updateArg.reduceVacationCredit = true;
 		updateArg.paid = true;
 		updateArg.approvalRequired = true;
+		updateArg.commentRequired = false;
+		updateArg.visibleOnPublicStatus = false;
 		updateArg.durationTypes = List.of(DURATION_FULL_DAY, DURATION_HALF_DAY);
 		updateArg.active = true;
 		ServiceResult updateResult = serviceHandler.doService(certificate, new UpdateAbsenceTypeService(), updateArg);
@@ -88,6 +94,8 @@ public class AbsenceTypeServiceTest {
 		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
 			Resource type = tx.getResourceBy(TYPE_ABSENCE_TYPE, absenceTypeId, true);
 			assertEquals("Updated Vacation", type.getString(PARAM_NAME));
+			assertFalse(type.getBoolean(PARAM_COMMENT_REQUIRED));
+			assertFalse(type.getBoolean(PARAM_VISIBLE_ON_PUBLIC_STATUS));
 		}
 
 		// Remove

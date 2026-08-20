@@ -5,6 +5,8 @@ import ch.atexxi.chronivaro.core.service.ApproveAbsenceService;
 import ch.atexxi.chronivaro.core.service.CancelAbsenceService;
 import ch.atexxi.chronivaro.core.service.RejectAbsenceService;
 import ch.atexxi.chronivaro.core.service.RequestAbsenceService;
+import ch.atexxi.chronivaro.core.service.SubmitAbsenceService;
+import ch.atexxi.chronivaro.core.service.UpdateAbsenceService;
 import li.strolch.model.Resource;
 import li.strolch.persistence.api.StrolchTransaction;
 import li.strolch.privilege.model.Certificate;
@@ -281,5 +283,181 @@ public class AbsenceServiceTest {
 			Resource absence = tx.getResourceBy(TYPE_ABSENCE, absenceId, true);
 			assertEquals(STATE_CANCELLED, absence.getString(PARAM_STATE));
 		}
+	}
+
+	@Test
+	public void shouldEnforceCommentRequired() {
+		String employeeId = "emp-comment-req";
+		String absenceTypeCode = "TRAINING";
+
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
+			createEmployee(tx, employeeId, "Comment Emp");
+
+			Resource training = tx.getResourceTemplate(TYPE_ABSENCE_TYPE, true);
+			training.setId(absenceTypeCode);
+			training.setName("Training");
+			training.setString(PARAM_CODE, absenceTypeCode);
+			training.setBoolean(PARAM_COMMENT_REQUIRED, true);
+			tx.add(training);
+
+			tx.commitOnClose();
+		}
+
+		ServiceHandler serviceHandler = runtimeMock.getServiceHandler();
+
+		// 1. Request without comment -> should fail
+		RequestAbsenceService.RequestAbsenceArgument reqArg = new RequestAbsenceService.RequestAbsenceArgument();
+		reqArg.employeeId = employeeId;
+		reqArg.absenceTypeCode = absenceTypeCode;
+		reqArg.start = ZonedDateTime.parse("2026-05-04T00:00:00+02:00[Europe/Zurich]");
+		reqArg.end = ZonedDateTime.parse("2026-05-04T23:59:59+02:00[Europe/Zurich]");
+		reqArg.durationType = DURATION_FULL_DAY;
+		ServiceResult failResult1 = serviceHandler.doService(certificate, new RequestAbsenceService(), reqArg);
+		assertTrue("Should fail when comment is null", failResult1.isNok());
+
+		// 2. Request with blank comment -> should fail
+		reqArg.comment = "   ";
+		ServiceResult failResult2 = serviceHandler.doService(certificate, new RequestAbsenceService(), reqArg);
+		assertTrue("Should fail when comment is blank", failResult2.isNok());
+
+		// 3. Request with valid comment -> should succeed
+		reqArg.comment = "Attending Java Conference";
+		ServiceResult okResult = serviceHandler.doService(certificate, new RequestAbsenceService(), reqArg);
+		assertTrue(okResult.getMessage(), okResult.isOk());
+	}
+
+	@Test
+	public void shouldEnforceAllowedDurationTypes() {
+		String employeeId = "emp-dur-types";
+		String absenceTypeCode = "DOCTOR";
+
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
+			createEmployee(tx, employeeId, "Duration Emp");
+
+			Resource doctor = tx.getResourceTemplate(TYPE_ABSENCE_TYPE, true);
+			doctor.setId(absenceTypeCode);
+			doctor.setName("Doctor Appointment");
+			doctor.setString(PARAM_CODE, absenceTypeCode);
+			doctor.setStringList(PARAM_DURATION_TYPES, java.util.List.of(DURATION_HOURS, DURATION_HALF_DAY));
+			tx.add(doctor);
+
+			tx.commitOnClose();
+		}
+
+		ServiceHandler serviceHandler = runtimeMock.getServiceHandler();
+
+		// 1. Request with disallowed duration FULL_DAY -> should fail
+		RequestAbsenceService.RequestAbsenceArgument reqArg = new RequestAbsenceService.RequestAbsenceArgument();
+		reqArg.employeeId = employeeId;
+		reqArg.absenceTypeCode = absenceTypeCode;
+		reqArg.start = ZonedDateTime.parse("2026-05-05T00:00:00+02:00[Europe/Zurich]");
+		reqArg.end = ZonedDateTime.parse("2026-05-05T23:59:59+02:00[Europe/Zurich]");
+		reqArg.durationType = DURATION_FULL_DAY;
+		ServiceResult failResult = serviceHandler.doService(certificate, new RequestAbsenceService(), reqArg);
+		assertTrue("FULL_DAY should be rejected", failResult.isNok());
+
+		// 2. Request with allowed duration HOURS -> should succeed
+		reqArg.durationType = DURATION_HOURS;
+		reqArg.minutes = 120;
+		ServiceResult okResult = serviceHandler.doService(certificate, new RequestAbsenceService(), reqArg);
+		assertTrue(okResult.getMessage(), okResult.isOk());
+	}
+
+	@Test
+	public void shouldHandleDraftAbsenceLifecycle() {
+		String employeeId = "emp-draft-test";
+		String absenceTypeCode = "SPECIAL_LEAVE";
+
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
+			createEmployee(tx, employeeId, "Draft Emp");
+
+			Resource special = tx.getResourceTemplate(TYPE_ABSENCE_TYPE, true);
+			special.setId(absenceTypeCode);
+			special.setName("Special Leave");
+			special.setString(PARAM_CODE, absenceTypeCode);
+			special.setBoolean(PARAM_COMMENT_REQUIRED, true);
+			tx.add(special);
+
+			tx.commitOnClose();
+		}
+
+		ServiceHandler serviceHandler = runtimeMock.getServiceHandler();
+
+		// 1. Create draft without comment -> should succeed
+		RequestAbsenceService.RequestAbsenceArgument reqArg = new RequestAbsenceService.RequestAbsenceArgument();
+		reqArg.employeeId = employeeId;
+		reqArg.absenceTypeCode = absenceTypeCode;
+		reqArg.start = ZonedDateTime.parse("2026-05-06T00:00:00+02:00[Europe/Zurich]");
+		reqArg.end = ZonedDateTime.parse("2026-05-06T23:59:59+02:00[Europe/Zurich]");
+		reqArg.durationType = DURATION_FULL_DAY;
+		reqArg.asDraft = true;
+		li.strolch.service.StringResult createDraftResult = serviceHandler.doService(certificate,
+				new RequestAbsenceService(), reqArg);
+		assertTrue(createDraftResult.getMessage(), createDraftResult.isOk());
+		String absenceId = createDraftResult.getValue();
+
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
+			Resource absence = tx.getResourceBy(TYPE_ABSENCE, absenceId, true);
+			assertEquals(STATE_DRAFT, absence.getString(PARAM_STATE));
+		}
+
+		// 2. Try to submit draft while comment is missing -> should fail
+		ServiceResult submitFail = serviceHandler.doService(certificate, new SubmitAbsenceService(),
+				new StringArgument(absenceId));
+		assertTrue("Submit should fail when comment is required but missing", submitFail.isNok());
+
+		// 3. Update draft to add comment -> should succeed
+		UpdateAbsenceService.UpdateAbsenceArgument updArg = new UpdateAbsenceService.UpdateAbsenceArgument();
+		updArg.absenceId = absenceId;
+		updArg.comment = "Moving house";
+		ServiceResult updResult = serviceHandler.doService(certificate, new UpdateAbsenceService(), updArg);
+		assertTrue(updResult.getMessage(), updResult.isOk());
+
+		// 4. Submit draft -> should succeed
+		ServiceResult submitOk = serviceHandler.doService(certificate, new SubmitAbsenceService(),
+				new StringArgument(absenceId));
+		assertTrue(submitOk.getMessage(), submitOk.isOk());
+
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
+			Resource absence = tx.getResourceBy(TYPE_ABSENCE, absenceId, true);
+			assertEquals(STATE_SUBMITTED, absence.getString(PARAM_STATE));
+			assertEquals("Moving house", absence.getString(PARAM_COMMENT));
+		}
+
+		// 5. Try to submit already submitted absence -> should fail
+		ServiceResult submitAgain = serviceHandler.doService(certificate, new SubmitAbsenceService(),
+				new StringArgument(absenceId));
+		assertTrue("Cannot submit already submitted absence", submitAgain.isNok());
+	}
+
+	@Test
+	public void shouldPreventOverlappingAbsences() {
+		String employeeId = "emp-overlap-test";
+
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
+			createEmployee(tx, employeeId, "Overlap Emp");
+			tx.commitOnClose();
+		}
+
+		ServiceHandler serviceHandler = runtimeMock.getServiceHandler();
+
+		// 1. First absence: May 11 to May 13
+		RequestAbsenceService.RequestAbsenceArgument req1 = new RequestAbsenceService.RequestAbsenceArgument();
+		req1.employeeId = employeeId;
+		req1.absenceTypeCode = "VACATION";
+		req1.start = ZonedDateTime.parse("2026-05-11T00:00:00+02:00[Europe/Zurich]");
+		req1.end = ZonedDateTime.parse("2026-05-13T23:59:59+02:00[Europe/Zurich]");
+		req1.durationType = DURATION_FULL_DAY;
+		assertTrue(serviceHandler.doService(certificate, new RequestAbsenceService(), req1).isOk());
+
+		// 2. Overlapping absence: May 12 to May 15 -> should fail
+		RequestAbsenceService.RequestAbsenceArgument req2 = new RequestAbsenceService.RequestAbsenceArgument();
+		req2.employeeId = employeeId;
+		req2.absenceTypeCode = "VACATION";
+		req2.start = ZonedDateTime.parse("2026-05-12T00:00:00+02:00[Europe/Zurich]");
+		req2.end = ZonedDateTime.parse("2026-05-15T23:59:59+02:00[Europe/Zurich]");
+		req2.durationType = DURATION_FULL_DAY;
+		assertTrue("Overlapping absence must fail",
+				serviceHandler.doService(certificate, new RequestAbsenceService(), req2).isNok());
 	}
 }
