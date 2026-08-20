@@ -5319,6 +5319,15 @@ components:
         vacationAbsenceTypeCode:
           type: string
           example: 'VACATION'
+        companyName:
+          type: string
+          example: 'Chronivaro'
+        companyLogo:
+          type: string
+          example: 'https://example.com/logo.png'
+        defaultLanguage:
+          type: string
+          example: 'de'
         version:
           type: integer
           example: 1
