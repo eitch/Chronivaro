@@ -383,19 +383,27 @@ Task 7 is split into subtasks **7.1** and **7.2** to separate the PDF generation
 
 #### 7.1: PDF Generation Engine and Layout Templates (OpenPDF / PDFBox)
 - **Specification Reference:** Section 4.2, Section 11.6.2, Section 17, Section 18.6
-- **Status:** `OPEN`
+- **Status:** `COMPLETED`
 - **Scope:**
-  1. Add OpenPDF (or PDFBox) dependency to `pom.xml` and `chronivaro-rest`.
+  1. Add OpenPDF (or PDFBox) dependency to `pom.xml` and `chronivaro-core`.
   2. Implement server-side `PdfExportHelper` with A4 page layout, standard company branding header (displaying `companyName` and `companyLogo` from Task 5), document metadata, employee summary box, and page-numbered footer.
   3. Implement PDF report builders for:
      - **Month Report PDF:** Monthly balance summary, calculation snapshot metrics, daily time breakdown table, work intervals, absences, and clear negative balance formatting.
      - **Vacation Summary PDF:** Annual entitlement, carry-over, adjustments, usage list, and remaining balance.
      - **Absence Report PDF:** Filtered employee absence list, absence types, date ranges, duration, and approval status.
+- **Affected Components:**
+  - `pom.xml`
+  - `chronivaro-core/pom.xml`
+  - `chronivaro-core/src/main/java/ch/atexxi/chronivaro/core/report/PdfExportHelper.java`
+  - `chronivaro-core/src/test/java/ch/atexxi/chronivaro/core/PdfExportHelperTest.java`
 - **Acceptance Criteria:**
   - PDF generator produces clean A4 documents with Unicode support without requiring external browser or office dependencies.
   - Documents include consistent header branding, employee information, clear data tables, and page footers.
   - Negative time and balance values are clearly identifiable in monochromatic print.
   - Core/REST unit tests verify deterministic PDF generation and byte streaming.
+- **Verification:**
+  - Unit tests in `PdfExportHelperTest` verifying deterministic PDF byte generation, document metadata, header/footer page events, table structures, formatting, multi-page layout, and image logo error resilience across Month, Vacation, and Absence reports in German (Swiss German) and English.
+  - Full reactor build and test suite passing cleanly (`mvn clean install` / `mvn clean test`).
 - **Dependencies:** Task 4, Task 5.
 
 #### 7.2: PDF REST Endpoints and Web UI Download Integration
