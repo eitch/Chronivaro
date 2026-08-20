@@ -203,7 +203,7 @@ The following foundational areas are verified as fully implemented in the reposi
 ### Task 3: Vacation Journal Immutability, Carry-Over and Year-End Processing
 
 - **Specification Reference:** Section 6.7, Section 6.7.1, Section 11.3
-- **Status:** `OPEN`
+- **Status:** `COMPLETED`
 - **Scope:**
   1. Fix `CreditVacationEntitlementService` and vacation adjustment logic to ensure journal immutability: entitlement adjustments or recalculations must append audited `CORRECTION` entries rather than updating existing `ENTITLEMENT` records in-place.
   2. Implement automated year-end vacation carry-over processing service (`YearEndVacationCarryOverService`):
@@ -213,14 +213,18 @@ The following foundational areas are verified as fully implemented in the reposi
   3. Ensure FIFO deduction consumption tracking against oldest available entitlement batches.
 - **Affected Components:**
   - `chronivaro-core/src/main/java/ch/atexxi/chronivaro/core/service/CreditVacationEntitlementService.java`
-  - `chronivaro-core/src/main/java/ch/atexxi/chronivaro/core/service/YearEndVacationCarryOverService.java` (new)
+  - `chronivaro-core/src/main/java/ch/atexxi/chronivaro/core/service/YearEndVacationCarryOverService.java`
   - `chronivaro-core/src/main/java/ch/atexxi/chronivaro/core/model/VacationHelper.java`
   - `chronivaro-core/src/main/java/ch/atexxi/chronivaro/core/service/ApproveAbsenceService.java`
+  - `runtime/config/PrivilegeRoles.xml`
 - **Acceptance Criteria:**
   - Recalculating or correcting entitlements never mutates existing `VacationAccountEntry` records.
   - Year-end service successfully transfers all unexpired vacation balances to the next year as `CARRY_OVER` entries.
   - Approving vacation requests continues to block negative balances and creates immutable `USAGE` journal entries consuming oldest credits first.
   - Comprehensive unit and integration tests cover year-end transitions and journal immutability.
+- **Verification:**
+  - Unit tests in `YearEndVacationCarryOverServiceTest`, `VacationJournalTest`, and `VacationEntitlementServiceTest`.
+  - Full reactor test suite passing cleanly (`mvn clean test`).
 - **Dependencies:** None.
 
 ---
