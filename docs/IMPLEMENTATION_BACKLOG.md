@@ -294,7 +294,7 @@ The following foundational areas are verified as fully implemented in the reposi
 
 ### Task 6: Implement Multi-Language (i18n) Infrastructure and DE/EN Localization
 
-Task 6 is split into subtasks **6.1** and **6.2** to separate the client-side i18n engine and translation dictionaries from UI component migration and build parity tests.
+Task 6 is split into subtasks **6.1**, **6.2**, **6.3**, and **6.4** to separate the client-side i18n engine and translation dictionaries, app shell and core authentication/dashboard views, employee self-service views, and master data administration views per task size limits.
 
 #### 6.1: i18n Core Bundle, Language Resolution Engine, and Key Parity Testing
 - **Specification Reference:** Section 4.2, Section 12.3, Section 16, Section 18.5
@@ -312,19 +312,44 @@ Task 6 is split into subtasks **6.1** and **6.2** to separate the client-side i1
   - Full reactor test suite passing cleanly (`mvn clean test`).
 - **Dependencies:** Task 5.
 
-#### 6.2: UI Localization Migration and Language Switcher Component
+#### 6.2: App Shell, Language Switcher, Authentication, and Dashboard Localization
+- **Specification Reference:** Section 4.2, Section 16, Section 18.5
+- **Status:** `COMPLETED`
+- **Scope:**
+  1. Add language switcher dropdown to the global navigation header (`#header-language-select`) and login screen (`#login-language-select`).
+  2. Add `data-i18n` attributes to all navigation items and implement live re-translation in `app.js` upon language switch without requiring a full page reload.
+  3. Migrate `LoginView.js`, `CompleteRegistrationView.js`, and `DashboardView.js` to dynamic translation keys (`I18n.t`).
+  4. Persist language selection in `localStorage` and sync with user preferences upon login.
+- **Acceptance Criteria:**
+  - Login and registration screens allow switching between German and English before authentication.
+  - Switching language updates navigation and active view immediately.
+  - User-selected language persists across sessions and page reloads.
+  - Web UI integration tests verify language switching, navigation attributes, and localized rendering.
+- **Verification:**
+  - `WebLocalizationUiTest` in `chronivaro-web` asserting header language selector presence, navigation translation keys, `app.js` lifecycle hooks, login/registration view localization, and dashboard view localization.
+  - `I18nKeyParityTest` verifying dictionary synchronization and Swiss German compliance.
+  - Full reactor test suite passing cleanly (`mvn clean test`).
+- **Dependencies:** Task 6.1.
+
+#### 6.3: Employee Self-Service Views Localization
 - **Specification Reference:** Section 4.2, Section 16, Section 18.5
 - **Status:** `OPEN`
 - **Scope:**
-  1. Add language switcher dropdown/toggle to the login screen and global navigation header.
-  2. Migrate all Web UI pages and components (`DashboardView`, `TimesView`, `MyAbsencesView`, `MyPeriodsView`, `ApprovalsView`, `ReportsView`, `PresenceView`, `Admin*View`, `ConfigurationView`) to use dynamic i18n keys.
-  3. Persist selected language to `localStorage` and sync with user preferences upon login.
+  1. Migrate employee self-service views (`MyTimesView.js`, `MyAbsencesView.js`, `MyPeriodsView.js`, `PresenceView.js`, `ApprovalsView.js`, `ReportsView.js`) to use `I18n.t` for table headers, form labels, status badges, buttons, modals, and error dialogues.
+  2. Update localized date/time formatting helpers where appropriate.
 - **Acceptance Criteria:**
-  - Login screen allows switching between German and English before authentication.
-  - Switching language updates all rendered UI text immediately without requiring a full browser reload.
-  - User-selected language persists across sessions and page reloads.
-  - Web integration tests verify language switching and localized rendering.
-- **Dependencies:** Task 6.1.
+  - All employee-facing time, absence, period, approval, presence, and reporting views render in the active language.
+  - Form validation messages and notifications are localized.
+- **Dependencies:** Task 6.2.
+
+#### 6.4: Administration Views Localization
+- **Specification Reference:** Section 4.2, Section 16, Section 18.5
+- **Status:** `OPEN`
+- **Scope:**
+  1. Migrate master data and system admin views (`EmployeesView.js`, `TeamsView.js`, `LocationsView.js`, `AbsenceTypesView.js`, `HolidayCalendarsView.js`, `ScheduleTemplatesView.js`, `SchedulesView.js`, `ConfigurationView.js`) to use `I18n.t`.
+- **Acceptance Criteria:**
+  - All admin views render in the active language and respond to language changes.
+- **Dependencies:** Task 6.2.
 
 ---
 
