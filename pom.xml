@@ -30,6 +30,7 @@
         <jaxb-runtime.version>4.0.5</jaxb-runtime.version>
         <jersey.version>3.1.11</jersey.version>
         <jetty.version>12.0.16</jetty.version>
+        <openpdf.version>2.0.3</openpdf.version>
 
         <maven-compiler-plugin.version>3.14.0</maven-compiler-plugin.version>
         <maven-surefire-plugin.version>3.5.2</maven-surefire-plugin.version>
@@ -122,6 +123,11 @@
                 <groupId>org.glassfish.jaxb</groupId>
                 <artifactId>jaxb-runtime</artifactId>
                 <version>${jaxb-runtime.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.github.librepdf</groupId>
+                <artifactId>openpdf</artifactId>
+                <version>${openpdf.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

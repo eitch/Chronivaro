@@ -29,6 +29,11 @@
             <artifactId>slf4j-api</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>com.github.librepdf</groupId>
+            <artifactId>openpdf</artifactId>
+        </dependency>
+
         <!-- Test -->
         <dependency>
             <groupId>li.strolch</groupId>
