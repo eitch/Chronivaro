@@ -11,16 +11,11 @@ Audit date: 2026-08-19. `IMPLEMENTATION_SPECIFICATION.md` is authoritative; the 
 - **Time Tracking Foundation (Sections 6.3, 6.4, 6.4.1, 7.1–7.4, 9.1, 9.2):** WorkDay/WorkEntry model, dynamic target time calculation, multi-interval start/stop timer, midnight 24:00 splitting, forgotten timer auto-capping to daily target, weekly working location defaults, historical schedule version resolution by entry date, duration validation, workday preservation for historical dates, and morning/afternoon location uniqueness rules (**Task 1**).
 - **Absence Types & Draft Lifecycle (Sections 6.5, 6.6, 9.4, 10.1, 13.2):** Absence types with `commentRequired` and `visibleOnPublicStatus` metadata, comment enforcement, duration type validation, and full `DRAFT` status / explicit submission workflow (`POST /me/absences/{id}/submit`) (**Task 2**).
 - **Vacation Journal Immutability & Year-End Carry-Over (Sections 6.7, 6.7.1, 11.3):** Entitlement recalculations create audited `CORRECTION` adjustments while keeping existing entries immutable; automated year-end carry-over service transfers unexpired balances as `CARRY_OVER` entries with FIFO consumption (**Task 3**).
+- **Period Calculation Snapshots & Balance Carry-Forward (Sections 6.9, 11.2, 11.6.2):** Month summaries return immutable `calculationSnapshot` for approved and locked periods; `initialBalance` accurately carries forward prior month closing balance; monthly summary categorizes paid absences, unpaid absences, vacation usage, and holiday credits (**Task 4**).
 - **Presence & Privacy (Section 8):** Real-time binary `WORKING`/`NOT_WORKING` presence status with sensitive absence detail filtering for non-privileged viewers unless `visibleOnPublicStatus` is true.
 - **Audit Logging & Retention (Sections 6.10, 12, 13.6):** Full audit trail recording entity lifecycle events, parameter mutations, correlation IDs, user details, and retention purge service.
 - **Reporting Foundation & CSV Export (Sections 11.1–11.5, 12.1–12.2, 13.8):** Core calculation engines, Web UI report viewers, and deterministic RFC 4180 UTF-8 BOM CSV exports for Day, Month, Vacation, Team, and Absence reports.
 - **System Probes & Operations (Sections 13.2, 19, 20):** Unauthenticated health, readiness, version, and metrics probe endpoints; structured logging with MDC correlation IDs.
-
----
-
-## Incomplete / Partially Implemented (Backlog Item 4)
-
-- **Period Calculation Snapshots & Balance Carry-Forward (Sections 6.9, 11.2, 11.6.2):** Month summaries always recompute live data rather than reading the immutable `calculationSnapshot` for approved/locked periods; `initialBalance` is hardcoded to 0 instead of carrying forward prior period ending balance (**Task 4**).
 
 ---
 

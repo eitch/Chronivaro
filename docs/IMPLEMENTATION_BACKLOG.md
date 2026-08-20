@@ -232,7 +232,7 @@ The following foundational areas are verified as fully implemented in the reposi
 ### Task 4: Integrate Calculation Snapshot and Balance Carry-Forward into Month Reports
 
 - **Specification Reference:** Section 6.9, Section 11.2, Section 11.6.2
-- **Status:** `OPEN`
+- **Status:** `DONE`
 - **Scope:**
   1. Update `MonthSummaryService` to check if a requested period is in `APPROVED` or `LOCKED` state, and if so, return the stored immutable `calculationSnapshot` rather than re-calculating live data.
   2. Implement balance carry-forward: `initialBalance` in `MonthSummary` must compute the cumulative ending balance of the previous month (including previous balance, monthly net variance, and manual adjustments).
@@ -241,13 +241,18 @@ The following foundational areas are verified as fully implemented in the reposi
   - `chronivaro-core/src/main/java/ch/atexxi/chronivaro/core/service/MonthSummaryService.java`
   - `chronivaro-core/src/main/java/ch/atexxi/chronivaro/core/model/MonthSummary.java`
   - `chronivaro-core/src/main/java/ch/atexxi/chronivaro/core/model/PeriodHelper.java`
+  - `chronivaro-core/src/main/java/ch/atexxi/chronivaro/core/model/AbsenceHelper.java`
   - `chronivaro-rest/src/main/java/ch/atexxi/chronivaro/rest/dto/MonthSummaryDto.java`
-  - `chronivaro-web/src/main/webapp/js/pages/MyPeriodsView.js`
+  - `chronivaro-rest/src/main/java/ch/atexxi/chronivaro/rest/dto/ChronivaroMapper.java`
+  - `chronivaro-web/src/main/webapp/js/pages/ReportsView.js`
 - **Acceptance Criteria:**
   - For `APPROVED` and `LOCKED` periods, month summaries are served directly from the `calculationSnapshot`.
   - `initialBalance` correctly reflects the prior month's `closingBalance`.
   - Monthly summary clearly itemizes actual working time, target time, holiday credits, paid/unpaid absences, vacation usage, starting balance, period variance, and final balance.
   - Tests verify snapshot retrieval, carry-forward math, and period locking immutability.
+- **Verification:**
+  - Unit tests in `PeriodLifecycleServiceTest` verifying multi-month balance carry-forward, snapshot serialization/deserialization, and paid/unpaid/vacation absence categorization.
+  - Full reactor test suite passing cleanly (`mvn clean test`).
 - **Dependencies:** None.
 
 ---
