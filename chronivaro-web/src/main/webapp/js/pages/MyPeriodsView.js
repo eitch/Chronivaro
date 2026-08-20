@@ -1,6 +1,7 @@
 import PeriodApi from '../api/PeriodApi.js';
 import NotificationDialog from '../utils/NotificationDialog.js';
 import Format from '../utils/Format.js';
+import I18n from '../i18n/I18n.js';
 
 export default class MyPeriodsView {
 
@@ -23,16 +24,16 @@ export default class MyPeriodsView {
 		container.id = 'my-periods-view';
 		container.innerHTML = `
 			<div class="view-header">
-				<h2>Monthly Closing & Periods</h2>
+				<h2>${I18n.t('periods.title')}</h2>
 				<div class="month-navigation-controls">
-					<button id="prev-period-btn" class="secondary-btn" title="Previous Month">&laquo; Prev</button>
+					<button id="prev-period-btn" class="secondary-btn" title="Previous Month">&laquo; ${I18n.t('common.prev')}</button>
 					<div class="month-input-wrapper">
-						<label for="period-month-picker">Period:</label>
+						<label for="period-month-picker">${I18n.t('periods.period')}:</label>
 						<input type="month" id="period-month-picker" value="${this.selectedYearMonth}">
 					</div>
-					<button id="next-period-btn" class="secondary-btn" title="Next Month">Next &raquo;</button>
-					<button id="current-period-btn" class="secondary-btn">Current Month</button>
-					<button id="refresh-period-btn" class="secondary-btn">Refresh</button>
+					<button id="next-period-btn" class="secondary-btn" title="Next Month">${I18n.t('common.next')} &raquo;</button>
+					<button id="current-period-btn" class="secondary-btn">${I18n.t('common.currentMonth')}</button>
+					<button id="refresh-period-btn" class="secondary-btn">${I18n.t('common.refresh')}</button>
 				</div>
 			</div>
 
@@ -40,15 +41,15 @@ export default class MyPeriodsView {
 			<div id="period-status-banner" class="period-status-banner card">
 				<div class="status-header-row">
 					<div>
-						<span class="period-label">Period Status for <strong id="banner-period-title">${this.selectedYearMonth}</strong>:</span>
-						<span id="period-status-badge" class="status-badge badge-open">OPEN</span>
+						<span class="period-label">${I18n.t('periods.periodStatusFor', { period: `<strong id="banner-period-title">${this.selectedYearMonth}</strong>` })}</span>
+						<span id="period-status-badge" class="status-badge badge-open">${I18n.t('enums.periodState.OPEN')}</span>
 					</div>
 					<div id="period-timestamps" class="period-timestamps">
 						<!-- Dynamically populated timestamps -->
 					</div>
 				</div>
 				<div id="rejection-alert" class="rejection-alert hidden">
-					<strong>Rejection Reason:</strong>
+					<strong>${I18n.t('common.rejectionReason')}:</strong>
 					<p id="rejection-comment-text"></p>
 				</div>
 			</div>
@@ -56,7 +57,7 @@ export default class MyPeriodsView {
 			<!-- Period Submission Action Box (when OPEN or REJECTED) -->
 			<section id="period-action-section" class="period-action-section card">
 				<div class="section-title-bar">
-					<h3>Period Submission & Closing</h3>
+					<h3>${I18n.t('periods.periodSubmissionClosing')}</h3>
 				</div>
 				<div id="period-submission-content">
 					<!-- Dynamically rendered based on lifecycle state -->
@@ -66,42 +67,42 @@ export default class MyPeriodsView {
 			<!-- Monthly Summary Cards -->
 			<section class="period-summary-section card">
 				<div class="section-title-bar">
-					<h3>Monthly Balance Summary</h3>
+					<h3>${I18n.t('periods.monthlyBalanceSummary')}</h3>
 				</div>
 				<div class="period-cards-grid" id="period-summary-cards">
 					<div class="summary-card">
-						<span class="card-label">Target Time</span>
+						<span class="card-label">${I18n.t('periods.targetHours')}</span>
 						<span class="card-value" id="summary-target-time">--</span>
 					</div>
 					<div class="summary-card">
-						<span class="card-label">Worked Time</span>
+						<span class="card-label">${I18n.t('periods.actualHours')}</span>
 						<span class="card-value" id="summary-actual-time">--</span>
 					</div>
 					<div class="summary-card">
-						<span class="card-label">Holiday Credit</span>
+						<span class="card-label">${I18n.t('periods.holidayHours')}</span>
 						<span class="card-value" id="summary-holiday-time">--</span>
 					</div>
 					<div class="summary-card">
-						<span class="card-label">Absences</span>
+						<span class="card-label">${I18n.t('absences.title')}</span>
 						<span class="card-value" id="summary-absence-time">--</span>
 					</div>
 					<div class="summary-card highlight" id="card-period-balance-container">
-						<span class="card-label">Period Balance</span>
+						<span class="card-label">${I18n.t('periods.balanceHours')}</span>
 						<span class="card-value" id="summary-period-balance">--</span>
 					</div>
 					<div class="summary-card">
-						<span class="card-label">Initial Balance</span>
+						<span class="card-label">${I18n.t('common.balance')} (${I18n.t('common.prev')})</span>
 						<span class="card-value" id="summary-initial-balance">--</span>
 					</div>
 					<div class="summary-card highlight" id="card-end-balance-container">
-						<span class="card-label">End Balance</span>
+						<span class="card-label">${I18n.t('common.total')} ${I18n.t('common.balance')}</span>
 						<span class="card-value" id="summary-end-balance">--</span>
 					</div>
 				</div>
 
 				<div id="calculation-snapshot-container" class="calculation-snapshot-container hidden">
 					<details class="snapshot-details" id="snapshot-details">
-						<summary>Official Calculation Snapshot Details</summary>
+						<summary>${I18n.t('periods.calculationSnapshotDetails')}</summary>
 						<pre id="snapshot-json-view" class="snapshot-json-view"></pre>
 					</details>
 				</div>
@@ -110,23 +111,23 @@ export default class MyPeriodsView {
 			<!-- Daily Breakdown Table -->
 			<section class="period-daily-breakdown card">
 				<div class="section-title-bar">
-					<h3>Daily Time Breakdown</h3>
+					<h3>${I18n.t('periods.dailyTimeBreakdown')}</h3>
 				</div>
 				<table class="data-table" id="daily-breakdown-table">
 					<thead>
 						<tr>
-							<th>Date</th>
-							<th>Day</th>
-							<th>Status / Location</th>
-							<th>Target</th>
-							<th>Worked</th>
-							<th>Holiday</th>
-							<th>Absence</th>
-							<th>Daily Balance</th>
+							<th>${I18n.t('common.date')}</th>
+							<th>${I18n.t('periods.day')}</th>
+							<th>${I18n.t('common.status')} / ${I18n.t('times.workingLocation')}</th>
+							<th>${I18n.t('common.target')}</th>
+							<th>${I18n.t('periods.worked')}</th>
+							<th>${I18n.t('periods.holiday')}</th>
+							<th>${I18n.t('periods.absence')}</th>
+							<th>${I18n.t('periods.dailyBalance')}</th>
 						</tr>
 					</thead>
 					<tbody id="daily-breakdown-tbody">
-						<tr><td colspan="8">Loading daily breakdown...</td></tr>
+						<tr><td colspan="8">${I18n.t('common.loading')}</td></tr>
 					</tbody>
 				</table>
 			</section>
@@ -205,10 +206,10 @@ export default class MyPeriodsView {
 		const snapshotContainer = container.querySelector('#calculation-snapshot-container');
 		const snapshotJsonView = container.querySelector('#snapshot-json-view');
 
-		titleEl.textContent = this.selectedYearMonth;
-		statusBadge.textContent = 'LOADING...';
+		if (titleEl) titleEl.textContent = this.selectedYearMonth;
+		statusBadge.textContent = I18n.t('common.loading');
 		statusBadge.className = 'status-badge';
-		dailyTbody.innerHTML = '<tr><td colspan="8">Loading data for ' + this.selectedYearMonth + '...</td></tr>';
+		dailyTbody.innerHTML = `<tr><td colspan="8">${I18n.t('common.loading')}</td></tr>`;
 
 		try {
 			const [statusResult, summaryResult] = await Promise.all([
@@ -226,10 +227,10 @@ export default class MyPeriodsView {
 
 		} catch (err) {
 			console.error('Error loading period data:', err);
-			statusBadge.textContent = 'ERROR';
+			statusBadge.textContent = I18n.t('common.error');
 			statusBadge.className = 'status-badge badge-rejected';
-			dailyTbody.innerHTML = `<tr><td colspan="8" class="error">Failed to load period data: ${err.message}</td></tr>`;
-			submissionContent.innerHTML = `<div class="error-box"><p>Failed to load period: ${err.message}</p></div>`;
+			dailyTbody.innerHTML = `<tr><td colspan="8" class="error">${err.message || I18n.t('app.error')}</td></tr>`;
+			submissionContent.innerHTML = `<div class="error-box"><p>${err.message || I18n.t('app.error')}</p></div>`;
 		}
 	}
 
@@ -240,21 +241,21 @@ export default class MyPeriodsView {
 		const rejectionCommentText = container.querySelector('#rejection-comment-text');
 
 		const status = this.currentPeriodStatus ? this.currentPeriodStatus.status : 'OPEN';
-		statusBadge.textContent = status;
+		statusBadge.textContent = I18n.t(`enums.periodState.${status}`, {}, status);
 		statusBadge.className = `status-badge badge-${status.toLowerCase()}`;
 
 		let timestampHtml = '';
 		if (this.currentPeriodStatus) {
 			if (this.currentPeriodStatus.submittedAt) {
-				timestampHtml += `<span>Submitted: <strong>${Format.dateTime(this.currentPeriodStatus.submittedAt)}</strong></span>`;
+				timestampHtml += `<span>${I18n.t('periods.submittedAt', { time: Format.dateTime(this.currentPeriodStatus.submittedAt) })}</span>`;
 			}
 			if (this.currentPeriodStatus.approvedAt) {
-				const by = this.currentPeriodStatus.approvedBy ? ` by ${this.currentPeriodStatus.approvedBy}` : '';
-				timestampHtml += `<span>Approved${by}: <strong>${Format.dateTime(this.currentPeriodStatus.approvedAt)}</strong></span>`;
+				const by = this.currentPeriodStatus.approvedBy ? ` (${this.currentPeriodStatus.approvedBy})` : '';
+				timestampHtml += `<span>${I18n.t('periods.approvedAt', { by: by, time: Format.dateTime(this.currentPeriodStatus.approvedAt) })}</span>`;
 			}
 			if (this.currentPeriodStatus.rejectedAt) {
-				const by = this.currentPeriodStatus.rejectedBy ? ` by ${this.currentPeriodStatus.rejectedBy}` : '';
-				timestampHtml += `<span>Rejected${by}: <strong>${Format.dateTime(this.currentPeriodStatus.rejectedAt)}</strong></span>`;
+				const by = this.currentPeriodStatus.rejectedBy ? ` (${this.currentPeriodStatus.rejectedBy})` : '';
+				timestampHtml += `<span>${I18n.t('periods.rejectedAt', { by: by, time: Format.dateTime(this.currentPeriodStatus.rejectedAt) })}</span>`;
 			}
 		}
 		timestampsEl.innerHTML = timestampHtml;
@@ -323,11 +324,15 @@ export default class MyPeriodsView {
 	renderDailyBreakdown(container) {
 		const tbody = container.querySelector('#daily-breakdown-tbody');
 		if (!this.currentMonthSummary || !this.currentMonthSummary.daySummaries || this.currentMonthSummary.daySummaries.length === 0) {
-			tbody.innerHTML = '<tr><td colspan="8">No daily records for this month.</td></tr>';
+			tbody.innerHTML = `<tr><td colspan="8">${I18n.t('periods.noDailyRecords')}</td></tr>`;
 			return;
 		}
 
-		const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+		const lang = I18n.getLanguage();
+		const daysDe = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
+		const daysEn = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+		const days = lang === 'de' ? daysDe : daysEn;
+
 		tbody.innerHTML = '';
 
 		this.currentMonthSummary.daySummaries.forEach(day => {
@@ -344,8 +349,12 @@ export default class MyPeriodsView {
 				stateClass = 'badge-not-working';
 			}
 
-			const locationLabel = day.workingLocation ? ` (${day.workingLocation})` : '';
-			const stateDisplay = `<span class="status-badge ${stateClass}">${day.stateLabel || day.state}${locationLabel}</span>`;
+			const locName = day.workingLocation 
+				? I18n.t(`enums.workingLocation.${day.workingLocation}`, {}, day.workingLocation)
+				: '';
+			const locationLabel = locName ? ` (${locName})` : '';
+			const stateText = I18n.t(`enums.dayState.${day.state}`, {}, day.stateLabel || day.state);
+			const stateDisplay = `<span class="status-badge ${stateClass}">${stateText}${locationLabel}</span>`;
 			const balanceClass = day.balance >= 0 ? 'positive' : 'negative';
 
 			tr.innerHTML = `
@@ -370,14 +379,14 @@ export default class MyPeriodsView {
 			submissionContent.innerHTML = `
 				<div class="submit-form-container">
 					<p class="submit-instruction">
-						Review the monthly calculation above. Once submitted, your supervisor will review and approve the monthly period.
+						${I18n.t('periods.submitInstruction')}
 					</p>
 					<div class="form-group">
-						<label for="submit-period-comment">Submission Comment (optional):</label>
-						<textarea id="submit-period-comment" class="form-textarea" rows="2" placeholder="Add any notes or explanations for your supervisor..."></textarea>
+						<label for="submit-period-comment">${I18n.t('periods.submissionComment')}</label>
+						<textarea id="submit-period-comment" class="form-textarea" rows="2" placeholder="${I18n.t('periods.submissionCommentPlaceholder')}"></textarea>
 					</div>
 					<div class="form-actions">
-						<button id="submit-period-btn" class="primary-btn">Submit Period for Approval</button>
+						<button id="submit-period-btn" class="primary-btn">${I18n.t('periods.submitPeriodForApproval')}</button>
 					</div>
 				</div>
 			`;
@@ -387,23 +396,23 @@ export default class MyPeriodsView {
 
 			submitBtn.addEventListener('click', async () => {
 				const confirmed = await NotificationDialog.confirm(
-					`Are you sure you want to submit monthly period ${this.selectedYearMonth} for supervisor approval?`,
-					'Submit Period'
+					I18n.t('periods.confirmSubmitDialog', { period: this.selectedYearMonth }),
+					I18n.t('periods.submitPeriodForApproval')
 				);
 				if (!confirmed) return;
 
 				try {
 					submitBtn.disabled = true;
-					submitBtn.textContent = 'Submitting...';
+					submitBtn.textContent = I18n.t('periods.submitting');
 					const comment = commentInput.value.trim() || null;
 					await PeriodApi.submitMyPeriod(this.selectedYearMonth, comment);
-					await NotificationDialog.info(`Period ${this.selectedYearMonth} successfully submitted for approval.`);
+					await NotificationDialog.info(I18n.t('periods.submitSuccess', { period: this.selectedYearMonth }));
 					await this.loadPeriodData(container);
 				} catch (err) {
 					console.error('Failed to submit period:', err);
-					NotificationDialog.error(err.message || 'Failed to submit period');
+					NotificationDialog.error(err.message || I18n.t('app.error'));
 					submitBtn.disabled = false;
-					submitBtn.textContent = 'Submit Period for Approval';
+					submitBtn.textContent = I18n.t('periods.submitPeriodForApproval');
 				}
 			});
 
@@ -412,8 +421,8 @@ export default class MyPeriodsView {
 				<div class="info-notice info-submitted">
 					<span class="notice-icon">&#9432;</span>
 					<div>
-						<strong>Period Submitted</strong>
-						<p>Period <strong>${this.selectedYearMonth}</strong> has been submitted and is currently pending review and approval by your supervisor.</p>
+						<strong>${I18n.t('periods.periodSubmittedTitle')}</strong>
+						<p>${I18n.t('periods.periodSubmittedDesc', { period: this.selectedYearMonth })}</p>
 					</div>
 				</div>
 			`;
@@ -422,8 +431,8 @@ export default class MyPeriodsView {
 				<div class="info-notice info-approved">
 					<span class="notice-icon">&#10003;</span>
 					<div>
-						<strong>Period Approved</strong>
-						<p>Period <strong>${this.selectedYearMonth}</strong> has been approved. The monthly times and balances are confirmed.</p>
+						<strong>${I18n.t('periods.periodApprovedTitle')}</strong>
+						<p>${I18n.t('periods.periodApprovedDesc', { period: this.selectedYearMonth })}</p>
 					</div>
 				</div>
 			`;
@@ -432,13 +441,11 @@ export default class MyPeriodsView {
 				<div class="info-notice info-locked">
 					<span class="notice-icon">&#128274;</span>
 					<div>
-						<strong>Period Closed & Locked</strong>
-						<p>Period <strong>${this.selectedYearMonth}</strong> is closed and locked as part of official year-end closing.</p>
+						<strong>${I18n.t('periods.periodLockedTitle')}</strong>
+						<p>${I18n.t('periods.periodLockedDesc', { period: this.selectedYearMonth })}</p>
 					</div>
 				</div>
 			`;
-		} else {
-			submissionContent.innerHTML = `<p>Period Status: ${status}</p>`;
 		}
 	}
 }

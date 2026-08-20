@@ -1,3 +1,5 @@
+import I18n from '../i18n/I18n.js';
+
 export default class Format {
     static duration(minutes) {
         if (minutes === undefined || minutes === null) return '';
@@ -17,12 +19,14 @@ export default class Format {
     static date(dateStr) {
         if (!dateStr) return '';
         const date = new Date(dateStr);
-        return isNaN(date.getTime()) ? dateStr : date.toLocaleDateString();
+        const lang = (typeof I18n !== 'undefined' && I18n.getLanguage) ? I18n.getLanguage() : 'de';
+        return isNaN(date.getTime()) ? dateStr : date.toLocaleDateString(lang);
     }
 
     static dateTime(dateStr) {
         if (!dateStr) return '';
         const date = new Date(dateStr);
-        return isNaN(date.getTime()) ? dateStr : date.toLocaleString();
+        const lang = (typeof I18n !== 'undefined' && I18n.getLanguage) ? I18n.getLanguage() : 'de';
+        return isNaN(date.getTime()) ? dateStr : date.toLocaleString(lang);
     }
 }

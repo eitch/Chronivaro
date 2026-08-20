@@ -2,6 +2,7 @@ import PresenceApi from '../api/PresenceApi.js';
 import TeamApi from '../api/TeamApi.js';
 import LocationApi from '../api/LocationApi.js';
 import Format from '../utils/Format.js';
+import I18n from '../i18n/I18n.js';
 
 export default class PresenceView {
 
@@ -14,17 +15,17 @@ export default class PresenceView {
 		container.id = 'presence-view';
 		container.innerHTML = `
 			<div class="view-header">
-				<h2>Who is working?</h2>
-				<button id="settings-toggle" class="icon-button" title="Settings">⚙️</button>
+				<h2>${I18n.t('presence.whoIsWorking')}</h2>
+				<button id="settings-toggle" class="icon-button" title="${I18n.t('presence.settings')}">⚙️</button>
 			</div>
 			<div id="settings-menu" class="settings-menu hidden">
 				<div class="filters">
-					<label>Team: <select id="team-filter"><option value="">All</option></select></label>
-					<label>Location: <select id="location-filter"><option value="">All</option></select></label>
+					<label>${I18n.t('common.team')}: <select id="team-filter"><option value="">${I18n.t('common.all')}</option></select></label>
+					<label>${I18n.t('common.location')}: <select id="location-filter"><option value="">${I18n.t('common.all')}</option></select></label>
 				</div>
 			</div>
 			<div id="presence-list" class="presence-list">
-				<p>Loading presence data...</p>
+				<p>${I18n.t('common.loading')}</p>
 			</div>
 		`;
 
@@ -45,7 +46,7 @@ export default class PresenceView {
 				const opt = document.createElement('option');
 				opt.value = t.id;
 				opt.textContent = t.name;
-				if (params.teamId === t.id) opt.selected = true;
+				if (params && params.teamId === t.id) opt.selected = true;
 				teamFilter.appendChild(opt);
 			});
 
@@ -54,7 +55,7 @@ export default class PresenceView {
 				const opt = document.createElement('option');
 				opt.value = l.id;
 				opt.textContent = l.name;
-				if (params.locationId === l.id) opt.selected = true;
+				if (params && params.locationId === l.id) opt.selected = true;
 				locationFilter.appendChild(opt);
 			});
 		};
@@ -66,7 +67,7 @@ export default class PresenceView {
 				const presenceInfos = await PresenceApi.getPresence(teamId, locationId);
 
 				if (presenceInfos.length === 0 && allTeams.length === 0) {
-					presenceList.innerHTML = '<p>No employees found matching the filters.</p>';
+					presenceList.innerHTML = `<p>${I18n.t('presence.noEmployeesFound')}</p>`;
 					return;
 				}
 
@@ -82,7 +83,7 @@ export default class PresenceView {
 					if (teamEmployees.length === 0) {
 						const noEmployees = document.createElement('p');
 						noEmployees.className = 'no-employees';
-						noEmployees.textContent = 'No employees present.';
+						noEmployees.textContent = I18n.t('presence.noEmployeesPresent');
 						teamGroup.appendChild(noEmployees);
 					} else {
 						teamEmployees.forEach(info => {
@@ -95,26 +96,33 @@ export default class PresenceView {
 							} else if (info.isOff) {
 								statusClass = 'status-off-duty';
 							}
-							let statusText = info.statusLabel;
+
+							let statusText = info.status === 'WORKING'
+								? I18n.t('presence.working')
+								: (info.isOff ? I18n.t('dashboard.offDuty') : I18n.t('presence.notWorking'));
 							
 							let extraInfo = '';
 							if (info.absenceTypeCode) {
-								extraInfo = `<span class="presence-absence">(${info.absenceTypeName})</span>`;
+								extraInfo = `<span class="presence-absence">(${info.absenceTypeName || info.absenceTypeCode})</span>`;
 							} else if (info.isOff) {
-								extraInfo = '<span class="presence-off">(Off-duty)</span>';
+								extraInfo = `<span class="presence-off">(${I18n.t('dashboard.offDuty')})</span>`;
 							}
+
+							const locationText = info.workingLocation 
+								? I18n.t(`enums.workingLocation.${info.workingLocation}`, {}, info.workingLocation)
+								: '';
 
 							card.innerHTML = `
 								<div class="presence-info">
 									<span class="presence-name">${info.firstname} ${info.lastname}</span>
 									<div class="presence-status-line">
 										<span class="presence-status ${statusClass}">${statusText}</span>
-										${info.status === 'WORKING' && info.workingLocation ? `<span class="presence-working-location">${info.workingLocation}</span>` : ''}
+										${info.status === 'WORKING' && locationText ? `<span class="presence-working-location">${locationText}</span>` : ''}
 									</div>
 									${extraInfo}
 								</div>
 								<div class="presence-stats">
-									Today: ${Format.duration(info.minutesToday)}
+									${I18n.t('presence.todayStats', { time: Format.duration(info.minutesToday) })}
 								</div>
 							`;
 							teamGroup.appendChild(card);
@@ -124,7 +132,7 @@ export default class PresenceView {
 				});
 			} catch (err) {
 				console.error(err);
-				presenceList.innerHTML = '<p class="error">Failed to load presence data.</p>';
+				presenceList.innerHTML = `<p class="error">${I18n.t('presence.failedToLoad')}</p>`;
 			}
 		};
 

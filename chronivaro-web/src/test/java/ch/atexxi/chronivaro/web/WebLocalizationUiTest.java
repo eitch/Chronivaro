@@ -116,4 +116,113 @@ public class WebLocalizationUiTest {
 		assertTrue("DashboardView must localize presence states", content.contains("I18n.t('presence.working')"));
 		assertTrue("DashboardView must localize off duty badge", content.contains("I18n.t('dashboard.offDuty')"));
 	}
+
+	@Test
+	public void shouldVerifyMyTimesViewLocalization() throws IOException {
+		File file = new File(getWebappDir(), "js/pages/MyTimesView.js");
+		assertTrue("MyTimesView.js must exist", file.exists());
+		String content = Files.readString(file.toPath());
+
+		assertTrue("MyTimesView must import I18n", content.contains("import I18n from '../i18n/I18n.js'"));
+		assertTrue("MyTimesView must localize title", content.contains("I18n.t('times.title')"));
+		assertTrue("MyTimesView must localize from filter", content.contains("I18n.t('common.from')"));
+		assertTrue("MyTimesView must localize to filter", content.contains("I18n.t('common.to')"));
+		assertTrue("MyTimesView must localize refresh button", content.contains("I18n.t('common.refresh')"));
+		assertTrue("MyTimesView must localize start time header", content.contains("I18n.t('times.startTime')"));
+		assertTrue("MyTimesView must localize end time header", content.contains("I18n.t('times.endTime')"));
+		assertTrue("MyTimesView must localize duration header", content.contains("I18n.t('common.duration')"));
+		assertTrue("MyTimesView must localize location header", content.contains("I18n.t('times.workingLocation')"));
+	}
+
+	@Test
+	public void shouldVerifyMyAbsencesViewLocalization() throws IOException {
+		File file = new File(getWebappDir(), "js/pages/MyAbsencesView.js");
+		assertTrue("MyAbsencesView.js must exist", file.exists());
+		String content = Files.readString(file.toPath());
+
+		assertTrue("MyAbsencesView must import I18n", content.contains("import I18n from '../i18n/I18n.js'"));
+		assertTrue("MyAbsencesView must localize title", content.contains("I18n.t('absences.title')"));
+		assertTrue("MyAbsencesView must localize request absence button", content.contains("I18n.t('absences.requestAbsence')"));
+		assertTrue("MyAbsencesView must localize vacation account title", content.contains("I18n.t('absences.vacationAccount')"));
+		assertTrue("MyAbsencesView must localize annual entitlement", content.contains("I18n.t('absences.initialEntitlement')"));
+		assertTrue("MyAbsencesView must localize carry over", content.contains("I18n.t('absences.carryOver')"));
+		assertTrue("MyAbsencesView must localize adjustments", content.contains("I18n.t('absences.adjustments')"));
+		assertTrue("MyAbsencesView must localize used / approved", content.contains("I18n.t('absences.usedApproved')"));
+		assertTrue("MyAbsencesView must localize remaining balance", content.contains("I18n.t('absences.currentBalance')"));
+		assertTrue("MyAbsencesView must localize journal details summary", content.contains("I18n.t('absences.viewVacationJournal'"));
+		assertTrue("MyAbsencesView must localize draft actions", content.contains("I18n.t('absences.saveDraft')"));
+	}
+
+	@Test
+	public void shouldVerifyMyPeriodsViewLocalization() throws IOException {
+		File file = new File(getWebappDir(), "js/pages/MyPeriodsView.js");
+		assertTrue("MyPeriodsView.js must exist", file.exists());
+		String content = Files.readString(file.toPath());
+
+		assertTrue("MyPeriodsView must import I18n", content.contains("import I18n from '../i18n/I18n.js'"));
+		assertTrue("MyPeriodsView must localize title", content.contains("I18n.t('periods.title')"));
+		assertTrue("MyPeriodsView must localize period label", content.contains("I18n.t('periods.period')"));
+		assertTrue("MyPeriodsView must localize period status banner", content.contains("I18n.t('periods.periodStatusFor'"));
+		assertTrue("MyPeriodsView must localize monthly balance summary", content.contains("I18n.t('periods.monthlyBalanceSummary')"));
+		assertTrue("MyPeriodsView must localize daily time breakdown", content.contains("I18n.t('periods.dailyTimeBreakdown')"));
+		assertTrue("MyPeriodsView must localize submission closing", content.contains("I18n.t('periods.periodSubmissionClosing')"));
+		assertTrue("MyPeriodsView must localize submit button", content.contains("I18n.t('periods.submitPeriodForApproval')"));
+	}
+
+	@Test
+	public void shouldVerifyPresenceViewLocalization() throws IOException {
+		File file = new File(getWebappDir(), "js/pages/PresenceView.js");
+		assertTrue("PresenceView.js must exist", file.exists());
+		String content = Files.readString(file.toPath());
+
+		assertTrue("PresenceView must import I18n", content.contains("import I18n from '../i18n/I18n.js'"));
+		assertTrue("PresenceView must localize title", content.contains("I18n.t('presence.whoIsWorking')"));
+		assertTrue("PresenceView must localize team filter", content.contains("I18n.t('common.team')"));
+		assertTrue("PresenceView must localize location filter", content.contains("I18n.t('common.location')"));
+		assertTrue("PresenceView must localize working presence", content.contains("I18n.t('presence.working')"));
+		assertTrue("PresenceView must localize stats", content.contains("I18n.t('presence.todayStats'"));
+	}
+
+	@Test
+	public void shouldVerifyApprovalsViewLocalization() throws IOException {
+		File file = new File(getWebappDir(), "js/pages/ApprovalsView.js");
+		assertTrue("ApprovalsView.js must exist", file.exists());
+		String content = Files.readString(file.toPath());
+
+		assertTrue("ApprovalsView must import I18n", content.contains("import I18n from '../i18n/I18n.js'"));
+		assertTrue("ApprovalsView must localize title", content.contains("I18n.t('approvals.supervisorApprovalQueues')"));
+		assertTrue("ApprovalsView must localize pending absences tab", content.contains("I18n.t('approvals.pendingAbsences')"));
+		assertTrue("ApprovalsView must localize pending periods tab", content.contains("I18n.t('approvals.pendingPeriods')"));
+		assertTrue("ApprovalsView must localize approve button", content.contains("I18n.t('common.approve')"));
+		assertTrue("ApprovalsView must localize reject button", content.contains("I18n.t('common.reject')"));
+		assertTrue("ApprovalsView must localize pagination page info", content.contains("I18n.t('approvals.pageInfo'"));
+	}
+
+	@Test
+	public void shouldVerifyReportsViewLocalization() throws IOException {
+		File file = new File(getWebappDir(), "js/pages/ReportsView.js");
+		assertTrue("ReportsView.js must exist", file.exists());
+		String content = Files.readString(file.toPath());
+
+		assertTrue("ReportsView must import I18n", content.contains("import I18n from '../i18n/I18n.js'"));
+		assertTrue("ReportsView must localize title", content.contains("I18n.t('reports.reportsAndExport')"));
+		assertTrue("ReportsView must localize day report tab", content.contains("I18n.t('reports.dayReport')"));
+		assertTrue("ReportsView must localize month report tab", content.contains("I18n.t('reports.monthReport')"));
+		assertTrue("ReportsView must localize vacation report tab", content.contains("I18n.t('reports.vacationReport')"));
+		assertTrue("ReportsView must localize team report tab", content.contains("I18n.t('reports.teamReport')"));
+		assertTrue("ReportsView must localize absences report tab", content.contains("I18n.t('reports.absencesReport')"));
+		assertTrue("ReportsView must localize generate report button", content.contains("I18n.t('reports.generateReport')"));
+		assertTrue("ReportsView must localize export csv button", content.contains("I18n.t('reports.exportCsvBom')"));
+	}
+
+	@Test
+	public void shouldVerifyFormatJsLocaleAwareness() throws IOException {
+		File file = new File(getWebappDir(), "js/utils/Format.js");
+		assertTrue("Format.js must exist", file.exists());
+		String content = Files.readString(file.toPath());
+
+		assertTrue("Format.js must import I18n", content.contains("import I18n from '../i18n/I18n.js'"));
+		assertTrue("Format.js date must use getLanguage", content.contains("I18n.getLanguage"));
+		assertTrue("Format.js dateTime must use getLanguage", content.contains("I18n.getLanguage"));
+	}
 }

@@ -1,5 +1,6 @@
 import WorkEntryApi from '../api/WorkEntryApi.js';
 import Format from '../utils/Format.js';
+import I18n from '../i18n/I18n.js';
 
 export default class MyTimesView {
 
@@ -11,26 +12,26 @@ export default class MyTimesView {
         const container = document.createElement('div');
         container.id = 'my-times-view';
         container.innerHTML = `
-			<h2>My Times</h2>
+			<h2>${I18n.t('times.title')}</h2>
 			<div id="filter-controls">
-				<label for="date-from">From:</label>
+				<label for="date-from">${I18n.t('common.from')}:</label>
 				<input type="date" id="date-from">
-				<label for="date-to">To:</label>
+				<label for="date-to">${I18n.t('common.to')}:</label>
 				<input type="date" id="date-to">
-				<button id="refresh-times">Refresh</button>
+				<button id="refresh-times" class="secondary-btn">${I18n.t('common.refresh')}</button>
 			</div>
-			<table id="work-entries-table">
+			<table id="work-entries-table" class="data-table">
 				<thead>
 					<tr>
-						<th>Start</th>
-						<th>End</th>
-						<th>Duration</th>
-						<th>Working location</th>
-						<th>Comment</th>
+						<th>${I18n.t('times.startTime')}</th>
+						<th>${I18n.t('times.endTime')}</th>
+						<th>${I18n.t('common.duration')}</th>
+						<th>${I18n.t('times.workingLocation')}</th>
+						<th>${I18n.t('common.comment')}</th>
 					</tr>
 				</thead>
 				<tbody>
-					<tr><td colspan="5">Loading...</td></tr>
+					<tr><td colspan="5">${I18n.t('common.loading')}</td></tr>
 				</tbody>
 			</table>
 		`;
@@ -59,24 +60,31 @@ export default class MyTimesView {
                 tbody.innerHTML = '';
 
                 if (entries.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="5">No entries found.</td></tr>';
+                    tbody.innerHTML = `<tr><td colspan="5">${I18n.t('times.noEntries')}</td></tr>`;
                     return;
                 }
 
                 entries.forEach(entry => {
                     const row = document.createElement('tr');
+                    const locationText = entry.workingLocation 
+                        ? I18n.t(`enums.workingLocation.${entry.workingLocation}`, {}, entry.workingLocation)
+                        : '';
+                    const endText = entry.end 
+                        ? Format.dateTime(entry.end)
+                        : `<span class="badge badge-working">${I18n.t('common.running')}</span>`;
+
                     row.innerHTML = `
-						<td>${new Date(entry.start).toLocaleString()}</td>
-						<td>${entry.end ? new Date(entry.end).toLocaleString() : 'Running...'}</td>
+						<td>${Format.dateTime(entry.start)}</td>
+						<td>${endText}</td>
 						<td>${Format.duration(entry.durationMinutes)}</td>
-						<td>${entry.workingLocation || ''}</td>
+						<td>${locationText}</td>
 						<td>${entry.comment || ''}</td>
 					`;
                     tbody.appendChild(row);
                 });
             } catch (err) {
                 console.error(err);
-                tbody.innerHTML = `<tr><td colspan="5" class="error">${err.message}</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="5" class="error">${err.message || I18n.t('app.error')}</td></tr>`;
             }
         };
 

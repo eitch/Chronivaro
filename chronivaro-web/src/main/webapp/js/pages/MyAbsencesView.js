@@ -2,6 +2,7 @@ import AbsenceApi from '../api/AbsenceApi.js';
 import VacationAccountApi from '../api/VacationAccountApi.js';
 import NotificationDialog from '../utils/NotificationDialog.js';
 import Format from '../utils/Format.js';
+import I18n from '../i18n/I18n.js';
 
 export default class MyAbsencesView {
     constructor(app) {
@@ -15,59 +16,59 @@ export default class MyAbsencesView {
         container.id = 'my-absences-view';
         container.innerHTML = `
             <div class="view-header">
-                <h2>Absences & Vacation</h2>
+                <h2>${I18n.t('absences.title')}</h2>
                 <div class="actions">
-                    <button id="request-absence-btn" class="primary-btn">+ Request Absence</button>
+                    <button id="request-absence-btn" class="primary-btn">+ ${I18n.t('absences.requestAbsence')}</button>
                 </div>
             </div>
 
             <!-- Vacation Account Summary Section -->
             <section class="vacation-summary-section card">
                 <div class="section-title-bar">
-                    <h3>Vacation Account</h3>
+                    <h3>${I18n.t('absences.vacationAccount')}</h3>
                     <div class="year-picker">
-                        <label for="vacation-year-select">Year:</label>
+                        <label for="vacation-year-select">${I18n.t('common.year')}:</label>
                         <select id="vacation-year-select"></select>
                     </div>
                 </div>
 
                 <div class="vacation-cards-grid" id="vacation-cards">
                     <div class="summary-card">
-                        <span class="card-label">Annual Entitlement</span>
+                        <span class="card-label">${I18n.t('absences.initialEntitlement')}</span>
                         <span class="card-value" id="card-entitlement">--</span>
                     </div>
                     <div class="summary-card">
-                        <span class="card-label">Carry-Over</span>
+                        <span class="card-label">${I18n.t('absences.carryOver')}</span>
                         <span class="card-value" id="card-carry-over">--</span>
                     </div>
                     <div class="summary-card">
-                        <span class="card-label">Adjustments</span>
+                        <span class="card-label">${I18n.t('absences.adjustments')}</span>
                         <span class="card-value" id="card-corrections">--</span>
                     </div>
                     <div class="summary-card">
-                        <span class="card-label">Used / Approved</span>
+                        <span class="card-label">${I18n.t('absences.usedApproved')}</span>
                         <span class="card-value" id="card-usage">--</span>
                     </div>
                     <div class="summary-card highlight" id="card-remaining-container">
-                        <span class="card-label">Remaining Balance</span>
+                        <span class="card-label">${I18n.t('absences.currentBalance')}</span>
                         <span class="card-value" id="card-remaining">--</span>
                     </div>
                 </div>
 
                 <details class="vacation-journal-details" id="vacation-journal-details">
-                    <summary>View Vacation Journal (<span id="journal-year-label"></span>)</summary>
+                    <summary>${I18n.t('absences.viewVacationJournal', { year: `<span id="journal-year-label">${this.selectedYear}</span>` })}</summary>
                     <table class="data-table" id="vacation-journal-table">
                         <thead>
                             <tr>
-                                <th>Effective Date</th>
-                                <th>Type</th>
-                                <th>Amount</th>
-                                <th>Comment</th>
-                                <th>Created By</th>
+                                <th>${I18n.t('common.effectiveDate')}</th>
+                                <th>${I18n.t('common.type')}</th>
+                                <th>${I18n.t('common.amount')}</th>
+                                <th>${I18n.t('common.comment')}</th>
+                                <th>${I18n.t('common.createdBy')}</th>
                             </tr>
                         </thead>
                         <tbody id="vacation-journal-tbody">
-                            <tr><td colspan="5">Loading journal...</td></tr>
+                            <tr><td colspan="5">${I18n.t('absences.loadingJournal')}</td></tr>
                         </tbody>
                     </table>
                 </details>
@@ -76,52 +77,52 @@ export default class MyAbsencesView {
             <!-- Personal Absences History Section -->
             <section class="absences-history-section card">
                 <div class="section-title-bar">
-                    <h3>Absence Requests</h3>
+                    <h3>${I18n.t('absences.history')}</h3>
                 </div>
 
                 <div class="filter-controls">
                     <div class="filter-group">
-                        <label for="absence-filter-from">From:</label>
+                        <label for="absence-filter-from">${I18n.t('common.from')}:</label>
                         <input type="date" id="absence-filter-from">
                     </div>
                     <div class="filter-group">
-                        <label for="absence-filter-to">To:</label>
+                        <label for="absence-filter-to">${I18n.t('common.to')}:</label>
                         <input type="date" id="absence-filter-to">
                     </div>
                     <div class="filter-group">
-                        <label for="absence-filter-status">Status:</label>
+                        <label for="absence-filter-status">${I18n.t('common.status')}:</label>
                         <select id="absence-filter-status">
-                            <option value="">All Statuses</option>
-                            <option value="SUBMITTED">Submitted</option>
-                            <option value="APPROVED">Approved</option>
-                            <option value="REJECTED">Rejected</option>
-                            <option value="CANCELLED">Cancelled</option>
-                            <option value="DRAFT">Draft</option>
+                            <option value="">${I18n.t('common.allStatuses')}</option>
+                            <option value="SUBMITTED">${I18n.t('enums.absenceState.SUBMITTED')}</option>
+                            <option value="APPROVED">${I18n.t('enums.absenceState.APPROVED')}</option>
+                            <option value="REJECTED">${I18n.t('enums.absenceState.REJECTED')}</option>
+                            <option value="CANCELLED">${I18n.t('enums.absenceState.CANCELLED')}</option>
+                            <option value="DRAFT">${I18n.t('enums.absenceState.DRAFT')}</option>
                         </select>
                     </div>
                     <div class="filter-group">
-                        <label for="absence-filter-type">Type:</label>
+                        <label for="absence-filter-type">${I18n.t('common.type')}:</label>
                         <select id="absence-filter-type">
-                            <option value="">All Types</option>
+                            <option value="">${I18n.t('common.allTypes')}</option>
                         </select>
                     </div>
-                    <button id="refresh-absences-btn" class="secondary-btn">Filter</button>
+                    <button id="refresh-absences-btn" class="secondary-btn">${I18n.t('common.filter')}</button>
                 </div>
 
                 <table class="data-table" id="absences-table">
                     <thead>
                         <tr>
-                            <th>Type</th>
-                            <th>Start Date</th>
-                            <th>End Date</th>
-                            <th>Duration</th>
-                            <th>Status</th>
-                            <th>Comment / Notes</th>
-                            <th>Actions</th>
+                            <th>${I18n.t('common.type')}</th>
+                            <th>${I18n.t('absences.startDate')}</th>
+                            <th>${I18n.t('absences.endDate')}</th>
+                            <th>${I18n.t('common.duration')}</th>
+                            <th>${I18n.t('common.status')}</th>
+                            <th>${I18n.t('common.comment')}</th>
+                            <th>${I18n.t('common.actions')}</th>
                         </tr>
                     </thead>
                     <tbody id="absences-tbody">
-                        <tr><td colspan="7">Loading absences...</td></tr>
+                        <tr><td colspan="7">${I18n.t('absences.loadingAbsences')}</td></tr>
                     </tbody>
                 </table>
             </section>
@@ -129,51 +130,51 @@ export default class MyAbsencesView {
             <!-- Request Absence Modal -->
             <div id="absence-modal" class="modal">
                 <div class="modal-content">
-                    <h3 id="absence-modal-title">Request Absence</h3>
+                    <h3 id="absence-modal-title">${I18n.t('absences.requestAbsence')}</h3>
                     <form id="absence-form">
                         <div class="form-grid">
                             <div class="form-group full-width">
-                                <label for="modal-absence-type">Absence Type:</label>
+                                <label for="modal-absence-type">${I18n.t('absences.absenceType')}:</label>
                                 <select id="modal-absence-type" required>
-                                    <option value="">-- Select Absence Type --</option>
+                                    <option value="">${I18n.t('absences.selectAbsenceTypePrompt')}</option>
                                 </select>
                             </div>
                             <div class="form-group">
-                                <label for="modal-start-date">Start Date:</label>
+                                <label for="modal-start-date">${I18n.t('absences.startDate')}:</label>
                                 <input type="date" id="modal-start-date" required>
                             </div>
                             <div class="form-group">
-                                <label for="modal-end-date">End Date:</label>
+                                <label for="modal-end-date">${I18n.t('absences.endDate')}:</label>
                                 <input type="date" id="modal-end-date" required>
                             </div>
                             <div class="form-group">
-                                <label for="modal-duration-type">Duration Type:</label>
+                                <label for="modal-duration-type">${I18n.t('absences.durationType')}:</label>
                                 <select id="modal-duration-type" required>
-                                    <option value="FULL_DAY">Full Day</option>
-                                    <option value="HALF_DAY">Half Day</option>
-                                    <option value="HOURS">Hours</option>
+                                    <option value="FULL_DAY">${I18n.t('enums.durationType.FULL_DAY')}</option>
+                                    <option value="HALF_DAY">${I18n.t('absences.halfDayMorning')} / ${I18n.t('absences.halfDayAfternoon')}</option>
+                                    <option value="HOURS">${I18n.t('enums.durationType.HOURLY')}</option>
                                 </select>
                             </div>
                             <div class="form-group" id="modal-half-day-group" style="display: none;">
-                                <label for="modal-half-day-part">Half Day Part:</label>
+                                <label for="modal-half-day-part">${I18n.t('absences.halfDayPart')}:</label>
                                 <select id="modal-half-day-part">
-                                    <option value="MORNING">Morning</option>
-                                    <option value="AFTERNOON">Afternoon</option>
+                                    <option value="MORNING">${I18n.t('absences.morning')}</option>
+                                    <option value="AFTERNOON">${I18n.t('absences.afternoon')}</option>
                                 </select>
                             </div>
                             <div class="form-group" id="modal-hours-group" style="display: none;">
-                                <label for="modal-hours">Hours:</label>
+                                <label for="modal-hours">${I18n.t('absences.hoursCount')}:</label>
                                 <input type="number" id="modal-hours" min="0.25" max="24" step="0.25" placeholder="e.g. 4">
                             </div>
                             <div class="form-group full-width">
-                                <label for="modal-comment" id="modal-comment-label">Comment:</label>
-                                <textarea id="modal-comment" rows="3" placeholder="Add a comment..."></textarea>
+                                <label for="modal-comment" id="modal-comment-label">${I18n.t('common.comment')}:</label>
+                                <textarea id="modal-comment" rows="3" placeholder="${I18n.t('common.comment')}..."></textarea>
                             </div>
                         </div>
                         <div class="modal-actions">
-                            <button type="submit" class="primary-btn">Submit Request</button>
-                            <button type="button" id="save-draft-btn" class="secondary-btn">Save as Draft</button>
-                            <button type="button" id="close-absence-modal-btn" class="secondary-btn">Cancel</button>
+                            <button type="submit" class="primary-btn">${I18n.t('absences.submitDraft')}</button>
+                            <button type="button" id="save-draft-btn" class="secondary-btn">${I18n.t('absences.saveDraft')}</button>
+                            <button type="button" id="close-absence-modal-btn" class="secondary-btn">${I18n.t('common.cancel')}</button>
                         </div>
                     </form>
                 </div>
@@ -233,8 +234,8 @@ export default class MyAbsencesView {
             try {
                 this.absenceTypes = await AbsenceApi.getAbsenceTypes();
                 // Populate filter dropdown
-                filterType.innerHTML = '<option value="">All Types</option>';
-                modalAbsenceType.innerHTML = '<option value="">-- Select Absence Type --</option>';
+                filterType.innerHTML = `<option value="">${I18n.t('common.allTypes')}</option>`;
+                modalAbsenceType.innerHTML = `<option value="">${I18n.t('absences.selectAbsenceTypePrompt')}</option>`;
 
                 this.absenceTypes.forEach(t => {
                     const opt1 = document.createElement('option');
@@ -257,8 +258,8 @@ export default class MyAbsencesView {
         // Load Vacation Account
         const loadVacationAccount = async () => {
             const year = parseInt(yearSelect.value, 10);
-            journalYearLabel.textContent = year;
-            journalTbody.innerHTML = '<tr><td colspan="5">Loading journal...</td></tr>';
+            if (journalYearLabel) journalYearLabel.textContent = year;
+            journalTbody.innerHTML = `<tr><td colspan="5">${I18n.t('absences.loadingJournal')}</td></tr>`;
             try {
                 const response = await VacationAccountApi.getMyVacationAccount(year);
                 const summary = response.summary || {};
@@ -279,7 +280,7 @@ export default class MyAbsencesView {
                 // Render journal table
                 journalTbody.innerHTML = '';
                 if (entries.length === 0) {
-                    journalTbody.innerHTML = '<tr><td colspan="5" class="empty-state">No vacation journal entries for this year.</td></tr>';
+                    journalTbody.innerHTML = `<tr><td colspan="5" class="empty-state">${I18n.t('absences.noJournalEntries')}</td></tr>`;
                 } else {
                     entries.forEach(entry => {
                         const row = document.createElement('tr');
@@ -287,10 +288,11 @@ export default class MyAbsencesView {
                         const sign = isPositive ? '+' : '';
                         const formattedAmount = `${sign}${Format.durationDays(entry.amountMinutes)}`;
                         const amountClass = isPositive ? 'text-success' : 'text-danger';
+                        const typeLabel = I18n.t(`enums.vacationEntryType.${entry.entryType}`, {}, entry.entryType);
 
                         row.innerHTML = `
                             <td>${Format.date(entry.effectiveDate)}</td>
-                            <td><span class="journal-type-badge">${entry.entryType}</span></td>
+                            <td><span class="journal-type-badge">${typeLabel}</span></td>
                             <td class="${amountClass}">${formattedAmount}</td>
                             <td>${entry.comment || '--'}</td>
                             <td>${entry.createdBy || '--'}</td>
@@ -300,18 +302,18 @@ export default class MyAbsencesView {
                 }
             } catch (err) {
                 console.error('Failed to load vacation account', err);
-                cardEntitlement.textContent = 'Error';
-                cardCarryOver.textContent = 'Error';
-                cardCorrections.textContent = 'Error';
-                cardUsage.textContent = 'Error';
-                cardRemaining.textContent = 'Error';
-                journalTbody.innerHTML = `<tr><td colspan="5" class="error">${err.message}</td></tr>`;
+                cardEntitlement.textContent = I18n.t('common.error');
+                cardCarryOver.textContent = I18n.t('common.error');
+                cardCorrections.textContent = I18n.t('common.error');
+                cardUsage.textContent = I18n.t('common.error');
+                cardRemaining.textContent = I18n.t('common.error');
+                journalTbody.innerHTML = `<tr><td colspan="5" class="error">${err.message || I18n.t('app.error')}</td></tr>`;
             }
         };
 
         // Load Personal Absences
         const loadAbsences = async () => {
-            absencesTbody.innerHTML = '<tr><td colspan="7">Loading absences...</td></tr>';
+            absencesTbody.innerHTML = `<tr><td colspan="7">${I18n.t('absences.loadingAbsences')}</td></tr>`;
             try {
                 const params = {
                     from: filterFrom.value || undefined,
@@ -324,7 +326,7 @@ export default class MyAbsencesView {
                 absencesTbody.innerHTML = '';
 
                 if (absences.length === 0) {
-                    absencesTbody.innerHTML = '<tr><td colspan="7" class="empty-state">No absence requests found.</td></tr>';
+                    absencesTbody.innerHTML = `<tr><td colspan="7" class="empty-state">${I18n.t('absences.noAbsenceRequests')}</td></tr>`;
                     return;
                 }
 
@@ -334,11 +336,15 @@ export default class MyAbsencesView {
                     // Determine duration label
                     let durationLabel = absence.durationType;
                     if (absence.durationType === 'HALF_DAY') {
-                        durationLabel = `Half Day (${absence.halfDayPart || ''})`;
+                        const partName = absence.halfDayPart 
+                            ? I18n.t(`absences.${absence.halfDayPart.toLowerCase()}`, {}, absence.halfDayPart)
+                            : '';
+                        durationLabel = `${I18n.t('absences.halfDayMorning')} (${partName})`;
                     } else if (absence.durationType === 'HOURS') {
-                        durationLabel = `${absence.hours || (absence.durationMinutes ? absence.durationMinutes / 60 : '')} hrs`;
+                        const hoursCount = absence.hours || (absence.durationMinutes ? absence.durationMinutes / 60 : '');
+                        durationLabel = `${hoursCount} ${I18n.t('common.hours')}`;
                     } else {
-                        durationLabel = 'Full Day';
+                        durationLabel = I18n.t('enums.durationType.FULL_DAY');
                     }
 
                     // Determine status badge
@@ -348,23 +354,24 @@ export default class MyAbsencesView {
                     else if (absence.status === 'REJECTED') statusClass = 'badge-rejected';
                     else if (absence.status === 'CANCELLED') statusClass = 'badge-cancelled';
 
+                    const statusLabel = I18n.t(`enums.absenceState.${absence.status}`, {}, absence.status);
+
                     // Notes / Reason
                     let notes = absence.comment || '';
-                    if (absence.status === 'REJECTED' && absence.rejectionReason) {
-                        notes += (notes ? ' | ' : '') + `Rejection Reason: ${absence.rejectionReason}`;
-                    } else if (absence.status === 'REJECTED' && absence.decisionComment) {
-                        notes += (notes ? ' | ' : '') + `Rejection Reason: ${absence.decisionComment}`;
+                    if (absence.status === 'REJECTED' && (absence.rejectionReason || absence.decisionComment)) {
+                        const reason = absence.rejectionReason || absence.decisionComment;
+                        notes += (notes ? ' | ' : '') + `${I18n.t('common.rejectionReason')}: ${reason}`;
                     }
 
                     // Actions
                     let actionsHtml = '--';
                     if (absence.status === 'DRAFT') {
                         actionsHtml = `
-                            <button class="action-btn submit-btn" data-id="${absence.id}" data-version="${absence.version || 0}">Submit</button>
-                            <button class="action-btn cancel-btn" data-id="${absence.id}" data-version="${absence.version || 0}">Cancel</button>
+                            <button class="action-btn submit-btn" data-id="${absence.id}" data-version="${absence.version || 0}">${I18n.t('common.submit')}</button>
+                            <button class="action-btn cancel-btn" data-id="${absence.id}" data-version="${absence.version || 0}">${I18n.t('common.cancel')}</button>
                         `;
                     } else if (absence.status === 'SUBMITTED' || absence.status === 'APPROVED') {
-                        actionsHtml = `<button class="action-btn cancel-btn" data-id="${absence.id}" data-version="${absence.version || 0}">Cancel</button>`;
+                        actionsHtml = `<button class="action-btn cancel-btn" data-id="${absence.id}" data-version="${absence.version || 0}">${I18n.t('common.cancel')}</button>`;
                     }
 
                     row.innerHTML = `
@@ -372,7 +379,7 @@ export default class MyAbsencesView {
                         <td>${Format.date(absence.start || absence.startDate)}</td>
                         <td>${Format.date(absence.end || absence.endDate)}</td>
                         <td>${durationLabel}</td>
-                        <td><span class="badge ${statusClass}">${absence.status}</span></td>
+                        <td><span class="badge ${statusClass}">${statusLabel}</span></td>
                         <td>${notes || '--'}</td>
                         <td>${actionsHtml}</td>
                     `;
@@ -383,11 +390,11 @@ export default class MyAbsencesView {
                         submitBtn.addEventListener('click', async () => {
                             try {
                                 await AbsenceApi.submitAbsence(absence.id, absence.version);
-                                await NotificationDialog.info('Absence submitted successfully.');
+                                await NotificationDialog.info(I18n.t('absences.requestSubmitted'));
                                 await loadAbsences();
                                 await loadVacationAccount();
                             } catch (err) {
-                                NotificationDialog.error(err.message);
+                                NotificationDialog.error(err.message || I18n.t('app.error'));
                             }
                         });
                     }
@@ -397,17 +404,17 @@ export default class MyAbsencesView {
                     if (cancelBtn) {
                         cancelBtn.addEventListener('click', async () => {
                             const confirmed = await NotificationDialog.confirm(
-                                `Are you sure you want to cancel this ${absence.absenceTypeName || 'absence'} request?`,
-                                'Cancel Absence'
+                                I18n.t('absences.confirmCancel', { type: absence.absenceTypeName || I18n.t('common.type') }),
+                                I18n.t('absences.cancelAbsence')
                             );
                             if (confirmed) {
                                 try {
                                     await AbsenceApi.cancelAbsence(absence.id, absence.version, 'Cancelled by employee');
-                                    await NotificationDialog.info('Absence request has been cancelled.');
+                                    await NotificationDialog.info(I18n.t('absences.requestCancelled'));
                                     await loadAbsences();
                                     await loadVacationAccount();
                                 } catch (err) {
-                                    NotificationDialog.error(err.message);
+                                    NotificationDialog.error(err.message || I18n.t('app.error'));
                                 }
                             }
                         });
@@ -417,7 +424,7 @@ export default class MyAbsencesView {
                 });
             } catch (err) {
                 console.error('Failed to load absences', err);
-                absencesTbody.innerHTML = `<tr><td colspan="7" class="error">${err.message}</td></tr>`;
+                absencesTbody.innerHTML = `<tr><td colspan="7" class="error">${err.message || I18n.t('app.error')}</td></tr>`;
             }
         };
 
@@ -427,7 +434,9 @@ export default class MyAbsencesView {
             if (!selectedOpt || !selectedOpt.value) return;
 
             const isCommentRequired = selectedOpt.dataset.commentRequired === 'true';
-            modalCommentLabel.textContent = isCommentRequired ? 'Comment *:' : 'Comment:';
+            modalCommentLabel.textContent = isCommentRequired 
+                ? `${I18n.t('common.comment')} *:` 
+                : `${I18n.t('common.comment')}:`;
             modalComment.required = isCommentRequired;
 
             let allowed = [];
@@ -437,9 +446,9 @@ export default class MyAbsencesView {
 
             modalDurationType.innerHTML = '';
             const allDurations = [
-                { value: 'FULL_DAY', label: 'Full Day' },
-                { value: 'HALF_DAY', label: 'Half Day' },
-                { value: 'HOURS', label: 'Hours' }
+                { value: 'FULL_DAY', label: I18n.t('enums.durationType.FULL_DAY') },
+                { value: 'HALF_DAY', label: `${I18n.t('absences.halfDayMorning')} / ${I18n.t('absences.halfDayAfternoon')}` },
+                { value: 'HOURS', label: I18n.t('enums.durationType.HOURLY') }
             ];
 
             const available = allowed.length > 0
@@ -510,14 +519,14 @@ export default class MyAbsencesView {
         saveDraftBtn.addEventListener('click', async () => {
             const absenceTypeCode = modalAbsenceType.value;
             if (!absenceTypeCode) {
-                NotificationDialog.error('Please select an absence type.');
+                NotificationDialog.error(I18n.t('absences.selectAbsenceTypeError'));
                 return;
             }
 
             const startDate = modalStartDate.value;
             const endDate = modalDurationType.value === 'FULL_DAY' ? modalEndDate.value : startDate;
             if (startDate > endDate) {
-                NotificationDialog.error('End date cannot be earlier than start date.');
+                NotificationDialog.error(I18n.t('absences.invalidDateRange'));
                 return;
             }
 
@@ -535,11 +544,11 @@ export default class MyAbsencesView {
             try {
                 await AbsenceApi.requestAbsence(payload);
                 modal.style.display = 'none';
-                await NotificationDialog.info('Absence saved as draft.');
+                await NotificationDialog.info(I18n.t('absences.draftSaved'));
                 await loadAbsences();
                 await loadVacationAccount();
             } catch (err) {
-                NotificationDialog.error(err.message);
+                NotificationDialog.error(err.message || I18n.t('app.error'));
             }
         });
 
@@ -551,14 +560,14 @@ export default class MyAbsencesView {
             e.preventDefault();
             const absenceTypeCode = modalAbsenceType.value;
             if (!absenceTypeCode) {
-                NotificationDialog.error('Please select an absence type.');
+                NotificationDialog.error(I18n.t('absences.selectAbsenceTypeError'));
                 return;
             }
 
             const startDate = modalStartDate.value;
             const endDate = modalDurationType.value === 'FULL_DAY' ? modalEndDate.value : startDate;
             if (startDate > endDate) {
-                NotificationDialog.error('End date cannot be earlier than start date.');
+                NotificationDialog.error(I18n.t('absences.invalidDateRange'));
                 return;
             }
 
@@ -575,11 +584,11 @@ export default class MyAbsencesView {
             try {
                 await AbsenceApi.requestAbsence(payload);
                 modal.style.display = 'none';
-                await NotificationDialog.info('Absence request submitted successfully.');
+                await NotificationDialog.info(I18n.t('absences.requestSubmitted'));
                 await loadAbsences();
                 await loadVacationAccount();
             } catch (err) {
-                NotificationDialog.error(err.message);
+                NotificationDialog.error(err.message || I18n.t('app.error'));
             }
         });
 

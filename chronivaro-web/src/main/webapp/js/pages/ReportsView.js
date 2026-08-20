@@ -2,6 +2,7 @@ import ReportApi from '../api/ReportApi.js';
 import AbsenceTypeApi from '../api/AbsenceTypeApi.js';
 import TeamApi from '../api/TeamApi.js';
 import Format from '../utils/Format.js';
+import I18n from '../i18n/I18n.js';
 
 export default class ReportsView {
 
@@ -53,26 +54,26 @@ export default class ReportsView {
 		container.id = 'reports-view';
 		container.innerHTML = `
 			<div class="view-header">
-				<h2>Reports & CSV Export</h2>
+				<h2>${I18n.t('reports.reportsAndExport')}</h2>
 			</div>
 
 			<!-- Report Type Selector -->
 			<div class="tabs-container">
 				<div class="tab-buttons">
 					<button id="report-type-day-btn" class="tab-btn ${this.activeReportType === 'day' ? 'active' : ''}">
-						Day Report
+						${I18n.t('reports.dayReport')}
 					</button>
 					<button id="report-type-month-btn" class="tab-btn ${this.activeReportType === 'month' ? 'active' : ''}">
-						Month Report
+						${I18n.t('reports.monthReport')}
 					</button>
 					<button id="report-type-vacation-btn" class="tab-btn ${this.activeReportType === 'vacation' ? 'active' : ''}">
-						Vacation Account
+						${I18n.t('reports.vacationReport')}
 					</button>
 					<button id="report-type-team-btn" class="tab-btn ${this.activeReportType === 'team' ? 'active' : ''}">
-						Team Report
+						${I18n.t('reports.teamReport')}
 					</button>
 					<button id="report-type-absences-btn" class="tab-btn ${this.activeReportType === 'absences' ? 'active' : ''}">
-						Absences Report
+						${I18n.t('reports.absencesReport')}
 					</button>
 				</div>
 			</div>
@@ -83,16 +84,16 @@ export default class ReportsView {
 					<!-- Dynamic Filter Fields will be injected here -->
 				</div>
 				<div class="report-actions-bar">
-					<button id="btn-run-report" class="primary-btn">Generate Report</button>
+					<button id="btn-run-report" class="primary-btn">${I18n.t('reports.generateReport')}</button>
 					<button id="btn-export-csv" class="secondary-btn btn-export">
-						<span class="icon">📥</span> Export CSV (UTF-8 BOM)
+						<span class="icon">📥</span> ${I18n.t('reports.exportCsvBom')}
 					</button>
 				</div>
 			</section>
 
 			<!-- Report Content Container -->
 			<div id="report-results-container">
-				<div class="empty-state">Select report parameters and click <strong>Generate Report</strong>.</div>
+				<div class="empty-state">${I18n.t('reports.selectParamsPrompt')}</div>
 			</div>
 		`;
 
@@ -159,7 +160,7 @@ export default class ReportsView {
 		const select = this.container.querySelector('#filter-absence-type');
 		if (!select) return;
 		const currentVal = select.value;
-		select.innerHTML = '<option value="">All Types</option>';
+		select.innerHTML = `<option value="">${I18n.t('common.allTypes')}</option>`;
 		this.absenceTypes.forEach(t => {
 			const opt = document.createElement('option');
 			opt.value = t.code || t.id;
@@ -173,7 +174,7 @@ export default class ReportsView {
 		const select = this.container.querySelector('#filter-team-id-select');
 		if (!select) return;
 		const currentVal = this.filters.team.teamId;
-		select.innerHTML = '<option value="">-- Select Team --</option>';
+		select.innerHTML = `<option value="">${I18n.t('reports.selectTeamPrompt')}</option>`;
 		this.teams.forEach(t => {
 			const opt = document.createElement('option');
 			opt.value = t.id;
@@ -187,12 +188,12 @@ export default class ReportsView {
 		if (this.activeReportType === 'day') {
 			this.filterBar.innerHTML = `
 				<div class="filter-group">
-					<label for="filter-day-date">Date *:</label>
+					<label for="filter-day-date">${I18n.t('common.date')} *:</label>
 					<input type="date" id="filter-day-date" value="${this.filters.day.date}" required>
 				</div>
 				<div class="filter-group">
-					<label for="filter-day-emp">Employee ID (optional):</label>
-					<input type="text" id="filter-day-emp" placeholder="Default: Current User" value="${this.filters.day.employeeId}">
+					<label for="filter-day-emp">${I18n.t('common.employee')} ID (${I18n.t('common.optional')}):</label>
+					<input type="text" id="filter-day-emp" placeholder="${I18n.t('reports.defaultCurrentUser')}" value="${this.filters.day.employeeId}">
 				</div>
 			`;
 			const dateInput = this.filterBar.querySelector('#filter-day-date');
@@ -203,12 +204,12 @@ export default class ReportsView {
 		} else if (this.activeReportType === 'month') {
 			this.filterBar.innerHTML = `
 				<div class="filter-group">
-					<label for="filter-month-ym">Month (YYYY-MM) *:</label>
+					<label for="filter-month-ym">${I18n.t('common.month')} (YYYY-MM) *:</label>
 					<input type="month" id="filter-month-ym" value="${this.filters.month.yearMonth}" required>
 				</div>
 				<div class="filter-group">
-					<label for="filter-month-emp">Employee ID (optional):</label>
-					<input type="text" id="filter-month-emp" placeholder="Default: Current User" value="${this.filters.month.employeeId}">
+					<label for="filter-month-emp">${I18n.t('common.employee')} ID (${I18n.t('common.optional')}):</label>
+					<input type="text" id="filter-month-emp" placeholder="${I18n.t('reports.defaultCurrentUser')}" value="${this.filters.month.employeeId}">
 				</div>
 			`;
 			const ymInput = this.filterBar.querySelector('#filter-month-ym');
@@ -219,12 +220,12 @@ export default class ReportsView {
 		} else if (this.activeReportType === 'vacation') {
 			this.filterBar.innerHTML = `
 				<div class="filter-group">
-					<label for="filter-vacation-year">Year *:</label>
+					<label for="filter-vacation-year">${I18n.t('common.year')} *:</label>
 					<input type="number" id="filter-vacation-year" min="2000" max="2100" value="${this.filters.vacation.year}" required>
 				</div>
 				<div class="filter-group">
-					<label for="filter-vacation-emp">Employee ID (optional):</label>
-					<input type="text" id="filter-vacation-emp" placeholder="Default: Current User" value="${this.filters.vacation.employeeId}">
+					<label for="filter-vacation-emp">${I18n.t('common.employee')} ID (${I18n.t('common.optional')}):</label>
+					<input type="text" id="filter-vacation-emp" placeholder="${I18n.t('reports.defaultCurrentUser')}" value="${this.filters.vacation.employeeId}">
 				</div>
 			`;
 			const yearInput = this.filterBar.querySelector('#filter-vacation-year');
@@ -235,11 +236,11 @@ export default class ReportsView {
 		} else if (this.activeReportType === 'team') {
 			this.filterBar.innerHTML = `
 				<div class="filter-group">
-					<label for="filter-team-id">Team ID *:</label>
+					<label for="filter-team-id">${I18n.t('common.team')} ID *:</label>
 					<input type="text" id="filter-team-id" placeholder="e.g. team-1" value="${this.filters.team.teamId}" required>
 				</div>
 				<div class="filter-group">
-					<label for="filter-team-ym">Month (YYYY-MM) *:</label>
+					<label for="filter-team-ym">${I18n.t('common.month')} (YYYY-MM) *:</label>
 					<input type="month" id="filter-team-ym" value="${this.filters.team.yearMonth}" required>
 				</div>
 			`;
@@ -251,31 +252,31 @@ export default class ReportsView {
 		} else if (this.activeReportType === 'absences') {
 			this.filterBar.innerHTML = `
 				<div class="filter-group">
-					<label for="filter-absences-from">From Date:</label>
+					<label for="filter-absences-from">${I18n.t('common.from')}:</label>
 					<input type="date" id="filter-absences-from" value="${this.filters.absences.from}">
 				</div>
 				<div class="filter-group">
-					<label for="filter-absences-to">To Date:</label>
+					<label for="filter-absences-to">${I18n.t('common.to')}:</label>
 					<input type="date" id="filter-absences-to" value="${this.filters.absences.to}">
 				</div>
 				<div class="filter-group">
-					<label for="filter-absences-emp">Employee ID:</label>
-					<input type="text" id="filter-absences-emp" placeholder="All / Optional" value="${this.filters.absences.employeeId}">
+					<label for="filter-absences-emp">${I18n.t('common.employee')} ID:</label>
+					<input type="text" id="filter-absences-emp" placeholder="${I18n.t('common.all')} / ${I18n.t('common.optional')}" value="${this.filters.absences.employeeId}">
 				</div>
 				<div class="filter-group">
-					<label for="filter-absence-type">Absence Type:</label>
+					<label for="filter-absence-type">${I18n.t('absences.absenceType')}:</label>
 					<select id="filter-absence-type">
-						<option value="">All Types</option>
+						<option value="">${I18n.t('common.allTypes')}</option>
 					</select>
 				</div>
 				<div class="filter-group">
-					<label for="filter-absence-state">State:</label>
+					<label for="filter-absence-state">${I18n.t('common.status')}:</label>
 					<select id="filter-absence-state">
-						<option value="">All States</option>
-						<option value="SUBMITTED">SUBMITTED</option>
-						<option value="APPROVED">APPROVED</option>
-						<option value="REJECTED">REJECTED</option>
-						<option value="CANCELLED">CANCELLED</option>
+						<option value="">${I18n.t('common.allStates')}</option>
+						<option value="SUBMITTED">${I18n.t('enums.absenceState.SUBMITTED')}</option>
+						<option value="APPROVED">${I18n.t('enums.absenceState.APPROVED')}</option>
+						<option value="REJECTED">${I18n.t('enums.absenceState.REJECTED')}</option>
+						<option value="CANCELLED">${I18n.t('enums.absenceState.CANCELLED')}</option>
 					</select>
 				</div>
 			`;
@@ -298,13 +299,13 @@ export default class ReportsView {
 	}
 
 	async generateReport() {
-		this.resultsContainer.innerHTML = '<div class="loading-spinner">Generating report...</div>';
+		this.resultsContainer.innerHTML = `<div class="loading-spinner">${I18n.t('reports.generatingReport')}</div>`;
 
 		try {
 			if (this.activeReportType === 'day') {
 				const date = this.filters.day.date;
 				if (!date) {
-					this.resultsContainer.innerHTML = '<div class="error-msg">Please specify a date.</div>';
+					this.resultsContainer.innerHTML = `<div class="error-msg">${I18n.t('reports.pleaseSpecifyDate')}</div>`;
 					return;
 				}
 				const data = await ReportApi.getDayReport(date, this.filters.day.employeeId);
@@ -313,7 +314,7 @@ export default class ReportsView {
 			} else if (this.activeReportType === 'month') {
 				const ym = this.filters.month.yearMonth;
 				if (!ym) {
-					this.resultsContainer.innerHTML = '<div class="error-msg">Please specify a month.</div>';
+					this.resultsContainer.innerHTML = `<div class="error-msg">${I18n.t('reports.pleaseSpecifyMonth')}</div>`;
 					return;
 				}
 				const data = await ReportApi.getMonthReport(ym, this.filters.month.employeeId);
@@ -328,7 +329,7 @@ export default class ReportsView {
 				const teamId = this.filters.team.teamId;
 				const ym = this.filters.team.yearMonth;
 				if (!teamId || !ym) {
-					this.resultsContainer.innerHTML = '<div class="error-msg">Please specify Team ID and Month.</div>';
+					this.resultsContainer.innerHTML = `<div class="error-msg">${I18n.t('reports.pleaseSpecifyTeam')}</div>`;
 					return;
 				}
 				const data = await ReportApi.getTeamReport(teamId, ym);
@@ -340,7 +341,7 @@ export default class ReportsView {
 			}
 		} catch (err) {
 			console.error('Error generating report', err);
-			this.resultsContainer.innerHTML = `<div class="error-msg">Failed to generate report: ${err.message}</div>`;
+			this.resultsContainer.innerHTML = `<div class="error-msg">${err.message || I18n.t('app.error')}</div>`;
 		}
 	}
 
@@ -349,7 +350,7 @@ export default class ReportsView {
 			if (this.activeReportType === 'day') {
 				const date = this.filters.day.date;
 				if (!date) {
-					alert('Please specify a date.');
+					alert(I18n.t('reports.pleaseSpecifyDate'));
 					return;
 				}
 				await ReportApi.downloadDayReportCsv(date, this.filters.day.employeeId);
@@ -357,7 +358,7 @@ export default class ReportsView {
 			} else if (this.activeReportType === 'month') {
 				const ym = this.filters.month.yearMonth;
 				if (!ym) {
-					alert('Please specify a month.');
+					alert(I18n.t('reports.pleaseSpecifyMonth'));
 					return;
 				}
 				await ReportApi.downloadMonthReportCsv(ym, this.filters.month.employeeId);
@@ -369,7 +370,7 @@ export default class ReportsView {
 				const teamId = this.filters.team.teamId;
 				const ym = this.filters.team.yearMonth;
 				if (!teamId || !ym) {
-					alert('Please specify Team ID and Month.');
+					alert(I18n.t('reports.pleaseSpecifyTeam'));
 					return;
 				}
 				await ReportApi.downloadTeamReportCsv(teamId, ym);
@@ -379,13 +380,13 @@ export default class ReportsView {
 			}
 		} catch (err) {
 			console.error('Error exporting CSV', err);
-			alert(`CSV export failed: ${err.message}`);
+			alert(`${I18n.t('app.error')}: ${err.message}`);
 		}
 	}
 
 	renderDayReport(data) {
 		if (!data) {
-			this.resultsContainer.innerHTML = '<div class="empty-state">No data returned for this day.</div>';
+			this.resultsContainer.innerHTML = `<div class="empty-state">${I18n.t('common.noData')}</div>`;
 			return;
 		}
 
@@ -394,12 +395,12 @@ export default class ReportsView {
 
 		let entriesHtml = '';
 		if (!data.workEntries || data.workEntries.length === 0) {
-			entriesHtml = '<tr><td colspan="5" class="empty-cell">No work entries recorded for this day.</td></tr>';
+			entriesHtml = `<tr><td colspan="5" class="empty-cell">${I18n.t('times.noEntries')}</td></tr>`;
 		} else {
 			entriesHtml = data.workEntries.map(entry => `
 				<tr>
 					<td>${Format.dateTime(entry.start)}</td>
-					<td>${entry.end ? Format.dateTime(entry.end) : '<span class="status-badge state-open">In Progress</span>'}</td>
+					<td>${entry.end ? Format.dateTime(entry.end) : `<span class="status-badge state-open">${I18n.t('reports.inProgress')}</span>`}</td>
 					<td><strong>${Format.duration(entry.durationMinutes)}</strong></td>
 					<td>${entry.durationMinutes} min</td>
 					<td>${entry.id}</td>
@@ -419,36 +420,38 @@ export default class ReportsView {
 			`).join('');
 		}
 
+		const stateLabel = I18n.t(`enums.dayState.${data.state}`, {}, data.stateLabel || data.state);
+
 		this.resultsContainer.innerHTML = `
 			<div class="report-result-header">
-				<h3>Day Report: ${data.date}</h3>
-				<span class="status-badge state-${(data.state || 'OPEN').toLowerCase()}">${data.stateLabel || data.state}</span>
+				<h3>${I18n.t('reports.dayReport')}: ${data.date}</h3>
+				<span class="status-badge state-${(data.state || 'OPEN').toLowerCase()}">${stateLabel}</span>
 			</div>
 
 			<!-- Summary Cards Grid -->
 			<div class="summary-grid report-summary-grid">
 				<div class="summary-card">
-					<div class="card-title">Target Time</div>
+					<div class="card-title">${I18n.t('times.targetTime')}</div>
 					<div class="card-value">${Format.duration(data.targetMinutes)}</div>
 					<div class="card-sub">${data.targetMinutes} min</div>
 				</div>
 				<div class="summary-card">
-					<div class="card-title">Actual Time</div>
+					<div class="card-title">${I18n.t('times.actualTime')}</div>
 					<div class="card-value">${Format.duration(data.actualMinutes)}</div>
 					<div class="card-sub">${data.actualMinutes} min</div>
 				</div>
 				<div class="summary-card">
-					<div class="card-title">Holiday Credit</div>
+					<div class="card-title">${I18n.t('periods.holidayHours')}</div>
 					<div class="card-value">${Format.duration(data.holidayMinutes)}</div>
 					<div class="card-sub">${data.holidayMinutes} min</div>
 				</div>
 				<div class="summary-card">
-					<div class="card-title">Absence Credit</div>
+					<div class="card-title">${I18n.t('periods.paidAbsence')}</div>
 					<div class="card-value">${Format.duration(data.absenceMinutes)}</div>
 					<div class="card-sub">${data.absenceMinutes} min</div>
 				</div>
 				<div class="summary-card highlight-card">
-					<div class="card-title">Day Balance</div>
+					<div class="card-title">${I18n.t('reports.dayBalance')}</div>
 					<div class="card-value ${balanceClass}">${balanceSign}${Format.duration(data.balance)}</div>
 					<div class="card-sub">${balanceSign}${data.balance} min</div>
 				</div>
@@ -456,16 +459,16 @@ export default class ReportsView {
 
 			<!-- Work Entries Section -->
 			<div class="report-section card">
-				<h4>Work Blocks</h4>
+				<h4>${I18n.t('reports.workBlocks')}</h4>
 				<div class="table-container">
 					<table class="data-table">
 						<thead>
 							<tr>
-								<th>Start</th>
-								<th>End</th>
-								<th>Duration</th>
-								<th>Minutes</th>
-								<th>Entry ID</th>
+								<th>${I18n.t('times.startTime')}</th>
+								<th>${I18n.t('times.endTime')}</th>
+								<th>${I18n.t('common.duration')}</th>
+								<th>${I18n.t('common.minutes')}</th>
+								<th>ID</th>
 							</tr>
 						</thead>
 						<tbody>
@@ -478,15 +481,15 @@ export default class ReportsView {
 			<!-- Breaks & Interruptions Section -->
 			${data.breaks && data.breaks.length > 0 ? `
 				<div class="report-section card">
-					<h4>Work Interruptions / Breaks</h4>
+					<h4>${I18n.t('reports.workInterruptions')}</h4>
 					<div class="table-container">
 						<table class="data-table">
 							<thead>
 								<tr>
-									<th>Break Start</th>
-									<th>Break End</th>
-									<th>Duration</th>
-									<th>Minutes</th>
+									<th>${I18n.t('reports.breakStart')}</th>
+									<th>${I18n.t('reports.breakEnd')}</th>
+									<th>${I18n.t('common.duration')}</th>
+									<th>${I18n.t('common.minutes')}</th>
 								</tr>
 							</thead>
 							<tbody>
@@ -501,7 +504,7 @@ export default class ReportsView {
 
 	renderMonthReport(data) {
 		if (!data) {
-			this.resultsContainer.innerHTML = '<div class="empty-state">No data returned for this month.</div>';
+			this.resultsContainer.innerHTML = `<div class="empty-state">${I18n.t('common.noData')}</div>`;
 			return;
 		}
 
@@ -512,12 +515,14 @@ export default class ReportsView {
 
 		let daysHtml = '';
 		if (!data.daySummaries || data.daySummaries.length === 0) {
-			daysHtml = '<tr><td colspan="8" class="empty-cell">No day summaries available.</td></tr>';
+			daysHtml = `<tr><td colspan="8" class="empty-cell">${I18n.t('periods.noDailyRecords')}</td></tr>`;
 		} else {
 			daysHtml = data.daySummaries.map(day => {
 				const dayBalClass = day.balance > 0 ? 'positive' : (day.balance < 0 ? 'negative' : 'neutral');
 				const dayBalSign = day.balance > 0 ? '+' : '';
 				const isWeekend = day.isOff && day.targetMinutes === 0;
+				const dayStateText = I18n.t(`enums.dayState.${day.state}`, {}, day.stateLabel || day.state);
+
 				return `
 					<tr class="${isWeekend ? 'row-off' : ''}">
 						<td><strong>${day.date}</strong></td>
@@ -526,8 +531,8 @@ export default class ReportsView {
 						<td>${day.holidayMinutes > 0 ? Format.duration(day.holidayMinutes) : '-'}</td>
 						<td>${day.absenceMinutes > 0 ? Format.duration(day.absenceMinutes) : '-'}</td>
 						<td class="${dayBalClass}"><strong>${dayBalSign}${Format.duration(day.balance)}</strong></td>
-						<td>${day.workEntries ? day.workEntries.length : 0} block(s)</td>
-						<td><span class="status-badge state-${(day.state || 'OPEN').toLowerCase()}">${day.stateLabel || day.state}</span></td>
+						<td>${day.workEntries ? day.workEntries.length : 0}</td>
+						<td><span class="status-badge state-${(day.state || 'OPEN').toLowerCase()}">${dayStateText}</span></td>
 					</tr>
 				`;
 			}).join('');
@@ -535,43 +540,43 @@ export default class ReportsView {
 
 		this.resultsContainer.innerHTML = `
 			<div class="report-result-header">
-				<h3>Monthly Report: ${data.yearMonth}</h3>
+				<h3>${I18n.t('reports.monthReport')}: ${data.yearMonth}</h3>
 			</div>
 
 			<!-- Summary Metrics Grid -->
 			<div class="summary-grid report-summary-grid">
 				<div class="summary-card">
-					<div class="card-title">Target Time</div>
+					<div class="card-title">${I18n.t('times.targetTime')}</div>
 					<div class="card-value">${Format.duration(data.totalTargetMinutes)}</div>
 					<div class="card-sub">${data.totalTargetMinutes} min</div>
 				</div>
 				<div class="summary-card">
-					<div class="card-title">Actual Time</div>
+					<div class="card-title">${I18n.t('times.actualTime')}</div>
 					<div class="card-value">${Format.duration(data.totalActualMinutes)}</div>
 					<div class="card-sub">${data.totalActualMinutes} min</div>
 				</div>
 				<div class="summary-card">
-					<div class="card-title">Holidays</div>
+					<div class="card-title">${I18n.t('periods.holidayHours')}</div>
 					<div class="card-value">${Format.duration(data.totalHolidayMinutes)}</div>
 					<div class="card-sub">${data.totalHolidayMinutes} min</div>
 				</div>
 				<div class="summary-card">
-					<div class="card-title">Paid Absences</div>
+					<div class="card-title">${I18n.t('periods.paidAbsence')}</div>
 					<div class="card-value">${Format.duration(data.paidAbsenceMinutes ?? data.totalPaidAbsenceMinutes ?? data.totalAbsenceMinutes ?? 0)}</div>
 					<div class="card-sub">${data.paidAbsenceMinutes ?? data.totalPaidAbsenceMinutes ?? data.totalAbsenceMinutes ?? 0} min</div>
 				</div>
 				<div class="summary-card">
-					<div class="card-title">Initial Balance</div>
+					<div class="card-title">${I18n.t('reports.initialBalance')}</div>
 					<div class="card-value">${Format.duration(data.initialBalanceMinutes)}</div>
 					<div class="card-sub">${data.initialBalanceMinutes} min</div>
 				</div>
 				<div class="summary-card">
-					<div class="card-title">Period Balance</div>
+					<div class="card-title">${I18n.t('reports.periodBalance')}</div>
 					<div class="card-value ${periodBalClass}">${periodBalSign}${Format.duration(data.periodBalanceMinutes)}</div>
 					<div class="card-sub">${periodBalSign}${data.periodBalanceMinutes} min</div>
 				</div>
 				<div class="summary-card highlight-card">
-					<div class="card-title">End Balance</div>
+					<div class="card-title">${I18n.t('reports.endBalance')}</div>
 					<div class="card-value ${endBalClass}">${endBalSign}${Format.duration(data.endBalanceMinutes)}</div>
 					<div class="card-sub">${endBalSign}${data.endBalanceMinutes} min</div>
 				</div>
@@ -579,19 +584,19 @@ export default class ReportsView {
 
 			<!-- Daily Breakdown Table -->
 			<div class="report-section card">
-				<h4>Daily Breakdown</h4>
+				<h4>${I18n.t('reports.dailyBreakdown')}</h4>
 				<div class="table-container">
 					<table class="data-table">
 						<thead>
 							<tr>
-								<th>Date</th>
-								<th>Target</th>
-								<th>Actual</th>
-								<th>Holiday</th>
-								<th>Absence</th>
-								<th>Day Balance</th>
-								<th>Blocks</th>
-								<th>Status</th>
+								<th>${I18n.t('common.date')}</th>
+								<th>${I18n.t('common.target')}</th>
+								<th>${I18n.t('common.actual')}</th>
+								<th>${I18n.t('periods.holiday')}</th>
+								<th>${I18n.t('periods.absence')}</th>
+								<th>${I18n.t('reports.dayBalance')}</th>
+								<th>${I18n.t('reports.workBlocks')}</th>
+								<th>${I18n.t('common.status')}</th>
 							</tr>
 						</thead>
 						<tbody>
@@ -605,7 +610,7 @@ export default class ReportsView {
 
 	renderVacationReport(data) {
 		if (!data) {
-			this.resultsContainer.innerHTML = '<div class="empty-state">No vacation account data available.</div>';
+			this.resultsContainer.innerHTML = `<div class="empty-state">${I18n.t('common.noData')}</div>`;
 			return;
 		}
 
@@ -613,56 +618,59 @@ export default class ReportsView {
 
 		let entriesHtml = '';
 		if (!data.entries || data.entries.length === 0) {
-			entriesHtml = '<tr><td colspan="7" class="empty-cell">No vacation transactions recorded for this year.</td></tr>';
+			entriesHtml = `<tr><td colspan="7" class="empty-cell">${I18n.t('absences.noJournalEntries')}</td></tr>`;
 		} else {
-			entriesHtml = data.entries.map(entry => `
-				<tr>
-					<td>${Format.date(entry.date)}</td>
-					<td><span class="status-badge">${entry.bookingType}</span></td>
-					<td><strong>${Format.durationDays(entry.valueMinutes)}</strong></td>
-					<td>${entry.targetPeriod || '-'}</td>
-					<td>${entry.comment || '-'}</td>
-					<td>${entry.createdBy || '-'}</td>
-					<td>${Format.dateTime(entry.createdAt)}</td>
-				</tr>
-			`).join('');
+			entriesHtml = data.entries.map(entry => {
+				const bTypeLabel = I18n.t(`enums.vacationEntryType.${entry.bookingType}`, {}, entry.bookingType);
+				return `
+					<tr>
+						<td>${Format.date(entry.date)}</td>
+						<td><span class="status-badge">${bTypeLabel}</span></td>
+						<td><strong>${Format.durationDays(entry.valueMinutes)}</strong></td>
+						<td>${entry.targetPeriod || '-'}</td>
+						<td>${entry.comment || '-'}</td>
+						<td>${entry.createdBy || '-'}</td>
+						<td>${Format.dateTime(entry.createdAt)}</td>
+					</tr>
+				`;
+			}).join('');
 		}
 
 		this.resultsContainer.innerHTML = `
 			<div class="report-result-header">
-				<h3>Vacation Account Report: Year ${data.year}</h3>
-				<span class="report-emp-tag">Employee: ${data.employeeId}</span>
+				<h3>${I18n.t('reports.vacationReport')}: ${I18n.t('common.year')} ${data.year}</h3>
+				<span class="report-emp-tag">${I18n.t('common.employee')}: ${data.employeeId}</span>
 			</div>
 
 			<!-- Summary Grid -->
 			<div class="summary-grid report-summary-grid">
 				<div class="summary-card">
-					<div class="card-title">Annual Entitlement</div>
+					<div class="card-title">${I18n.t('reports.annualEntitlement')}</div>
 					<div class="card-value">${Format.durationDays(data.annualEntitlementMinutes)}</div>
 					<div class="card-sub">${data.annualEntitlementMinutes} min</div>
 				</div>
 				<div class="summary-card">
-					<div class="card-title">Carry-Over</div>
+					<div class="card-title">${I18n.t('reports.carryOver')}</div>
 					<div class="card-value">${Format.durationDays(data.carryOverMinutes)}</div>
 					<div class="card-sub">${data.carryOverMinutes} min</div>
 				</div>
 				<div class="summary-card">
-					<div class="card-title">Corrections</div>
+					<div class="card-title">${I18n.t('reports.corrections')}</div>
 					<div class="card-value">${Format.durationDays(data.correctionMinutes)}</div>
 					<div class="card-sub">${data.correctionMinutes} min</div>
 				</div>
 				<div class="summary-card">
-					<div class="card-title">Taken / Used</div>
+					<div class="card-title">${I18n.t('reports.takenUsed')}</div>
 					<div class="card-value">${Format.durationDays(data.takenMinutes)}</div>
 					<div class="card-sub">${data.takenMinutes} min</div>
 				</div>
 				<div class="summary-card">
-					<div class="card-title">Planned Future</div>
+					<div class="card-title">${I18n.t('reports.plannedFuture')}</div>
 					<div class="card-value">${Format.durationDays(data.plannedMinutes)}</div>
 					<div class="card-sub">${data.plannedMinutes} min</div>
 				</div>
 				<div class="summary-card highlight-card">
-					<div class="card-title">Remaining Balance</div>
+					<div class="card-title">${I18n.t('reports.remainingBalance')}</div>
 					<div class="card-value ${remBalClass}">${Format.durationDays(data.remainingBalanceMinutes)}</div>
 					<div class="card-sub">${data.remainingBalanceMinutes} min</div>
 				</div>
@@ -670,18 +678,18 @@ export default class ReportsView {
 
 			<!-- Vacation Journal Entries Table -->
 			<div class="report-section card">
-				<h4>Vacation Journal Transactions</h4>
+				<h4>${I18n.t('reports.vacationJournalTransactions')}</h4>
 				<div class="table-container">
 					<table class="data-table">
 						<thead>
 							<tr>
-								<th>Date</th>
-								<th>Booking Type</th>
-								<th>Value (Days / Duration)</th>
-								<th>Target Period</th>
-								<th>Comment</th>
-								<th>Created By</th>
-								<th>Created At</th>
+								<th>${I18n.t('common.date')}</th>
+								<th>${I18n.t('reports.bookingType')}</th>
+								<th>${I18n.t('reports.valueDaysDuration')}</th>
+								<th>${I18n.t('reports.targetPeriod')}</th>
+								<th>${I18n.t('common.comment')}</th>
+								<th>${I18n.t('common.createdBy')}</th>
+								<th>${I18n.t('common.date')}</th>
 							</tr>
 						</thead>
 						<tbody>
@@ -695,7 +703,7 @@ export default class ReportsView {
 
 	renderTeamReport(data) {
 		if (!data) {
-			this.resultsContainer.innerHTML = '<div class="empty-state">No team data returned.</div>';
+			this.resultsContainer.innerHTML = `<div class="empty-state">${I18n.t('common.noData')}</div>`;
 			return;
 		}
 
@@ -717,14 +725,15 @@ export default class ReportsView {
 
 		let rowsHtml = '';
 		if (employees.length === 0) {
-			rowsHtml = '<tr><td colspan="10" class="empty-cell">No employees found for this team.</td></tr>';
+			rowsHtml = `<tr><td colspan="10" class="empty-cell">${I18n.t('presence.noEmployeesFound')}</td></tr>`;
 		} else {
 			rowsHtml = employees.map(emp => {
 				const balClass = emp.periodBalanceMinutes > 0 ? 'positive' : (emp.periodBalanceMinutes < 0 ? 'negative' : 'neutral');
 				const balSign = emp.periodBalanceMinutes > 0 ? '+' : '';
 				const missingBadge = emp.missingBookingsCount > 0 
-					? `<span class="badge badge-warning">${emp.missingBookingsCount} missing</span>`
+					? `<span class="badge badge-warning">${emp.missingBookingsCount} ${I18n.t('reports.missingBookings')}</span>`
 					: `<span class="badge badge-success">0</span>`;
+				const pStateLabel = I18n.t(`enums.periodState.${emp.periodState}`, {}, emp.periodState);
 
 				return `
 					<tr>
@@ -736,7 +745,7 @@ export default class ReportsView {
 						<td>${Format.duration(emp.initialBalanceMinutes)}</td>
 						<td class="${balClass}"><strong>${balSign}${Format.duration(emp.periodBalanceMinutes)}</strong></td>
 						<td><strong>${Format.duration(emp.endBalanceMinutes)}</strong></td>
-						<td><span class="status-badge state-${(emp.periodState || 'OPEN').toLowerCase()}">${emp.periodState}</span></td>
+						<td><span class="status-badge state-${(emp.periodState || 'OPEN').toLowerCase()}">${pStateLabel}</span></td>
 						<td>${missingBadge}</td>
 					</tr>
 				`;
@@ -745,56 +754,56 @@ export default class ReportsView {
 
 		this.resultsContainer.innerHTML = `
 			<div class="report-result-header">
-				<h3>Team Report: ${data.teamName} (${data.teamId})</h3>
-				<span class="report-emp-tag">Month: ${data.yearMonth}</span>
+				<h3>${I18n.t('reports.teamReport')}: ${data.teamName} (${data.teamId})</h3>
+				<span class="report-emp-tag">${I18n.t('common.month')}: ${data.yearMonth}</span>
 			</div>
 
 			<!-- Team Summary Cards -->
 			<div class="summary-grid report-summary-grid">
 				<div class="summary-card">
-					<div class="card-title">Team Members</div>
+					<div class="card-title">${I18n.t('reports.teamMembers')}</div>
 					<div class="card-value">${employees.length}</div>
-					<div class="card-sub">Active Employees</div>
+					<div class="card-sub">${I18n.t('reports.activeEmployees')}</div>
 				</div>
 				<div class="summary-card">
-					<div class="card-title">Total Target</div>
+					<div class="card-title">${I18n.t('reports.totalTarget')}</div>
 					<div class="card-value">${Format.duration(totalTarget)}</div>
 					<div class="card-sub">${totalTarget} min</div>
 				</div>
 				<div class="summary-card">
-					<div class="card-title">Total Actual</div>
+					<div class="card-title">${I18n.t('reports.totalWorked')}</div>
 					<div class="card-value">${Format.duration(totalActual)}</div>
 					<div class="card-sub">${totalActual} min</div>
 				</div>
 				<div class="summary-card">
-					<div class="card-title">Net Balance</div>
+					<div class="card-title">${I18n.t('reports.netBalance')}</div>
 					<div class="card-value ${totalBalClass}">${totalBalSign}${Format.duration(totalPeriodBal)}</div>
 					<div class="card-sub">${totalBalSign}${totalPeriodBal} min</div>
 				</div>
 				<div class="summary-card ${totalMissing > 0 ? 'warning-card' : ''}">
-					<div class="card-title">Missing Bookings</div>
+					<div class="card-title">${I18n.t('reports.missingBookings')}</div>
 					<div class="card-value">${totalMissing}</div>
-					<div class="card-sub">Unrecorded target days</div>
+					<div class="card-sub">${I18n.t('reports.unrecordedTargetDays')}</div>
 				</div>
 			</div>
 
 			<!-- Team Members Table -->
 			<div class="report-section card">
-				<h4>Employee Summaries</h4>
+				<h4>${I18n.t('reports.employeeSummaries')}</h4>
 				<div class="table-container">
 					<table class="data-table">
 						<thead>
 							<tr>
-								<th>Employee</th>
-								<th>Target</th>
-								<th>Actual</th>
-								<th>Holiday</th>
-								<th>Absence</th>
-								<th>Initial Balance</th>
-								<th>Period Balance</th>
-								<th>End Balance</th>
-								<th>Period Status</th>
-								<th>Missing Bookings</th>
+								<th>${I18n.t('common.employee')}</th>
+								<th>${I18n.t('common.target')}</th>
+								<th>${I18n.t('common.actual')}</th>
+								<th>${I18n.t('periods.holiday')}</th>
+								<th>${I18n.t('periods.absence')}</th>
+								<th>${I18n.t('reports.initialBalance')}</th>
+								<th>${I18n.t('reports.periodBalance')}</th>
+								<th>${I18n.t('reports.endBalance')}</th>
+								<th>${I18n.t('reports.periodStatus')}</th>
+								<th>${I18n.t('reports.missingBookings')}</th>
 							</tr>
 						</thead>
 						<tbody>
@@ -828,12 +837,13 @@ export default class ReportsView {
 
 		let rowsHtml = '';
 		if (items.length === 0) {
-			rowsHtml = '<tr><td colspan="9" class="empty-cell">No absences found matching filter criteria.</td></tr>';
+			rowsHtml = `<tr><td colspan="9" class="empty-cell">${I18n.t('absences.noAbsences')}</td></tr>`;
 		} else {
 			rowsHtml = items.map(item => {
 				const paidBadge = item.paid
-					? '<span class="badge badge-success">Paid</span>'
-					: '<span class="badge badge-neutral">Unpaid</span>';
+					? `<span class="badge badge-success">${I18n.t('reports.paid')}</span>`
+					: `<span class="badge badge-neutral">${I18n.t('reports.unpaid')}</span>`;
+				const aStateLabel = I18n.t(`enums.absenceState.${item.state}`, {}, item.state);
 
 				return `
 					<tr>
@@ -842,7 +852,7 @@ export default class ReportsView {
 						<td>${Format.date(item.start)} - ${Format.date(item.end)}</td>
 						<td>${item.durationType || '-'} ${item.dayPart ? `(${item.dayPart})` : ''}</td>
 						<td><strong>${Format.duration(item.minutes)}</strong> (${item.minutes}m)</td>
-						<td><span class="status-badge state-${(item.state || 'SUBMITTED').toLowerCase()}">${item.state}</span></td>
+						<td><span class="status-badge state-${(item.state || 'SUBMITTED').toLowerCase()}">${aStateLabel}</span></td>
 						<td>${paidBadge}</td>
 						<td>${item.approvedBy ? `${item.approvedBy}<br><small class="text-muted">${Format.dateTime(item.approvedAt)}</small>` : '-'}</td>
 						<td>${item.comment || '-'}</td>
@@ -853,29 +863,29 @@ export default class ReportsView {
 
 		this.resultsContainer.innerHTML = `
 			<div class="report-result-header">
-				<h3>Absences Report</h3>
-				<span class="report-emp-tag">${items.length} records</span>
+				<h3>${I18n.t('reports.absencesReport')}</h3>
+				<span class="report-emp-tag">${items.length} ${I18n.t('reports.records')}</span>
 			</div>
 
 			<!-- Summary Cards Grid -->
 			<div class="summary-grid report-summary-grid">
 				<div class="summary-card">
-					<div class="card-title">Total Absences</div>
+					<div class="card-title">${I18n.t('reports.totalAbsences')}</div>
 					<div class="card-value">${items.length}</div>
-					<div class="card-sub">${approvedCount} approved</div>
+					<div class="card-sub">${approvedCount} ${I18n.t('reports.approved')}</div>
 				</div>
 				<div class="summary-card">
-					<div class="card-title">Total Duration</div>
+					<div class="card-title">${I18n.t('reports.totalDuration')}</div>
 					<div class="card-value">${Format.duration(totalMinutes)}</div>
 					<div class="card-sub">${Format.durationDays(totalMinutes)}</div>
 				</div>
 				<div class="summary-card">
-					<div class="card-title">Paid Absence Time</div>
+					<div class="card-title">${I18n.t('reports.paidAbsenceTime')}</div>
 					<div class="card-value">${Format.duration(paidMinutes)}</div>
 					<div class="card-sub">${Format.durationDays(paidMinutes)}</div>
 				</div>
 				<div class="summary-card">
-					<div class="card-title">Unpaid Absence Time</div>
+					<div class="card-title">${I18n.t('reports.unpaidAbsenceTime')}</div>
 					<div class="card-value">${Format.duration(unpaidMinutes)}</div>
 					<div class="card-sub">${Format.durationDays(unpaidMinutes)}</div>
 				</div>
@@ -883,20 +893,20 @@ export default class ReportsView {
 
 			<!-- Absences Table -->
 			<div class="report-section card">
-				<h4>Absences Listing</h4>
+				<h4>${I18n.t('reports.absencesListing')}</h4>
 				<div class="table-container">
 					<table class="data-table">
 						<thead>
 							<tr>
-								<th>Employee</th>
-								<th>Absence Type</th>
-								<th>Date Range</th>
-								<th>Duration Type</th>
-								<th>Duration</th>
-								<th>Status</th>
-								<th>Remuneration</th>
-								<th>Approved By</th>
-								<th>Comment</th>
+								<th>${I18n.t('common.employee')}</th>
+								<th>${I18n.t('absences.absenceType')}</th>
+								<th>${I18n.t('reports.dateRange')}</th>
+								<th>${I18n.t('absences.durationType')}</th>
+								<th>${I18n.t('common.duration')}</th>
+								<th>${I18n.t('common.status')}</th>
+								<th>${I18n.t('reports.remuneration')}</th>
+								<th>${I18n.t('common.createdBy')}</th>
+								<th>${I18n.t('common.comment')}</th>
 							</tr>
 						</thead>
 						<tbody>
