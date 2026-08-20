@@ -15,7 +15,7 @@ public record ChronivaroAppConfig(
 
 	public static final boolean DEFAULT_HTTP_ENABLED = true;
 	public static final String DEFAULT_BIND_ADDRESS = "0.0.0.0";
-	public static final int DEFAULT_PORT = 8080;
+	public static final int DEFAULT_PORT = 9000;
 	public static final String DEFAULT_CONTEXT_PATH = "/";
 	public static final String DEFAULT_STROLCH_ENVIRONMENT = "dev";
 	public static final String DEFAULT_STROLCH_PATH = "runtime";

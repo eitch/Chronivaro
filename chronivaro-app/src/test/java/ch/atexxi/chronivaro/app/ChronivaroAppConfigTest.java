@@ -11,7 +11,7 @@ public class ChronivaroAppConfigTest {
 		ChronivaroAppConfig config = ChronivaroAppConfig.defaultConfig();
 		assertTrue(config.httpEnabled());
 		assertEquals("0.0.0.0", config.bindAddress());
-		assertEquals(8080, config.port());
+		assertEquals(9000, config.port());
 		assertEquals("/", config.contextPath());
 		assertEquals("dev", config.strolchEnvironment());
 		assertNotNull(config.strolchPath());
