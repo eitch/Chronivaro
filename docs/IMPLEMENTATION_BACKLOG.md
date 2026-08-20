@@ -161,7 +161,7 @@ The following foundational areas are verified as fully implemented in the reposi
 ### Task 2: Complete Absence Type Metadata and Draft Submission Workflow
 
 - **Specification Reference:** Section 6.5, Section 6.6, Section 9.4, Section 10.1, Section 13.2
-- **Status:** `OPEN`
+- **Status:** `COMPLETED`
 - **Scope:**
   1. Add `commentRequired` (boolean) and `visibleOnPublicStatus` (boolean) to `AbsenceType` model, DTOs, and create/update services.
   2. Enforce comment validation in `RequestAbsenceService`: if `commentRequired` is true, reject requests with blank/null comments.
@@ -172,12 +172,18 @@ The following foundational areas are verified as fully implemented in the reposi
   4. Update public presence/status views so that absence details are hidden unless `visibleOnPublicStatus` is true.
 - **Affected Components:**
   - `chronivaro-core/src/main/java/ch/atexxi/chronivaro/core/model/ChronivaroConstants.java`
+  - `chronivaro-core/src/main/java/ch/atexxi/chronivaro/core/model/AbsenceHelper.java`
   - `chronivaro-core/src/main/java/ch/atexxi/chronivaro/core/service/CreateAbsenceTypeService.java`
   - `chronivaro-core/src/main/java/ch/atexxi/chronivaro/core/service/UpdateAbsenceTypeService.java`
   - `chronivaro-core/src/main/java/ch/atexxi/chronivaro/core/service/RequestAbsenceService.java`
-  - `chronivaro-core/src/main/java/ch/atexxi/chronivaro/core/service/SubmitAbsenceService.java` (new)
+  - `chronivaro-core/src/main/java/ch/atexxi/chronivaro/core/service/UpdateAbsenceService.java`
+  - `chronivaro-core/src/main/java/ch/atexxi/chronivaro/core/service/SubmitAbsenceService.java`
+  - `chronivaro-core/src/main/java/ch/atexxi/chronivaro/core/service/PresenceService.java`
   - `chronivaro-rest/src/main/java/ch/atexxi/chronivaro/rest/dto/AbsenceTypeDto.java`
-  - `chronivaro-rest/src/main/java/ch/atexxi/chronivaro/rest/resource/AbsenceResource.java`
+  - `chronivaro-rest/src/main/java/ch/atexxi/chronivaro/rest/dto/ChronivaroMapper.java`
+  - `chronivaro-rest/src/main/java/ch/atexxi/chronivaro/rest/resource/AbsenceTypeResource.java`
+  - `chronivaro-rest/src/main/java/ch/atexxi/chronivaro/rest/resource/ChronivaroResource.java`
+  - `chronivaro-web/src/main/webapp/js/api/AbsenceApi.js`
   - `chronivaro-web/src/main/webapp/js/pages/MyAbsencesView.js`
   - `chronivaro-web/src/main/webapp/js/pages/AbsenceTypesView.js`
 - **Acceptance Criteria:**
@@ -186,6 +192,10 @@ The following foundational areas are verified as fully implemented in the reposi
   - Users can save an absence as `DRAFT`, edit it, and submit it when ready.
   - Public status masks absence types that have `visibleOnPublicStatus = false`.
   - Core and REST integration tests verify draft editing, submission, and validation.
+- **Verification:**
+  - Unit tests in `AbsenceTypeServiceTest`, `AbsenceServiceTest`, `UpdateAbsenceServiceTest`, and `PresenceServiceTest`.
+  - Integration tests in `AbsenceTypeResourceTest`, `ChronivaroResourceTest`, and `ApprovalsQueueTest`.
+  - Full reactor test suite passing cleanly (`mvn clean test`).
 - **Dependencies:** None.
 
 ---
