@@ -333,13 +333,18 @@ Task 6 is split into subtasks **6.1**, **6.2**, **6.3**, and **6.4** to separate
 
 #### 6.3: Employee Self-Service Views Localization
 - **Specification Reference:** Section 4.2, Section 16, Section 18.5
-- **Status:** `OPEN`
+- **Status:** `COMPLETED`
 - **Scope:**
   1. Migrate employee self-service views (`MyTimesView.js`, `MyAbsencesView.js`, `MyPeriodsView.js`, `PresenceView.js`, `ApprovalsView.js`, `ReportsView.js`) to use `I18n.t` for table headers, form labels, status badges, buttons, modals, and error dialogues.
-  2. Update localized date/time formatting helpers where appropriate.
+  2. Update localized date/time formatting helpers (`Format.js`) to support dynamic language locale parameters.
 - **Acceptance Criteria:**
   - All employee-facing time, absence, period, approval, presence, and reporting views render in the active language.
-  - Form validation messages and notifications are localized.
+  - Form validation messages, notification prompts, and confirm/reject dialogues are localized.
+  - Web UI integration tests assert dynamic localization across all employee self-service views.
+- **Verification:**
+  - `WebLocalizationUiTest` in `chronivaro-web` asserting `I18n.t` usage across `MyTimesView.js`, `MyAbsencesView.js`, `MyPeriodsView.js`, `PresenceView.js`, `ApprovalsView.js`, `ReportsView.js`, and `Format.js`.
+  - `I18nKeyParityTest` verifying dictionary synchronization and Swiss German compliance.
+  - Full reactor test suite passing cleanly (`mvn clean test`).
 - **Dependencies:** Task 6.2.
 
 #### 6.4: Administration Views Localization

@@ -15,6 +15,7 @@ Audit date: 2026-08-19. `IMPLEMENTATION_SPECIFICATION.md` is authoritative; the 
 - **Global Application Branding & Configuration (Sections 6.11, 18):** `companyName`, `companyLogo`, and `defaultLanguage` parameters supported in `GlobalConfiguration` model, validation in `UpdateConfigurationService`, REST endpoints with ETag concurrency (`/rest/chronivaro/v1/admin/configuration` and `/rest/chronivaro/v1/system/branding`), and dynamic web application header branding without broken image placeholders (**Task 5**).
 - **Multi-Language (i18n) Core Bundle & Language Resolution (Sections 4.2, 12.3, 16, 18.5):** Complete German (`de.json`, Swiss German standard) and English (`en.json`) translation dictionaries, client-side `I18n.js` module with multi-tier resolution fallback, and automated build key parity test enforcing 100% synchronization (**Task 6.1**).
 - **App Shell Language Switcher & Authentication/Dashboard Localization (Sections 4.2, 16, 18.5):** Dynamic header language selector (`#header-language-select`), login language selector (`#login-language-select`), live navigation link translation without page reload, user locale preference synchronization, and fully localized `LoginView`, `CompleteRegistrationView`, and `DashboardView` (**Task 6.2**).
+- **Employee Self-Service Views Localization (Sections 4.2, 16, 18.5):** Complete localization of employee self-service view templates (`MyTimesView`, `MyAbsencesView`, `MyPeriodsView`, `PresenceView`, `ApprovalsView`, `ReportsView`), modal dialogues, notification prompts, and locale-aware `Format.js` date/time formatting (**Task 6.3**).
 - **Presence & Privacy (Section 8):** Real-time binary `WORKING`/`NOT_WORKING` presence status with sensitive absence detail filtering for non-privileged viewers unless `visibleOnPublicStatus` is true.
 - **Audit Logging & Retention (Sections 6.10, 12, 13.6):** Full audit trail recording entity lifecycle events, parameter mutations, correlation IDs, user details, and retention purge service.
 - **Reporting Foundation & CSV Export (Sections 11.1–11.5, 12.1–12.2, 13.8):** Core calculation engines, Web UI report viewers, and deterministic RFC 4180 UTF-8 BOM CSV exports for Day, Month, Vacation, Team, and Absence reports.
@@ -22,9 +23,8 @@ Audit date: 2026-08-19. `IMPLEMENTATION_SPECIFICATION.md` is authoritative; the 
 
 ---
 
-## Missing Requirements (Backlog Items 6.3–7)
+## Missing Requirements (Backlog Items 6.4–7)
 
-- **Employee Self-Service Views Localization (Sections 4.2, 16, 18.5):** Migrating employee self-service view templates (`MyTimesView`, `MyAbsencesView`, `MyPeriodsView`, `PresenceView`, `ApprovalsView`, `ReportsView`) to dynamic i18n keys (**Task 6.3**).
 - **Administration Views Localization (Sections 4.2, 16, 18.5):** Migrating master data and admin views (`EmployeesView`, `TeamsView`, `LocationsView`, `AbsenceTypesView`, `HolidayCalendarsView`, `ScheduleTemplatesView`, `SchedulesView`, `ConfigurationView`) to dynamic i18n keys (**Task 6.4**).
 - **Native PDF Report Generation (Sections 4.2, 11.6.2, 17, 18.6):** Server-side PDF generation engine (OpenPDF/PDFBox) and PDF endpoints for Month, Vacation, and Absence reports (**Task 7.1 & 7.2**).
 
