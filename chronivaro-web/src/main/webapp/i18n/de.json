@@ -79,6 +79,10 @@
     "password": "Passwort",
     "newPassword": "Neues Passwort",
     "confirmPassword": "Passwort bestätigen",
+    "challengeCode": "Challenge-Code",
+    "choosePasswordPrompt": "Bitte geben Sie Ihren Challenge-Code ein und wählen Sie ein neues Passwort.",
+    "registrationComplete": "Registrierung abgeschlossen! Sie können sich nun anmelden.",
+    "loginLinkText": "anmelden",
     "loginTitle": "Anmeldung bei Chronivaro",
     "loginButton": "Anmelden",
     "logout": "Abmelden",
@@ -93,6 +97,18 @@
   },
   "dashboard": {
     "title": "Dashboard",
+    "todaySummary": "Heutige Übersicht",
+    "worked": "Gearbeitet",
+    "required": "Soll",
+    "balance": "Saldo",
+    "changeLocation": "Arbeitsort wechseln",
+    "clearLocation": "Auswahl aufheben",
+    "selectLocationFirst": "Bitte wählen Sie vor Arbeitsbeginn einen Arbeitsort.",
+    "offDuty": "Dienstfrei",
+    "errorLoadingStatus": "Fehler beim Laden des Status",
+    "workingLocation": "Arbeitsort",
+    "start": "Starten",
+    "stop": "Stoppen",
     "greeting": "Willkommen zurück, {name}",
     "clockIn": "Timer starten",
     "clockOut": "Timer stoppen",
@@ -337,7 +353,9 @@
     "workingLocation": {
       "OFFICE": "Büro",
       "REMOTE": "Homeoffice / Remote",
-      "FIELD": "Aussendienst / Kunde"
+      "FIELD": "Aussendienst / Kunde",
+      "HOME_OFFICE": "Homeoffice",
+      "CUSTOMER": "Kunde"
     },
     "dayState": {
       "WORKING": "Arbeitet",

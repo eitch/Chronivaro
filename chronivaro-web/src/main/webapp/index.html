@@ -15,23 +15,29 @@
     </div>
     <nav>
         <ul>
-            <li data-roles="Employee"><a href="#dashboard" class="nav-link">Dashboard</a></li>
-            <li data-roles="Supervisor,HR,Administrator"><a href="#presence" class="nav-link">Presence</a></li>
-            <li data-roles="Employee"><a href="#my-times" class="nav-link">My Times</a></li>
-            <li data-roles="Employee"><a href="#my-absences" class="nav-link">Absences & Vacation</a></li>
-            <li data-roles="Employee"><a href="#my-periods" class="nav-link">Monthly Closing</a></li>
-            <li data-roles="Supervisor,HR,Administrator"><a href="#approvals" class="nav-link">Approvals</a></li>
-            <li data-roles="Employee,Supervisor,HR,Administrator"><a href="#reports" class="nav-link">Reports</a></li>
-            <li data-roles="Administrator,HR"><a href="#employees" class="nav-link">Employees</a></li>
-            <li data-roles="Administrator"><a href="#teams" class="nav-link">Teams</a></li>
-            <li data-roles="Administrator"><a href="#locations" class="nav-link">Locations</a></li>
-            <li data-roles="Administrator"><a href="#absence-types" class="nav-link">Absence Types</a></li>
-            <li data-roles="Administrator"><a href="#holiday-calendars" class="nav-link">Holiday Calendars</a></li>
-            <li data-roles="Administrator"><a href="#schedule-templates" class="nav-link">Schedule Templates</a></li>
-            <li data-roles="Administrator"><a href="#configuration" class="nav-link">Configuration</a></li>
-            <li><a href="#" id="logout-link" class="nav-link">Logout</a></li>
+            <li data-roles="Employee"><a href="#dashboard" class="nav-link" data-i18n="nav.dashboard">Dashboard</a></li>
+            <li data-roles="Supervisor,HR,Administrator"><a href="#presence" class="nav-link" data-i18n="nav.presence">Presence</a></li>
+            <li data-roles="Employee"><a href="#my-times" class="nav-link" data-i18n="nav.myTimes">My Times</a></li>
+            <li data-roles="Employee"><a href="#my-absences" class="nav-link" data-i18n="nav.myAbsences">Absences & Vacation</a></li>
+            <li data-roles="Employee"><a href="#my-periods" class="nav-link" data-i18n="nav.myPeriods">Monthly Closing</a></li>
+            <li data-roles="Supervisor,HR,Administrator"><a href="#approvals" class="nav-link" data-i18n="nav.approvals">Approvals</a></li>
+            <li data-roles="Employee,Supervisor,HR,Administrator"><a href="#reports" class="nav-link" data-i18n="nav.reports">Reports</a></li>
+            <li data-roles="Administrator,HR"><a href="#employees" class="nav-link" data-i18n="nav.employees">Employees</a></li>
+            <li data-roles="Administrator"><a href="#teams" class="nav-link" data-i18n="nav.teams">Teams</a></li>
+            <li data-roles="Administrator"><a href="#locations" class="nav-link" data-i18n="nav.locations">Locations</a></li>
+            <li data-roles="Administrator"><a href="#absence-types" class="nav-link" data-i18n="nav.absenceTypes">Absence Types</a></li>
+            <li data-roles="Administrator"><a href="#holiday-calendars" class="nav-link" data-i18n="nav.holidayCalendars">Holiday Calendars</a></li>
+            <li data-roles="Administrator"><a href="#schedule-templates" class="nav-link" data-i18n="nav.scheduleTemplates">Schedule Templates</a></li>
+            <li data-roles="Administrator"><a href="#configuration" class="nav-link" data-i18n="nav.configuration">Configuration</a></li>
+            <li><a href="#" id="logout-link" class="nav-link" data-i18n="nav.logout">Logout</a></li>
         </ul>
     </nav>
+    <div class="header-actions" id="header-actions">
+        <select id="header-language-select" class="language-select" aria-label="Language">
+            <option value="de">DE</option>
+            <option value="en">EN</option>
+        </select>
+    </div>
 </header>
 <main id="app">
     <!-- Views are rendered here -->

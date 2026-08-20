@@ -10,6 +10,9 @@ export default class AuthApi {
 		});
 		localStorage.setItem('authToken', result.authToken);
 		localStorage.setItem('roles', JSON.stringify(result.roles));
+		if (result.locale) {
+			localStorage.setItem('userLocale', result.locale);
+		}
 		return result;
 	}
 
@@ -24,6 +27,7 @@ export default class AuthApi {
 	static logout() {
 		localStorage.removeItem('authToken');
 		localStorage.removeItem('roles');
+		localStorage.removeItem('userLocale');
 		// We could call the logout endpoint too if needed
 	}
 
@@ -34,6 +38,10 @@ export default class AuthApi {
 	static getRoles() {
 		const roles = localStorage.getItem('roles');
 		return roles ? JSON.parse(roles) : [];
+	}
+
+	static getUserLocale() {
+		return localStorage.getItem('userLocale');
 	}
 
 	static hasRole(role) {

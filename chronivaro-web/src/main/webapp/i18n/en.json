@@ -79,6 +79,10 @@
     "password": "Password",
     "newPassword": "New Password",
     "confirmPassword": "Confirm Password",
+    "challengeCode": "Challenge Code",
+    "choosePasswordPrompt": "Please enter your challenge code and choose a new password.",
+    "registrationComplete": "Registration complete! You can now login.",
+    "loginLinkText": "login",
     "loginTitle": "Login to Chronivaro",
     "loginButton": "Login",
     "logout": "Logout",
@@ -93,6 +97,18 @@
   },
   "dashboard": {
     "title": "Dashboard",
+    "todaySummary": "Today's Summary",
+    "worked": "Worked",
+    "required": "Required",
+    "balance": "Balance",
+    "changeLocation": "Change location",
+    "clearLocation": "Clear",
+    "selectLocationFirst": "Select a working location before starting work.",
+    "offDuty": "Off-duty",
+    "errorLoadingStatus": "Error loading status",
+    "workingLocation": "Working location",
+    "start": "Start",
+    "stop": "Stop",
     "greeting": "Welcome back, {name}",
     "clockIn": "Start Timer",
     "clockOut": "Stop Timer",
@@ -337,7 +353,9 @@
     "workingLocation": {
       "OFFICE": "Office",
       "REMOTE": "Home Office / Remote",
-      "FIELD": "Field / Customer Site"
+      "FIELD": "Field / Customer Site",
+      "HOME_OFFICE": "Home Office",
+      "CUSTOMER": "Customer"
     },
     "dayState": {
       "WORKING": "Working",

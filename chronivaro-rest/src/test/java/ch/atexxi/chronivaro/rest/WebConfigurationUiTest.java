@@ -62,7 +62,7 @@ public class WebConfigurationUiTest extends AbstractChronivaroRestfulTest {
 		assertTrue("index.html must exist", indexFile.exists());
 		String indexContent = Files.readString(indexFile.toPath());
 		assertTrue("index.html must contain configuration link for Administrator",
-				indexContent.contains("<li data-roles=\"Administrator\"><a href=\"#configuration\" class=\"nav-link\">Configuration</a></li>"));
+				indexContent.contains("data-roles=\"Administrator\"") && indexContent.contains("href=\"#configuration\""));
 		assertTrue("index.html must contain header-branding", indexContent.contains("id=\"header-branding\""));
 		assertTrue("index.html must contain header-logo", indexContent.contains("id=\"header-logo\""));
 		assertTrue("index.html must contain header-title", indexContent.contains("id=\"header-title\""));

@@ -1,6 +1,7 @@
 import WorkEntryApi from '../api/WorkEntryApi.js';
 import NotificationDialog from '../utils/NotificationDialog.js';
 import Format from '../utils/Format.js';
+import I18n from '../i18n/I18n.js';
 
 export default class DashboardView {
 
@@ -12,30 +13,30 @@ export default class DashboardView {
         const container = document.createElement('div');
         container.id = 'dashboard-view';
         container.innerHTML = `
-			<h2>Dashboard</h2>
+			<h2>${I18n.t('dashboard.title')}</h2>
 			<div id="status-container">
-				<p><span id="presence-status">Loading...</span></p>
-				<p><span id="off-duty-badge" class="hidden">Off-duty</span></p>
+				<p><span id="presence-status">${I18n.t('common.loading')}</span></p>
+				<p><span id="off-duty-badge" class="hidden">${I18n.t('dashboard.offDuty')}</span></p>
 				<div id="timer-controls">
 					<fieldset id="working-location-group">
-						<legend>Working location</legend>
-						<label><input type="radio" name="working-location" value="HOME_OFFICE"> Home office</label>
-						<label><input type="radio" name="working-location" value="OFFICE"> Office</label>
-						<label><input type="radio" name="working-location" value="CUSTOMER"> Customer</label>
-						<button id="clear-working-location" type="button">Clear</button>
+						<legend>${I18n.t('dashboard.workingLocation')}</legend>
+						<label><input type="radio" name="working-location" value="HOME_OFFICE"> ${I18n.t('enums.workingLocation.HOME_OFFICE')}</label>
+						<label><input type="radio" name="working-location" value="OFFICE"> ${I18n.t('enums.workingLocation.OFFICE')}</label>
+						<label><input type="radio" name="working-location" value="CUSTOMER"> ${I18n.t('enums.workingLocation.CUSTOMER')}</label>
+						<button id="clear-working-location" type="button">${I18n.t('dashboard.clearLocation')}</button>
 					</fieldset>
                 </div>
                 <div id="timer-controls">
-					<button id="start-timer" disabled>Start</button>
-					<button id="stop-timer" disabled>Stop</button>
-					<button id="change-working-location" type="button" disabled>Change location</button>
+					<button id="start-timer" disabled>${I18n.t('dashboard.start')}</button>
+					<button id="stop-timer" disabled>${I18n.t('dashboard.stop')}</button>
+					<button id="change-working-location" type="button" disabled>${I18n.t('dashboard.changeLocation')}</button>
 				</div>
 			</div>
 			<div id="day-summary">
-				<h3>Today's Summary</h3>
-				<p>Worked: <span id="worked-time">...</span></p>
-				<p>Required: <span id="required-time">...</span></p>
-				<p>Balance: <span id="day-balance">...</span></p>
+				<h3>${I18n.t('dashboard.todaySummary')}</h3>
+				<p>${I18n.t('dashboard.worked')}: <span id="worked-time">...</span></p>
+				<p>${I18n.t('dashboard.required')}: <span id="required-time">...</span></p>
+				<p>${I18n.t('dashboard.balance')}: <span id="day-balance">...</span></p>
 			</div>
 		`;
 
@@ -54,7 +55,7 @@ export default class DashboardView {
 
         const refresh = async () => {
             try {
-            				if (!locationSelectionCleared && !workingLocations.some(input => input.checked)) {
+            	if (!locationSelectionCleared && !workingLocations.some(input => input.checked)) {
                     const defaults = await WorkEntryApi.getWorkingLocationDefaults();
                     const weekday = new Intl.DateTimeFormat('en', {weekday: 'long'}).format(new Date()).toUpperCase();
                     const defaultLocation = defaults.find(item => item.weekday === weekday &&
@@ -65,15 +66,17 @@ export default class DashboardView {
                         defaultInput.checked = true;
                 }
                 const summary = await WorkEntryApi.getDaySummary(new Date());
-                statusSpan.textContent = summary.stateLabel;
                 if (summary.state === 'WORKING') {
+                    statusSpan.textContent = I18n.t('presence.working');
                     statusSpan.className = 'status-working';
                     workingLocations.forEach(input => input.checked = input.value === summary.workingLocation);
                     offDutyBadge.className = 'hidden';
                 } else if (summary.isOff) {
+                    statusSpan.textContent = I18n.t('dashboard.offDuty');
                     statusSpan.className = 'status-off-duty';
                     offDutyBadge.className = 'off-duty-badge';
                 } else {
+                    statusSpan.textContent = I18n.t('presence.notWorking');
                     statusSpan.className = 'status-not-working';
                     offDutyBadge.className = 'hidden';
                 }
@@ -89,7 +92,7 @@ export default class DashboardView {
 				workingLocationGroup.classList.toggle('read-only', summary.state === 'WORKING');
             } catch (err) {
                 console.error(err);
-                statusSpan.textContent = 'Error loading status';
+                statusSpan.textContent = I18n.t('dashboard.errorLoadingStatus');
             }
         };
 
@@ -97,7 +100,7 @@ export default class DashboardView {
             try {
 				const workingLocation = workingLocations.find(input => input.checked);
 				if (!workingLocation) {
-					NotificationDialog.error('Select a working location before starting work.');
+					NotificationDialog.error(I18n.t('dashboard.selectLocationFirst'));
 					return;
 				}
 				await WorkEntryApi.startTimer(workingLocation.value);

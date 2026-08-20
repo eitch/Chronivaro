@@ -17,11 +17,15 @@ import ScheduleTemplatesView from './pages/ScheduleTemplatesView.js';
 import ConfigurationView from './pages/ConfigurationView.js';
 import ConfigurationApi from './api/ConfigurationApi.js';
 import CompleteRegistrationView from './pages/CompleteRegistrationView.js';
+import I18n from './i18n/I18n.js';
 
 class ChronivaroApp {
     constructor() {
         this.appContainer = document.getElementById('app');
         this.nav = document.querySelector('header nav');
+        this.headerActions = document.getElementById('header-actions');
+        this.currentHash = '';
+        this.currentViewName = '';
 
         window.addEventListener('unauthorized', () => {
             this.navigate('login');
@@ -31,16 +35,69 @@ class ChronivaroApp {
             this.route();
         });
 
-        document.getElementById('logout-link').addEventListener('click', (e) => {
-            e.preventDefault();
-            AuthApi.logout();
-            this.navigate('login');
+        const logoutLink = document.getElementById('logout-link');
+        if (logoutLink) {
+            logoutLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                AuthApi.logout();
+                this.navigate('login');
+            });
+        }
+
+        const headerLangSelect = document.getElementById('header-language-select');
+        if (headerLangSelect) {
+            headerLangSelect.addEventListener('change', async (e) => {
+                await I18n.setLanguage(e.target.value, true);
+            });
+        }
+
+        I18n.onLanguageChange((lang) => {
+            this.onLanguageChanged(lang);
         });
     }
 
-    start() {
+    async start() {
+        await this.initI18n();
         this.loadBranding();
         this.route();
+    }
+
+    async initI18n() {
+        try {
+            let defaultLang = 'en';
+            try {
+                const branding = await ConfigurationApi.getBranding();
+                if (branding && branding.defaultLanguage) {
+                    defaultLang = branding.defaultLanguage;
+                }
+                this.updateBranding(branding);
+            } catch (e) {
+                console.warn('Could not load global branding during i18n init', e);
+            }
+            await I18n.init({
+                defaultLanguage: defaultLang,
+                userLocale: AuthApi.getUserLocale()
+            });
+            this.syncLanguageUi(I18n.getLanguage());
+        } catch (err) {
+            console.error('Failed to initialize i18n', err);
+        }
+    }
+
+    onLanguageChanged(lang) {
+        document.documentElement.lang = lang;
+        this.syncLanguageUi(lang);
+        this.updateNavigation();
+        if (this.currentHash) {
+            this.showView(this.currentHash);
+        }
+    }
+
+    syncLanguageUi(lang) {
+        const headerLangSelect = document.getElementById('header-language-select');
+        if (headerLangSelect) {
+            headerLangSelect.value = lang;
+        }
     }
 
     async loadBranding() {
@@ -106,6 +163,13 @@ class ChronivaroApp {
 			const hasRole = requiredRoles.some(role => roles.includes(role));
 			li.style.display = hasRole ? 'block' : 'none';
 		});
+
+		this.nav.querySelectorAll('[data-i18n]').forEach(el => {
+			const key = el.getAttribute('data-i18n');
+			if (key) {
+				el.textContent = I18n.t(key);
+			}
+		});
 	}
 
     navigate(page, params) {
@@ -118,6 +182,7 @@ class ChronivaroApp {
     }
 
     async showView(hash) {
+        this.currentHash = hash;
         let viewName = hash;
         let params = {};
         if (hash.includes('?')) {
@@ -129,9 +194,14 @@ class ChronivaroApp {
                 params[decodeURIComponent(kv[0])] = decodeURIComponent(kv[1]);
             });
         }
+        this.currentViewName = viewName;
 
         this.appContainer.innerHTML = '';
-        this.nav.style.display = (viewName === 'login' || viewName === 'complete-registration') ? 'none' : 'block';
+        const isAuthView = (viewName === 'login' || viewName === 'complete-registration');
+        this.nav.style.display = isAuthView ? 'none' : 'block';
+        if (this.headerActions) {
+            this.headerActions.style.display = isAuthView ? 'none' : 'flex';
+        }
 
         // Update active nav link
         document.querySelectorAll('.nav-link').forEach(link => {
