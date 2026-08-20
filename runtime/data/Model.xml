@@ -22,6 +22,9 @@
             <Parameter Id="annualVacationDays" Name="Annual Vacation Days" Type="Integer" Value="25"/>
             <Parameter Id="minutesPerVacationDay" Name="Minutes Per Vacation Day" Type="Integer" Value="480"/>
             <Parameter Id="vacationAbsenceTypeCode" Name="Vacation Absence Type Code" Type="String" Value="VACATION"/>
+            <Parameter Id="companyName" Name="Company Name" Type="String" Value="Chronivaro"/>
+            <Parameter Id="companyLogo" Name="Company Logo" Type="String" Value=""/>
+            <Parameter Id="defaultLanguage" Name="Default Language" Type="String" Value="de"/>
         </ParameterBag>
     </Resource>
 
