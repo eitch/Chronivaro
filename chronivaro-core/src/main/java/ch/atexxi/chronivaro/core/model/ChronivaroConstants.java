@@ -88,11 +88,16 @@ public class ChronivaroConstants {
 	public static final String PARAM_ANNUAL_VACATION_DAYS = "annualVacationDays";
 	public static final String PARAM_MINUTES_PER_VACATION_DAY = "minutesPerVacationDay";
 	public static final String PARAM_VACATION_ABSENCE_TYPE_CODE = "vacationAbsenceTypeCode";
+	public static final String PARAM_COMPANY_NAME = "companyName";
+	public static final String PARAM_COMPANY_LOGO = "companyLogo";
+	public static final String PARAM_DEFAULT_LANGUAGE = "defaultLanguage";
 
 	public static final int DEFAULT_ANNUAL_VACATION_DAYS = 25;
 	public static final int DEFAULT_MINUTES_PER_VACATION_DAY = 480;
 	public static final String DEFAULT_VACATION_ABSENCE_TYPE_CODE = "VACATION";
 	public static final int DEFAULT_WEEKLY_TARGET_MINUTES = 2520;
+	public static final String DEFAULT_COMPANY_NAME = "Chronivaro";
+	public static final String DEFAULT_LANGUAGE = "de";
 
 	public static final String PARAM_HOLIDAY_CALENDAR = "holidayCalendar";
 	public static final String PARAM_DATE = "date";

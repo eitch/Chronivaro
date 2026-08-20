@@ -299,8 +299,19 @@ public class ChronivaroMapper {
 				config.hasParameter(PARAM_ANNUAL_VACATION_DAYS) ? config.getInteger(PARAM_ANNUAL_VACATION_DAYS) : DEFAULT_ANNUAL_VACATION_DAYS,
 				config.hasParameter(PARAM_MINUTES_PER_VACATION_DAY) ? config.getInteger(PARAM_MINUTES_PER_VACATION_DAY) : DEFAULT_MINUTES_PER_VACATION_DAY,
 				config.hasParameter(PARAM_VACATION_ABSENCE_TYPE_CODE) ? config.getString(PARAM_VACATION_ABSENCE_TYPE_CODE) : DEFAULT_VACATION_ABSENCE_TYPE_CODE,
+				config.hasParameter(PARAM_COMPANY_NAME) ? config.getString(PARAM_COMPANY_NAME) : DEFAULT_COMPANY_NAME,
+				config.hasParameter(PARAM_COMPANY_LOGO) ? config.getString(PARAM_COMPANY_LOGO) : "",
+				config.hasParameter(PARAM_DEFAULT_LANGUAGE) ? config.getString(PARAM_DEFAULT_LANGUAGE) : DEFAULT_LANGUAGE,
 				ch.atexxi.chronivaro.core.model.ChronivaroVersionHelper.getVersion(config),
 				config.hasParameter(PARAM_UPDATED_BY) ? config.getString(PARAM_UPDATED_BY) : null
+		);
+	}
+
+	public static BrandingDto brandingToDto(Resource config) {
+		return new BrandingDto(
+				config != null && config.hasParameter(PARAM_COMPANY_NAME) ? config.getString(PARAM_COMPANY_NAME) : DEFAULT_COMPANY_NAME,
+				config != null && config.hasParameter(PARAM_COMPANY_LOGO) ? config.getString(PARAM_COMPANY_LOGO) : "",
+				config != null && config.hasParameter(PARAM_DEFAULT_LANGUAGE) ? config.getString(PARAM_DEFAULT_LANGUAGE) : DEFAULT_LANGUAGE
 		);
 	}
 }

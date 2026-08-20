@@ -17,6 +17,9 @@ public class UpdateConfigurationService extends AbstractService<UpdateConfigurat
 		public Integer annualVacationDays;
 		public Integer minutesPerVacationDay;
 		public String vacationAbsenceTypeCode;
+		public String companyName;
+		public String companyLogo;
+		public String defaultLanguage;
 	}
 
 	@Override
@@ -32,6 +35,18 @@ public class UpdateConfigurationService extends AbstractService<UpdateConfigurat
 		}
 		if (arg.vacationAbsenceTypeCode != null && arg.vacationAbsenceTypeCode.isBlank()) {
 			throw new IllegalArgumentException("vacationAbsenceTypeCode cannot be blank");
+		}
+		if (arg.companyName != null && arg.companyName.length() > 200) {
+			throw new IllegalArgumentException("companyName cannot exceed 200 characters");
+		}
+		if (arg.defaultLanguage != null && !arg.defaultLanguage.isBlank()) {
+			String lang = arg.defaultLanguage.trim().toLowerCase();
+			if (!"de".equals(lang) && !"en".equals(lang)) {
+				throw new IllegalArgumentException("defaultLanguage must be either 'de' or 'en'");
+			}
+		}
+		if (arg.companyLogo != null && !arg.companyLogo.isBlank() && !isValidLogo(arg.companyLogo)) {
+			throw new IllegalArgumentException("companyLogo must be a valid image URL, relative image path, or data URI");
 		}
 
 		try (StrolchTransaction tx = openArgOrUserTx(arg)) {
@@ -55,6 +70,21 @@ public class UpdateConfigurationService extends AbstractService<UpdateConfigurat
 				config.setString(PARAM_VACATION_ABSENCE_TYPE_CODE, arg.vacationAbsenceTypeCode);
 				changes.append(" vacationAbsenceTypeCode=").append(arg.vacationAbsenceTypeCode);
 			}
+			if (arg.companyName != null) {
+				String name = arg.companyName.trim();
+				config.setString(PARAM_COMPANY_NAME, name);
+				changes.append(" companyName=").append(name);
+			}
+			if (arg.companyLogo != null) {
+				String logo = arg.companyLogo.trim();
+				config.setString(PARAM_COMPANY_LOGO, logo);
+				changes.append(" companyLogo=").append(logo.isEmpty() ? "(cleared)" : "(set)");
+			}
+			if (arg.defaultLanguage != null && !arg.defaultLanguage.isBlank()) {
+				String lang = arg.defaultLanguage.trim().toLowerCase();
+				config.setString(PARAM_DEFAULT_LANGUAGE, lang);
+				changes.append(" defaultLanguage=").append(lang);
+			}
 
 			bumpVersion(config, tx);
 			tx.update(config);
@@ -65,6 +95,30 @@ public class UpdateConfigurationService extends AbstractService<UpdateConfigurat
 			tx.commitOnClose();
 		}
 		return ServiceResult.success();
+	}
+
+	private static boolean isValidLogo(String logo) {
+		if (logo == null || logo.isBlank()) {
+			return true;
+		}
+		String trimmed = logo.trim();
+		if (trimmed.startsWith("data:image/") && trimmed.contains(";base64,")) {
+			return true;
+		}
+		if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+			try {
+				new java.net.URI(trimmed);
+				return true;
+			} catch (Exception e) {
+				return false;
+			}
+		}
+		if (trimmed.startsWith("/") || trimmed.startsWith("assets/") || trimmed.startsWith("images/")) {
+			return true;
+		}
+		String lower = trimmed.toLowerCase();
+		return lower.endsWith(".png") || lower.endsWith(".jpg") || lower.endsWith(".jpeg")
+				|| lower.endsWith(".svg") || lower.endsWith(".gif") || lower.endsWith(".webp") || lower.endsWith(".ico");
 	}
 
 	@Override

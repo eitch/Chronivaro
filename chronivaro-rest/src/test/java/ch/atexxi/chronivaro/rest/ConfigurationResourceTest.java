@@ -33,7 +33,24 @@ public class ConfigurationResourceTest extends AbstractChronivaroRestfulTest {
 			assertNotNull(dto.annualVacationDays());
 			assertNotNull(dto.minutesPerVacationDay());
 			assertNotNull(dto.vacationAbsenceTypeCode());
+			assertEquals("Chronivaro", dto.companyName());
+			assertEquals("de", dto.defaultLanguage());
 			assertNotNull(dto.version());
+		}
+	}
+
+	@Test
+	public void shouldGetPublicBranding() {
+		try (Response response = target()
+				.path("chronivaro/v1/system/branding")
+				.request(MediaType.APPLICATION_JSON)
+				.get()) {
+			assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+			String body = response.readEntity(String.class);
+			ch.atexxi.chronivaro.rest.dto.BrandingDto dto = ChronivaroRestHelper.createGson().fromJson(body, ch.atexxi.chronivaro.rest.dto.BrandingDto.class);
+			assertNotNull(dto);
+			assertNotNull(dto.companyName());
+			assertNotNull(dto.defaultLanguage());
 		}
 	}
 
@@ -59,7 +76,10 @@ public class ConfigurationResourceTest extends AbstractChronivaroRestfulTest {
 				  "weeklyTargetMinutes": 2400,
 				  "annualVacationDays": 28,
 				  "minutesPerVacationDay": 480,
-				  "vacationAbsenceTypeCode": "VACATION"
+				  "vacationAbsenceTypeCode": "VACATION",
+				  "companyName": "Acme Time Corp",
+				  "companyLogo": "https://example.com/logo.png",
+				  "defaultLanguage": "en"
 				}
 				""";
 
@@ -79,6 +99,9 @@ public class ConfigurationResourceTest extends AbstractChronivaroRestfulTest {
 			assertEquals(Integer.valueOf(28), updated.annualVacationDays());
 			assertEquals(Integer.valueOf(480), updated.minutesPerVacationDay());
 			assertEquals("VACATION", updated.vacationAbsenceTypeCode());
+			assertEquals("Acme Time Corp", updated.companyName());
+			assertEquals("https://example.com/logo.png", updated.companyLogo());
+			assertEquals("en", updated.defaultLanguage());
 			assertEquals(Integer.valueOf(initial.version() + 1), updated.version());
 			assertEquals("admin", updated.updatedBy());
 		}

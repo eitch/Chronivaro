@@ -2,6 +2,10 @@ import Rest from '../utils/Rest.js';
 
 export default class ConfigurationApi {
 
+	static async getBranding() {
+		return await Rest.get('rest/chronivaro/v1/system/branding');
+	}
+
 	static async getConfiguration() {
 		return await Rest.get('rest/chronivaro/v1/admin/configuration');
 	}

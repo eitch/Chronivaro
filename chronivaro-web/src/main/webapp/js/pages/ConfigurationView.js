@@ -30,6 +30,30 @@ export default class ConfigurationView {
 
 					<form id="configuration-form" class="config-form">
 						<div class="form-group">
+							<label for="config-company-name">Company Name *:</label>
+							<input type="text" id="config-company-name" placeholder="Chronivaro" required>
+							<small class="form-hint">Global company name displayed across all views, headers, and reports.</small>
+						</div>
+
+						<div class="form-group">
+							<label for="config-company-logo">Company Logo URL / Data URI (Optional):</label>
+							<input type="text" id="config-company-logo" placeholder="https://example.com/logo.png or data:image/png;base64,...">
+							<small class="form-hint">Optional URL, relative asset path, or base64 data URI for the global company logo.</small>
+							<div class="config-logo-preview" id="config-logo-preview-box" style="display: none;">
+								<img id="config-logo-preview" src="" alt="Logo Preview">
+							</div>
+						</div>
+
+						<div class="form-group">
+							<label for="config-default-language">Default Language *:</label>
+							<select id="config-default-language" required>
+								<option value="de">Deutsch (German)</option>
+								<option value="en">English</option>
+							</select>
+							<small class="form-hint">System-wide default language used when no user preference is set.</small>
+						</div>
+
+						<div class="form-group">
 							<label for="config-weekly-target">Standard Weekly Target (Minutes) *:</label>
 							<input type="number" id="config-weekly-target" min="0" max="10080" required>
 							<small class="form-hint" id="weekly-target-hint">Default full-time weekly working time in minutes (e.g. 2520 = 42h).</small>
@@ -64,6 +88,11 @@ export default class ConfigurationView {
 
 		this.container = container;
 		this.form = container.querySelector('#configuration-form');
+		this.companyNameInput = container.querySelector('#config-company-name');
+		this.companyLogoInput = container.querySelector('#config-company-logo');
+		this.defaultLanguageSelect = container.querySelector('#config-default-language');
+		this.logoPreview = container.querySelector('#config-logo-preview');
+		this.logoPreviewBox = container.querySelector('#config-logo-preview-box');
 		this.weeklyTargetInput = container.querySelector('#config-weekly-target');
 		this.vacationDaysInput = container.querySelector('#config-vacation-days');
 		this.dayMinutesInput = container.querySelector('#config-day-minutes');
@@ -73,6 +102,7 @@ export default class ConfigurationView {
 		this.saveBtn = container.querySelector('#save-config-btn');
 		this.reloadBtn = container.querySelector('#reload-config-btn');
 
+		this.companyLogoInput.addEventListener('input', () => this.updateLogoPreview());
 		this.weeklyTargetInput.addEventListener('input', () => this.updateHints());
 		this.dayMinutesInput.addEventListener('input', () => this.updateHints());
 
@@ -81,6 +111,20 @@ export default class ConfigurationView {
 
 		await this.loadConfiguration();
 		return container;
+	}
+
+	updateLogoPreview() {
+		const url = this.companyLogoInput.value.trim();
+		if (url) {
+			this.logoPreview.src = url;
+			this.logoPreviewBox.style.display = 'inline-block';
+			this.logoPreview.onerror = () => {
+				this.logoPreviewBox.style.display = 'none';
+			};
+		} else {
+			this.logoPreviewBox.style.display = 'none';
+			this.logoPreview.removeAttribute('src');
+		}
 	}
 
 	updateHints() {
@@ -105,6 +149,9 @@ export default class ConfigurationView {
 			this.configuration = config;
 			this.currentVersion = config.version;
 
+			this.companyNameInput.value = config.companyName || 'Chronivaro';
+			this.companyLogoInput.value = config.companyLogo || '';
+			this.defaultLanguageSelect.value = config.defaultLanguage || 'de';
 			this.weeklyTargetInput.value = config.weeklyTargetMinutes != null ? config.weeklyTargetMinutes : 2520;
 			this.vacationDaysInput.value = config.annualVacationDays != null ? config.annualVacationDays : 25;
 			this.dayMinutesInput.value = config.minutesPerVacationDay != null ? config.minutesPerVacationDay : 480;
@@ -113,6 +160,7 @@ export default class ConfigurationView {
 			this.versionBadge.textContent = `Version: ${config.version != null ? config.version : 1}`;
 			this.updatedByBadge.textContent = `Updated by: ${config.updatedBy || 'system'}`;
 
+			this.updateLogoPreview();
 			this.updateHints();
 		} catch (err) {
 			console.error('Failed to load configuration', err);
@@ -123,10 +171,23 @@ export default class ConfigurationView {
 	async handleSave(e) {
 		e.preventDefault();
 
+		const companyName = this.companyNameInput.value.trim();
+		const companyLogo = this.companyLogoInput.value.trim();
+		const defaultLanguage = this.defaultLanguageSelect.value;
 		const weeklyTargetMinutes = parseInt(this.weeklyTargetInput.value, 10);
 		const annualVacationDays = parseInt(this.vacationDaysInput.value, 10);
 		const minutesPerVacationDay = parseInt(this.dayMinutesInput.value, 10);
 		const vacationAbsenceTypeCode = this.vacationCodeInput.value.trim();
+
+		if (!companyName) {
+			NotificationDialog.error('Company name cannot be empty.');
+			return;
+		}
+
+		if (defaultLanguage !== 'de' && defaultLanguage !== 'en') {
+			NotificationDialog.error('Default language must be either "de" or "en".');
+			return;
+		}
 
 		if (isNaN(weeklyTargetMinutes) || weeklyTargetMinutes < 0 || weeklyTargetMinutes > 10080) {
 			NotificationDialog.error('Weekly target minutes must be between 0 and 10080 (168h).');
@@ -149,6 +210,9 @@ export default class ConfigurationView {
 		}
 
 		const payload = {
+			companyName,
+			companyLogo,
+			defaultLanguage,
 			weeklyTargetMinutes,
 			annualVacationDays,
 			minutesPerVacationDay,
@@ -165,6 +229,10 @@ export default class ConfigurationView {
 
 			this.versionBadge.textContent = `Version: ${updated.version != null ? updated.version : 1}`;
 			this.updatedByBadge.textContent = `Updated by: ${updated.updatedBy || 'system'}`;
+
+			if (this.app && typeof this.app.updateBranding === 'function') {
+				this.app.updateBranding(updated);
+			}
 
 			NotificationDialog.info('Global configuration updated successfully.');
 		} catch (err) {

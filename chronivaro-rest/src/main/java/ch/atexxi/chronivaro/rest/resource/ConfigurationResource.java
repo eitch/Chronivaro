@@ -48,6 +48,9 @@ public class ConfigurationResource {
 		arg.annualVacationDays = dto.annualVacationDays();
 		arg.minutesPerVacationDay = dto.minutesPerVacationDay();
 		arg.vacationAbsenceTypeCode = dto.vacationAbsenceTypeCode();
+		arg.companyName = dto.companyName();
+		arg.companyLogo = dto.companyLogo();
+		arg.defaultLanguage = dto.defaultLanguage();
 
 		ServiceResult result = serviceHandler.doService(cert, new UpdateConfigurationService(), arg);
 		if (result.isOk()) {

@@ -15,6 +15,7 @@ import HolidayCalendarsView from './pages/HolidayCalendarsView.js';
 import SchedulesView from './pages/SchedulesView.js';
 import ScheduleTemplatesView from './pages/ScheduleTemplatesView.js';
 import ConfigurationView from './pages/ConfigurationView.js';
+import ConfigurationApi from './api/ConfigurationApi.js';
 import CompleteRegistrationView from './pages/CompleteRegistrationView.js';
 
 class ChronivaroApp {
@@ -38,7 +39,42 @@ class ChronivaroApp {
     }
 
     start() {
+        this.loadBranding();
         this.route();
+    }
+
+    async loadBranding() {
+        try {
+            const branding = await ConfigurationApi.getBranding();
+            this.updateBranding(branding);
+        } catch (e) {
+            console.warn('Could not load global branding', e);
+        }
+    }
+
+    updateBranding(branding) {
+        if (!branding) return;
+        const titleEl = document.getElementById('header-title');
+        const logoEl = document.getElementById('header-logo');
+
+        if (titleEl && branding.companyName) {
+            titleEl.textContent = branding.companyName;
+            document.title = branding.companyName;
+        }
+
+        if (logoEl) {
+            if (branding.companyLogo && branding.companyLogo.trim().length > 0) {
+                logoEl.src = branding.companyLogo.trim();
+                logoEl.alt = branding.companyName || 'Logo';
+                logoEl.style.display = 'block';
+                logoEl.onerror = () => {
+                    logoEl.style.display = 'none';
+                };
+            } else {
+                logoEl.style.display = 'none';
+                logoEl.removeAttribute('src');
+            }
+        }
     }
 
 	route() {

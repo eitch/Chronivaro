@@ -1,5 +1,7 @@
 package ch.atexxi.chronivaro.rest.resource;
 
+import ch.atexxi.chronivaro.rest.dto.BrandingDto;
+import ch.atexxi.chronivaro.rest.dto.ChronivaroMapper;
 import ch.atexxi.chronivaro.rest.dto.HealthDto;
 import ch.atexxi.chronivaro.rest.dto.ReadinessDto;
 import ch.atexxi.chronivaro.rest.dto.SystemMetricsDto;
@@ -12,6 +14,8 @@ import jakarta.ws.rs.core.Response;
 import li.strolch.agent.api.ComponentContainer;
 import li.strolch.agent.api.StrolchAgent;
 import li.strolch.agent.api.VersionQueryResult;
+import li.strolch.model.Resource;
+import li.strolch.persistence.api.StrolchTransaction;
 import li.strolch.rest.RestfulStrolchComponent;
 import li.strolch.utils.iso8601.ISO8601;
 
@@ -23,6 +27,8 @@ import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+
+import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
 
 @Path("chronivaro/v1")
 public class SystemResource {
@@ -69,6 +75,36 @@ public class SystemResource {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getVersionRoot() {
 		return getVersion();
+	}
+
+	@GET
+	@Path("branding")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response getBrandingRoot() {
+		return getBranding();
+	}
+
+	@GET
+	@Path("system/branding")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response getBranding() {
+		StrolchAgent agent = getAgent();
+		if (agent != null) {
+			try {
+				BrandingDto dto = agent.runAsAgentWithResult(ctx -> {
+					try (StrolchTransaction tx = agent.openTx(ctx.getCertificate(), "GetBranding", true)) {
+						Resource config = tx.getResourceBy(TYPE_GLOBAL_CONFIGURATION, "configuration", false);
+						return ChronivaroMapper.brandingToDto(config);
+					}
+				});
+				if (dto != null) {
+					return Response.ok(ChronivaroRestHelper.createGson().toJson(dto), MediaType.APPLICATION_JSON).build();
+				}
+			} catch (Exception ignored) {
+			}
+		}
+		BrandingDto fallback = new BrandingDto(DEFAULT_COMPANY_NAME, "", DEFAULT_LANGUAGE);
+		return Response.ok(ChronivaroRestHelper.createGson().toJson(fallback), MediaType.APPLICATION_JSON).build();
 	}
 
 	@GET

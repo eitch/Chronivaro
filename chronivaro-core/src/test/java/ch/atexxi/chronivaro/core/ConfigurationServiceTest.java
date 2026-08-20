@@ -44,6 +44,9 @@ public class ConfigurationServiceTest {
 		arg.annualVacationDays = 30;
 		arg.minutesPerVacationDay = 500;
 		arg.vacationAbsenceTypeCode = "VAC";
+		arg.companyName = "Acme Corp";
+		arg.companyLogo = "https://example.com/logo.png";
+		arg.defaultLanguage = "en";
 
 		ServiceResult result = serviceHandler.doService(adminCert, service, arg);
 		assertTrue(result.getMessage(), result.isOk());
@@ -54,6 +57,9 @@ public class ConfigurationServiceTest {
 			assertEquals(30, config.getInteger(ch.atexxi.chronivaro.core.model.ChronivaroConstants.PARAM_ANNUAL_VACATION_DAYS));
 			assertEquals(500, config.getInteger(ch.atexxi.chronivaro.core.model.ChronivaroConstants.PARAM_MINUTES_PER_VACATION_DAY));
 			assertEquals("VAC", config.getString(ch.atexxi.chronivaro.core.model.ChronivaroConstants.PARAM_VACATION_ABSENCE_TYPE_CODE));
+			assertEquals("Acme Corp", config.getString(ch.atexxi.chronivaro.core.model.ChronivaroConstants.PARAM_COMPANY_NAME));
+			assertEquals("https://example.com/logo.png", config.getString(ch.atexxi.chronivaro.core.model.ChronivaroConstants.PARAM_COMPANY_LOGO));
+			assertEquals("en", config.getString(ch.atexxi.chronivaro.core.model.ChronivaroConstants.PARAM_DEFAULT_LANGUAGE));
 		}
 	}
 
@@ -80,5 +86,15 @@ public class ConfigurationServiceTest {
 		blankCode.vacationAbsenceTypeCode = "   ";
 		ServiceResult result4 = serviceHandler.doService(adminCert, new UpdateConfigurationService(), blankCode);
 		assertTrue("Blank absence type code should fail", result4.isNok());
+
+		UpdateConfigurationService.UpdateConfigurationArgument invalidLang = new UpdateConfigurationService.UpdateConfigurationArgument();
+		invalidLang.defaultLanguage = "fr";
+		ServiceResult result5 = serviceHandler.doService(adminCert, new UpdateConfigurationService(), invalidLang);
+		assertTrue("Unsupported default language should fail", result5.isNok());
+
+		UpdateConfigurationService.UpdateConfigurationArgument invalidLogo = new UpdateConfigurationService.UpdateConfigurationArgument();
+		invalidLogo.companyLogo = "invalid-uri-scheme:::";
+		ServiceResult result6 = serviceHandler.doService(adminCert, new UpdateConfigurationService(), invalidLogo);
+		assertTrue("Invalid company logo format should fail", result6.isNok());
 	}
 }
