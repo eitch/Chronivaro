@@ -1,5 +1,6 @@
 import AbsenceTypeApi from '../api/AbsenceTypeApi.js';
 import NotificationDialog from '../utils/NotificationDialog.js';
+import I18n from '../utils/I18n.js';
 
 export default class AbsenceTypesView {
     constructor(app) {
@@ -10,65 +11,65 @@ export default class AbsenceTypesView {
         const container = document.createElement('div');
         container.id = 'absence-types-view';
         container.innerHTML = `
-			<h2>Absence Types</h2>
+			<h2>${I18n.t('absenceTypes.title')}</h2>
 			<div class="actions">
-				<button id="add-absence-type-btn">Add Absence Type</button>
+				<button id="add-absence-type-btn">${I18n.t('absenceTypes.addAbsenceType')}</button>
 			</div>
 			<table id="absence-types-table">
 				<thead>
 					<tr>
-						<th>Code</th>
-						<th>Name</th>
-						<th>Paid</th>
-						<th>Appr. Req.</th>
-						<th>Actions</th>
+						<th>${I18n.t('absenceTypes.code')}</th>
+						<th>${I18n.t('absenceTypes.name')}</th>
+						<th>${I18n.t('absenceTypes.paid')}</th>
+						<th>${I18n.t('absenceTypes.apprReq')}</th>
+						<th>${I18n.t('common.actions')}</th>
 					</tr>
 				</thead>
 				<tbody>
-					<tr><td colspan="5">Loading...</td></tr>
+					<tr><td colspan="5">${I18n.t('common.loading')}</td></tr>
 				</tbody>
 			</table>
 
 			<div id="absence-type-modal" class="modal">
 				<div class="modal-content">
-					<h3 id="modal-title">Add Absence Type</h3>
+					<h3 id="modal-title">${I18n.t('absenceTypes.addAbsenceType')}</h3>
 					<form id="absence-type-form">
 						<div class="form-group" id="at-id-group">
-							<label for="at-id">ID:</label>
+							<label for="at-id">${I18n.t('common.id')}:</label>
 							<input type="text" id="at-id" required>
 						</div>
 						<div class="form-group">
-							<label for="at-code">Code:</label>
+							<label for="at-code">${I18n.t('absenceTypes.code')}:</label>
 							<input type="text" id="at-code" required>
 						</div>
 						<div class="form-group">
-							<label for="at-name">Name:</label>
+							<label for="at-name">${I18n.t('absenceTypes.name')}:</label>
 							<input type="text" id="at-name" required>
 						</div>
 						<div class="form-group">
-							<label><input type="checkbox" id="at-paid"> Paid</label>
+							<label><input type="checkbox" id="at-paid"> ${I18n.t('absenceTypes.paid')}</label>
 						</div>
 						<div class="form-group">
-							<label><input type="checkbox" id="at-approval-required"> Approval Required</label>
+							<label><input type="checkbox" id="at-approval-required"> ${I18n.t('absenceTypes.approvalRequired')}</label>
 						</div>
 						<div class="form-group">
-							<label><input type="checkbox" id="at-comment-required"> Comment Required</label>
+							<label><input type="checkbox" id="at-comment-required"> ${I18n.t('absenceTypes.commentRequired')}</label>
 						</div>
 						<div class="form-group">
-							<label><input type="checkbox" id="at-visible-on-public-status"> Visible on Public Status</label>
+							<label><input type="checkbox" id="at-visible-on-public-status"> ${I18n.t('absenceTypes.visibleOnPublicStatus')}</label>
 						</div>
 						<div class="form-group">
-							<label><input type="checkbox" id="at-count-as-target-time"> Count as Target Time</label>
+							<label><input type="checkbox" id="at-count-as-target-time"> ${I18n.t('absenceTypes.countAsTargetTime')}</label>
 						</div>
 						<div class="form-group">
-							<label><input type="checkbox" id="at-reduce-vacation-credit"> Reduce Vacation Credit</label>
+							<label><input type="checkbox" id="at-reduce-vacation-credit"> ${I18n.t('absenceTypes.reduceVacationCredit')}</label>
 						</div>
 						<div class="form-group">
-							<label><input type="checkbox" id="at-active" checked> Active</label>
+							<label><input type="checkbox" id="at-active" checked> ${I18n.t('common.active')}</label>
 						</div>
 						<div class="actions">
-							<button type="submit">Save</button>
-							<button type="button" id="close-modal">Cancel</button>
+							<button type="submit">${I18n.t('common.save')}</button>
+							<button type="button" id="close-modal">${I18n.t('common.cancel')}</button>
 						</div>
 					</form>
 				</div>
@@ -90,14 +91,14 @@ export default class AbsenceTypesView {
                 tbody.innerHTML = '';
                 types.forEach(type => {
                     const row = document.createElement('tr');
-               					row.innerHTML = `
+                    row.innerHTML = `
 						<td>${type.code}</td>
 						<td>${type.name}</td>
-						<td>${type.paid ? 'Yes' : 'No'}</td>
-						<td>${type.approvalRequired ? 'Yes' : 'No'}</td>
+						<td>${type.paid ? I18n.t('common.yes') : I18n.t('common.no')}</td>
+						<td>${type.approvalRequired ? I18n.t('common.yes') : I18n.t('common.no')}</td>
 						<td>
-							<button class="ghost edit-btn" data-id="${type.id}">Edit</button>
-							<button class="secondary delete-btn" data-id="${type.id}">Delete</button>
+							<button class="ghost edit-btn" data-id="${type.id}">${I18n.t('common.edit')}</button>
+							<button class="secondary delete-btn" data-id="${type.id}">${I18n.t('common.delete')}</button>
 						</td>
 					`;
                     tbody.appendChild(row);
@@ -111,7 +112,7 @@ export default class AbsenceTypesView {
                 });
             } catch (err) {
                 console.error(err);
-            				tbody.innerHTML = `<tr><td colspan="5" class="error">${err.message}</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="5" class="error">${err.message}</td></tr>`;
             }
         };
 
@@ -121,7 +122,7 @@ export default class AbsenceTypesView {
                 const type = types.find(t => t.id === id);
                 if (type) {
                     editingId = id;
-                    modalTitle.innerText = 'Edit Absence Type';
+                    modalTitle.innerText = I18n.t('absenceTypes.editAbsenceType');
                     container.querySelector('#at-id-group').style.display = 'block';
                     container.querySelector('#at-id').value = type.id;
                     container.querySelector('#at-id').disabled = true;
@@ -142,7 +143,7 @@ export default class AbsenceTypesView {
         };
 
         const deleteAbsenceType = async (id) => {
-            if (await NotificationDialog.confirm(`Are you sure you want to delete absence type ${id}?`)) {
+            if (await NotificationDialog.confirm(I18n.t('absenceTypes.confirmDelete', { id }))) {
                 try {
                     await AbsenceTypeApi.remove(id);
                     refresh();
@@ -154,7 +155,7 @@ export default class AbsenceTypesView {
 
         addBtn.addEventListener('click', () => {
             editingId = null;
-            modalTitle.innerText = 'Add Absence Type';
+            modalTitle.innerText = I18n.t('absenceTypes.addAbsenceType');
             form.reset();
             container.querySelector('#at-id-group').style.display = 'none';
             container.querySelector('#at-id').required = false;

@@ -4,6 +4,7 @@ import LocationApi from '../api/LocationApi.js';
 import ScheduleApi from '../api/ScheduleApi.js';
 import ScheduleTemplateApi from '../api/ScheduleTemplateApi.js';
 import NotificationDialog from '../utils/NotificationDialog.js';
+import I18n from '../utils/I18n.js';
 
 export default class EmployeesView {
     constructor(app) {
@@ -14,101 +15,101 @@ export default class EmployeesView {
         const container = document.createElement('div');
         container.id = 'employees-view';
         container.innerHTML = `
-			<h2>Employees</h2>
+			<h2>${I18n.t('employees.title')}</h2>
 			<div class="actions">
-				<button id="add-employee-btn">Add Employee</button>
+				<button id="add-employee-btn">${I18n.t('employees.addEmployee')}</button>
 			</div>
 			<table id="employees-table">
 				<thead>
 					<tr>
-						<th>Username</th>
-						<th>Pers. Nr.</th>
-						<th>Firstname</th>
-						<th>Lastname</th>
-						<th>Birthdate</th>
-						<th>Team</th>
-						<th>Location</th>
-						<th>Active</th>
-						<th>Actions</th>
+						<th>${I18n.t('employees.username')}</th>
+						<th>${I18n.t('employees.persNr')}</th>
+						<th>${I18n.t('employees.firstName')}</th>
+						<th>${I18n.t('employees.lastName')}</th>
+						<th>${I18n.t('employees.birthdate')}</th>
+						<th>${I18n.t('common.team')}</th>
+						<th>${I18n.t('common.location')}</th>
+						<th>${I18n.t('common.active')}</th>
+						<th>${I18n.t('common.actions')}</th>
 					</tr>
 				</thead>
 				<tbody>
-					<tr><td colspan="9">Loading...</td></tr>
+					<tr><td colspan="9">${I18n.t('common.loading')}</td></tr>
 				</tbody>
 			</table>
 
 			<div id="employee-modal" class="modal">
 				<div class="modal-content wide">
-					<h3 id="modal-title">Add Employee</h3>
+					<h3 id="modal-title">${I18n.t('employees.addEmployee')}</h3>
 					<form id="employee-form">
 						<div class="form-grid">
 							<div class="form-group" id="emp-username-group">
-								<label for="emp-username">Username:</label>
+								<label for="emp-username">${I18n.t('employees.username')}:</label>
 								<input type="text" id="emp-username" required>
 							</div>
 							<div class="form-group">
-								<label for="emp-email">Email:</label>
+								<label for="emp-email">${I18n.t('employees.email')}:</label>
 								<input type="email" id="emp-email">
 							</div>
 							<div class="form-group" id="emp-id-group">
-								<label for="emp-id">ID:</label>
+								<label for="emp-id">${I18n.t('common.id')}:</label>
 								<input type="text" id="emp-id" required>
 							</div>
 							<div class="form-group">
-								<label for="emp-pers-nr">Personal Number:</label>
+								<label for="emp-pers-nr">${I18n.t('employees.personalNumber')}:</label>
 								<input type="text" id="emp-pers-nr" required>
 							</div>
 							<div class="form-group">
-								<label for="emp-firstname">Firstname:</label>
+								<label for="emp-firstname">${I18n.t('employees.firstName')}:</label>
 								<input type="text" id="emp-firstname" required>
 							</div>
 							<div class="form-group">
-								<label for="emp-lastname">Lastname:</label>
+								<label for="emp-lastname">${I18n.t('employees.lastName')}:</label>
 								<input type="text" id="emp-lastname" required>
 							</div>
 							<div class="form-group">
-								<label for="emp-birthdate">Birthdate:</label>
+								<label for="emp-birthdate">${I18n.t('employees.birthdate')}:</label>
 								<input type="date" id="emp-birthdate">
 							</div>
 							<div class="form-group">
-								<label for="emp-team">Team:</label>
+								<label for="emp-team">${I18n.t('common.team')}:</label>
 								<select id="emp-team" required></select>
 							</div>
 							<div class="form-group">
-								<label for="emp-location">Location:</label>
+								<label for="emp-location">${I18n.t('common.location')}:</label>
 								<select id="emp-location" required></select>
 							</div>
 							<div class="form-group">
-								<label for="emp-timezone">Timezone:</label>
+								<label for="emp-timezone">${I18n.t('employees.timezone')}:</label>
 								<input type="text" id="emp-timezone" required placeholder="Europe/Zurich">
 							</div>
 							<div class="form-group">
-								<label for="emp-join-date">Join Date:</label>
+								<label for="emp-join-date">${I18n.t('employees.joinDate')}:</label>
 								<input type="date" id="emp-join-date" required>
 							</div>
 							<div class="form-group">
-								<label for="emp-exit-date">Exit Date:</label>
+								<label for="emp-exit-date">${I18n.t('employees.exitDate')}:</label>
 								<input type="date" id="emp-exit-date">
 							</div>
 							<div class="form-group full-width">
-								<label><input type="checkbox" id="emp-active" checked> Active</label>
+								<label><input type="checkbox" id="emp-active" checked> ${I18n.t('common.active')}</label>
 							</div>
 						</div>
 						<div id="schedule-section">
 							<hr>
-							<h3>Initial Schedule</h3>
+							<h3>${I18n.t('employees.initialSchedule')}</h3>
 							<div class="form-grid">
 								<div class="form-group">
-									<label for="sched-template">Apply Template:</label>
+									<label for="sched-template">${I18n.t('employees.applyTemplate')}</label>
 									<select id="sched-template" required>
-										<option value="">-- Select Template --</option>
+										<option value="">${I18n.t('employees.selectTemplatePrompt')}</option>
 									</select>
 								</div>
 							</div>
 						</div>
 						<div class="actions">
-							<button type="submit">Save</button>
-							<button type="button" id="close-modal">Cancel</button>
+							<button type="submit">${I18n.t('common.save')}</button>
+							<button type="button" id="close-modal">${I18n.t('common.cancel')}</button>
 						</div>
 					</form>
 				</div>
@@ -143,18 +144,18 @@ export default class EmployeesView {
             ]);
 
             if (teams.length === 0) {
-                teamSelect.innerHTML = '<option value="">No teams available</option>';
+                teamSelect.innerHTML = `<option value="">${I18n.t('employees.noTeamsAvailable')}</option>`;
             } else {
                 teamSelect.innerHTML = teams.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
             }
 
             if (locations.length === 0) {
-                locationSelect.innerHTML = '<option value="">No locations available</option>';
+                locationSelect.innerHTML = `<option value="">${I18n.t('employees.noLocationsAvailable')}</option>`;
             } else {
                 locationSelect.innerHTML = locations.map(l => `<option value="${l.id}">${l.name}</option>`).join('');
             }
 
-            templateSelect.innerHTML = '<option value="">-- Select Template --</option>' +
+            templateSelect.innerHTML = `<option value="">${I18n.t('employees.selectTemplatePrompt')}</option>` +
                 templates.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
             templateSelect.templates = templates;
         };
@@ -165,7 +166,7 @@ export default class EmployeesView {
                 tbody.innerHTML = '';
                 employees.forEach(emp => {
                     const row = document.createElement('tr');
-               					row.innerHTML = `
+                    row.innerHTML = `
 						<td>${emp.username}</td>
 						<td>${emp.personalNumber}</td>
 						<td>${emp.firstname}</td>
@@ -173,15 +174,15 @@ export default class EmployeesView {
 						<td>${emp.birthdate}</td>
 						<td>${emp.teamName || ''}</td>
 						<td>${emp.locationName || ''}</td>
-						<td>${emp.active ? 'Yes' : 'No'}</td>
+						<td>${emp.active ? I18n.t('common.yes') : I18n.t('common.no')}</td>
 						<td>
 							<div class="dropdown">
-								<button class="ghost dropdown-toggle" data-id="${emp.id}">Actions</button>
+								<button class="ghost dropdown-toggle" data-id="${emp.id}">${I18n.t('common.actions')}</button>
 								<div class="dropdown-content">
-									<button class="edit-btn" data-id="${emp.id}">Edit</button>
-									<button class="register-btn" data-id="${emp.id}">Register</button>
-									<button class="schedules-btn" data-id="${emp.id}">Schedules</button>
-									<button class="delete-btn" data-id="${emp.id}">Delete</button>
+									<button class="edit-btn" data-id="${emp.id}">${I18n.t('common.edit')}</button>
+									<button class="register-btn" data-id="${emp.id}">${I18n.t('employees.register')}</button>
+									<button class="schedules-btn" data-id="${emp.id}">${I18n.t('employees.schedules')}</button>
+									<button class="delete-btn" data-id="${emp.id}">${I18n.t('common.delete')}</button>
 								</div>
 							</div>
 						</td>
@@ -213,7 +214,7 @@ export default class EmployeesView {
                 });
             } catch (err) {
                 console.error(err);
-            				tbody.innerHTML = `<tr><td colspan="9" class="error">${err.message}</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="9" class="error">${err.message}</td></tr>`;
             }
         };
 
@@ -224,7 +225,7 @@ export default class EmployeesView {
                 const emp = employees.find(e => e.id === id);
                 if (emp) {
                     editingId = id;
-                    modalTitle.innerText = 'Edit Employee';
+                    modalTitle.innerText = I18n.t('employees.editEmployee');
                     container.querySelector('#emp-id-group').style.display = 'block';
                     container.querySelector('#emp-id').value = emp.id;
                     container.querySelector('#emp-id').disabled = true;
@@ -249,10 +250,10 @@ export default class EmployeesView {
         };
 
         const registerEmployee = async (id) => {
-            if (await NotificationDialog.confirm(`Are you sure you want to initiate registration for employee ${id}?`)) {
+            if (await NotificationDialog.confirm(I18n.t('employees.confirmRegister', { id }))) {
                 try {
                     await EmployeeApi.register(id);
-                    NotificationDialog.info('Registration initiated successfully.');
+                    NotificationDialog.info(I18n.t('employees.registerSuccess'));
                 } catch (err) {
                     NotificationDialog.error(err.message);
                 }
@@ -260,7 +261,7 @@ export default class EmployeesView {
         };
 
         const deleteEmployee = async (id) => {
-            if (await NotificationDialog.confirm(`Are you sure you want to delete employee ${id}?`)) {
+            if (await NotificationDialog.confirm(I18n.t('employees.confirmDelete', { id }))) {
                 try {
                     await EmployeeApi.remove(id);
                     refresh();
@@ -273,7 +274,7 @@ export default class EmployeesView {
         addBtn.addEventListener('click', async () => {
             await loadOptions();
             editingId = null;
-            modalTitle.innerText = 'Add Employee';
+            modalTitle.innerText = I18n.t('employees.addEmployee');
             form.reset();
             container.querySelector('#emp-id-group').style.display = 'none';
             container.querySelector('#emp-id').required = false;

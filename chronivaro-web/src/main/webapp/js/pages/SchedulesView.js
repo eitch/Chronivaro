@@ -3,6 +3,7 @@ import ScheduleTemplateApi from '../api/ScheduleTemplateApi.js';
 import EmployeeApi from '../api/EmployeeApi.js';
 import NotificationDialog from '../utils/NotificationDialog.js';
 import Format from '../utils/Format.js';
+import I18n from '../utils/I18n.js';
 
 export default class SchedulesView {
     constructor(app) {
@@ -15,33 +16,33 @@ export default class SchedulesView {
         container.id = 'schedules-view';
         container.innerHTML = `
 			<div class="header-actions">
-				<button id="back-btn" class="ghost">Back to Employees</button>
-				<h2 id="employee-name">Schedules for ${employeeId}</h2>
+				<button id="back-btn" class="ghost">${I18n.t('schedules.backToEmployees')}</button>
+				<h2 id="employee-name">${I18n.t('schedules.schedulesFor', { name: employeeId })}</h2>
 			</div>
 			<div class="actions">
-				<button id="add-schedule-btn">Add Schedule</button>
+				<button id="add-schedule-btn">${I18n.t('schedules.addSchedule')}</button>
 			</div>
 			<table id="schedules-table">
 				<thead>
 					<tr>
-						<th>Valid From</th>
-						<th>Valid To</th>
-						<th>Mon</th>
-						<th>Tue</th>
-						<th>Wed</th>
-						<th>Thu</th>
-						<th>Fri</th>
-						<th>Sat</th>
-						<th>Sun</th>
-						<th>Actions</th>
+						<th>${I18n.t('schedules.validFrom')}</th>
+						<th>${I18n.t('schedules.validTo')}</th>
+						<th>${I18n.t('scheduleTemplates.mon')}</th>
+						<th>${I18n.t('scheduleTemplates.tue')}</th>
+						<th>${I18n.t('scheduleTemplates.wed')}</th>
+						<th>${I18n.t('scheduleTemplates.thu')}</th>
+						<th>${I18n.t('scheduleTemplates.fri')}</th>
+						<th>${I18n.t('scheduleTemplates.sat')}</th>
+						<th>${I18n.t('scheduleTemplates.sun')}</th>
+						<th>${I18n.t('common.actions')}</th>
 					</tr>
 				</thead>
 				<tbody>
-					<tr><td colspan="10">Loading...</td></tr>
+					<tr><td colspan="10">${I18n.t('common.loading')}</td></tr>
 				</tbody>
 				<tfoot>
 					<tr id="weekly-summary-row">
-						<th colspan="2">Weekly Total:</th>
+						<th colspan="2">${I18n.t('schedules.weeklyTotal')}</th>
 						<th colspan="7" id="weekly-total">0h 0m</th>
 						<th></th>
 					</tr>
@@ -50,54 +51,54 @@ export default class SchedulesView {
 
 			<div id="schedule-modal" class="modal">
 				<div class="modal-content">
-					<h3 id="modal-title">Add Schedule</h3>
+					<h3 id="modal-title">${I18n.t('schedules.addSchedule')}</h3>
 					<form id="schedule-form">
 						<div class="form-group">
-							<label for="sched-template">Apply Template:</label>
+							<label for="sched-template">${I18n.t('schedules.applyTemplate')}</label>
 							<select id="sched-template">
-								<option value="">-- Select Template --</option>
+								<option value="">${I18n.t('schedules.selectTemplatePrompt')}</option>
 							</select>
 						</div>
 						<hr>
 						<div class="form-group">
-							<label for="sched-valid-from">Valid From:</label>
+							<label for="sched-valid-from">${I18n.t('schedules.validFrom')}:</label>
 							<input type="date" id="sched-valid-from" required>
 						</div>
 						<div class="form-group">
-							<label for="sched-valid-to">Valid To:</label>
+							<label for="sched-valid-to">${I18n.t('schedules.validTo')}:</label>
 							<input type="date" id="sched-valid-to">
 						</div>
 						<div class="form-group">
-							<label for="sched-mon">Monday:</label>
+							<label for="sched-mon">${I18n.t('scheduleTemplates.monday')}:</label>
 							<input type="text" id="sched-mon" required placeholder="HH:mm" value="08:00">
 						</div>
 						<div class="form-group">
-							<label for="sched-tue">Tuesday:</label>
+							<label for="sched-tue">${I18n.t('scheduleTemplates.tuesday')}:</label>
 							<input type="text" id="sched-tue" required placeholder="HH:mm" value="08:00">
 						</div>
 						<div class="form-group">
-							<label for="sched-wed">Wednesday:</label>
+							<label for="sched-wed">${I18n.t('scheduleTemplates.wednesday')}:</label>
 							<input type="text" id="sched-wed" required placeholder="HH:mm" value="08:00">
 						</div>
 						<div class="form-group">
-							<label for="sched-thu">Thursday:</label>
+							<label for="sched-thu">${I18n.t('scheduleTemplates.thursday')}:</label>
 							<input type="text" id="sched-thu" required placeholder="HH:mm" value="08:00">
 						</div>
 						<div class="form-group">
-							<label for="sched-fri">Friday:</label>
+							<label for="sched-fri">${I18n.t('scheduleTemplates.friday')}:</label>
 							<input type="text" id="sched-fri" required placeholder="HH:mm" value="08:00">
 						</div>
 						<div class="form-group">
-							<label for="sched-sat">Saturday:</label>
+							<label for="sched-sat">${I18n.t('scheduleTemplates.saturday')}:</label>
 							<input type="text" id="sched-sat" required placeholder="HH:mm" value="00:00">
 						</div>
 						<div class="form-group">
-							<label for="sched-sun">Sunday:</label>
+							<label for="sched-sun">${I18n.t('scheduleTemplates.sunday')}:</label>
 							<input type="text" id="sched-sun" required placeholder="HH:mm" value="00:00">
 						</div>
 						<div class="actions">
-							<button type="submit">Save</button>
-							<button type="button" id="close-modal">Cancel</button>
+							<button type="submit">${I18n.t('common.save')}</button>
+							<button type="button" id="close-modal">${I18n.t('common.cancel')}</button>
 						</div>
 					</form>
 				</div>
@@ -149,7 +150,7 @@ export default class SchedulesView {
         const refresh = async () => {
             try {
                 const employee = await EmployeeApi.get(employeeId);
-                employeeNameHeader.innerText = `Schedules for ${employee.firstname} ${employee.lastname}`;
+                employeeNameHeader.innerText = I18n.t('schedules.schedulesFor', { name: `${employee.firstname} ${employee.lastname}` });
 
                 const schedules = await ScheduleApi.getAll(employeeId);
                 tbody.innerHTML = '';
@@ -167,8 +168,8 @@ export default class SchedulesView {
 						<td>${Format.duration(sched.saturday)}</td>
 						<td>${Format.duration(sched.sunday)}</td>
 						<td>
-							<button class="ghost edit-btn" data-id="${sched.id}">Edit</button>
-							<button class="secondary delete-btn" data-id="${sched.id}">Delete</button>
+							<button class="ghost edit-btn" data-id="${sched.id}">${I18n.t('common.edit')}</button>
+							<button class="secondary delete-btn" data-id="${sched.id}">${I18n.t('common.delete')}</button>
 						</td>
 					`;
                     tbody.appendChild(row);
@@ -184,7 +185,7 @@ export default class SchedulesView {
                 });
 
                 templates = await ScheduleTemplateApi.getAll();
-                templateSelect.innerHTML = '<option value="">-- Select Template --</option>';
+                templateSelect.innerHTML = `<option value="">${I18n.t('schedules.selectTemplatePrompt')}</option>`;
                 templates.forEach(t => {
                     const opt = document.createElement('option');
                     opt.value = t.id;
@@ -217,7 +218,7 @@ export default class SchedulesView {
                 const sched = schedules.find(s => s.id === id);
                 if (sched) {
                     editingId = id;
-                    modalTitle.innerText = 'Edit Schedule';
+                    modalTitle.innerText = I18n.t('schedules.editSchedule');
                     container.querySelector('#sched-valid-from').value = formatDate(sched.validFrom);
                     container.querySelector('#sched-valid-to').value = formatDate(sched.validTo);
                     container.querySelector('#sched-mon').value = formatTime(sched.monday);
@@ -236,7 +237,7 @@ export default class SchedulesView {
         };
 
         const deleteSchedule = async (id) => {
-            if (await NotificationDialog.confirm(`Are you sure you want to delete this schedule?`)) {
+            if (await NotificationDialog.confirm(I18n.t('schedules.confirmDelete'))) {
                 try {
                     await ScheduleApi.remove(employeeId, id);
                     refresh();
@@ -248,7 +249,7 @@ export default class SchedulesView {
 
         addBtn.addEventListener('click', () => {
             editingId = null;
-            modalTitle.innerText = 'Add Schedule';
+            modalTitle.innerText = I18n.t('schedules.addSchedule');
             form.reset();
             modal.style.display = 'block';
         });

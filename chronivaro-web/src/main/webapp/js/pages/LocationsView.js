@@ -1,6 +1,7 @@
 import LocationApi from '../api/LocationApi.js';
 import HolidayCalendarApi from '../api/HolidayCalendarApi.js';
 import NotificationDialog from '../utils/NotificationDialog.js';
+import I18n from '../utils/I18n.js';
 
 export default class LocationsView {
     constructor(app) {
@@ -11,47 +12,47 @@ export default class LocationsView {
         const container = document.createElement('div');
         container.id = 'locations-view';
         container.innerHTML = `
-			<h2>Locations</h2>
+			<h2>${I18n.t('locations.title')}</h2>
 			<div class="actions">
-				<button id="add-location-btn">Add Location</button>
+				<button id="add-location-btn">${I18n.t('locations.addLocation')}</button>
 			</div>
 			<table id="locations-table">
 				<thead>
 					<tr>
-						<th>Name</th>
-						<th>Timezone</th>
-						<th>Holiday Calendar</th>
-						<th>Actions</th>
+						<th>${I18n.t('common.name')}</th>
+						<th>${I18n.t('locations.timeZone')}</th>
+						<th>${I18n.t('locations.holidayCalendar')}</th>
+						<th>${I18n.t('common.actions')}</th>
 					</tr>
 				</thead>
 				<tbody>
-					<tr><td colspan="4">Loading...</td></tr>
+					<tr><td colspan="4">${I18n.t('common.loading')}</td></tr>
 				</tbody>
 			</table>
 
 			<div id="location-modal" class="modal">
 				<div class="modal-content">
-					<h3 id="modal-title">Add Location</h3>
+					<h3 id="modal-title">${I18n.t('locations.addLocation')}</h3>
 					<form id="location-form">
 						<div class="form-group" id="loc-id-group">
-							<label for="loc-id">ID:</label>
+							<label for="loc-id">${I18n.t('common.id')}:</label>
 							<input type="text" id="loc-id" required>
 						</div>
 						<div class="form-group">
-							<label for="loc-name">Name:</label>
+							<label for="loc-name">${I18n.t('common.name')}:</label>
 							<input type="text" id="loc-name" required>
 						</div>
 						<div class="form-group">
-							<label for="loc-timezone">Timezone:</label>
+							<label for="loc-timezone">${I18n.t('locations.timeZone')}:</label>
 							<input type="text" id="loc-timezone" required placeholder="Europe/Zurich">
 						</div>
 						<div class="form-group">
-							<label for="loc-holiday-calendar">Holiday Calendar:</label>
+							<label for="loc-holiday-calendar">${I18n.t('locations.holidayCalendar')}:</label>
 							<select id="loc-holiday-calendar"></select>
 						</div>
 						<div class="actions">
-							<button type="submit">Save</button>
-							<button type="button" id="close-modal">Cancel</button>
+							<button type="submit">${I18n.t('common.save')}</button>
+							<button type="button" id="close-modal">${I18n.t('common.cancel')}</button>
 						</div>
 					</form>
 				</div>
@@ -72,14 +73,14 @@ export default class LocationsView {
             try {
                 const calendars = await HolidayCalendarApi.getCalendars();
                 if (calendars.length === 0) {
-                    holidayCalendarSelect.innerHTML = '<option value="">No calendars available</option>';
+                    holidayCalendarSelect.innerHTML = `<option value="">${I18n.t('locations.noCalendarsAvailable')}</option>`;
                 } else {
                     holidayCalendarSelect.innerHTML = '<option value=""></option>' +
                         calendars.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
                 }
             } catch (err) {
                 console.error(err);
-                holidayCalendarSelect.innerHTML = '<option value="">Error loading calendars</option>';
+                holidayCalendarSelect.innerHTML = `<option value="">${I18n.t('locations.errorLoadingCalendars')}</option>`;
             }
         };
 
@@ -89,13 +90,13 @@ export default class LocationsView {
                 tbody.innerHTML = '';
                 locations.forEach(loc => {
                     const row = document.createElement('tr');
-               					row.innerHTML = `
+                    row.innerHTML = `
 						<td>${loc.name}</td>
 						<td>${loc.timezone}</td>
 						<td>${loc.holidayCalendarName || ''}</td>
 						<td>
-							<button class="ghost edit-btn" data-id="${loc.id}">Edit</button>
-							<button class="secondary delete-btn" data-id="${loc.id}">Delete</button>
+							<button class="ghost edit-btn" data-id="${loc.id}">${I18n.t('common.edit')}</button>
+							<button class="secondary delete-btn" data-id="${loc.id}">${I18n.t('common.delete')}</button>
 						</td>
 					`;
                     tbody.appendChild(row);
@@ -109,7 +110,7 @@ export default class LocationsView {
                 });
             } catch (err) {
                 console.error(err);
-            				tbody.innerHTML = `<tr><td colspan="4" class="error">${err.message}</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="4" class="error">${err.message}</td></tr>`;
             }
         };
 
@@ -120,7 +121,7 @@ export default class LocationsView {
                 const loc = locations.find(l => l.id === id);
                 if (loc) {
                     editingId = id;
-                    modalTitle.innerText = 'Edit Location';
+                    modalTitle.innerText = I18n.t('locations.editLocation');
                     container.querySelector('#loc-id-group').style.display = 'block';
                     container.querySelector('#loc-id').value = loc.id;
                     container.querySelector('#loc-id').disabled = true;
@@ -135,7 +136,7 @@ export default class LocationsView {
         };
 
         const deleteLocation = async (id) => {
-            if (await NotificationDialog.confirm(`Are you sure you want to delete location ${id}?`)) {
+            if (await NotificationDialog.confirm(I18n.t('locations.confirmDelete', { id }))) {
                 try {
                     await LocationApi.remove(id);
                     refresh();
@@ -148,7 +149,7 @@ export default class LocationsView {
         addBtn.addEventListener('click', async () => {
             editingId = null;
             await loadOptions();
-            modalTitle.innerText = 'Add Location';
+            modalTitle.innerText = I18n.t('locations.addLocation');
             form.reset();
             container.querySelector('#loc-id-group').style.display = 'none';
             container.querySelector('#loc-id').required = false;

@@ -225,4 +225,113 @@ public class WebLocalizationUiTest {
 		assertTrue("Format.js date must use getLanguage", content.contains("I18n.getLanguage"));
 		assertTrue("Format.js dateTime must use getLanguage", content.contains("I18n.getLanguage"));
 	}
+
+	@Test
+	public void shouldVerifyEmployeesViewLocalization() throws IOException {
+		File file = new File(getWebappDir(), "js/pages/EmployeesView.js");
+		assertTrue("EmployeesView.js must exist", file.exists());
+		String content = Files.readString(file.toPath());
+
+		assertTrue("EmployeesView must import I18n", content.contains("import I18n from '../utils/I18n.js'"));
+		assertTrue("EmployeesView must localize title", content.contains("I18n.t('employees.title')"));
+		assertTrue("EmployeesView must localize add button", content.contains("I18n.t('employees.addEmployee')"));
+		assertTrue("EmployeesView must localize headers", content.contains("I18n.t('employees.username')"));
+		assertTrue("EmployeesView must localize initial schedule", content.contains("I18n.t('employees.initialSchedule')"));
+	}
+
+	@Test
+	public void shouldVerifyTeamsViewLocalization() throws IOException {
+		File file = new File(getWebappDir(), "js/pages/TeamsView.js");
+		assertTrue("TeamsView.js must exist", file.exists());
+		String content = Files.readString(file.toPath());
+
+		assertTrue("TeamsView must import I18n", content.contains("import I18n from '../utils/I18n.js'"));
+		assertTrue("TeamsView must localize title", content.contains("I18n.t('teams.title')"));
+		assertTrue("TeamsView must localize add button", content.contains("I18n.t('teams.addTeam')"));
+		assertTrue("TeamsView must localize name header", content.contains("I18n.t('common.name')"));
+		assertTrue("TeamsView must localize delete confirmation", content.contains("I18n.t('teams.confirmDelete'"));
+	}
+
+	@Test
+	public void shouldVerifyLocationsViewLocalization() throws IOException {
+		File file = new File(getWebappDir(), "js/pages/LocationsView.js");
+		assertTrue("LocationsView.js must exist", file.exists());
+		String content = Files.readString(file.toPath());
+
+		assertTrue("LocationsView must import I18n", content.contains("import I18n from '../utils/I18n.js'"));
+		assertTrue("LocationsView must localize title", content.contains("I18n.t('locations.title')"));
+		assertTrue("LocationsView must localize add button", content.contains("I18n.t('locations.addLocation')"));
+		assertTrue("LocationsView must localize timezone header", content.contains("I18n.t('locations.timeZone')"));
+		assertTrue("LocationsView must localize calendar header", content.contains("I18n.t('locations.holidayCalendar')"));
+	}
+
+	@Test
+	public void shouldVerifyAbsenceTypesViewLocalization() throws IOException {
+		File file = new File(getWebappDir(), "js/pages/AbsenceTypesView.js");
+		assertTrue("AbsenceTypesView.js must exist", file.exists());
+		String content = Files.readString(file.toPath());
+
+		assertTrue("AbsenceTypesView must import I18n", content.contains("import I18n from '../utils/I18n.js'"));
+		assertTrue("AbsenceTypesView must localize title", content.contains("I18n.t('absenceTypes.title')"));
+		assertTrue("AbsenceTypesView must localize add button", content.contains("I18n.t('absenceTypes.addAbsenceType')"));
+		assertTrue("AbsenceTypesView must localize code header", content.contains("I18n.t('absenceTypes.code')"));
+		assertTrue("AbsenceTypesView must localize paid checkbox", content.contains("I18n.t('absenceTypes.paid')"));
+		assertTrue("AbsenceTypesView must localize approval checkbox", content.contains("I18n.t('absenceTypes.approvalRequired')"));
+	}
+
+	@Test
+	public void shouldVerifyHolidayCalendarsViewLocalization() throws IOException {
+		File file = new File(getWebappDir(), "js/pages/HolidayCalendarsView.js");
+		assertTrue("HolidayCalendarsView.js must exist", file.exists());
+		String content = Files.readString(file.toPath());
+
+		assertTrue("HolidayCalendarsView must import I18n", content.contains("import I18n from '../utils/I18n.js'"));
+		assertTrue("HolidayCalendarsView must localize title", content.contains("I18n.t('holidayCalendars.title')"));
+		assertTrue("HolidayCalendarsView must localize add calendar button", content.contains("I18n.t('holidayCalendars.addCalendar')"));
+		assertTrue("HolidayCalendarsView must localize select prompt", content.contains("I18n.t('holidayCalendars.selectCalendarPrompt')"));
+		assertTrue("HolidayCalendarsView must localize add holiday button", content.contains("I18n.t('holidayCalendars.addHoliday')"));
+		assertTrue("HolidayCalendarsView must localize credit factor", content.contains("I18n.t('holidayCalendars.creditFactor')"));
+	}
+
+	@Test
+	public void shouldVerifyScheduleTemplatesViewLocalization() throws IOException {
+		File file = new File(getWebappDir(), "js/pages/ScheduleTemplatesView.js");
+		assertTrue("ScheduleTemplatesView.js must exist", file.exists());
+		String content = Files.readString(file.toPath());
+
+		assertTrue("ScheduleTemplatesView must import I18n", content.contains("import I18n from '../utils/I18n.js'"));
+		assertTrue("ScheduleTemplatesView must localize title", content.contains("I18n.t('scheduleTemplates.title')"));
+		assertTrue("ScheduleTemplatesView must localize add button", content.contains("I18n.t('scheduleTemplates.addTemplate')"));
+		assertTrue("ScheduleTemplatesView must localize days", content.contains("I18n.t('scheduleTemplates.mon')"));
+		assertTrue("ScheduleTemplatesView must localize monday modal label", content.contains("I18n.t('scheduleTemplates.monday')"));
+	}
+
+	@Test
+	public void shouldVerifySchedulesViewLocalization() throws IOException {
+		File file = new File(getWebappDir(), "js/pages/SchedulesView.js");
+		assertTrue("SchedulesView.js must exist", file.exists());
+		String content = Files.readString(file.toPath());
+
+		assertTrue("SchedulesView must import I18n", content.contains("import I18n from '../utils/I18n.js'"));
+		assertTrue("SchedulesView must localize back button", content.contains("I18n.t('schedules.backToEmployees')"));
+		assertTrue("SchedulesView must localize dynamic title", content.contains("I18n.t('schedules.schedulesFor'"));
+		assertTrue("SchedulesView must localize add button", content.contains("I18n.t('schedules.addSchedule')"));
+		assertTrue("SchedulesView must localize weekly total footer", content.contains("I18n.t('schedules.weeklyTotal')"));
+	}
+
+	@Test
+	public void shouldVerifyConfigurationViewLocalization() throws IOException {
+		File file = new File(getWebappDir(), "js/pages/ConfigurationView.js");
+		assertTrue("ConfigurationView.js must exist", file.exists());
+		String content = Files.readString(file.toPath());
+
+		assertTrue("ConfigurationView must import I18n", content.contains("import I18n from '../utils/I18n.js'"));
+		assertTrue("ConfigurationView must localize title", content.contains("I18n.t('configuration.title')"));
+		assertTrue("ConfigurationView must localize subtitle", content.contains("I18n.t('configuration.subtitle')"));
+		assertTrue("ConfigurationView must localize global settings", content.contains("I18n.t('configuration.globalSettings')"));
+		assertTrue("ConfigurationView must localize company name", content.contains("I18n.t('configuration.companyName')"));
+		assertTrue("ConfigurationView must localize default language", content.contains("I18n.t('configuration.defaultLanguage')"));
+		assertTrue("ConfigurationView must localize save button", content.contains("I18n.t('configuration.saveConfig')"));
+		assertTrue("ConfigurationView must localize reload button", content.contains("I18n.t('configuration.reloadConfig')"));
+	}
 }

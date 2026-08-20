@@ -1,5 +1,6 @@
 import TeamApi from '../api/TeamApi.js';
 import NotificationDialog from '../utils/NotificationDialog.js';
+import I18n from '../utils/I18n.js';
 
 export default class TeamsView {
     constructor(app) {
@@ -10,37 +11,37 @@ export default class TeamsView {
         const container = document.createElement('div');
         container.id = 'teams-view';
         container.innerHTML = `
-			<h2>Teams</h2>
+			<h2>${I18n.t('teams.title')}</h2>
 			<div class="actions">
-				<button id="add-team-btn">Add Team</button>
+				<button id="add-team-btn">${I18n.t('teams.addTeam')}</button>
 			</div>
 			<table id="teams-table">
 				<thead>
 					<tr>
-						<th>Name</th>
-						<th>Actions</th>
+						<th>${I18n.t('common.name')}</th>
+						<th>${I18n.t('common.actions')}</th>
 					</tr>
 				</thead>
 				<tbody>
-					<tr><td colspan="2">Loading...</td></tr>
+					<tr><td colspan="2">${I18n.t('common.loading')}</td></tr>
 				</tbody>
 			</table>
 
 			<div id="team-modal" class="modal">
 				<div class="modal-content">
-					<h3 id="modal-title">Add Team</h3>
+					<h3 id="modal-title">${I18n.t('teams.addTeam')}</h3>
 					<form id="team-form">
 						<div class="form-group" id="team-id-group">
-							<label for="team-id">ID:</label>
+							<label for="team-id">${I18n.t('common.id')}:</label>
 							<input type="text" id="team-id" required>
 						</div>
 						<div class="form-group">
-							<label for="team-name">Name:</label>
+							<label for="team-name">${I18n.t('common.name')}:</label>
 							<input type="text" id="team-name" required>
 						</div>
 						<div class="actions">
-							<button type="submit">Save</button>
-							<button type="button" id="close-modal">Cancel</button>
+							<button type="submit">${I18n.t('common.save')}</button>
+							<button type="button" id="close-modal">${I18n.t('common.cancel')}</button>
 						</div>
 					</form>
 				</div>
@@ -62,11 +63,11 @@ export default class TeamsView {
                 tbody.innerHTML = '';
                 teams.forEach(team => {
                     const row = document.createElement('tr');
-               					row.innerHTML = `
+                    row.innerHTML = `
 						<td>${team.name}</td>
 						<td>
-							<button class="ghost edit-btn" data-id="${team.id}">Edit</button>
-							<button class="secondary delete-btn" data-id="${team.id}">Delete</button>
+							<button class="ghost edit-btn" data-id="${team.id}">${I18n.t('common.edit')}</button>
+							<button class="secondary delete-btn" data-id="${team.id}">${I18n.t('common.delete')}</button>
 						</td>
 					`;
                     tbody.appendChild(row);
@@ -80,7 +81,7 @@ export default class TeamsView {
                 });
             } catch (err) {
                 console.error(err);
-            				tbody.innerHTML = `<tr><td colspan="2" class="error">${err.message}</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="2" class="error">${err.message}</td></tr>`;
             }
         };
 
@@ -90,7 +91,7 @@ export default class TeamsView {
                 const team = teams.find(t => t.id === id);
                 if (team) {
                     editingId = id;
-                    modalTitle.innerText = 'Edit Team';
+                    modalTitle.innerText = I18n.t('teams.editTeam');
                     container.querySelector('#team-id-group').style.display = 'block';
                     container.querySelector('#team-id').value = team.id;
                     container.querySelector('#team-id').disabled = true;
@@ -103,7 +104,7 @@ export default class TeamsView {
         };
 
         const deleteTeam = async (id) => {
-            if (await NotificationDialog.confirm(`Are you sure you want to delete team ${id}?`)) {
+            if (await NotificationDialog.confirm(I18n.t('teams.confirmDelete', { id }))) {
                 try {
                     await TeamApi.remove(id);
                     refresh();
@@ -115,7 +116,7 @@ export default class TeamsView {
 
         addBtn.addEventListener('click', () => {
             editingId = null;
-            modalTitle.innerText = 'Add Team';
+            modalTitle.innerText = I18n.t('teams.addTeam');
             form.reset();
             container.querySelector('#team-id-group').style.display = 'none';
             container.querySelector('#team-id').required = false;

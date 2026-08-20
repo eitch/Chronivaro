@@ -1,5 +1,6 @@
 import ConfigurationApi from '../api/ConfigurationApi.js';
 import NotificationDialog from '../utils/NotificationDialog.js';
+import I18n from '../utils/I18n.js';
 
 export default class ConfigurationView {
 
@@ -14,72 +15,72 @@ export default class ConfigurationView {
 		container.id = 'configuration-view';
 		container.innerHTML = `
 			<div class="view-header">
-				<h2>System Configuration</h2>
-				<p class="subtitle">Manage global parameters for weekly target hours, vacation calculation rules, and default absence codes.</p>
+				<h2>${I18n.t('configuration.title')}</h2>
+				<p class="subtitle">${I18n.t('configuration.subtitle')}</p>
 			</div>
 
 			<div class="configuration-container">
 				<div class="card config-card">
 					<div class="card-header">
-						<h3>Global Settings</h3>
+						<h3>${I18n.t('configuration.globalSettings')}</h3>
 						<div class="config-metadata" id="config-metadata">
-							<span class="badge" id="config-version-badge">Version: -</span>
-							<span class="badge secondary" id="config-updated-by-badge">Updated by: -</span>
+							<span class="badge" id="config-version-badge">${I18n.t('configuration.version')}: -</span>
+							<span class="badge secondary" id="config-updated-by-badge">${I18n.t('configuration.updatedBy')}: -</span>
 						</div>
 					</div>
 
 					<form id="configuration-form" class="config-form">
 						<div class="form-group">
-							<label for="config-company-name">Company Name *:</label>
+							<label for="config-company-name">${I18n.t('configuration.companyName')} *:</label>
 							<input type="text" id="config-company-name" placeholder="Chronivaro" required>
-							<small class="form-hint">Global company name displayed across all views, headers, and reports.</small>
+							<small class="form-hint">${I18n.t('configuration.companyNameHint')}</small>
 						</div>
 
 						<div class="form-group">
-							<label for="config-company-logo">Company Logo URL / Data URI (Optional):</label>
+							<label for="config-company-logo">${I18n.t('configuration.companyLogo')}:</label>
 							<input type="text" id="config-company-logo" placeholder="https://example.com/logo.png or data:image/png;base64,...">
-							<small class="form-hint">Optional URL, relative asset path, or base64 data URI for the global company logo.</small>
+							<small class="form-hint">${I18n.t('configuration.companyLogoHint')}</small>
 							<div class="config-logo-preview" id="config-logo-preview-box" style="display: none;">
 								<img id="config-logo-preview" src="" alt="Logo Preview">
 							</div>
 						</div>
 
 						<div class="form-group">
-							<label for="config-default-language">Default Language *:</label>
+							<label for="config-default-language">${I18n.t('configuration.defaultLanguage')} *:</label>
 							<select id="config-default-language" required>
-								<option value="de">Deutsch (German)</option>
-								<option value="en">English</option>
+								<option value="de">${I18n.t('configuration.langDe')}</option>
+								<option value="en">${I18n.t('configuration.langEn')}</option>
 							</select>
-							<small class="form-hint">System-wide default language used when no user preference is set.</small>
+							<small class="form-hint">${I18n.t('configuration.defaultLanguageHint')}</small>
 						</div>
 
 						<div class="form-group">
-							<label for="config-weekly-target">Standard Weekly Target (Minutes) *:</label>
+							<label for="config-weekly-target">${I18n.t('configuration.weeklyTargetMinutes')} *:</label>
 							<input type="number" id="config-weekly-target" min="0" max="10080" required>
-							<small class="form-hint" id="weekly-target-hint">Default full-time weekly working time in minutes (e.g. 2520 = 42h).</small>
+							<small class="form-hint" id="weekly-target-hint">${I18n.t('configuration.weeklyTargetHint')}</small>
 						</div>
 
 						<div class="form-group">
-							<label for="config-vacation-days">Annual Vacation Entitlement (Days) *:</label>
+							<label for="config-vacation-days">${I18n.t('configuration.annualVacationDays')} *:</label>
 							<input type="number" id="config-vacation-days" min="0" max="365" required>
-							<small class="form-hint">Standard annual vacation allowance in full days (e.g. 25 days).</small>
+							<small class="form-hint">${I18n.t('configuration.annualVacationDaysHint')}</small>
 						</div>
 
 						<div class="form-group">
-							<label for="config-day-minutes">Minutes per Vacation Day *:</label>
+							<label for="config-day-minutes">${I18n.t('configuration.minutesPerVacationDay')} *:</label>
 							<input type="number" id="config-day-minutes" min="1" max="1440" required>
-							<small class="form-hint" id="day-minutes-hint">Conversion factor between days and minutes (e.g. 480 min = 8h/day).</small>
+							<small class="form-hint" id="day-minutes-hint">${I18n.t('configuration.dayMinutesHint')}</small>
 						</div>
 
 						<div class="form-group">
-							<label for="config-vacation-code">Vacation Absence Type Code *:</label>
+							<label for="config-vacation-code">${I18n.t('configuration.vacationAbsenceTypeCode')} *:</label>
 							<input type="text" id="config-vacation-code" placeholder="VACATION" required>
-							<small class="form-hint">Technical code used to identify vacation absence requests.</small>
+							<small class="form-hint">${I18n.t('configuration.vacationCodeHint')}</small>
 						</div>
 
 						<div class="form-actions">
-							<button type="submit" id="save-config-btn" class="primary-btn">Save Configuration</button>
-							<button type="button" id="reload-config-btn" class="secondary-btn">Reload</button>
+							<button type="submit" id="save-config-btn" class="primary-btn">${I18n.t('configuration.saveConfig')}</button>
+							<button type="button" id="reload-config-btn" class="secondary-btn">${I18n.t('configuration.reloadConfig')}</button>
 						</div>
 					</form>
 				</div>
@@ -132,14 +133,14 @@ export default class ConfigurationView {
 		const hint1 = this.container.querySelector('#weekly-target-hint');
 		if (hint1 && !isNaN(weeklyMin)) {
 			const hours = (weeklyMin / 60).toFixed(1);
-			hint1.textContent = `Default full-time weekly working time: ${weeklyMin} min (${hours}h/week).`;
+			hint1.textContent = I18n.t('configuration.weeklyTargetHintDynamic', { minutes: weeklyMin, hours });
 		}
 
 		const dayMin = parseInt(this.dayMinutesInput.value, 10);
 		const hint2 = this.container.querySelector('#day-minutes-hint');
 		if (hint2 && !isNaN(dayMin)) {
 			const hours = (dayMin / 60).toFixed(1);
-			hint2.textContent = `Conversion factor: ${dayMin} min = ${hours}h/day.`;
+			hint2.textContent = I18n.t('configuration.dayMinutesHintDynamic', { minutes: dayMin, hours });
 		}
 	}
 
@@ -157,8 +158,8 @@ export default class ConfigurationView {
 			this.dayMinutesInput.value = config.minutesPerVacationDay != null ? config.minutesPerVacationDay : 480;
 			this.vacationCodeInput.value = config.vacationAbsenceTypeCode || 'VACATION';
 
-			this.versionBadge.textContent = `Version: ${config.version != null ? config.version : 1}`;
-			this.updatedByBadge.textContent = `Updated by: ${config.updatedBy || 'system'}`;
+			this.versionBadge.textContent = `${I18n.t('configuration.version')}: ${config.version != null ? config.version : 1}`;
+			this.updatedByBadge.textContent = `${I18n.t('configuration.updatedBy')}: ${config.updatedBy || 'system'}`;
 
 			this.updateLogoPreview();
 			this.updateHints();
@@ -180,32 +181,32 @@ export default class ConfigurationView {
 		const vacationAbsenceTypeCode = this.vacationCodeInput.value.trim();
 
 		if (!companyName) {
-			NotificationDialog.error('Company name cannot be empty.');
+			NotificationDialog.error(I18n.t('configuration.companyNameEmpty'));
 			return;
 		}
 
 		if (defaultLanguage !== 'de' && defaultLanguage !== 'en') {
-			NotificationDialog.error('Default language must be either "de" or "en".');
+			NotificationDialog.error(I18n.t('configuration.invalidLanguage'));
 			return;
 		}
 
 		if (isNaN(weeklyTargetMinutes) || weeklyTargetMinutes < 0 || weeklyTargetMinutes > 10080) {
-			NotificationDialog.error('Weekly target minutes must be between 0 and 10080 (168h).');
+			NotificationDialog.error(I18n.t('configuration.invalidWeeklyTarget'));
 			return;
 		}
 
 		if (isNaN(annualVacationDays) || annualVacationDays < 0 || annualVacationDays > 365) {
-			NotificationDialog.error('Annual vacation days must be between 0 and 365.');
+			NotificationDialog.error(I18n.t('configuration.invalidVacationDays'));
 			return;
 		}
 
 		if (isNaN(minutesPerVacationDay) || minutesPerVacationDay <= 0 || minutesPerVacationDay > 1440) {
-			NotificationDialog.error('Minutes per vacation day must be between 1 and 1440 (24h).');
+			NotificationDialog.error(I18n.t('configuration.invalidDayMinutes'));
 			return;
 		}
 
 		if (!vacationAbsenceTypeCode) {
-			NotificationDialog.error('Vacation absence type code cannot be empty.');
+			NotificationDialog.error(I18n.t('configuration.vacationCodeEmpty'));
 			return;
 		}
 
@@ -220,27 +221,27 @@ export default class ConfigurationView {
 		};
 
 		this.saveBtn.disabled = true;
-		this.saveBtn.textContent = 'Saving...';
+		this.saveBtn.textContent = I18n.t('configuration.saving');
 
 		try {
 			const updated = await ConfigurationApi.updateConfiguration(payload, this.currentVersion);
 			this.configuration = updated;
 			this.currentVersion = updated.version;
 
-			this.versionBadge.textContent = `Version: ${updated.version != null ? updated.version : 1}`;
-			this.updatedByBadge.textContent = `Updated by: ${updated.updatedBy || 'system'}`;
+			this.versionBadge.textContent = `${I18n.t('configuration.version')}: ${updated.version != null ? updated.version : 1}`;
+			this.updatedByBadge.textContent = `${I18n.t('configuration.updatedBy')}: ${updated.updatedBy || 'system'}`;
 
 			if (this.app && typeof this.app.updateBranding === 'function') {
 				this.app.updateBranding(updated);
 			}
 
-			NotificationDialog.info('Global configuration updated successfully.');
+			NotificationDialog.info(I18n.t('configuration.saveSuccess'));
 		} catch (err) {
 			console.error('Failed to update configuration', err);
-			NotificationDialog.error('Failed to update configuration: ' + err.message);
+			NotificationDialog.error(I18n.t('configuration.saveError') + ' ' + err.message);
 		} finally {
 			this.saveBtn.disabled = false;
-			this.saveBtn.textContent = 'Save Configuration';
+			this.saveBtn.textContent = I18n.t('configuration.saveConfig');
 		}
 	}
 }

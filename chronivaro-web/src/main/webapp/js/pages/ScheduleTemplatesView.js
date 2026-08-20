@@ -1,6 +1,7 @@
 import ScheduleTemplateApi from '../api/ScheduleTemplateApi.js';
 import NotificationDialog from '../utils/NotificationDialog.js';
 import Format from '../utils/Format.js';
+import I18n from '../utils/I18n.js';
 
 export default class ScheduleTemplatesView {
 	constructor(app) {
@@ -11,69 +12,69 @@ export default class ScheduleTemplatesView {
 		const container = document.createElement('div');
 		container.id = 'schedule-templates-view';
 		container.innerHTML = `
-			<h2>Schedule Templates</h2>
+			<h2>${I18n.t('scheduleTemplates.title')}</h2>
 			<div class="actions">
-				<button id="add-template-btn">Add Template</button>
+				<button id="add-template-btn">${I18n.t('scheduleTemplates.addTemplate')}</button>
 			</div>
 			<table id="templates-table">
 				<thead>
 					<tr>
-						<th>Name</th>
-						<th>Mon</th>
-						<th>Tue</th>
-						<th>Wed</th>
-						<th>Thu</th>
-						<th>Fri</th>
-						<th>Sat</th>
-						<th>Sun</th>
-						<th>Total</th>
-						<th>Actions</th>
+						<th>${I18n.t('common.name')}</th>
+						<th>${I18n.t('scheduleTemplates.mon')}</th>
+						<th>${I18n.t('scheduleTemplates.tue')}</th>
+						<th>${I18n.t('scheduleTemplates.wed')}</th>
+						<th>${I18n.t('scheduleTemplates.thu')}</th>
+						<th>${I18n.t('scheduleTemplates.fri')}</th>
+						<th>${I18n.t('scheduleTemplates.sat')}</th>
+						<th>${I18n.t('scheduleTemplates.sun')}</th>
+						<th>${I18n.t('common.total')}</th>
+						<th>${I18n.t('common.actions')}</th>
 					</tr>
 				</thead>
 				<tbody>
-					<tr><td colspan="10">Loading...</td></tr>
+					<tr><td colspan="10">${I18n.t('common.loading')}</td></tr>
 				</tbody>
 			</table>
 
 			<div id="template-modal" class="modal">
 				<div class="modal-content">
-					<h3 id="modal-title">Add Template</h3>
+					<h3 id="modal-title">${I18n.t('scheduleTemplates.addTemplate')}</h3>
 					<form id="template-form">
 						<div class="form-group">
-							<label for="template-name">Name:</label>
+							<label for="template-name">${I18n.t('common.name')}:</label>
 							<input type="text" id="template-name" required>
 						</div>
 						<div class="form-group">
-							<label for="template-mon">Monday:</label>
+							<label for="template-mon">${I18n.t('scheduleTemplates.monday')}:</label>
 							<input type="text" id="template-mon" required placeholder="HH:mm" value="08:00">
 						</div>
 						<div class="form-group">
-							<label for="template-tue">Tuesday:</label>
+							<label for="template-tue">${I18n.t('scheduleTemplates.tuesday')}:</label>
 							<input type="text" id="template-tue" required placeholder="HH:mm" value="08:00">
 						</div>
 						<div class="form-group">
-							<label for="template-wed">Wednesday:</label>
+							<label for="template-wed">${I18n.t('scheduleTemplates.wednesday')}:</label>
 							<input type="text" id="template-wed" required placeholder="HH:mm" value="08:00">
 						</div>
 						<div class="form-group">
-							<label for="template-thu">Thursday:</label>
+							<label for="template-thu">${I18n.t('scheduleTemplates.thursday')}:</label>
 							<input type="text" id="template-thu" required placeholder="HH:mm" value="08:00">
 						</div>
 						<div class="form-group">
-							<label for="template-fri">Friday:</label>
+							<label for="template-fri">${I18n.t('scheduleTemplates.friday')}:</label>
 							<input type="text" id="template-fri" required placeholder="HH:mm" value="08:00">
 						</div>
 						<div class="form-group">
-							<label for="template-sat">Saturday:</label>
+							<label for="template-sat">${I18n.t('scheduleTemplates.saturday')}:</label>
 							<input type="text" id="template-sat" required placeholder="HH:mm" value="00:00">
 						</div>
 						<div class="form-group">
-							<label for="template-sun">Sunday:</label>
+							<label for="template-sun">${I18n.t('scheduleTemplates.sunday')}:</label>
 							<input type="text" id="template-sun" required placeholder="HH:mm" value="00:00">
 						</div>
 						<div class="actions">
-							<button type="submit">Save</button>
-							<button type="button" id="close-modal">Cancel</button>
+							<button type="submit">${I18n.t('common.save')}</button>
+							<button type="button" id="close-modal">${I18n.t('common.cancel')}</button>
 						</div>
 					</form>
 				</div>
@@ -119,8 +120,8 @@ export default class ScheduleTemplatesView {
 						<td>${Format.duration(t.sunday)}</td>
 						<td>${Format.duration(totalMinutes)}</td>
 						<td>
-							<button class="ghost edit-btn" data-id="${t.id}">Edit</button>
-							<button class="secondary delete-btn" data-id="${t.id}">Delete</button>
+							<button class="ghost edit-btn" data-id="${t.id}">${I18n.t('common.edit')}</button>
+							<button class="secondary delete-btn" data-id="${t.id}">${I18n.t('common.delete')}</button>
 						</td>
 					`;
 					tbody.appendChild(row);
@@ -144,7 +145,7 @@ export default class ScheduleTemplatesView {
 				const template = templates.find(t => t.id === id);
 				if (template) {
 					editingId = id;
-					modalTitle.innerText = 'Edit Template';
+					modalTitle.innerText = I18n.t('scheduleTemplates.editTemplate');
 					container.querySelector('#template-name').value = template.name;
 					container.querySelector('#template-mon').value = formatTime(template.monday);
 					container.querySelector('#template-tue').value = formatTime(template.tuesday);
@@ -161,7 +162,7 @@ export default class ScheduleTemplatesView {
 		};
 
 		const deleteTemplate = async (id) => {
-			if (await NotificationDialog.confirm(`Are you sure you want to delete this template?`)) {
+			if (await NotificationDialog.confirm(I18n.t('scheduleTemplates.confirmDelete'))) {
 				try {
 					await ScheduleTemplateApi.remove(id);
 					refresh();
@@ -173,7 +174,7 @@ export default class ScheduleTemplatesView {
 
 		addBtn.addEventListener('click', () => {
 			editingId = null;
-			modalTitle.innerText = 'Add Template';
+			modalTitle.innerText = I18n.t('scheduleTemplates.addTemplate');
 			form.reset();
 			modal.style.display = 'block';
 		});
