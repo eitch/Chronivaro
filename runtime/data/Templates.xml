@@ -73,7 +73,10 @@
             <Parameter Id="reduceVacationCredit" Name="Reduce Vacation Credit" Type="Boolean" Value="false"/>
             <Parameter Id="paid" Name="Paid" Type="Boolean" Value="false"/>
             <Parameter Id="approvalRequired" Name="Approval Required" Type="Boolean" Value="true"/>
+            <Parameter Id="commentRequired" Name="Comment Required" Type="Boolean" Value="false"/>
+            <Parameter Id="visibleOnPublicStatus" Name="Visible On Public Status" Type="Boolean" Value="false"/>
             <Parameter Id="durationTypes" Name="Duration Types" Type="StringList" Value="FULL_DAY,HALF_DAY,HOURS"/>
+            <Parameter Id="active" Name="Active" Type="Boolean" Value="true"/>
         </ParameterBag>
     </Resource>
 
