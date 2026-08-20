@@ -260,7 +260,7 @@ The following foundational areas are verified as fully implemented in the reposi
 ### Task 5: Implement Company Branding and Default Language in Global Configuration
 
 - **Specification Reference:** Section 6.11, Section 18
-- **Status:** `OPEN`
+- **Status:** `COMPLETED`
 - **Scope:**
   1. Add `companyName` (String), `companyLogo` (String image/base64 URL), and `defaultLanguage` (String, initial `de` or `en`) to `GlobalConfiguration` model and constants.
   2. Update `UpdateConfigurationService` and `ConfigurationDto` with validations (valid language code, valid logo format).
@@ -270,15 +270,24 @@ The following foundational areas are verified as fully implemented in the reposi
   - `chronivaro-core/src/main/java/ch/atexxi/chronivaro/core/model/ChronivaroConstants.java`
   - `chronivaro-core/src/main/java/ch/atexxi/chronivaro/core/service/UpdateConfigurationService.java`
   - `chronivaro-rest/src/main/java/ch/atexxi/chronivaro/rest/dto/ConfigurationDto.java`
+  - `chronivaro-rest/src/main/java/ch/atexxi/chronivaro/rest/dto/BrandingDto.java`
+  - `chronivaro-rest/src/main/java/ch/atexxi/chronivaro/rest/dto/ChronivaroMapper.java`
   - `chronivaro-rest/src/main/java/ch/atexxi/chronivaro/rest/resource/ConfigurationResource.java`
+  - `chronivaro-rest/src/main/java/ch/atexxi/chronivaro/rest/resource/SystemResource.java`
   - `chronivaro-web/src/main/webapp/index.html`
   - `chronivaro-web/src/main/webapp/js/app.js`
+  - `chronivaro-web/src/main/webapp/js/api/ConfigurationApi.js`
   - `chronivaro-web/src/main/webapp/js/pages/ConfigurationView.js`
+  - `chronivaro-web/src/main/webapp/assets/css/style.css`
 - **Acceptance Criteria:**
   - Administrators can read and update `companyName`, `companyLogo`, and `defaultLanguage` via REST and UI.
   - The web application header dynamically displays the configured company name and logo across all pages.
   - If no logo is configured, no broken image placeholder or error appears in the UI.
   - Integration tests verify configuration persistence, validation, and REST roundtrips.
+- **Verification:**
+  - Unit tests in `ConfigurationServiceTest` verifying update, persistence, validation of language and logo, and audit logging.
+  - REST and UI integration tests in `ConfigurationResourceTest` and `WebConfigurationUiTest` verifying public branding retrieval, admin PUT/GET with ETag optimistic concurrency, and web asset/header structure assertions.
+  - Full reactor test suite passing cleanly (`mvn clean test`).
 - **Dependencies:** None.
 
 ---

@@ -12,6 +12,7 @@ Audit date: 2026-08-19. `IMPLEMENTATION_SPECIFICATION.md` is authoritative; the 
 - **Absence Types & Draft Lifecycle (Sections 6.5, 6.6, 9.4, 10.1, 13.2):** Absence types with `commentRequired` and `visibleOnPublicStatus` metadata, comment enforcement, duration type validation, and full `DRAFT` status / explicit submission workflow (`POST /me/absences/{id}/submit`) (**Task 2**).
 - **Vacation Journal Immutability & Year-End Carry-Over (Sections 6.7, 6.7.1, 11.3):** Entitlement recalculations create audited `CORRECTION` adjustments while keeping existing entries immutable; automated year-end carry-over service transfers unexpired balances as `CARRY_OVER` entries with FIFO consumption (**Task 3**).
 - **Period Calculation Snapshots & Balance Carry-Forward (Sections 6.9, 11.2, 11.6.2):** Month summaries return immutable `calculationSnapshot` for approved and locked periods; `initialBalance` accurately carries forward prior month closing balance; monthly summary categorizes paid absences, unpaid absences, vacation usage, and holiday credits (**Task 4**).
+- **Global Application Branding & Configuration (Sections 6.11, 18):** `companyName`, `companyLogo`, and `defaultLanguage` parameters supported in `GlobalConfiguration` model, validation in `UpdateConfigurationService`, REST endpoints with ETag concurrency (`/rest/chronivaro/v1/admin/configuration` and `/rest/chronivaro/v1/system/branding`), and dynamic web application header branding without broken image placeholders (**Task 5**).
 - **Presence & Privacy (Section 8):** Real-time binary `WORKING`/`NOT_WORKING` presence status with sensitive absence detail filtering for non-privileged viewers unless `visibleOnPublicStatus` is true.
 - **Audit Logging & Retention (Sections 6.10, 12, 13.6):** Full audit trail recording entity lifecycle events, parameter mutations, correlation IDs, user details, and retention purge service.
 - **Reporting Foundation & CSV Export (Sections 11.1–11.5, 12.1–12.2, 13.8):** Core calculation engines, Web UI report viewers, and deterministic RFC 4180 UTF-8 BOM CSV exports for Day, Month, Vacation, Team, and Absence reports.
@@ -19,9 +20,8 @@ Audit date: 2026-08-19. `IMPLEMENTATION_SPECIFICATION.md` is authoritative; the 
 
 ---
 
-## Missing Requirements (Backlog Items 5–7)
+## Missing Requirements (Backlog Items 6–7)
 
-- **Global Application Branding & Configuration (Sections 6.11, 18):** `companyName`, `companyLogo`, and `defaultLanguage` are missing from `GlobalConfiguration` model, REST endpoints, and UI navigation header (**Task 5**).
 - **Multi-Language (i18n) Infrastructure & DE/EN Localization (Sections 4.2, 12.3, 16, 18.5):** No translation dictionaries, i18n resolution engine, language switcher, or translation key parity build tests exist (**Task 6.1 & 6.2**).
 - **Native PDF Report Generation (Sections 4.2, 11.6.2, 17, 18.6):** Server-side PDF generation engine (OpenPDF/PDFBox) and PDF endpoints for Month, Vacation, and Absence reports are missing (**Task 7.1 & 7.2**).
 
