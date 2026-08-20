@@ -408,15 +408,27 @@ Task 7 is split into subtasks **7.1** and **7.2** to separate the PDF generation
 
 #### 7.2: PDF REST Endpoints and Web UI Download Integration
 - **Specification Reference:** Section 4.2, Section 11.6.2, Section 13.2, Section 13.8, Section 17
-- **Status:** `OPEN`
+- **Status:** `COMPLETED`
 - **Scope:**
   1. Add `format=pdf` query parameter support and `Accept: application/pdf` content negotiation to `ReportsResource` for `/reports/month`, `/reports/vacation`, and `/reports/absences`.
   2. Support direct streaming responses (`Response.ok(pdfBytes, "application/pdf").header("Content-Disposition", "attachment; filename=...").build()`) with no persistent server storage.
-  3. Add PDF download buttons to `ReportsView.js` and `MyPeriodsView.js` using `Rest.getBlob`.
+  3. Support route aliases (`/reports/month.pdf`, `/reports/vacation.pdf`, `/reports/absences.pdf`).
+  4. Add PDF download buttons to `ReportsView.js` and `MyPeriodsView.js` using `ReportApi` and `Rest.getBlob`.
+- **Affected Components:**
+  - `chronivaro-rest/src/main/java/ch/atexxi/chronivaro/rest/resource/ReportsResource.java`
+  - `chronivaro-rest/src/test/java/ch/atexxi/chronivaro/rest/ReportsResourceTest.java`
+  - `chronivaro-rest/src/test/java/ch/atexxi/chronivaro/rest/WebReportsUiTest.java`
+  - `chronivaro-web/src/main/webapp/js/api/ReportApi.js`
+  - `chronivaro-web/src/main/webapp/js/pages/ReportsView.js`
+  - `chronivaro-web/src/main/webapp/js/pages/MyPeriodsView.js`
 - **Acceptance Criteria:**
   - REST endpoints stream valid PDF binaries with appropriate MIME types and attachment headers.
   - Users can trigger PDF downloads directly from the Reports and Monthly Closing UI views.
   - Integration tests verify PDF endpoint status codes, headers, and payload validity.
+- **Verification:**
+  - `ReportsResourceTest` in `chronivaro-rest` asserting PDF binary responses via `?format=pdf`, `Accept: application/pdf`, and `.pdf` route aliases for Month, Vacation, and Absence reports.
+  - `WebReportsUiTest` in `chronivaro-rest` asserting PDF download methods, DOM action buttons, and REST flow downloads.
+  - Full reactor build and test suite passing cleanly (`mvn clean install` / `mvn clean test`).
 - **Dependencies:** Task 7.1.
 
 ---
