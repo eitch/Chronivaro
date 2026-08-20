@@ -28,6 +28,7 @@
             <Allow>ch.atexxi.chronivaro.core.service.DaySummaryService</Allow>
             <Allow>ch.atexxi.chronivaro.core.service.MonthSummaryService</Allow>
             <Allow>ch.atexxi.chronivaro.core.service.RequestAbsenceService</Allow>
+            <Allow>ch.atexxi.chronivaro.core.service.SubmitAbsenceService</Allow>
             <Allow>ch.atexxi.chronivaro.core.service.UpdateAbsenceService</Allow>
             <Allow>ch.atexxi.chronivaro.core.service.CancelAbsenceService</Allow>
             <Allow>ch.atexxi.chronivaro.core.service.StartTimerService</Allow>
@@ -54,6 +55,7 @@
             <Allow>ch.atexxi.chronivaro.core.service.AddWorkEntryService</Allow>
             <Allow>ch.atexxi.chronivaro.core.service.CorrectWorkEntryService</Allow>
             <Allow>ch.atexxi.chronivaro.core.service.RequestAbsenceService</Allow>
+            <Allow>ch.atexxi.chronivaro.core.service.SubmitAbsenceService</Allow>
             <Allow>ch.atexxi.chronivaro.core.service.UpdateAbsenceService</Allow>
             <Allow>ch.atexxi.chronivaro.core.service.CancelAbsenceService</Allow>
             <Allow>ch.atexxi.chronivaro.core.service.ApproveAbsenceService</Allow>
@@ -79,6 +81,10 @@
 
     <Role name="HR">
         <Privilege name="li.strolch.service.api.Service" policy="DefaultPrivilege">
+            <Allow>ch.atexxi.chronivaro.core.service.RequestAbsenceService</Allow>
+            <Allow>ch.atexxi.chronivaro.core.service.SubmitAbsenceService</Allow>
+            <Allow>ch.atexxi.chronivaro.core.service.UpdateAbsenceService</Allow>
+            <Allow>ch.atexxi.chronivaro.core.service.CancelAbsenceService</Allow>
             <Allow>ch.atexxi.chronivaro.core.service.ApproveAbsenceService</Allow>
             <Allow>ch.atexxi.chronivaro.core.service.RejectAbsenceService</Allow>
             <Allow>ch.atexxi.chronivaro.core.service.PresenceService</Allow>

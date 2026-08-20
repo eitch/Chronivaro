@@ -93,6 +93,7 @@
             <Allow>ch.atexxi.chronivaro.core.service.DaySummaryService</Allow>
             <Allow>ch.atexxi.chronivaro.core.service.MonthSummaryService</Allow>
             <Allow>ch.atexxi.chronivaro.core.service.RequestAbsenceService</Allow>
+            <Allow>ch.atexxi.chronivaro.core.service.SubmitAbsenceService</Allow>
             <Allow>ch.atexxi.chronivaro.core.service.UpdateAbsenceService</Allow>
             <Allow>ch.atexxi.chronivaro.core.service.CancelAbsenceService</Allow>
             <Allow>ch.atexxi.chronivaro.core.service.StartTimerService</Allow>
