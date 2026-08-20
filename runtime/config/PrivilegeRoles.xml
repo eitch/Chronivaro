@@ -97,6 +97,7 @@
             <Allow>ch.atexxi.chronivaro.core.service.LockPeriodService</Allow>
             <Allow>ch.atexxi.chronivaro.core.service.CalculateVacationEntitlementService</Allow>
             <Allow>ch.atexxi.chronivaro.core.service.CreditVacationEntitlementService</Allow>
+            <Allow>ch.atexxi.chronivaro.core.service.YearEndVacationCarryOverService</Allow>
             <Allow>ch.atexxi.chronivaro.core.service.AddVacationCorrectionService</Allow>
             <Allow>ch.atexxi.chronivaro.core.service.GetVacationAccountSummaryService</Allow>
             <Allow>ch.atexxi.chronivaro.core.service.TeamReportService</Allow>
