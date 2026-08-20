@@ -452,4 +452,117 @@ public class ReportsResourceTest extends AbstractChronivaroRestfulTest {
 			assertTrue(csvStr.contains("employee_emp"));
 		}
 	}
+
+	@Test
+	public void shouldExportReportsAsPdfViaQueryParamAcceptHeaderAndAlias() {
+		String employeeToken = authenticate("employee", "admin");
+		String supervisorToken = authenticate("supervisor", "admin");
+
+		// 1. Month Report PDF via ?format=pdf
+		try (Response res = target()
+				.path("chronivaro/v1/reports/month")
+				.queryParam("yearMonth", "2026-08")
+				.queryParam("format", "pdf")
+				.request()
+				.header("Authorization", employeeToken)
+				.get()) {
+
+			assertEquals(200, res.getStatus());
+			assertTrue(res.getMediaType().toString().startsWith("application/pdf"));
+			assertTrue(res.getHeaderString("Content-Disposition").contains("month-report-employee_emp-2026-08.pdf"));
+			byte[] pdfBytes = res.readEntity(byte[].class);
+			assertNotNull(pdfBytes);
+			assertTrue(pdfBytes.length > 500);
+			assertTrue(new String(pdfBytes, 0, 5).startsWith("%PDF-"));
+		}
+
+		// 2. Month Report PDF via Accept header
+		try (Response res = target()
+				.path("chronivaro/v1/reports/month")
+				.queryParam("yearMonth", "2026-08")
+				.request("application/pdf")
+				.header("Authorization", employeeToken)
+				.get()) {
+
+			assertEquals(200, res.getStatus());
+			assertTrue(res.getMediaType().toString().startsWith("application/pdf"));
+			byte[] pdfBytes = res.readEntity(byte[].class);
+			assertTrue(new String(pdfBytes, 0, 5).startsWith("%PDF-"));
+		}
+
+		// 3. Month Report PDF via /month.pdf alias
+		try (Response res = target()
+				.path("chronivaro/v1/reports/month.pdf")
+				.queryParam("yearMonth", "2026-08")
+				.request()
+				.header("Authorization", employeeToken)
+				.get()) {
+
+			assertEquals(200, res.getStatus());
+			assertTrue(res.getMediaType().toString().startsWith("application/pdf"));
+			byte[] pdfBytes = res.readEntity(byte[].class);
+			assertTrue(new String(pdfBytes, 0, 5).startsWith("%PDF-"));
+		}
+
+		// 4. Vacation Report PDF via ?format=pdf
+		try (Response res = target()
+				.path("chronivaro/v1/reports/vacation")
+				.queryParam("year", 2026)
+				.queryParam("format", "pdf")
+				.request()
+				.header("Authorization", employeeToken)
+				.get()) {
+
+			assertEquals(200, res.getStatus());
+			assertTrue(res.getMediaType().toString().startsWith("application/pdf"));
+			assertTrue(res.getHeaderString("Content-Disposition").contains("vacation-report-employee_emp-2026.pdf"));
+			byte[] pdfBytes = res.readEntity(byte[].class);
+			assertTrue(new String(pdfBytes, 0, 5).startsWith("%PDF-"));
+		}
+
+		// 5. Vacation Report PDF via /vacation.pdf alias
+		try (Response res = target()
+				.path("chronivaro/v1/reports/vacation.pdf")
+				.queryParam("year", 2026)
+				.request()
+				.header("Authorization", employeeToken)
+				.get()) {
+
+			assertEquals(200, res.getStatus());
+			assertTrue(res.getMediaType().toString().startsWith("application/pdf"));
+			byte[] pdfBytes = res.readEntity(byte[].class);
+			assertTrue(new String(pdfBytes, 0, 5).startsWith("%PDF-"));
+		}
+
+		// 6. Absences Report PDF via ?format=pdf for supervisor
+		try (Response res = target()
+				.path("chronivaro/v1/reports/absences")
+				.queryParam("teamId", "team-1")
+				.queryParam("format", "pdf")
+				.request()
+				.header("Authorization", supervisorToken)
+				.get()) {
+
+			assertEquals(200, res.getStatus());
+			assertTrue(res.getMediaType().toString().startsWith("application/pdf"));
+			assertTrue(res.getHeaderString("Content-Disposition").contains("absence-report-team-1"));
+			byte[] pdfBytes = res.readEntity(byte[].class);
+			assertTrue(new String(pdfBytes, 0, 5).startsWith("%PDF-"));
+		}
+
+		// 7. Absences Report PDF via /absences.pdf alias
+		try (Response res = target()
+				.path("chronivaro/v1/reports/absences.pdf")
+				.queryParam("from", "2026-08-01")
+				.queryParam("to", "2026-08-31")
+				.request()
+				.header("Authorization", employeeToken)
+				.get()) {
+
+			assertEquals(200, res.getStatus());
+			assertTrue(res.getMediaType().toString().startsWith("application/pdf"));
+			byte[] pdfBytes = res.readEntity(byte[].class);
+			assertTrue(new String(pdfBytes, 0, 5).startsWith("%PDF-"));
+		}
+	}
 }

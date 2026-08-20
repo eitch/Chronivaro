@@ -88,6 +88,9 @@ export default class ReportsView {
 					<button id="btn-export-csv" class="secondary-btn btn-export">
 						<span class="icon">📥</span> ${I18n.t('reports.exportCsvBom')}
 					</button>
+					<button id="btn-export-pdf" class="secondary-btn btn-export">
+						<span class="icon">📄</span> ${I18n.t('reports.exportPdf')}
+					</button>
 				</div>
 			</section>
 
@@ -102,12 +105,14 @@ export default class ReportsView {
 		this.resultsContainer = container.querySelector('#report-results-container');
 		this.runBtn = container.querySelector('#btn-run-report');
 		this.exportBtn = container.querySelector('#btn-export-csv');
+		this.exportPdfBtn = container.querySelector('#btn-export-pdf');
 
 		this.setupTabs(container);
 		this.renderFilterFields();
 
 		this.runBtn.addEventListener('click', () => this.generateReport());
 		this.exportBtn.addEventListener('click', () => this.exportCsv());
+		this.exportPdfBtn.addEventListener('click', () => this.exportPdf());
 
 		// Load background data for selects
 		this.loadReferenceData();
@@ -380,6 +385,33 @@ export default class ReportsView {
 			}
 		} catch (err) {
 			console.error('Error exporting CSV', err);
+			alert(`${I18n.t('app.error')}: ${err.message}`);
+		}
+	}
+
+	async exportPdf() {
+		try {
+			const lang = (window.I18n && window.I18n.getLanguage) ? window.I18n.getLanguage() : 'de';
+			if (this.activeReportType === 'month') {
+				const ym = this.filters.month.yearMonth;
+				if (!ym) {
+					alert(I18n.t('reports.pleaseSpecifyMonth'));
+					return;
+				}
+				await ReportApi.downloadMonthReportPdf(ym, this.filters.month.employeeId, lang);
+
+			} else if (this.activeReportType === 'vacation') {
+				await ReportApi.downloadVacationReportPdf(this.filters.vacation.year, this.filters.vacation.employeeId, lang);
+
+			} else if (this.activeReportType === 'absences') {
+				const params = { ...this.filters.absences, lang };
+				await ReportApi.downloadAbsenceReportPdf(params);
+
+			} else {
+				alert(I18n.t('reports.pdfOnlySupportedForMonthVacationAbsence') || 'PDF export is available for Month, Vacation, and Absence reports.');
+			}
+		} catch (err) {
+			console.error('Error exporting PDF', err);
 			alert(`${I18n.t('app.error')}: ${err.message}`);
 		}
 	}

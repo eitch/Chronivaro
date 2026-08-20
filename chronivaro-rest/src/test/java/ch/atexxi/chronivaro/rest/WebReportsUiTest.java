@@ -276,11 +276,19 @@ public class WebReportsUiTest extends AbstractChronivaroRestfulTest {
 		assertTrue("ReportsView must export default class", reportsViewContent.contains("export default class ReportsView"));
 		assertTrue("ReportsView must contain generateReport method", reportsViewContent.contains("generateReport"));
 		assertTrue("ReportsView must contain exportCsv method", reportsViewContent.contains("exportCsv"));
+		assertTrue("ReportsView must contain exportPdf method", reportsViewContent.contains("exportPdf"));
+		assertTrue("ReportsView must contain PDF export button", reportsViewContent.contains("btn-export-pdf"));
 		assertTrue("ReportsView must render day report", reportsViewContent.contains("renderDayReport"));
 		assertTrue("ReportsView must render month report", reportsViewContent.contains("renderMonthReport"));
 		assertTrue("ReportsView must render vacation report", reportsViewContent.contains("renderVacationReport"));
 		assertTrue("ReportsView must render team report", reportsViewContent.contains("renderTeamReport"));
 		assertTrue("ReportsView must render absence report", reportsViewContent.contains("renderAbsenceReport"));
+
+		File myPeriodsViewJs = new File(webDir, "js/pages/MyPeriodsView.js");
+		assertTrue("MyPeriodsView.js must exist", myPeriodsViewJs.exists());
+		String myPeriodsViewContent = Files.readString(myPeriodsViewJs.toPath());
+		assertTrue("MyPeriodsView must contain downloadPdf method", myPeriodsViewContent.contains("downloadPdf"));
+		assertTrue("MyPeriodsView must contain PDF download button", myPeriodsViewContent.contains("download-period-pdf-btn"));
 
 		File reportApiJs = new File(webDir, "js/api/ReportApi.js");
 		assertTrue("ReportApi.js must exist", reportApiJs.exists());
@@ -289,12 +297,15 @@ public class WebReportsUiTest extends AbstractChronivaroRestfulTest {
 		assertTrue("ReportApi must define downloadDayReportCsv", reportApiContent.contains("downloadDayReportCsv"));
 		assertTrue("ReportApi must define getMonthReport", reportApiContent.contains("getMonthReport"));
 		assertTrue("ReportApi must define downloadMonthReportCsv", reportApiContent.contains("downloadMonthReportCsv"));
+		assertTrue("ReportApi must define downloadMonthReportPdf", reportApiContent.contains("downloadMonthReportPdf"));
 		assertTrue("ReportApi must define getVacationReport", reportApiContent.contains("getVacationReport"));
 		assertTrue("ReportApi must define downloadVacationReportCsv", reportApiContent.contains("downloadVacationReportCsv"));
+		assertTrue("ReportApi must define downloadVacationReportPdf", reportApiContent.contains("downloadVacationReportPdf"));
 		assertTrue("ReportApi must define getTeamReport", reportApiContent.contains("getTeamReport"));
 		assertTrue("ReportApi must define downloadTeamReportCsv", reportApiContent.contains("downloadTeamReportCsv"));
 		assertTrue("ReportApi must define getAbsenceReport", reportApiContent.contains("getAbsenceReport"));
 		assertTrue("ReportApi must define downloadAbsenceReportCsv", reportApiContent.contains("downloadAbsenceReportCsv"));
+		assertTrue("ReportApi must define downloadAbsenceReportPdf", reportApiContent.contains("downloadAbsenceReportPdf"));
 
 		File styleCss = new File(webDir, "assets/css/style.css");
 		assertTrue("style.css must exist", styleCss.exists());
@@ -464,6 +475,45 @@ public class WebReportsUiTest extends AbstractChronivaroRestfulTest {
 				.get()) {
 
 			assertEquals(403, forbiddenTeam.getStatus());
+		}
+	}
+
+	@Test
+	public void shouldDownloadMonthAndVacationReportsPdf() {
+		String employeeToken = authenticate("employee", "admin");
+
+		// 1. Month Report PDF download
+		try (Response monthPdfResp = target()
+				.path("/chronivaro/v1/reports/month")
+				.queryParam("yearMonth", "2026-08")
+				.queryParam("format", "pdf")
+				.queryParam("lang", "de")
+				.request("application/pdf")
+				.header(HttpHeaders.AUTHORIZATION, employeeToken)
+				.get()) {
+
+			assertEquals(200, monthPdfResp.getStatus());
+			assertTrue(monthPdfResp.getMediaType().toString().startsWith("application/pdf"));
+			byte[] pdfBytes = monthPdfResp.readEntity(byte[].class);
+			assertNotNull(pdfBytes);
+			assertTrue(new String(pdfBytes, 0, 5).startsWith("%PDF-"));
+		}
+
+		// 2. Vacation Report PDF download
+		try (Response vacPdfResp = target()
+				.path("/chronivaro/v1/reports/vacation")
+				.queryParam("year", "2026")
+				.queryParam("format", "pdf")
+				.queryParam("lang", "en")
+				.request("application/pdf")
+				.header(HttpHeaders.AUTHORIZATION, employeeToken)
+				.get()) {
+
+			assertEquals(200, vacPdfResp.getStatus());
+			assertTrue(vacPdfResp.getMediaType().toString().startsWith("application/pdf"));
+			byte[] pdfBytes = vacPdfResp.readEntity(byte[].class);
+			assertNotNull(pdfBytes);
+			assertTrue(new String(pdfBytes, 0, 5).startsWith("%PDF-"));
 		}
 	}
 }

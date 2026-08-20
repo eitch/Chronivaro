@@ -1,4 +1,5 @@
 import PeriodApi from '../api/PeriodApi.js';
+import ReportApi from '../api/ReportApi.js';
 import NotificationDialog from '../utils/NotificationDialog.js';
 import Format from '../utils/Format.js';
 import I18n from '../i18n/I18n.js';
@@ -34,6 +35,9 @@ export default class MyPeriodsView {
 					<button id="next-period-btn" class="secondary-btn" title="Next Month">${I18n.t('common.next')} &raquo;</button>
 					<button id="current-period-btn" class="secondary-btn">${I18n.t('common.currentMonth')}</button>
 					<button id="refresh-period-btn" class="secondary-btn">${I18n.t('common.refresh')}</button>
+					<button id="download-period-pdf-btn" class="secondary-btn btn-export" title="Download Month Report PDF">
+						<span class="icon">📄</span> ${I18n.t('reports.exportPdf')}
+					</button>
 				</div>
 			</div>
 
@@ -177,6 +181,21 @@ export default class MyPeriodsView {
 		refreshBtn.addEventListener('click', () => {
 			this.loadPeriodData(container);
 		});
+
+		const downloadPdfBtn = container.querySelector('#download-period-pdf-btn');
+		if (downloadPdfBtn) {
+			downloadPdfBtn.addEventListener('click', () => this.downloadPdf());
+		}
+	}
+
+	async downloadPdf() {
+		try {
+			const lang = (window.I18n && window.I18n.getLanguage) ? window.I18n.getLanguage() : 'de';
+			await ReportApi.downloadMonthReportPdf(this.selectedYearMonth, null, lang);
+		} catch (err) {
+			console.error('Failed to download period PDF', err);
+			NotificationDialog.error(err.message || I18n.t('app.error'));
+		}
 	}
 
 	navigateMonth(offset) {

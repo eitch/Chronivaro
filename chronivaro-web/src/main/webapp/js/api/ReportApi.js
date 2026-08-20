@@ -38,6 +38,19 @@ export default class ReportApi {
 		ReportApi.triggerBlobDownload(blob, filename);
 	}
 
+	static async downloadMonthReportPdf(yearMonth, employeeId, lang) {
+		let url = `/chronivaro/v1/reports/month?yearMonth=${encodeURIComponent(yearMonth)}&format=pdf`;
+		if (employeeId && employeeId.trim()) {
+			url += `&employeeId=${encodeURIComponent(employeeId.trim())}`;
+		}
+		if (lang && lang.trim()) {
+			url += `&lang=${encodeURIComponent(lang.trim())}`;
+		}
+		const blob = await Rest.getBlob(url, {'Accept': 'application/pdf'});
+		const filename = `month-report-${employeeId ? employeeId.trim() : 'me'}-${yearMonth}.pdf`;
+		ReportApi.triggerBlobDownload(blob, filename);
+	}
+
 	static async getVacationReport(year, employeeId) {
 		let url = `/chronivaro/v1/reports/vacation?format=json`;
 		if (year) {
@@ -59,6 +72,22 @@ export default class ReportApi {
 		}
 		const blob = await Rest.getBlob(url, {'Accept': 'text/csv'});
 		const filename = `vacation-report-${year || new Date().getFullYear()}${employeeId ? '-' + employeeId : ''}.csv`;
+		ReportApi.triggerBlobDownload(blob, filename);
+	}
+
+	static async downloadVacationReportPdf(year, employeeId, lang) {
+		let url = `/chronivaro/v1/reports/vacation?format=pdf`;
+		if (year) {
+			url += `&year=${encodeURIComponent(year)}`;
+		}
+		if (employeeId && employeeId.trim()) {
+			url += `&employeeId=${encodeURIComponent(employeeId.trim())}`;
+		}
+		if (lang && lang.trim()) {
+			url += `&lang=${encodeURIComponent(lang.trim())}`;
+		}
+		const blob = await Rest.getBlob(url, {'Accept': 'application/pdf'});
+		const filename = `vacation-report-${employeeId ? employeeId.trim() : 'me'}-${year || new Date().getFullYear()}.pdf`;
 		ReportApi.triggerBlobDownload(blob, filename);
 	}
 
@@ -86,17 +115,34 @@ export default class ReportApi {
 		return Rest.get(url);
 	}
 
-	static async downloadAbsenceReportCsv({from, to, employeeId, type, state}) {
+	static async downloadAbsenceReportCsv({from, to, employeeId, teamId, type, state}) {
 		let queryParts = ['format=csv'];
 		if (from) queryParts.push(`from=${encodeURIComponent(from)}`);
 		if (to) queryParts.push(`to=${encodeURIComponent(to)}`);
 		if (employeeId && employeeId.trim()) queryParts.push(`employeeId=${encodeURIComponent(employeeId.trim())}`);
+		if (teamId && teamId.trim()) queryParts.push(`teamId=${encodeURIComponent(teamId.trim())}`);
 		if (type && type.trim()) queryParts.push(`type=${encodeURIComponent(type.trim())}`);
 		if (state && state.trim()) queryParts.push(`state=${encodeURIComponent(state.trim())}`);
 
 		const url = `/chronivaro/v1/reports/absences?${queryParts.join('&')}`;
 		const blob = await Rest.getBlob(url, {'Accept': 'text/csv'});
 		const filename = `absence-report-${from || 'all'}-to-${to || 'all'}.csv`;
+		ReportApi.triggerBlobDownload(blob, filename);
+	}
+
+	static async downloadAbsenceReportPdf({from, to, employeeId, teamId, type, state, lang}) {
+		let queryParts = ['format=pdf'];
+		if (from) queryParts.push(`from=${encodeURIComponent(from)}`);
+		if (to) queryParts.push(`to=${encodeURIComponent(to)}`);
+		if (employeeId && employeeId.trim()) queryParts.push(`employeeId=${encodeURIComponent(employeeId.trim())}`);
+		if (teamId && teamId.trim()) queryParts.push(`teamId=${encodeURIComponent(teamId.trim())}`);
+		if (type && type.trim()) queryParts.push(`type=${encodeURIComponent(type.trim())}`);
+		if (state && state.trim()) queryParts.push(`state=${encodeURIComponent(state.trim())}`);
+		if (lang && lang.trim()) queryParts.push(`lang=${encodeURIComponent(lang.trim())}`);
+
+		const url = `/chronivaro/v1/reports/absences?${queryParts.join('&')}`;
+		const blob = await Rest.getBlob(url, {'Accept': 'application/pdf'});
+		const filename = `absence-report-${from || 'all'}-to-${to || 'all'}.pdf`;
 		ReportApi.triggerBlobDownload(blob, filename);
 	}
 

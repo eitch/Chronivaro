@@ -4,6 +4,7 @@ import ch.atexxi.chronivaro.core.model.ChronivaroModelHelper;
 import ch.atexxi.chronivaro.core.model.PeriodHelper;
 import ch.atexxi.chronivaro.core.model.VacationHelper;
 import ch.atexxi.chronivaro.core.report.CsvExportHelper;
+import ch.atexxi.chronivaro.core.report.PdfExportHelper;
 import ch.atexxi.chronivaro.core.service.*;
 import ch.atexxi.chronivaro.rest.dto.ChronivaroMapper;
 import jakarta.servlet.http.HttpServletRequest;
@@ -21,6 +22,7 @@ import li.strolch.service.api.ServiceResult;
 
 import java.time.LocalDate;
 import java.time.YearMonth;
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -43,6 +45,10 @@ public class ReportsResource {
 
 	private boolean isCsv(String format, String acceptHeader) {
 		return "csv".equalsIgnoreCase(format) || (acceptHeader != null && acceptHeader.contains("text/csv"));
+	}
+
+	private boolean isPdf(String format, String acceptHeader) {
+		return "pdf".equalsIgnoreCase(format) || (acceptHeader != null && acceptHeader.contains("application/pdf"));
 	}
 
 	private String resolveTargetEmployeeId(StrolchTransaction tx, Certificate cert, String requestedEmployeeId) {
@@ -125,10 +131,11 @@ public class ReportsResource {
 
 	@GET
 	@Path("/month")
-	@Produces({MediaType.APPLICATION_JSON, "text/csv"})
+	@Produces({MediaType.APPLICATION_JSON, "text/csv", "application/pdf"})
 	public Response getMonthReport(@QueryParam("yearMonth") String yearMonthStr,
 								   @QueryParam("employeeId") String employeeId,
 								   @QueryParam("format") String format,
+								   @QueryParam("lang") String lang,
 								   @HeaderParam("Accept") String acceptHeader) {
 		if (yearMonthStr == null || yearMonthStr.trim().isEmpty()) {
 			throw new IllegalArgumentException("yearMonth query parameter is required (format: YYYY-MM)");
@@ -140,12 +147,22 @@ public class ReportsResource {
 		String targetEmployeeId;
 		Resource employeeResource;
 		String periodState = STATE_OPEN;
+		ZonedDateTime approvalDate = null;
+		String approvedBy = null;
+		Resource companyConfig;
 		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
 			targetEmployeeId = resolveTargetEmployeeId(tx, cert, employeeId);
 			employeeResource = ChronivaroModelHelper.getEmployee(tx, targetEmployeeId);
+			companyConfig = tx.getResourceBy(TYPE_GLOBAL_CONFIGURATION, "configuration", false);
 			Optional<Resource> period = PeriodHelper.findPeriod(tx, targetEmployeeId, yearMonth);
 			if (period.isPresent()) {
 				periodState = period.get().getString(PARAM_STATE);
+				if (period.get().hasParameter(PARAM_APPROVED_AT)) {
+					approvalDate = period.get().getDate(PARAM_APPROVED_AT);
+				}
+				if (period.get().hasParameter(PARAM_APPROVED_BY)) {
+					approvedBy = period.get().getString(PARAM_APPROVED_BY);
+				}
 			}
 		}
 
@@ -156,6 +173,14 @@ public class ReportsResource {
 		MonthSummaryService.MonthSummaryResult result = getServiceHandler().doService(cert, new MonthSummaryService(), arg);
 		if (!result.isOk()) {
 			return handleServiceError(result);
+		}
+
+		if (isPdf(format, acceptHeader)) {
+			byte[] pdf = PdfExportHelper.exportMonthReportToPdf(result.monthSummary, periodState, approvalDate, approvedBy, employeeResource, companyConfig, lang);
+			String filename = PdfExportHelper.getMonthReportPdfFileName(targetEmployeeId, yearMonth);
+			return Response.ok(pdf, "application/pdf")
+					.header("Content-Disposition", "attachment; filename=\"" + filename + "\"")
+					.build();
 		}
 
 		if (isCsv(format, acceptHeader)) {
@@ -169,11 +194,21 @@ public class ReportsResource {
 	}
 
 	@GET
+	@Path("/month.pdf")
+	@Produces("application/pdf")
+	public Response getMonthReportPdfAlias(@QueryParam("yearMonth") String yearMonthStr,
+										   @QueryParam("employeeId") String employeeId,
+										   @QueryParam("lang") String lang) {
+		return getMonthReport(yearMonthStr, employeeId, "pdf", lang, "application/pdf");
+	}
+
+	@GET
 	@Path("/vacation")
-	@Produces({MediaType.APPLICATION_JSON, "text/csv"})
+	@Produces({MediaType.APPLICATION_JSON, "text/csv", "application/pdf"})
 	public Response getVacationReport(@QueryParam("year") Integer yearParam,
 									  @QueryParam("employeeId") String employeeId,
 									  @QueryParam("format") String format,
+									  @QueryParam("lang") String lang,
 									  @HeaderParam("Accept") String acceptHeader) {
 		int year = yearParam != null ? yearParam : LocalDate.now().getYear();
 		Certificate cert = getCertificate();
@@ -181,9 +216,11 @@ public class ReportsResource {
 		String targetEmployeeId;
 		Resource employeeResource;
 		List<Resource> entries;
+		Resource companyConfig;
 		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
 			targetEmployeeId = resolveTargetEmployeeId(tx, cert, employeeId);
 			employeeResource = ChronivaroModelHelper.getEmployee(tx, targetEmployeeId);
+			companyConfig = tx.getResourceBy(TYPE_GLOBAL_CONFIGURATION, "configuration", false);
 			entries = VacationHelper.getVacationEntries(tx, targetEmployeeId, year);
 		}
 
@@ -196,6 +233,14 @@ public class ReportsResource {
 			return handleServiceError(result);
 		}
 
+		if (isPdf(format, acceptHeader)) {
+			byte[] pdf = PdfExportHelper.exportVacationReportToPdf(result.summary, entries, employeeResource, year, companyConfig, lang);
+			String filename = PdfExportHelper.getVacationReportPdfFileName(targetEmployeeId, year);
+			return Response.ok(pdf, "application/pdf")
+					.header("Content-Disposition", "attachment; filename=\"" + filename + "\"")
+					.build();
+		}
+
 		if (isCsv(format, acceptHeader)) {
 			String csv = CsvExportHelper.exportVacationReportToCsv(result.summary, entries, employeeResource, year);
 			return Response.ok(csv, "text/csv; charset=utf-8")
@@ -204,6 +249,15 @@ public class ReportsResource {
 		}
 
 		return Response.ok(ChronivaroRestHelper.createGson().toJson(ChronivaroMapper.vacationSummaryToDto(result.summary, entries)), MediaType.APPLICATION_JSON).build();
+	}
+
+	@GET
+	@Path("/vacation.pdf")
+	@Produces("application/pdf")
+	public Response getVacationReportPdfAlias(@QueryParam("year") Integer yearParam,
+											  @QueryParam("employeeId") String employeeId,
+											  @QueryParam("lang") String lang) {
+		return getVacationReport(yearParam, employeeId, "pdf", lang, "application/pdf");
 	}
 
 	@GET
@@ -244,7 +298,7 @@ public class ReportsResource {
 
 	@GET
 	@Path("/absences")
-	@Produces({MediaType.APPLICATION_JSON, "text/csv"})
+	@Produces({MediaType.APPLICATION_JSON, "text/csv", "application/pdf"})
 	public Response getAbsencesReport(@QueryParam("teamId") String teamId,
 									  @QueryParam("employeeId") String employeeId,
 									  @QueryParam("from") String fromStr,
@@ -252,6 +306,7 @@ public class ReportsResource {
 									  @QueryParam("absenceTypeCode") String absenceTypeCode,
 									  @QueryParam("status") String statusStr,
 									  @QueryParam("format") String format,
+									  @QueryParam("lang") String lang,
 									  @HeaderParam("Accept") String acceptHeader) {
 		Certificate cert = getCertificate();
 
@@ -280,6 +335,36 @@ public class ReportsResource {
 			return handleServiceError(result);
 		}
 
+		if (isPdf(format, acceptHeader)) {
+			String teamName = null;
+			String employeeName = null;
+			Resource companyConfig;
+			try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
+				companyConfig = tx.getResourceBy(TYPE_GLOBAL_CONFIGURATION, "configuration", false);
+				if (teamId != null && !teamId.trim().isEmpty()) {
+					Resource teamRes = tx.getResourceBy(TYPE_TEAM, teamId.trim());
+					if (teamRes != null) {
+						teamName = teamRes.getName();
+					}
+				}
+				if (employeeId != null && !employeeId.trim().isEmpty()) {
+					Resource empRes = tx.getResourceBy(TYPE_EMPLOYEE, employeeId.trim());
+					if (empRes != null) {
+						employeeName = empRes.getName();
+					}
+				}
+			}
+
+			LocalDate fromDate = (fromStr != null && !fromStr.trim().isEmpty()) ? LocalDate.parse(fromStr.trim()) : null;
+			LocalDate toDate = (toStr != null && !toStr.trim().isEmpty()) ? LocalDate.parse(toStr.trim()) : null;
+			byte[] pdf = PdfExportHelper.exportAbsenceReportToPdf(result.items, teamName, employeeName, fromDate, toDate, companyConfig, lang);
+			String context = employeeId != null && !employeeId.isBlank() ? employeeId : (teamId != null && !teamId.isBlank() ? teamId : "all");
+			String filename = PdfExportHelper.getAbsenceReportPdfFileName(context, fromDate, toDate);
+			return Response.ok(pdf, "application/pdf")
+					.header("Content-Disposition", "attachment; filename=\"" + filename + "\"")
+					.build();
+		}
+
 		if (isCsv(format, acceptHeader)) {
 			String csv = CsvExportHelper.exportAbsenceReportToCsv(result.items);
 			return Response.ok(csv, "text/csv; charset=utf-8")
@@ -288,6 +373,19 @@ public class ReportsResource {
 		}
 
 		return Response.ok(ChronivaroRestHelper.createGson().toJson(ChronivaroMapper.absenceReportToDto(result.items)), MediaType.APPLICATION_JSON).build();
+	}
+
+	@GET
+	@Path("/absences.pdf")
+	@Produces("application/pdf")
+	public Response getAbsencesReportPdfAlias(@QueryParam("teamId") String teamId,
+											  @QueryParam("employeeId") String employeeId,
+											  @QueryParam("from") String fromStr,
+											  @QueryParam("to") String toStr,
+											  @QueryParam("absenceTypeCode") String absenceTypeCode,
+											  @QueryParam("status") String statusStr,
+											  @QueryParam("lang") String lang) {
+		return getAbsencesReport(teamId, employeeId, fromStr, toStr, absenceTypeCode, statusStr, "pdf", lang, "application/pdf");
 	}
 
 	private Response handleServiceError(ServiceResult result) {
