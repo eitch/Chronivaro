@@ -1,6 +1,7 @@
 import ReportApi from '../api/ReportApi.js';
 import AbsenceTypeApi from '../api/AbsenceTypeApi.js';
 import TeamApi from '../api/TeamApi.js';
+import AuthApi from '../api/AuthApi.js';
 import Format from '../utils/Format.js';
 import I18n from '../i18n/I18n.js';
 
@@ -113,14 +114,30 @@ export default class ReportsView {
 		this.runBtn.addEventListener('click', () => this.generateReport());
 		this.exportBtn.addEventListener('click', () => this.exportCsv());
 		this.exportPdfBtn.addEventListener('click', () => this.exportPdf());
+		this.updateActionButtons();
 
 		// Load background data for selects
 		this.loadReferenceData();
 
-		// Auto run default report
-		this.generateReport();
+		// Only users with an employee profile can use the implicit self-report.
+		// Administrative users must select an employee explicitly.
+		if (AuthApi.hasRole('Employee') || AuthApi.hasRole('Supervisor')) {
+			this.generateReport();
+		}
 
 		return container;
+	}
+
+	updateActionButtons() {
+		const isAdmin = AuthApi.hasRole('Administrator');
+		const employeeId = this.filters[this.activeReportType]?.employeeId?.trim();
+		const teamId = this.filters.team.teamId?.trim();
+		const hasExplicitTarget = Boolean(employeeId || (this.activeReportType === 'team' && teamId));
+		const disabled = isAdmin && !hasExplicitTarget;
+
+		[this.runBtn, this.exportBtn, this.exportPdfBtn].forEach(button => {
+			if (button) button.disabled = disabled;
+		});
 	}
 
 	setupTabs(container) {
@@ -301,9 +318,23 @@ export default class ReportsView {
 			if (this.filters.absences.state) stateSelect.value = this.filters.absences.state;
 			this.populateAbsenceTypeSelect();
 		}
+
+		this.filterBar.querySelectorAll('input, select').forEach(input => {
+			input.addEventListener('input', () => this.updateActionButtons());
+			input.addEventListener('change', () => this.updateActionButtons());
+		});
+		this.updateActionButtons();
 	}
 
 	async generateReport() {
+		const employeeId = this.filters[this.activeReportType]?.employeeId?.trim();
+		const teamId = this.filters.team.teamId?.trim();
+		const hasExplicitTarget = Boolean(employeeId || (this.activeReportType === 'team' && teamId));
+		if (AuthApi.hasRole('Administrator') && !hasExplicitTarget) {
+			this.resultsContainer.innerHTML = '';
+			return;
+		}
+
 		this.resultsContainer.innerHTML = `<div class="loading-spinner">${I18n.t('reports.generatingReport')}</div>`;
 
 		try {

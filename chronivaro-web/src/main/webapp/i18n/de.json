@@ -353,6 +353,7 @@
     "exportCsv": "CSV exportieren",
     "exportCsvBom": "CSV exportieren (UTF-8 BOM)",
     "exportPdf": "PDF exportieren",
+    "pdfOnlySupportedForMonthVacationAbsence": "Der PDF-Export ist für Monats-, Ferien- und Abwesenheitsberichte verfügbar.",
     "selectMonth": "Monat auswählen",
     "selectYear": "Jahr auswählen",
     "selectTeam": "Team auswählen",

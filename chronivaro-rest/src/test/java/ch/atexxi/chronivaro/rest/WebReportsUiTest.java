@@ -283,6 +283,21 @@ public class WebReportsUiTest extends AbstractChronivaroRestfulTest {
 		assertTrue("ReportsView must render vacation report", reportsViewContent.contains("renderVacationReport"));
 		assertTrue("ReportsView must render team report", reportsViewContent.contains("renderTeamReport"));
 		assertTrue("ReportsView must render absence report", reportsViewContent.contains("renderAbsenceReport"));
+		assertTrue("ReportsView must not auto-run an implicit report for administrators",
+				reportsViewContent.contains("AuthApi.hasRole('Employee')")
+						&& reportsViewContent.contains("AuthApi.hasRole('Supervisor')"));
+		assertTrue("ReportsView must disable admin actions without an explicit target",
+				reportsViewContent.contains("updateActionButtons")
+						&& reportsViewContent.contains("button.disabled = disabled"));
+		assertTrue("ReportsView must not generate implicit administrator reports",
+				reportsViewContent.contains("AuthApi.hasRole('Administrator') && !hasExplicitTarget")
+						&& reportsViewContent.contains("this.resultsContainer.innerHTML = ''"));
+		assertTrue("English locale must contain the PDF availability message",
+				Files.readString(new File(webDir, "i18n/en.json").toPath())
+						.contains("pdfOnlySupportedForMonthVacationAbsence"));
+		assertTrue("German locale must contain the PDF availability message",
+				Files.readString(new File(webDir, "i18n/de.json").toPath())
+						.contains("pdfOnlySupportedForMonthVacationAbsence"));
 
 		File myPeriodsViewJs = new File(webDir, "js/pages/MyPeriodsView.js");
 		assertTrue("MyPeriodsView.js must exist", myPeriodsViewJs.exists());
@@ -316,6 +331,21 @@ public class WebReportsUiTest extends AbstractChronivaroRestfulTest {
 		assertTrue("style.css must exist", styleCss.exists());
 		String cssContent = Files.readString(styleCss.toPath());
 		assertTrue("style.css must include report styles", cssContent.contains("#reports-view") && cssContent.contains(".btn-export"));
+	}
+
+	@Test
+	public void shouldAllowAdminToViewExplicitEmployeeReport() {
+		String adminToken = authenticate("admin", "admin");
+
+		try (Response response = target()
+				.path("/chronivaro/v1/reports/day")
+				.queryParam("date", "2026-08-03")
+				.queryParam("employeeId", "employee_emp")
+				.request(MediaType.APPLICATION_JSON)
+				.header(HttpHeaders.AUTHORIZATION, adminToken)
+				.get()) {
+			assertEquals(200, response.getStatus());
+		}
 	}
 
 	@Test
