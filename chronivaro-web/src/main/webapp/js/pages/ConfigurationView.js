@@ -1,6 +1,6 @@
 import ConfigurationApi from '../api/ConfigurationApi.js';
 import NotificationDialog from '../utils/NotificationDialog.js';
-import I18n from '../utils/I18n.js';
+import I18n from '../i18n/I18n.js';
 
 export default class ConfigurationView {
 

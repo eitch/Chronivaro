@@ -3,7 +3,7 @@ import ScheduleTemplateApi from '../api/ScheduleTemplateApi.js';
 import EmployeeApi from '../api/EmployeeApi.js';
 import NotificationDialog from '../utils/NotificationDialog.js';
 import Format from '../utils/Format.js';
-import I18n from '../utils/I18n.js';
+import I18n from '../i18n/I18n.js';
 
 export default class SchedulesView {
     constructor(app) {

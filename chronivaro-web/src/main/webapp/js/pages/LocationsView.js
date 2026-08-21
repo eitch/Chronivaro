@@ -1,7 +1,7 @@
 import LocationApi from '../api/LocationApi.js';
 import HolidayCalendarApi from '../api/HolidayCalendarApi.js';
 import NotificationDialog from '../utils/NotificationDialog.js';
-import I18n from '../utils/I18n.js';
+import I18n from '../i18n/I18n.js';
 
 export default class LocationsView {
     constructor(app) {
