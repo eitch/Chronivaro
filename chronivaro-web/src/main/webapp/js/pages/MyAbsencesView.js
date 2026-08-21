@@ -336,41 +336,43 @@ export default class MyAbsencesView {
                     // Determine duration label
                     let durationLabel = absence.durationType;
                     if (absence.durationType === 'HALF_DAY') {
-                        const partName = absence.halfDayPart 
-                            ? I18n.t(`absences.${absence.halfDayPart.toLowerCase()}`, {}, absence.halfDayPart)
+                        const dayPartVal = absence.dayPart || absence.halfDayPart;
+                        const partName = dayPartVal 
+                            ? I18n.t(`absences.${dayPartVal.toLowerCase()}`, {}, dayPartVal)
                             : '';
                         durationLabel = `${I18n.t('absences.halfDayMorning')} (${partName})`;
                     } else if (absence.durationType === 'HOURS') {
-                        const hoursCount = absence.hours || (absence.durationMinutes ? absence.durationMinutes / 60 : '');
+                        const hoursCount = absence.hours || (absence.minutes ? (absence.minutes / 60) : (absence.durationMinutes ? absence.durationMinutes / 60 : ''));
                         durationLabel = `${hoursCount} ${I18n.t('common.hours')}`;
                     } else {
                         durationLabel = I18n.t('enums.durationType.FULL_DAY');
                     }
 
                     // Determine status badge
+                    const absenceState = absence.state || absence.status;
                     let statusClass = 'badge-draft';
-                    if (absence.status === 'SUBMITTED') statusClass = 'badge-submitted';
-                    else if (absence.status === 'APPROVED') statusClass = 'badge-approved';
-                    else if (absence.status === 'REJECTED') statusClass = 'badge-rejected';
-                    else if (absence.status === 'CANCELLED') statusClass = 'badge-cancelled';
+                    if (absenceState === 'SUBMITTED') statusClass = 'badge-submitted';
+                    else if (absenceState === 'APPROVED') statusClass = 'badge-approved';
+                    else if (absenceState === 'REJECTED') statusClass = 'badge-rejected';
+                    else if (absenceState === 'CANCELLED') statusClass = 'badge-cancelled';
 
-                    const statusLabel = I18n.t(`enums.absenceState.${absence.status}`, {}, absence.status);
+                    const statusLabel = I18n.t(`enums.absenceState.${absenceState}`, {}, absenceState);
 
                     // Notes / Reason
                     let notes = absence.comment || '';
-                    if (absence.status === 'REJECTED' && (absence.rejectionReason || absence.decisionComment)) {
+                    if (absenceState === 'REJECTED' && (absence.rejectionReason || absence.decisionComment)) {
                         const reason = absence.rejectionReason || absence.decisionComment;
                         notes += (notes ? ' | ' : '') + `${I18n.t('common.rejectionReason')}: ${reason}`;
                     }
 
                     // Actions
                     let actionsHtml = '--';
-                    if (absence.status === 'DRAFT') {
+                    if (absenceState === 'DRAFT') {
                         actionsHtml = `
                             <button class="action-btn submit-btn" data-id="${absence.id}" data-version="${absence.version || 0}">${I18n.t('common.submit')}</button>
                             <button class="action-btn cancel-btn" data-id="${absence.id}" data-version="${absence.version || 0}">${I18n.t('common.cancel')}</button>
                         `;
-                    } else if (absence.status === 'SUBMITTED' || absence.status === 'APPROVED') {
+                    } else if (absenceState === 'SUBMITTED' || absenceState === 'APPROVED') {
                         actionsHtml = `<button class="action-btn cancel-btn" data-id="${absence.id}" data-version="${absence.version || 0}">${I18n.t('common.cancel')}</button>`;
                     }
 

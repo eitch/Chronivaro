@@ -60,6 +60,7 @@ public class WebPersonalAbsenceUiTest extends AbstractChronivaroRestfulTest {
 		assertTrue("View must contain absence filter controls", viewContent.contains("filter-controls"));
 		assertTrue("View must contain absence table", viewContent.contains("absences-table"));
 		assertTrue("View must contain absence request modal", viewContent.contains("absence-modal"));
+		assertTrue("View must resolve absence state for status badge and label", viewContent.contains("absence.state || absence.status") || viewContent.contains("absence.state"));
 	}
 
 	@Test

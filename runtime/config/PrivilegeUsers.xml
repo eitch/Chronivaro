@@ -32,10 +32,10 @@
         <State>ENABLED</State>
         <Locale>de</Locale>
         <Roles>
-            <Role>ModelAccessor</Role>
             <Role>Administrator</Role>
-            <Role>PrivilegeAdmin</Role>
             <Role>Employee</Role>
+            <Role>ModelAccessor</Role>
+            <Role>PrivilegeAdmin</Role>
             <Role>Supervisor</Role>
         </Roles>
         <Properties>
@@ -46,8 +46,7 @@
             <LastLogin>2026-08-21T07:41:16.476+02:00</LastLogin>
         </History>
     </User>
-    <User userId="666872618952" username="jill"
-          password="$PBKDF2WithHmacSHA512,10000,256$4260f19c64c9ead7219be761aa7dc6fc0c928b1cbb0652b73b674b251eabc929$d0b76bea884f156c6430f4da7bcc9718465ca623f774f54f8e32e20028fe5113">
+    <User userId="666872618952" username="jill" password="$PBKDF2WithHmacSHA512,10000,256$4260f19c64c9ead7219be761aa7dc6fc0c928b1cbb0652b73b674b251eabc929$d0b76bea884f156c6430f4da7bcc9718465ca623f774f54f8e32e20028fe5113">
         <Firstname>Jill</Firstname>
         <Lastname>Someone</Lastname>
         <State>ENABLED</State>
@@ -62,7 +61,7 @@
         </Properties>
         <History>
             <FirstLogin>2026-08-15T22:35:58.804+02:00</FirstLogin>
-            <LastLogin>2026-08-21T07:49:45.862+02:00</LastLogin>
+            <LastLogin>2026-08-21T13:41:52.878+02:00</LastLogin>
             <LastPasswordChange>2026-08-15T22:43:28.194+02:00</LastPasswordChange>
         </History>
     </User>
