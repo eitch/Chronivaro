@@ -232,7 +232,7 @@ The following foundational areas are verified as fully implemented in the reposi
 ### Task 4: Integrate Calculation Snapshot and Balance Carry-Forward into Month Reports
 
 - **Specification Reference:** Section 6.9, Section 11.2, Section 11.6.2
-- **Status:** `DONE`
+- **Status:** `COMPLETED`
 - **Scope:**
   1. Update `MonthSummaryService` to check if a requested period is in `APPROVED` or `LOCKED` state, and if so, return the stored immutable `calculationSnapshot` rather than re-calculating live data.
   2. Implement balance carry-forward: `initialBalance` in `MonthSummary` must compute the cumulative ending balance of the previous month (including previous balance, monthly net variance, and manual adjustments).
