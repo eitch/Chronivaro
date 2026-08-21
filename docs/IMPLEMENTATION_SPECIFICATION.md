@@ -274,6 +274,9 @@ Regeln:
 - Sich überschneidende Abwesenheiten sind nicht erlaubt.
 - Arbeitszeit und genehmigte Abwesenheit am gleichen Zeitpunkt beziehungsweise für dieselben angerechneten Minuten sind zu validieren.
 - Mehrtägige Abwesenheiten werden bei der Berechnung pro Kalendertag aufgelöst.
+- Entwurfsstatus (`DRAFT`): Abwesenheiten können als Entwurf gespeichert werden. Ein Entwurf kann durch den Mitarbeiter vor dem Einreichen beliebig bearbeitet (Attribute wie Datum, Dauer, Kommentar anpassen) oder verworfen/storniert werden (`DRAFT` -> `CANCELLED`).
+- Das Stornieren eines Entwurfs erzeugt keine Ferienkontobuchung (weder Bezug noch Rückvergütung), da Entwürfe noch keine Ferienminuten abgezogen haben.
+- Durch das Einreichen (`DRAFT` -> `SUBMITTED`) wird der Antrag finalisiert und für Vorgesetzte zur Genehmigung freigegeben.
 
 ### 6.7 VacationAccountEntry – Ferienkontobuchung
 
@@ -481,12 +484,13 @@ Um eine konsistente Behandlung von vergessenen Timern zu gewährleisten, gilt fo
 
 ### 9.4 Abwesenheitsantrag
 
-1. Mitarbeiter erfasst Art, Zeitraum und Dauer.
+1. Mitarbeiter erfasst Art, Zeitraum und Dauer und kann den Antrag direkt einreichen oder als Entwurf (`DRAFT`) speichern.
 2. System berechnet die betroffenen Sollminuten als Vorschau.
-3. Mitarbeiter reicht den Antrag ein.
-4. Vorgesetzter genehmigt oder lehnt mit Kommentar ab.
-5. Bei Ferien wird nach Genehmigung eine Ferienkontobuchung erstellt.
-6. Stornierung oder Änderung erzeugt eine entsprechende Gegenbuchung; bestehende Kontobuchungen werden nicht still überschrieben.
+3. Gespeicherte Entwürfe können in der Abwesenheitsübersicht eingesehen, nachträglich bearbeitet (z. B. Korrektur von Tippfehlern, Datums- oder Daueranpassung) oder verworfen/storniert (`DRAFT` -> `CANCELLED`) werden. Das Verwerfen eines Entwurfs löst keine Ferienkontobuchung aus.
+4. Der Mitarbeiter reicht den fertigen Antrag bzw. Entwurf ein (`DRAFT` -> `SUBMITTED`).
+5. Vorgesetzter genehmigt oder lehnt mit Kommentar ab.
+6. Bei Ferien wird nach Genehmigung eine Ferienkontobuchung erstellt.
+7. Stornierung oder Änderung einer genehmigten Abwesenheit erzeugt eine entsprechende Gegenbuchung; bestehende Kontobuchungen werden nicht still überschrieben.
 
 ### 9.5 Monatsabschluss
 
@@ -657,8 +661,10 @@ Die UI wird mit HTML, CSS und Vanilla JavaScript umgesetzt. Es wird kein Fronten
    - Zeitblöcke erfassen und bearbeiten
    - Tagessummen und Saldi
 3. **Abwesenheiten**
-   - Antrag erfassen
-   - eigene Anträge und Status
+   - Antrag erfassen (als Entwurf speichern oder direkt einreichen)
+   - eigene Anträge und Status-Historie
+   - Aktionen für Entwürfe: Einreichen (`Submit`), Bearbeiten im Modal (`Edit`) und Verwerfen/Stornieren (`Cancel`)
+   - hohe visuelle Kontraste für alle Aktionsschaltflächen gemäss Barrierefreiheitsanforderungen (WCAG AA), sodass Text- und Hintergrundfarben klar unterscheidbar sind
    - Kalenderdarstellung
 4. **Ferien**
    - Kontoübersicht
@@ -849,6 +855,10 @@ GET    /approvals/absences
 POST   /approvals/absences/{id}/approve
 POST   /approvals/absences/{id}/reject
 ```
+
+- `PUT /me/absences/{id}`: Aktualisieren eines Abwesenheitsentwurfs (`DRAFT`) vor der Einreichung (z. B. Korrektur von Datumsbereich, Dauer oder Kommentar).
+- `POST /me/absences/{id}/submit`: Einreichen eines Abwesenheitsentwurfs (`DRAFT` -> `SUBMITTED`).
+- `POST /me/absences/{id}/cancel`: Stornieren einer Abwesenheit (`DRAFT`, `SUBMITTED` oder `APPROVED` -> `CANCELLED`). Bei Stornierung eines Entwurfs (`DRAFT`) werden keine Gegenbuchungen auf dem Ferienkonto vorgenommen.
 
 #### Ferien
 

@@ -433,6 +433,33 @@ Task 7 is split into subtasks **7.1** and **7.2** to separate the PDF generation
 
 ---
 
+### Task 8: Employee Absence Draft Lifecycle & History View UX Improvements
+
+- **Specification Reference:** Section 6.6, Section 9.4, Section 12.1, Section 13.2
+- **Status:** `OPEN`
+- **Scope:**
+  1. Fix CSS styling collision for `.action-btn.submit-btn`, `.action-btn.edit-btn`, and general `.action-btn` text contrast in `chronivaro-web/src/main/webapp/assets/css/style.css` so that action button text is clearly readable and meets WCAG AA contrast standards.
+  2. Update `CancelAbsenceService` in `chronivaro-core` to allow cancelling absences in `STATE_DRAFT` without creating vacation refund journal records.
+  3. Add `Edit` action button to draft rows in `MyAbsencesView.js`, wire up modal pre-population and draft updating via `AbsenceApi.updateAbsence`, and ensure drafts can be saved as updated draft or submitted directly.
+- **Affected Components:**
+  - `chronivaro-core/src/main/java/ch/atexxi/chronivaro/core/service/CancelAbsenceService.java`
+  - `chronivaro-core/src/test/java/ch/atexxi/chronivaro/core/AbsenceServiceTest.java`
+  - `chronivaro-web/src/main/webapp/assets/css/style.css`
+  - `chronivaro-web/src/main/webapp/js/pages/MyAbsencesView.js`
+  - `chronivaro-rest/src/test/java/ch/atexxi/chronivaro/rest/WebPersonalAbsenceUiTest.java`
+- **Acceptance Criteria:**
+  - Action buttons in personal absence history are clearly legible with high contrast (e.g. submit: primary/blue accent, edit: neutral slate accent, cancel: soft red accent).
+  - An employee can cancel a draft absence without error; no vacation journal refund is created.
+  - An employee can click "Edit" on a draft absence, modify fields in the modal, and save the updated draft.
+  - Draft submission transitions the absence to `SUBMITTED`.
+- **Verification:**
+  - Unit tests in `AbsenceServiceTest` verifying draft cancellation without vacation journal entries and draft updates.
+  - REST/UI tests in `WebPersonalAbsenceUiTest` and `VacationAndAbsenceRestTest` verifying draft lifecycle endpoints, modal operations, and action buttons.
+  - Full reactor build and test suite passing cleanly (`mvn clean test`).
+- **Dependencies:** Task 2.
+
+---
+
 ## Explicitly Excluded / Post-MVP Out of Scope
 
 The following items are defined in Section 4.3 as post-MVP expansions and are not part of the active implementation backlog:

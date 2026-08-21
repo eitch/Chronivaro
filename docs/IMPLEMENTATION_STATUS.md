@@ -26,9 +26,9 @@ Audit date: 2026-08-19. `IMPLEMENTATION_SPECIFICATION.md` is authoritative; the 
 
 ---
 
-## Missing Requirements
+## Missing Requirements / Open Tasks
 
-None. All implementation backlog tasks (Tasks 1 through 7) are fully implemented and verified against the specification.
+- **Task 8: Employee Absence Draft Lifecycle & History View UX Improvements (Sections 6.6, 9.4, 12.1, 13.2):** Open task to fix `.action-btn.submit-btn` and action button styling contrast in CSS, enable draft absence cancellation in `CancelAbsenceService` without vacation journal side-effects, and add draft editing capability in `MyAbsencesView.js`.
 
 ---
 
