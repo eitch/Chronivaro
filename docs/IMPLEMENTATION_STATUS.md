@@ -9,7 +9,7 @@ Audit date: 2026-08-21. `IMPLEMENTATION_SPECIFICATION.md` is authoritative; the 
 - **Architecture & Deployment (Sections 4.1, 14, 15.1–15.9, 16, 20.1):** 4-module Maven reactor (`chronivaro-core`, `chronivaro-rest`, `chronivaro-web`, `chronivaro-app`), JDK 25, embedded Eclipse Jetty 12 lifecycle, static frontend web asset delivery at `/`, Jersey JAX-RS REST integration under `/rest/chronivaro/v1`, executable standalone fat-JAR (`chronivaro.jar`).
 - **Master Data & Registration (Sections 6.1, 6.8, 9.6, 13.7):** `Employee`, `Team`, `Location`, `EmploymentScheduleVersion`, `HolidayCalendar`, Strolch user creation with `SET_PASSWORD` challenge, and token-based initial password setting.
 - **Time Tracking Foundation (Sections 6.3, 6.4, 6.4.1, 7.1–7.4, 9.1, 9.2):** WorkDay/WorkEntry model, dynamic target time calculation, multi-interval start/stop timer, midnight 24:00 splitting, forgotten timer auto-capping to daily target, weekly working location defaults, historical schedule version resolution by entry date, duration validation, and morning/afternoon location uniqueness.
-- **Absence Management & Draft Lifecycle (Sections 6.5, 6.6, 9.4, 10.1, 13.2):** Absence types with `commentRequired` and `visibleOnPublicStatus` metadata, comment enforcement, duration type validation, and full `DRAFT` status / explicit submission and cancellation workflow.
+- **Absence Management & Default Types (Sections 4.1 #6, 6.5, 6.5.1, 6.6, 9.4, 10.1, 13.2):** Preconfigured 10 standard absence types bootstrapped in `Model.xml` (`VACATION`, `ILLNESS`, `ACCIDENT`, `MILITARY_CIVIL_DEFENSE`, `DOCTOR_APPOINTMENT`, `TRAINING`, `PARENTAL_LEAVE`, `UNPAID_LEAVE`, `OVERTIME_COMPENSATION`, `OTHER`), `commentRequired` and `visibleOnPublicStatus` metadata, comment enforcement, duration type validation, and full `DRAFT` status / explicit submission and cancellation workflow.
 - **Vacation Journal Immutability & Year-End Carry-Over (Sections 6.7, 6.7.1, 11.3):** Entitlement recalculations create audited `CORRECTION` adjustments while keeping existing entries immutable; automated year-end carry-over service transfers unexpired balances as `CARRY_OVER` entries with FIFO consumption.
 - **Period Calculation Snapshots & Balance Carry-Forward (Sections 6.9, 11.2, 11.6.2):** Month summaries return immutable `calculationSnapshot` for approved and locked periods; `initialBalance` accurately carries forward prior month closing balance; monthly summary categorizes paid absences, unpaid absences, vacation usage, and holiday credits.
 - **Reporting & Exports (Sections 11.1–11.5, 12.1–12.2, 13.8, 17, 18.6):** Core calculation engines, Web UI report viewers, deterministic RFC 4180 CSV exports, and server-side native OpenPDF export generator with streaming REST endpoints (`/reports/month`, `/reports/vacation`, `/reports/absences`).
@@ -22,31 +22,25 @@ Audit date: 2026-08-21. `IMPLEMENTATION_SPECIFICATION.md` is authoritative; the 
 
 The following requirements from `docs/IMPLEMENTATION_SPECIFICATION.md` represent incomplete or missing behaviour identified during repository re-audit:
 
-1. **Preconfigured Default Absence Types Dataset (Task 9):**
-   - *Classification:* `PARTIALLY_IMPLEMENTED`
-   - *Specification Reference:* Section 4.1 (#6), Section 6.5, Section 6.5.1
-   - *Status:* `OPEN`
-   - *Missing Behaviour:* Seed data for the 10 standard absence types (`VACATION`, `ILLNESS`, `ACCIDENT`, `MILITARY_CIVIL_DEFENSE`, `DOCTOR_APPOINTMENT`, `TRAINING`, `PARENTAL_LEAVE`, `UNPAID_LEAVE`, `OVERTIME_COMPENSATION`, `OTHER`) is not declared in `runtime/data/Model.xml`.
-
-2. **Automated Vacation Entitlement Granting & Schedule Correction Journaling (Task 10):**
+1. **Automated Vacation Entitlement Granting & Schedule Correction Journaling (Task 10):**
    - *Classification:* `PARTIALLY_IMPLEMENTED`
    - *Specification Reference:* Section 6.7, Section 6.7.1, Section 7.5
    - *Status:* `OPEN`
    - *Missing Behaviour:* Creating a new employee with a `joinDate` does not automatically calculate and credit pro-rated `ENTITLEMENT` journal entries for the current year; modifying `exitDate` or changing weekly schedule target hours does not compute and post audited `CORRECTION` adjustments to `VacationAccountEntry`.
 
-3. **WorkEntry Comments, Shorten-Only Restrictions & MyTimes UI (Task 11):**
+2. **WorkEntry Comments, Shorten-Only Restrictions & MyTimes UI (Task 11):**
    - *Classification:* `PARTIALLY_IMPLEMENTED`
    - *Specification Reference:* Section 4.1 (#4, #5), Section 6.4, Section 9.1, Section 9.3, Section 12.1 (#1, #2), Section 13.2
    - *Status:* `OPEN`
    - *Missing Behaviour:* `StopTimerService` does not persist optional comments; `CorrectWorkEntryService` / `ChronivaroResource` allows regular employees to move start times or extend durations instead of restricting them strictly to shortening `end` times and updating comments; `MyTimesView.js` lacks comment editing and time shortening controls.
 
-4. **Supervisor Detailed Monthly Period Inspection View & Endpoint (Task 12):**
+3. **Supervisor Detailed Monthly Period Inspection View & Endpoint (Task 12):**
    - *Classification:* `PARTIALLY_IMPLEMENTED`
    - *Specification Reference:* Section 4.1 (#11), Section 9.5, Section 12.1 (#6), Section 13.2
    - *Status:* `OPEN`
    - *Missing Behaviour:* `ApprovalsResource` lacks `GET /approvals/periods/{id}` for loading the detailed monthly report breakdown; `ApprovalsView.js` lacks an inspection dialog/modal that displays the full monthly report and allows direct approval/rejection with comments.
 
-5. **User Management for Pure System Users (Non-Employees) (Task 13):**
+4. **User Management for Pure System Users (Non-Employees) (Task 13):**
    - *Classification:* `MISSING`
    - *Specification Reference:* Section 3.6, Section 6.1.1, Section 9.7, Section 12.1 (#8), Section 13.2
    - *Status:* `OPEN`

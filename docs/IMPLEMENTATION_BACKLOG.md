@@ -125,7 +125,7 @@ The following foundational areas are verified as fully implemented in the reposi
 - **Architecture & Deployment:** 4-module Maven reactor (`chronivaro-core`, `chronivaro-rest`, `chronivaro-web`, `chronivaro-app`), JDK 25, embedded Jetty 12 lifecycle, same-server frontend and REST delivery under `/rest/chronivaro/v1`, executable fat-JAR (`chronivaro.jar`).
 - **Master Data & Registration:** `Employee`, `Team`, `Location`, `EmploymentScheduleVersion`, `HolidayCalendar`, Strolch user challenge initiation (`SET_PASSWORD`), and token-based password setting.
 - **Time Tracking Foundation:** WorkDay/WorkEntry model, dynamic target time calculation, start/stop timer, midnight splitting (24:00 boundary), forgotten timer auto-capping to daily target, weekly working location defaults, historical schedule resolution, and morning/afternoon location uniqueness.
-- **Absence Lifecycle & Quotas:** Absence types with `commentRequired` and `visibleOnPublicStatus` flags, draft saving/submission workflow, vacation journal immutability with audited `CORRECTION` adjustments, and year-end `CARRY_OVER` transfer.
+- **Absence Lifecycle, Quotas & Preconfigured Types:** Absence types with `commentRequired` and `visibleOnPublicStatus` flags, 10 standard preconfigured default absence types bootstrapped in `Model.xml` matching Section 6.5.1, draft saving/submission workflow, vacation journal immutability with audited `CORRECTION` adjustments, and year-end `CARRY_OVER` transfer.
 - **Monthly Period Calculations & Snapshots:** Immutable `calculationSnapshot` for approved/locked periods, monthly balance carry-forward, and detailed absence categorization.
 - **Reporting & Exports:** RFC 4180 CSV exports and native server-side OpenPDF generation for Month, Vacation, and Absence reports.
 - **Presence, Audit & System Operations:** Masked binary presence indicators, comprehensive audit trail with retention purging, health probes, and structured logging.
@@ -138,7 +138,7 @@ The following foundational areas are verified as fully implemented in the reposi
 ### Task 9: Add Preconfigured Default Absence Types to Model.xml
 
 - **Specification Reference:** Section 4.1 (#6), Section 6.5, Section 6.5.1
-- **Status:** `OPEN`
+- **Status:** `COMPLETED`
 - **Scope:**
   1. Add resource declarations for the 10 standard preconfigured absence types to `runtime/data/Model.xml`:
      - `VACATION` (Ferien): creditTargetTime=true, deductVacation=true, paid=true, approvalRequired=true, commentRequired=false, allowedDurations=[HALF_DAY, FULL_DAY], visibleOnPublicStatus=false
@@ -154,10 +154,14 @@ The following foundational areas are verified as fully implemented in the reposi
   2. Ensure integration test validates all 10 absence types load properly on clean startup and match metadata rules.
 - **Affected Components:**
   - `runtime/data/Model.xml`
+  - `chronivaro-core/src/test/resources/data/Model.xml`
   - `chronivaro-core/src/test/java/ch/atexxi/chronivaro/core/AbsenceTypeServiceTest.java`
 - **Acceptance Criteria:**
   - `Model.xml` contains resource definitions for all 10 standard absence types matching Section 6.5.1.
   - Upon runtime startup, all 10 types are immediately available for employee absence requests and validation.
+- **Verification:**
+  - Unit tests in `AbsenceTypeServiceTest.shouldLoadPreconfiguredDefaultAbsenceTypesFromModel` verifying all 10 preconfigured absence types, attributes, duration types, and flags.
+  - Full reactor test suite passing cleanly (`mvn clean test`).
 - **Dependencies:** None.
 
 ---
