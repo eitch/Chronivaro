@@ -641,6 +641,14 @@
       "Administrator": "Administrator"
     }
   },
+  "user": {
+    "profile": "Benutzerprofil",
+    "roles": "Rollen",
+    "name": "Name",
+    "firstName": "Vorname",
+    "lastName": "Nachname",
+    "username": "Benutzername"
+  },
   "errors": {
     "unauthorized": "Sie müssen angemeldet sein, um diese Aktion auszuführen.",
     "forbidden": "Sie besitzen keine Berechtigung für diese Aktion.",

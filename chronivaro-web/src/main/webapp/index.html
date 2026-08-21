@@ -48,6 +48,23 @@
         </div>
     </nav>
     <div class="header-actions" id="header-actions">
+        <details class="nav-group user-menu" id="user-menu" style="display: none;">
+            <summary class="user-menu-summary" id="user-menu-summary" aria-label="User profile">
+                <span class="user-icon" aria-hidden="true">👤</span>
+                <span class="user-menu-username" id="header-username"></span>
+            </summary>
+            <div class="user-dropdown-panel" id="user-dropdown-panel">
+                <div class="user-dropdown-section user-dropdown-profile">
+                    <div class="user-dropdown-name" id="user-dropdown-fullname"></div>
+                    <div class="user-dropdown-handle" id="user-dropdown-username"></div>
+                </div>
+                <div class="user-dropdown-divider"></div>
+                <div class="user-dropdown-section">
+                    <div class="user-dropdown-label" data-i18n="user.roles">Roles</div>
+                    <div class="user-dropdown-roles" id="user-dropdown-roles"></div>
+                </div>
+            </div>
+        </details>
         <a href="#" id="logout-link" class="nav-link nav-logout" data-i18n="nav.logout">Logout</a>
         <select id="header-language-select" class="language-select" aria-label="Language">
             <option value="de">DE</option>

@@ -40,6 +40,7 @@ class ChronivaroApp {
             logoutLink.addEventListener('click', (e) => {
                 e.preventDefault();
                 AuthApi.logout();
+                this.updateUserMenu();
                 this.navigate('login');
             });
         }
@@ -86,19 +87,19 @@ class ChronivaroApp {
                     }
                 }
             });
-
-            this.nav.querySelectorAll('.nav-group').forEach(group => {
-                group.addEventListener('toggle', () => {
-                    if (group.open) {
-                        this.nav.querySelectorAll('.nav-group').forEach(other => {
-                            if (other !== group && other.open) {
-                                other.removeAttribute('open');
-                            }
-                        });
-                    }
-                });
-            });
         }
+
+        document.querySelectorAll('.nav-group').forEach(group => {
+            group.addEventListener('toggle', () => {
+                if (group.open) {
+                    document.querySelectorAll('.nav-group').forEach(other => {
+                        if (other !== group && other.open) {
+                            other.removeAttribute('open');
+                        }
+                    });
+                }
+            });
+        });
 
         document.addEventListener('click', (e) => {
             if (this.nav && !e.target.closest('.nav-group')) {
@@ -189,57 +190,113 @@ class ChronivaroApp {
         }
     }
 
-	route() {
-		let hash = window.location.hash.substring(1);
-		if (!hash || hash === 'dashboard') {
-			const roles = AuthApi.getRoles();
-			if (roles.includes('Employee')) {
-				hash = 'dashboard';
-			} else if (roles.includes('Supervisor') || roles.includes('HR') || roles.includes('Administrator')) {
-				hash = 'presence';
-			} else {
-				hash = 'dashboard';
-			}
-		}
+    route() {
+        let hash = window.location.hash.substring(1);
+        if (!hash || hash === 'dashboard') {
+            const roles = AuthApi.getRoles();
+            if (roles.includes('Employee')) {
+                hash = 'dashboard';
+            } else if (roles.includes('Supervisor') || roles.includes('HR') || roles.includes('Administrator')) {
+                hash = 'presence';
+            } else {
+                hash = 'dashboard';
+            }
+        }
 
-		if (!AuthApi.isLoggedIn() && hash !== 'login' && !hash.startsWith('complete-registration')) {
-			this.navigate('login');
-			return;
-		}
+        if (!AuthApi.isLoggedIn() && hash !== 'login' && !hash.startsWith('complete-registration')) {
+            this.navigate('login');
+            return;
+        }
 
-		this.updateNavigation();
-		this.closeNavGroups();
-		const navToggle = document.getElementById('nav-toggle');
-		if (navToggle) {
-			navToggle.setAttribute('aria-expanded', 'false');
-			this.nav.classList.remove('is-open');
-		}
-		this.showView(hash);
-	}
+        this.updateNavigation();
+        this.closeNavGroups();
+        const navToggle = document.getElementById('nav-toggle');
+        if (navToggle) {
+            navToggle.setAttribute('aria-expanded', 'false');
+            this.nav.classList.remove('is-open');
+        }
+        this.showView(hash);
+    }
 
-	closeNavGroups() {
-		if (this.nav) {
-			this.nav.querySelectorAll('.nav-group[open]').forEach(group => {
-				group.removeAttribute('open');
-			});
-		}
-	}
+    closeNavGroups() {
+        document.querySelectorAll('.nav-group[open]').forEach(group => {
+            group.removeAttribute('open');
+        });
+    }
 
-	updateNavigation() {
-		const roles = AuthApi.getRoles();
-        this.nav.querySelectorAll('li[data-roles]').forEach(li => {
-			const requiredRoles = li.getAttribute('data-roles').split(',');
-			const hasRole = requiredRoles.some(role => roles.includes(role));
-            li.hidden = !hasRole;
-		});
+    updateNavigation() {
+        const roles = AuthApi.getRoles();
+        if (this.nav) {
+            this.nav.querySelectorAll('li[data-roles]').forEach(li => {
+                const requiredRoles = li.getAttribute('data-roles').split(',');
+                const hasRole = requiredRoles.some(role => roles.includes(role));
+                li.hidden = !hasRole;
+            });
+        }
 
-        this.nav.querySelectorAll('[data-i18n]').forEach(el => {
-			const key = el.getAttribute('data-i18n');
-			if (key) {
-				el.textContent = I18n.t(key);
-			}
-		});
-	}
+        document.querySelectorAll('header [data-i18n]').forEach(el => {
+            const key = el.getAttribute('data-i18n');
+            if (key) {
+                el.textContent = I18n.t(key);
+            }
+        });
+
+        this.updateUserMenu();
+    }
+
+    updateUserMenu() {
+        const userMenu = document.getElementById('user-menu');
+        if (!userMenu) return;
+
+        if (!AuthApi.isLoggedIn()) {
+            userMenu.style.display = 'none';
+            return;
+        }
+        userMenu.style.display = '';
+
+        const username = AuthApi.getUsername();
+        const firstname = AuthApi.getFirstname();
+        const lastname = AuthApi.getLastname();
+        const roles = AuthApi.getRoles();
+
+        const headerUsernameEl = document.getElementById('header-username');
+        if (headerUsernameEl) {
+            headerUsernameEl.textContent = username || 'User';
+        }
+
+        const fullNameEl = document.getElementById('user-dropdown-fullname');
+        if (fullNameEl) {
+            const fullName = [firstname, lastname].filter(Boolean).join(' ').trim();
+            fullNameEl.textContent = fullName || username || '-';
+        }
+
+        const handleEl = document.getElementById('user-dropdown-username');
+        if (handleEl) {
+            handleEl.textContent = username ? `@${username}` : '';
+        }
+
+        const rolesListEl = document.getElementById('user-dropdown-roles');
+        if (rolesListEl) {
+            rolesListEl.innerHTML = '';
+            const displayRoles = (roles || []).filter(role => role !== 'ModelAccessor' && role !== 'PrivilegeAdmin');
+            if (displayRoles.length > 0) {
+                displayRoles.forEach(role => {
+                    const badge = document.createElement('span');
+                    badge.className = 'user-dropdown-role-badge';
+                    const roleKey = `enums.roles.${role}`;
+                    const translatedRole = I18n.t(roleKey);
+                    badge.textContent = (translatedRole && translatedRole !== roleKey) ? translatedRole : role;
+                    rolesListEl.appendChild(badge);
+                });
+            } else {
+                const empty = document.createElement('span');
+                empty.className = 'text-muted';
+                empty.style.fontSize = '0.8rem';
+                empty.textContent = '-';
+                rolesListEl.appendChild(empty);
+            }
+        }
+    }
 
     navigate(page, params) {
         if (params) {

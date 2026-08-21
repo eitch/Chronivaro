@@ -89,4 +89,40 @@ public class WebNavigationUiTest {
 		assertTrue("app.js must handle header-branding click",
 				appJs.contains("headerBranding.addEventListener('click'"));
 	}
+
+	@Test
+	public void shouldVerifyLoggedInUserDropdownInHeader() throws IOException {
+		File htmlFile = new File(getWebappDir(), "index.html");
+		assertTrue("index.html must exist", htmlFile.exists());
+		String html = Files.readString(htmlFile.toPath());
+
+		assertTrue("index.html must contain user-menu element", html.contains("id=\"user-menu\""));
+		assertTrue("index.html must display username in header", html.contains("id=\"header-username\""));
+		assertTrue("index.html must display user full name in dropdown", html.contains("id=\"user-dropdown-fullname\""));
+		assertTrue("index.html must display roles in dropdown", html.contains("id=\"user-dropdown-roles\""));
+
+		File cssFile = new File(getWebappDir(), "assets/css/style.css");
+		assertTrue("style.css must exist", cssFile.exists());
+		String css = Files.readString(cssFile.toPath());
+
+		assertTrue("style.css must style .user-menu", css.contains(".user-menu"));
+		assertTrue("style.css must style .user-dropdown-panel", css.contains(".user-dropdown-panel"));
+		assertTrue("style.css must style .user-dropdown-role-badge", css.contains(".user-dropdown-role-badge"));
+
+		File authApiFile = new File(getWebappDir(), "js/api/AuthApi.js");
+		assertTrue("AuthApi.js must exist", authApiFile.exists());
+		String authApiJs = Files.readString(authApiFile.toPath());
+
+		assertTrue("AuthApi.js must store username", authApiJs.contains("localStorage.setItem('username'"));
+		assertTrue("AuthApi.js must store firstname", authApiJs.contains("localStorage.setItem('firstname'"));
+		assertTrue("AuthApi.js must store lastname", authApiJs.contains("localStorage.setItem('lastname'"));
+		assertTrue("AuthApi.js must provide getUsername", authApiJs.contains("getUsername()"));
+
+		File appJsFile = new File(getWebappDir(), "js/app.js");
+		assertTrue("app.js must exist", appJsFile.exists());
+		String appJs = Files.readString(appJsFile.toPath());
+
+		assertTrue("app.js must have updateUserMenu method", appJs.contains("updateUserMenu()"));
+		assertTrue("app.js must hide ModelAccessor role", appJs.contains("role !== 'ModelAccessor'"));
+	}
 }
