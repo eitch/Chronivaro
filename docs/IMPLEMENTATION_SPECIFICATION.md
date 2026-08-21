@@ -51,7 +51,7 @@ Historische Auswertungen müssen auch dann reproduzierbar bleiben, wenn sich Arb
 ### 3.4 Administrator
 
 - globale Konfiguration verwalten
-- Rollen und Berechtigungen verwalten
+- Benutzer, Rollen und Berechtigungen verwalten (auch für Nicht-Mitarbeiter)
 - Abwesenheitsarten, Feiertage und Standorte konfigurieren
 - technische Administration durchführen
 
@@ -60,23 +60,27 @@ Historische Auswertungen müssen auch dann reproduzierbar bleiben, wenn sich Arb
 - freigegebene Reports einsehen
 - keine Daten verändern
 
+### 3.6 Reine Systembenutzer ohne Mitarbeiterprofil
+
+- Benutzer wie Systemadministratoren, HR-Manager, reine Vorgesetzte oder externe Revisoren können als Strolch-Benutzer mit entsprechenden Rollen existieren, ohne selbst Arbeitszeiten zu erfassen oder ein `Employee`-Profil zu besitzen.
+
 ## 4. Umfang
 
 ### 4.1 MVP
 
 Der erste produktiv nutzbare Umfang enthält:
 
-1. Mitarbeiter- und Teamverwaltung
+1. Mitarbeiter-, Benutzer- und Teamverwaltung (einschliesslich reiner Systembenutzer ohne Mitarbeiterprofil)
 2. versionierte Arbeitsmodelle mit individuellen Sollzeiten
 3. Feiertagskalender
-4. Arbeitszeiterfassung mit mehreren Arbeitsblöcken pro Tag
-5. manuelle Erfassung einer Tagesarbeitszeit
-6. konfigurierbare Abwesenheitsarten
+4. Arbeitszeiterfassung mit mehreren Arbeitsblöcken pro Tag und Kommentarfunktion
+5. Nachträgliches Verkürzen von Zeitbuchungen durch Mitarbeitende (z. B. bei vergessenem Timer-Stopp) sowie administrative Zeitkorrekturen
+6. konfigurierbare und vordefinierte Abwesenheitsarten
 7. halb- und ganztägige sowie stundenweise Abwesenheiten
 8. Ferienkonten mit nachvollziehbaren Kontobuchungen
 9. Anwesenheitsstatus
 10. Soll-/Ist-Auswertung und Zeitsaldo
-11. Monatsabschluss mit Genehmigungsstatus
+11. Monatsabschluss mit Genehmigungsworkflow und detaillierter Inspektionsansicht für Vorgesetzte
 12. Rollen und Berechtigungen
 13. Audit-Log
 14. CSV-Export
@@ -129,6 +133,17 @@ Pflichtattribute:
 | `active` | fachlicher Aktivstatus |
 | `currentWorkDayId` | Referenz auf den aktuellen `WorkDay` |
 
+### 6.1.1 User – Strolch-Benutzer (auch für Nicht-Mitarbeiter)
+
+Strolch verwaltet Benutzer und Rollen unabhängig von der fachlichen `Employee`-Ressource.
+
+Regeln:
+
+- Jeder `Employee` referenziert einen Strolch-Benutzer (`personId`), um sich anzumelden und Arbeitszeiten zu erfassen.
+- Es können Strolch-Benutzer ohne verknüpftes `Employee`-Profil existieren (z. B. reine Systemadministratoren, HR-Personal ohne Zeiterfassung, reine Vorgesetzte oder externe Revisoren).
+- Reine Benutzer besitzen Rollen (z. B. `Admin`, `HR`, `Supervisor`, `Reader`), Benutzername, Name und Status, werden jedoch nicht in der Mitarbeiterübersicht, Zeiterfassung oder Statusanzeige geführt.
+- Die Benutzerverwaltung erlaubt die Pflege dieser Benutzer inklusive Rollenzuweisung und Passwort-Initialisierung (`SET_PASSWORD`-Challenge).
+
 ### 6.2 EmploymentScheduleVersion – versionierter Arbeitsplan
 
 Ein Mitarbeiter besitzt mindestens einen Arbeitsplan. Änderungen erzeugen eine neue Version.
@@ -147,6 +162,8 @@ Regeln:
 - Für jeden aktiven Beschäftigungstag muss genau eine Version bestimmbar sein.
 - Vergangene Versionen dürfen nur mit entsprechender Berechtigung korrigiert werden.
 - Pensum und Wochentagsverteilung sind getrennt zu speichern, damit beispielsweise ein 80-%-Pensum auf vier oder fünf Tage verteilt werden kann.
+- **Eintritt unter dem Monat:** Tritt ein Mitarbeiter im Laufe eines Monats ein (`entryDate`), gilt für alle Tage vor dem Eintrittsdatum eine tägliche Sollzeit von `0` Minuten. Die Monatssollzeit ergibt sich ausschliesslich aus der Summe der aktiven Tage ab `entryDate` bis Monatsende. Tage vor dem Eintrittsdatum werden im Monatskalender als inaktiv dargestellt und lösen keine Warnungen vor fehlenden Buchungen aus.
+- **Austritt unter dem Monat:** Scheidet ein Mitarbeiter im Laufe eines Monats aus (`exitDate`), gilt für alle Tage nach dem Austrittsdatum eine Sollzeit von `0` Minuten.
 
 ### 6.3 WorkDay – Arbeitstag
 
@@ -188,6 +205,9 @@ Regeln:
 - Ein `WorkEntry` bildet ausschliesslich einen tatsächlich gearbeiteten Zeitblock ab.
 - Pausen werden nicht als eigene Entität erfasst. Eine Unterbrechung ergibt sich aus der zeitlichen Lücke zwischen zwei Arbeitsblöcken.
 - Direkte Tageszeiteingaben werden intern als separate manuelle Tagesbuchung oder als klar gekennzeichnete Dauerbuchung abgebildet; beide Erfassungsarten dürfen nicht zu einer Doppelzählung führen.
+- **Kommentare:** Mitarbeitende können zu jedem `WorkEntry` einen optionalen Kommentar erfassen und bearbeiten (z. B. beim Stoppen des Timers oder bei einer nachträglichen Korrektur).
+- **Einschränkung für reguläre Mitarbeitende bei Zeitkorrekturen:** Mitarbeitende dürfen ihre eigenen, noch nicht eingereichten oder gesperrten `WorkEntry`-Buchungen ausschliesslich **verkürzen** (d. h. die Enduhrzeit auf einen früheren Zeitpunkt des Tages vorverlegen, beispielsweise wenn vergessen wurde, den Timer rechtzeitig zu stoppen) und den Kommentar anpassen. Ein Vorverlegen der Startzeit oder ein Hinausschieben der Endzeit über den erfassten Zeitstempel hinaus ist für reguläre Mitarbeitende nicht zulässig.
+- **Administrative Korrekturen:** Vollständige Korrekturen, Vorverlegungen der Startzeit, Verlängerungen oder Löschungen von Zeitbuchungen bleiben der Personaladministration und Administratoren vorbehalten und werden im Audit-Log revisionssicher protokolliert.
 - Jeder `WorkEntry` muss einen Arbeitsort haben. Der Arbeitsort beschreibt den Ort des jeweiligen Zeitblocks und ist nicht zwingend für den ganzen Arbeitstag gleich.
 - Ein Arbeitstag darf höchstens einen Arbeitsort am Vormittag und einen Arbeitsort am Nachmittag haben. Ein Wechsel des Arbeitsorts erzeugt daher separate, nicht überlappende `WorkEntry`-Zeitblöcke.
 - Für die Erfassung im Dashboard werden die Dauerbereiche `HALF_DAY` und `FULL_DAY` unterstützt. Ein halber Tag bezieht sich auf `MORNING` oder `AFTERNOON`; ein ganzer Tag gilt für beide Tageshälften.
@@ -214,19 +234,6 @@ Regeln:
 
 ### 6.5 AbsenceType – Abwesenheitsart
 
-Konfigurierbare Beispiele:
-
-- Ferien
-- Krankheit
-- Unfall
-- Militär oder Zivildienst
-- Arzttermin
-- Weiterbildung
-- Mutterschafts-, Vaterschafts- oder Elternurlaub
-- unbezahlter Urlaub
-- Überstundenkompensation
-- sonstige Abwesenheit
-
 | Attribut | Beschreibung |
 | --- | --- |
 | `absenceTypeId` | eindeutige ID |
@@ -240,6 +247,23 @@ Konfigurierbare Beispiele:
 | `allowedDurations` | `HOURS`, `HALF_DAY`, `FULL_DAY` |
 | `visibleOnPublicStatus` | ob der genaue Typ sichtbar sein darf; standardmässig `false` |
 | `active` | für neue Erfassungen verfügbar |
+
+#### 6.5.1 Standardmässig vorkonfigurierte Abwesenheitsarten
+
+Chronivaro liefert initial folgende Standard-Abwesenheitsarten aus:
+
+| Code | Name | Sollzeit-Gutschrift | Ferienabzug | Bezahlt | Genehmigungspflichtig | Kommentarpflichtig | Erlaubte Dauern | Sichtbar Status |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `VACATION` | Ferien | `true` | `true` | `true` | `true` | `false` | `HALF_DAY`, `FULL_DAY` | `false` |
+| `ILLNESS` | Krankheit | `true` | `false` | `true` | `true` | `false` | `HOURS`, `HALF_DAY`, `FULL_DAY` | `false` |
+| `ACCIDENT` | Unfall | `true` | `false` | `true` | `true` | `false` | `HOURS`, `HALF_DAY`, `FULL_DAY` | `false` |
+| `MILITARY_CIVIL_DEFENSE` | Militär / Zivilschutz | `true` | `false` | `true` | `true` | `false` | `HALF_DAY`, `FULL_DAY` | `false` |
+| `DOCTOR_APPOINTMENT` | Arzttermin | `true` | `false` | `true` | `false` | `false` | `HOURS` | `false` |
+| `TRAINING` | Weiterbildung | `true` | `false` | `true` | `true` | `true` | `HOURS`, `HALF_DAY`, `FULL_DAY` | `false` |
+| `PARENTAL_LEAVE` | Elternurlaub | `true` | `false` | `true` | `true` | `false` | `HALF_DAY`, `FULL_DAY` | `false` |
+| `UNPAID_LEAVE` | Unbezahlter Urlaub | `false` | `false` | `false` | `true` | `true` | `HALF_DAY`, `FULL_DAY` | `false` |
+| `OVERTIME_COMPENSATION` | Überstundenkompensation | `false` | `false` | `true` | `true` | `false` | `HOURS`, `HALF_DAY`, `FULL_DAY` | `false` |
+| `OTHER` | Sonstige Abwesenheit | `false` | `false` | `true` | `true` | `true` | `HOURS`, `HALF_DAY`, `FULL_DAY` | `false` |
 
 Lokalisierungsregel:
 
@@ -300,11 +324,13 @@ Ferien werden intern in Minuten geführt. Die UI darf das Guthaben zusätzlich i
 Die automatisierte Anspruchsberechnung verwendet die folgenden Regelungen:
 
 - Der standardmässige jährliche Ferienanspruch für einen vollzeitbeschäftigten Mitarbeiter beträgt `25` Ferientage pro Anspruchsjahr.
-- Das Anspruchsjahr entspricht dem Kalenderjahr, und der jährliche Ferienanspruch wird zu Beginn dieses Jahres gutgeschrieben.
+- Das Anspruchsjahr entspricht dem Kalenderjahr, und der jährliche Ferienanspruch wird für bestehende Mitarbeitende zu Beginn dieses Jahres (per `1. Januar`) als `ENTITLEMENT`-Journaleintrag gutgeschrieben.
+- Tritt ein Mitarbeiter im Laufe des Anspruchsjahres ein (`entryDate`), wird der anteilige Ferienanspruch ab dem Eintrittsdatum bis zum Jahresende berechnet und per `entryDate` als `ENTITLEMENT`-Journaleintrag gebucht.
 - Ein Ferientag entspricht `480` Minuten. Dieser Wert ist global konfigurierbar und hat standardmässig den Wert `480` Minuten. Er wird nicht aus der individuellen täglichen Sollarbeitszeit oder dem Beschäftigungsgrad eines Mitarbeiters abgeleitet.
 - Der Ferienanspruch bei Teilzeitbeschäftigung wird anteilsmässig anhand des Beschäftigungsgrads berechnet.
 - Beginnt oder endet ein Arbeitsverhältnis während des Anspruchsjahres, wird der Ferienanspruch anteilsmässig für den aktiven Zeitraum des Jahres berechnet.
 - Anteilig berechnete Ferienansprüche werden mit voller Genauigkeit berechnet, in Minuten umgerechnet und anschliessend kaufmännisch auf die nächste ganze Minute gerundet.
+- Ändert sich der Beschäftigungsgrad während des Jahres oder wird ein Austrittsdatum (`exitDate`) erfasst bzw. geändert, erfolgt eine automatisierte Neuberechnung des anteiligen Jahresanspruchs mit entsprechender `CORRECTION`-Gegenbuchung im Journal.
 - Es gelten keine altersabhängigen Ferienanspruchsregeln.
 - Es gelten keine dienstaltersabhängigen Ferienanspruchsregeln.
 - Nicht bezogene Ferien werden beim Übergang ins nächste Kalenderjahr ohne Begrenzung übertragen.
@@ -383,7 +409,7 @@ Sollzeit = Arbeitsplan-Minuten des Wochentags
 
 Anpassungen:
 
-- vor Eintritt oder nach Austritt: `0`
+- vor Eintritt (`entryDate`) oder nach Austritt (`exitDate`): `0`
 - gesetzlicher beziehungsweise konfigurierter Feiertag: Reduktion gemäss `creditFactor`
 - unbezahlte Abwesenheit: Sollzeit bleibt für die Ausweisung erhalten, wird aber nicht als erfüllt angerechnet
 - bezahlte anrechenbare Abwesenheit: wird als Abwesenheitsgutschrift ausgewiesen
@@ -477,10 +503,11 @@ Um eine konsistente Behandlung von vergessenen Timern zu gewährleisten, gilt fo
 ### 9.3 Manuelle Zeitkorrektur
 
 1. Benutzer öffnet einen Tag.
-2. Benutzer ergänzt, ändert oder entfernt eine Buchung.
-3. System validiert Reihenfolge, Überlappungen und Periodenstatus.
-4. Bei einer bereits genehmigten oder gesperrten Periode ist die Änderung nur nach Wiederöffnung möglich.
-5. Änderung wird protokolliert.
+2. Reguläre Mitarbeitende können bestehende eigene Zeitbuchungen **verkürzen** (d. h. den Endzeitpunkt vorverlegen) und den Kommentar anpassen (beispielsweise zur Korrektur eines zu spät gestoppten Timers).
+3. Personaladministration und Administratoren können mit entsprechender Berechtigung Zeitbuchungen vollständig bearbeiten (Start- und Endzeiten anpassen, neue Buchungen manuell hinzufügen oder Buchungen löschen).
+4. Das System validiert Reihenfolge, Überlappungen und den Periodenstatus (nur in offenen Perioden möglich).
+5. Bei einer bereits genehmigten oder gesperrten Periode ist jede Änderung nur nach vorheriger Wiederöffnung durch berechtigte Rollen möglich.
+6. Jede Änderung wird im Audit-Log revisionssicher mit Vorher-/Nachher-Werten protokolliert.
 
 ### 9.4 Abwesenheitsantrag
 
@@ -497,9 +524,11 @@ Um eine konsistente Behandlung von vergessenen Timern zu gewährleisten, gilt fo
 1. Mitarbeiter prüft die Monatsübersicht.
 2. System zeigt Fehler und Warnungen.
 3. Mitarbeiter reicht die Periode ein.
-4. Vorgesetzter genehmigt oder lehnt ab.
-5. Nach Genehmigung wird die Periode gesperrt.
-6. Eine Wiederöffnung erfordert Berechtigung und Begründung.
+4. Vorgesetzter öffnet die eingereichte Periode in der Genehmigungsansicht.
+5. In der Genehmigungsansicht kann der Vorgesetzte den vollständigen Monatsreport (Tagesaufstellung, Soll-/Istzeiten, Arbeitsblöcke, Unterbrüche, Abwesenheiten, Saldi und Kommentare) in einer detaillierten Inspektionsansicht einsehen.
+6. Der Vorgesetzte kann die Periode direkt aus der Detailansicht oder der Übersichtstabelle genehmigen oder mit Begründung ablehnen.
+7. Nach Genehmigung wird die Periode gesperrt.
+8. Eine Wiederöffnung erfordert Berechtigung und Begründung.
 
 ### 9.6 Mitarbeiter-Registrierung
 
@@ -512,6 +541,15 @@ Um neuen Mitarbeitern den Zugriff auf Chronivaro zu ermöglichen, wird ein admin
 5. Der Mitarbeiter verwendet den erhaltenen Link/Code, um sein initiales Passwort festzulegen und sich anschliessend anzumelden.
 
 Dieser Prozess nutzt den Standard-Strolch-Mechanismus zur Passwortinitialisierung und stellt sicher, dass keine Passwörter manuell durch Administratoren vergeben oder per Klartext-E-Mail versendet werden müssen.
+
+### 9.7 Benutzerverwaltung für Nicht-Mitarbeiter
+
+Für Personen, die das System administrieren, überwachen oder leiten, ohne selbst als Mitarbeiter Arbeitszeiten zu erfassen (z. B. Systemadministratoren, HR-Personal, reine Vorgesetzte oder externe Revisoren):
+
+1. Ein Administrator legt in der Benutzerverwaltung einen neuen Strolch-Benutzer mit Benutzername, Name und Rollenzuweisung an.
+2. Das System erstellt den Benutzer ohne verknüpfte `Employee`-Ressource.
+3. Der Administrator löst die Registrierung / Passwort-Challenge (`Usage.SET_PASSWORD`) aus.
+4. Der Benutzer erhält den Aktivierungslink, setzt sein Passwort und kann sich mit seinen zugewiesenen Rollen am System anmelden.
 
 ## 10. Validierungen
 
@@ -653,12 +691,12 @@ Die UI wird mit HTML, CSS und Vanilla JavaScript umgesetzt. Es wird kein Fronten
 1. **Dashboard**
    - heutige Soll- und Istzeit
    - aktueller Status
-   - Start/Stoppen
+   - Start/Stoppen (mit optionalem Kommentar)
    - aktueller Zeit- und Feriensaldo
    - offene Warnungen
 2. **Meine Zeiten**
    - Tages-, Wochen- und Monatsansicht
-   - Zeitblöcke erfassen und bearbeiten
+   - Zeitblöcke einsehen, kommentieren und verkürzen (für reguläre Mitarbeitende) bzw. administrativ korrigieren
    - Tagessummen und Saldi
 3. **Abwesenheiten**
    - Antrag erfassen (als Entwurf speichern oder direkt einreichen)
@@ -676,13 +714,14 @@ Die UI wird mit HTML, CSS und Vanilla JavaScript umgesetzt. Es wird kein Fronten
    - datenschutzkonforme Anzeige
 6. **Genehmigungen**
    - offene Abwesenheiten
-   - eingereichte Monatsperioden
+   - eingereichte Monatsperioden mit Detailprüfung (Öffnen des vollständigen Monatsreports in einer Inspektionsansicht mit direkter Genehmigungs-/Ablehnungsaktion)
 7. **Reports**
    - Zeitraum und Mitarbeiter/Team auswählen
    - Soll-/Ist-Vergleich
    - CSV-Export
    - PDF-Export für Monatsreport, Ferienübersicht und Abwesenheitsreport
 8. **Administration**
+   - Benutzerverwaltung (für reine Systembenutzer sowie Mitarbeiterbenutzer, Rollenzuweisung und Passwort-Challenge)
    - Mitarbeiter und Teams
    - Registrierungsprozess auslösen
    - Arbeitspläne
@@ -842,6 +881,8 @@ GET    /me/day-summary/{date}
 GET    /me/month-summary/{yearMonth}
 ```
 
+- `PUT /me/work-entries/{id}`: Aktualisieren einer offenen/nicht eingereichten Buchung durch den Mitarbeiter (auf das Verkürzen der Endzeit und Anpassen des Kommentars beschränkt).
+
 #### Abwesenheiten
 
 ```text
@@ -882,6 +923,7 @@ GET    /presence?teamId={id}&locationId={id}
 GET    /me/periods/{yearMonth}
 POST   /me/periods/{yearMonth}/submit
 GET    /approvals/periods
+GET    /approvals/periods/{id}
 POST   /approvals/periods/{id}/approve
 POST   /approvals/periods/{id}/reject
 POST   /periods/{id}/reopen
@@ -892,9 +934,13 @@ GET    /reports/absences
 GET    /reports/absences.pdf
 ```
 
+- `GET /approvals/periods/{id}`: Vollständige Monatsreport-Detailansicht der eingereichten Periode (Tage, Buchungen, Unterbrüche, Abwesenheiten, Saldi) für Genehmiger vor der Entscheidung.
+
 #### Administration
 
 ```text
+GET/POST/PUT /users
+POST         /users/{id}/register
 GET/POST/PUT /employees
 POST         /employees/{id}/register
 GET/POST/PUT /teams
@@ -904,6 +950,9 @@ GET/POST/PUT /absence-types
 GET/POST/PUT /employees/{id}/schedule-versions
 GET/POST/PUT /configuration
 ```
+
+- `GET/POST/PUT /users`: Verwaltung reiner Strolch-Benutzer (Systemadmins, HR-Manager, Revisoren) unabhängig von Mitarbeiterprofilen.
+- `POST /users/{id}/register`: Passwort-Challenge (`Usage.SET_PASSWORD`) für reine Benutzer auslösen.
 
 Die endgültigen DTOs und HTTP-Statuscodes werden pro Endpunkt in der OpenAPI-Spezifikation festgelegt.
 
@@ -1226,8 +1275,9 @@ Chronivaro verwendet die in der Zielumgebung etablierte Authentifizierung. Die R
 
 Mindestens folgende Berechtigungen werden getrennt geprüft:
 
-- eigene Zeiten lesen und ändern
-- fremde Zeiten lesen und ändern
+- eigene Zeiten lesen und verkürzen / kommentieren
+- fremde Zeiten lesen und administrativ korrigieren / erfassen / löschen
+- Benutzer und Rollen administrieren (auch für reine Systembenutzer)
 - Abwesenheiten genehmigen
 - Perioden genehmigen und wieder öffnen
 - Ferienkonten korrigieren
@@ -1367,25 +1417,26 @@ Mindestens folgende Fälle:
 
 Das MVP gilt als fachlich abnahmebereit, wenn:
 
-1. ein Administrator Mitarbeiter, Team, Standort, Feiertagskalender und Arbeitsplan erfassen kann;
-2. ein Mitarbeiter mehrere Arbeitsblöcke pro Tag erfassen kann, wobei Unterbrüche aus den zeitlichen Lücken abgeleitet werden;
-3. die Anwendung Überlappungen und mehrere laufende Buchungen verhindert;
-4. Soll- und Istzeit für Tag und Monat korrekt berechnet werden;
-5. Pensumsänderungen alte Monatsauswertungen nicht verfälschen;
-6. Ferien, Krankheit und mindestens eine weitere Abwesenheitsart erfasst werden können;
-7. Halb- und Ganztage anhand des individuellen Arbeitsplans berechnet werden;
-8. ein Vorgesetzter Abwesenheiten genehmigen und ablehnen kann;
-9. Ferienbezüge nachvollziehbare Kontobuchungen erzeugen;
-10. die Statusseite binär und aktuell anzeigt, ob ein Mitarbeiter arbeitet oder nicht arbeitet;
-11. nicht berechtigte Benutzer keine sensiblen Abwesenheitsgründe sehen;
-12. Monatsperioden eingereicht, genehmigt, abgelehnt, gesperrt und begründet wieder geöffnet werden können;
-13. ein Monatsreport Sollzeit, Istzeit, Abwesenheiten und Saldo zeigt;
-14. der Monatsreport als CSV exportiert werden kann;
-15. alle fachlich relevanten Änderungen im Audit-Log nachvollziehbar sind;
-16. die definierten Kernberechnungen automatisiert getestet sind;
-17. Chronivaro ohne externen Servlet-Container als eigenständige Java-Anwendung gestartet werden kann;
-18. Embedded Jetty sowohl das Frontend als auch die bestehende REST API bereitstellt;
-19. Start, HTTP-Betrieb und kontrollierter Shutdown der Embedded-Jetty-Laufzeit automatisiert getestet sind.
+1. ein Administrator Mitarbeiter, Benutzer (auch reine Systembenutzer), Teams, Standorte, Feiertagskalender und Arbeitspläne verwalten kann;
+2. ein Mitarbeiter mehrere Arbeitsblöcke pro Tag erfassen und kommentieren kann, wobei Unterbrüche aus den zeitlichen Lücken abgeleitet werden;
+3. Mitarbeiter ihre offenen Zeitbuchungen bei Bedarf verkürzen (Endzeit vorverlegen) und kommentieren können, während unzulässige Verlängerungen verhindert werden;
+4. die Anwendung Überlappungen und mehrere laufende Buchungen verhindert;
+5. Soll- und Istzeit für Tag und Monat (inklusive Eintritten/Austritten unter dem Monat) korrekt berechnet werden;
+6. Pensumsänderungen alte Monatsauswertungen nicht verfälschen;
+7. die vorkonfigurierten Standard-Abwesenheitsarten verfügbar sind und weitere Abwesenheitsarten erfasst werden können;
+8. Halb- und Ganztage anhand des individuellen Arbeitsplans berechnet werden;
+9. ein Vorgesetzter Abwesenheiten genehmigen und ablehnen kann;
+10. Ferienbezüge nachvollziehbare Kontobuchungen erzeugen und der Ferienanspruch automatisiert gebucht wird;
+11. die Statusseite binär und aktuell anzeigt, ob ein Mitarbeiter arbeitet oder nicht arbeitet;
+12. nicht berechtigte Benutzer keine sensiblen Abwesenheitsgründe sehen;
+13. Monatsperioden eingereicht, vom Vorgesetzten über eine detaillierte Inspektionsansicht geprüft, genehmigt, abgelehnt, gesperrt und begründet wieder geöffnet werden können;
+14. ein Monatsreport Sollzeit, Istzeit, Abwesenheiten und Saldo zeigt;
+15. der Monatsreport als CSV exportiert werden kann;
+16. alle fachlich relevanten Änderungen im Audit-Log nachvollziehbar sind;
+17. die definierten Kernberechnungen automatisiert getestet sind;
+18. Chronivaro ohne externen Servlet-Container als eigenständige Java-Anwendung gestartet werden kann;
+19. Embedded Jetty sowohl das Frontend als auch die bestehende REST API bereitstellt;
+20. Start, HTTP-Betrieb und kontrollierter Shutdown der Embedded-Jetty-Laufzeit automatisiert getestet sind.
 
 ### 20.1 Akzeptanzkriterien für die aktuellen Erweiterungen
 
