@@ -123,6 +123,7 @@
             <Allow>ch.atexxi.chronivaro.core.service.SubmitPeriodService</Allow>
             <Allow>ch.atexxi.chronivaro.core.service.CalculateVacationEntitlementService</Allow>
             <Allow>ch.atexxi.chronivaro.core.service.GetVacationAccountSummaryService</Allow>
+            <Allow>ch.atexxi.chronivaro.core.service.PresenceService</Allow>
             <Allow>ch.atexxi.chronivaro.core.service.AbsenceReportService</Allow>
         </Privilege>
         <Privilege name="li.strolch.search.StrolchSearch" policy="DefaultPrivilege">

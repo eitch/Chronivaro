@@ -5,6 +5,7 @@ import ch.atexxi.chronivaro.core.model.ScheduleHelper;
 import ch.atexxi.chronivaro.core.model.WorkEntryHelper;
 import li.strolch.model.Resource;
 import li.strolch.persistence.api.StrolchTransaction;
+import li.strolch.privilege.base.AccessDeniedException;
 import li.strolch.privilege.model.Restrictable;
 import li.strolch.privilege.model.SimpleRestrictable;
 import li.strolch.service.api.AbstractService;
@@ -62,10 +63,29 @@ public class PresenceService extends AbstractService<PresenceService.PresenceArg
 	@Override
 	protected PresenceResult internalDoService(PresenceArgument arg) throws Exception {
 		try (StrolchTransaction tx = openArgOrUserTx(arg)) {
+			boolean isPrivileged = tx.getPrivilegeContext().hasRole(ROLE_HR)
+					|| tx.getPrivilegeContext().hasRole(ROLE_ADMIN)
+					|| tx.getPrivilegeContext().hasRole(ROLE_ADMINISTRATOR)
+					|| tx.getPrivilegeContext().hasRole(ROLE_SUPERVISOR);
+
+			String effectiveTeamId = arg.teamId;
+			if (!isPrivileged) {
+				Optional<Resource> callerEmp = ChronivaroModelHelper.findEmployeeByUser(tx, tx.getCertificate().getUserId());
+				if (callerEmp.isEmpty() || !callerEmp.get().hasRelation(PARAM_PRIMARY_TEAM)) {
+					throw new AccessDeniedException("Access denied: No employee profile or team found for current user.");
+				}
+				String callerTeamId = callerEmp.get().getRelationId(PARAM_PRIMARY_TEAM);
+				if (arg.teamId != null && !arg.teamId.isEmpty() && !arg.teamId.equals(callerTeamId)) {
+					throw new AccessDeniedException("Access denied: You can only view presence for your own team.");
+				}
+				effectiveTeamId = callerTeamId;
+			}
+
+			String finalTeamId = effectiveTeamId;
 			List<PresenceInfo> presenceInfos = tx
 					.streamResources(TYPE_EMPLOYEE)
-					.filter(e -> arg.teamId == null || e.getRelationId(PARAM_PRIMARY_TEAM).equals(arg.teamId))
-					.filter(e -> arg.locationId == null || e.getRelationId(PARAM_LOCATION).equals(arg.locationId))
+					.filter(e -> finalTeamId == null || (e.hasRelation(PARAM_PRIMARY_TEAM) && e.getRelationId(PARAM_PRIMARY_TEAM).equals(finalTeamId)))
+					.filter(e -> arg.locationId == null || (e.hasRelation(PARAM_LOCATION) && e.getRelationId(PARAM_LOCATION).equals(arg.locationId)))
 					.filter(e -> e.getBoolean(PARAM_ACTIVE))
 					.map(e -> {
 						Optional<Resource> activeEntry = WorkEntryHelper.findActiveWorkEntry(tx, e.getId());
