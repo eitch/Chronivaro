@@ -232,7 +232,7 @@ public class WebLocalizationUiTest {
 		assertTrue("EmployeesView.js must exist", file.exists());
 		String content = Files.readString(file.toPath());
 
-		assertTrue("EmployeesView must import I18n", content.contains("import I18n from '../utils/I18n.js'"));
+		assertTrue("EmployeesView must import I18n", content.contains("import I18n from '../i18n/I18n.js'"));
 		assertTrue("EmployeesView must localize title", content.contains("I18n.t('employees.title')"));
 		assertTrue("EmployeesView must localize add button", content.contains("I18n.t('employees.addEmployee')"));
 		assertTrue("EmployeesView must localize headers", content.contains("I18n.t('employees.username')"));
@@ -245,7 +245,7 @@ public class WebLocalizationUiTest {
 		assertTrue("TeamsView.js must exist", file.exists());
 		String content = Files.readString(file.toPath());
 
-		assertTrue("TeamsView must import I18n", content.contains("import I18n from '../utils/I18n.js'"));
+		assertTrue("TeamsView must import I18n", content.contains("import I18n from '../i18n/I18n.js'"));
 		assertTrue("TeamsView must localize title", content.contains("I18n.t('teams.title')"));
 		assertTrue("TeamsView must localize add button", content.contains("I18n.t('teams.addTeam')"));
 		assertTrue("TeamsView must localize name header", content.contains("I18n.t('common.name')"));
@@ -258,7 +258,7 @@ public class WebLocalizationUiTest {
 		assertTrue("LocationsView.js must exist", file.exists());
 		String content = Files.readString(file.toPath());
 
-		assertTrue("LocationsView must import I18n", content.contains("import I18n from '../utils/I18n.js'"));
+		assertTrue("LocationsView must import I18n", content.contains("import I18n from '../i18n/I18n.js'"));
 		assertTrue("LocationsView must localize title", content.contains("I18n.t('locations.title')"));
 		assertTrue("LocationsView must localize add button", content.contains("I18n.t('locations.addLocation')"));
 		assertTrue("LocationsView must localize timezone header", content.contains("I18n.t('locations.timeZone')"));
@@ -271,7 +271,7 @@ public class WebLocalizationUiTest {
 		assertTrue("AbsenceTypesView.js must exist", file.exists());
 		String content = Files.readString(file.toPath());
 
-		assertTrue("AbsenceTypesView must import I18n", content.contains("import I18n from '../utils/I18n.js'"));
+		assertTrue("AbsenceTypesView must import I18n", content.contains("import I18n from '../i18n/I18n.js'"));
 		assertTrue("AbsenceTypesView must localize title", content.contains("I18n.t('absenceTypes.title')"));
 		assertTrue("AbsenceTypesView must localize add button", content.contains("I18n.t('absenceTypes.addAbsenceType')"));
 		assertTrue("AbsenceTypesView must localize code header", content.contains("I18n.t('absenceTypes.code')"));
@@ -285,7 +285,7 @@ public class WebLocalizationUiTest {
 		assertTrue("HolidayCalendarsView.js must exist", file.exists());
 		String content = Files.readString(file.toPath());
 
-		assertTrue("HolidayCalendarsView must import I18n", content.contains("import I18n from '../utils/I18n.js'"));
+		assertTrue("HolidayCalendarsView must import I18n", content.contains("import I18n from '../i18n/I18n.js'"));
 		assertTrue("HolidayCalendarsView must localize title", content.contains("I18n.t('holidayCalendars.title')"));
 		assertTrue("HolidayCalendarsView must localize add calendar button", content.contains("I18n.t('holidayCalendars.addCalendar')"));
 		assertTrue("HolidayCalendarsView must localize select prompt", content.contains("I18n.t('holidayCalendars.selectCalendarPrompt')"));
@@ -299,7 +299,7 @@ public class WebLocalizationUiTest {
 		assertTrue("ScheduleTemplatesView.js must exist", file.exists());
 		String content = Files.readString(file.toPath());
 
-		assertTrue("ScheduleTemplatesView must import I18n", content.contains("import I18n from '../utils/I18n.js'"));
+		assertTrue("ScheduleTemplatesView must import I18n", content.contains("import I18n from '../i18n/I18n.js'"));
 		assertTrue("ScheduleTemplatesView must localize title", content.contains("I18n.t('scheduleTemplates.title')"));
 		assertTrue("ScheduleTemplatesView must localize add button", content.contains("I18n.t('scheduleTemplates.addTemplate')"));
 		assertTrue("ScheduleTemplatesView must localize days", content.contains("I18n.t('scheduleTemplates.mon')"));
@@ -312,7 +312,7 @@ public class WebLocalizationUiTest {
 		assertTrue("SchedulesView.js must exist", file.exists());
 		String content = Files.readString(file.toPath());
 
-		assertTrue("SchedulesView must import I18n", content.contains("import I18n from '../utils/I18n.js'"));
+		assertTrue("SchedulesView must import I18n", content.contains("import I18n from '../i18n/I18n.js'"));
 		assertTrue("SchedulesView must localize back button", content.contains("I18n.t('schedules.backToEmployees')"));
 		assertTrue("SchedulesView must localize dynamic title", content.contains("I18n.t('schedules.schedulesFor'"));
 		assertTrue("SchedulesView must localize add button", content.contains("I18n.t('schedules.addSchedule')"));
@@ -325,7 +325,7 @@ public class WebLocalizationUiTest {
 		assertTrue("ConfigurationView.js must exist", file.exists());
 		String content = Files.readString(file.toPath());
 
-		assertTrue("ConfigurationView must import I18n", content.contains("import I18n from '../utils/I18n.js'"));
+		assertTrue("ConfigurationView must import I18n", content.contains("import I18n from '../i18n/I18n.js'"));
 		assertTrue("ConfigurationView must localize title", content.contains("I18n.t('configuration.title')"));
 		assertTrue("ConfigurationView must localize subtitle", content.contains("I18n.t('configuration.subtitle')"));
 		assertTrue("ConfigurationView must localize global settings", content.contains("I18n.t('configuration.globalSettings')"));

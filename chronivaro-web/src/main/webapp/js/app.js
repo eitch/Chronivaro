@@ -51,6 +51,46 @@ class ChronivaroApp {
             });
         }
 
+        const navToggle = document.getElementById('nav-toggle');
+        if (navToggle) {
+            navToggle.addEventListener('click', () => {
+                const expanded = navToggle.getAttribute('aria-expanded') === 'true';
+                navToggle.setAttribute('aria-expanded', String(!expanded));
+                this.nav.classList.toggle('is-open', !expanded);
+            });
+        }
+
+        if (this.nav) {
+            this.nav.addEventListener('click', (e) => {
+                const link = e.target.closest('.nav-link');
+                if (link) {
+                    this.closeNavGroups();
+                    if (navToggle && this.nav.classList.contains('is-open')) {
+                        navToggle.setAttribute('aria-expanded', 'false');
+                        this.nav.classList.remove('is-open');
+                    }
+                }
+            });
+
+            this.nav.querySelectorAll('.nav-group').forEach(group => {
+                group.addEventListener('toggle', () => {
+                    if (group.open) {
+                        this.nav.querySelectorAll('.nav-group').forEach(other => {
+                            if (other !== group && other.open) {
+                                other.removeAttribute('open');
+                            }
+                        });
+                    }
+                });
+            });
+        }
+
+        document.addEventListener('click', (e) => {
+            if (this.nav && !e.target.closest('.nav-group')) {
+                this.closeNavGroups();
+            }
+        });
+
         I18n.onLanguageChange((lang) => {
             this.onLanguageChanged(lang);
         });
@@ -153,18 +193,32 @@ class ChronivaroApp {
 		}
 
 		this.updateNavigation();
+		this.closeNavGroups();
+		const navToggle = document.getElementById('nav-toggle');
+		if (navToggle) {
+			navToggle.setAttribute('aria-expanded', 'false');
+			this.nav.classList.remove('is-open');
+		}
 		this.showView(hash);
+	}
+
+	closeNavGroups() {
+		if (this.nav) {
+			this.nav.querySelectorAll('.nav-group[open]').forEach(group => {
+				group.removeAttribute('open');
+			});
+		}
 	}
 
 	updateNavigation() {
 		const roles = AuthApi.getRoles();
-		this.nav.querySelectorAll('li[data-roles]').forEach(li => {
+        this.nav.querySelectorAll('li[data-roles]').forEach(li => {
 			const requiredRoles = li.getAttribute('data-roles').split(',');
 			const hasRole = requiredRoles.some(role => roles.includes(role));
-			li.style.display = hasRole ? 'block' : 'none';
+            li.hidden = !hasRole;
 		});
 
-		this.nav.querySelectorAll('[data-i18n]').forEach(el => {
+        this.nav.querySelectorAll('[data-i18n]').forEach(el => {
 			const key = el.getAttribute('data-i18n');
 			if (key) {
 				el.textContent = I18n.t(key);
@@ -209,6 +263,9 @@ class ChronivaroApp {
             if (link.getAttribute('href') === `#${viewName}`) {
                 link.classList.add('active');
             }
+        });
+        this.nav.querySelectorAll('.nav-group').forEach(group => {
+            group.hidden = !group.querySelector('li:not([hidden])');
         });
 
         let view;

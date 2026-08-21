@@ -8,6 +8,10 @@
     "success": "Vorgang erfolgreich"
   },
   "nav": {
+    "menu": "Menü",
+    "workspace": "Arbeitsbereich",
+    "peoplePlanning": "Personen & Planung",
+    "administration": "Administration",
     "dashboard": "Dashboard",
     "presence": "Anwesenheit",
     "myTimes": "Meine Zeiten",

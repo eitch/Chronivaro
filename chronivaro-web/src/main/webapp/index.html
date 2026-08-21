@@ -13,26 +13,42 @@
         <img id="header-logo" class="header-logo" alt="Logo" style="display: none;">
         <h1 id="header-title">Chronivaro</h1>
     </div>
-    <nav>
-        <ul>
-            <li data-roles="Employee"><a href="#dashboard" class="nav-link" data-i18n="nav.dashboard">Dashboard</a></li>
-            <li data-roles="Supervisor,HR,Administrator"><a href="#presence" class="nav-link" data-i18n="nav.presence">Presence</a></li>
-            <li data-roles="Employee"><a href="#my-times" class="nav-link" data-i18n="nav.myTimes">My Times</a></li>
-            <li data-roles="Employee"><a href="#my-absences" class="nav-link" data-i18n="nav.myAbsences">Absences & Vacation</a></li>
-            <li data-roles="Employee"><a href="#my-periods" class="nav-link" data-i18n="nav.myPeriods">Monthly Closing</a></li>
-            <li data-roles="Supervisor,HR,Administrator"><a href="#approvals" class="nav-link" data-i18n="nav.approvals">Approvals</a></li>
-            <li data-roles="Employee,Supervisor,HR,Administrator"><a href="#reports" class="nav-link" data-i18n="nav.reports">Reports</a></li>
-            <li data-roles="Administrator,HR"><a href="#employees" class="nav-link" data-i18n="nav.employees">Employees</a></li>
-            <li data-roles="Administrator"><a href="#teams" class="nav-link" data-i18n="nav.teams">Teams</a></li>
-            <li data-roles="Administrator"><a href="#locations" class="nav-link" data-i18n="nav.locations">Locations</a></li>
-            <li data-roles="Administrator"><a href="#absence-types" class="nav-link" data-i18n="nav.absenceTypes">Absence Types</a></li>
-            <li data-roles="Administrator"><a href="#holiday-calendars" class="nav-link" data-i18n="nav.holidayCalendars">Holiday Calendars</a></li>
-            <li data-roles="Administrator"><a href="#schedule-templates" class="nav-link" data-i18n="nav.scheduleTemplates">Schedule Templates</a></li>
-            <li data-roles="Administrator"><a href="#configuration" class="nav-link" data-i18n="nav.configuration">Configuration</a></li>
-            <li><a href="#" id="logout-link" class="nav-link" data-i18n="nav.logout">Logout</a></li>
-        </ul>
+    <nav aria-label="Main navigation">
+        <button id="nav-toggle" class="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-groups">☰ <span data-i18n="nav.menu">Menu</span></button>
+        <div id="nav-groups" class="nav-groups">
+            <a href="#dashboard" class="nav-link nav-dashboard" data-roles="Employee" data-i18n="nav.dashboard">Dashboard</a>
+            <details class="nav-group">
+                <summary data-i18n="nav.workspace">Workspace</summary>
+                <ul>
+                    <li data-roles="Supervisor,HR,Administrator"><a href="#presence" class="nav-link" data-i18n="nav.presence">Presence</a></li>
+                    <li data-roles="Employee"><a href="#my-times" class="nav-link" data-i18n="nav.myTimes">My Times</a></li>
+                    <li data-roles="Employee"><a href="#my-absences" class="nav-link" data-i18n="nav.myAbsences">Absences & Vacation</a></li>
+                    <li data-roles="Employee"><a href="#my-periods" class="nav-link" data-i18n="nav.myPeriods">Monthly Closing</a></li>
+                    <li data-roles="Supervisor,HR,Administrator"><a href="#approvals" class="nav-link" data-i18n="nav.approvals">Approvals</a></li>
+                    <li data-roles="Employee,Supervisor,HR,Administrator"><a href="#reports" class="nav-link" data-i18n="nav.reports">Reports</a></li>
+                </ul>
+            </details>
+            <details class="nav-group">
+                <summary data-i18n="nav.peoplePlanning">People & Planning</summary>
+                <ul>
+                    <li data-roles="Administrator,HR"><a href="#employees" class="nav-link" data-i18n="nav.employees">Employees</a></li>
+                    <li data-roles="Administrator"><a href="#teams" class="nav-link" data-i18n="nav.teams">Teams</a></li>
+                    <li data-roles="Administrator"><a href="#locations" class="nav-link" data-i18n="nav.locations">Locations</a></li>
+                    <li data-roles="Administrator"><a href="#schedule-templates" class="nav-link" data-i18n="nav.scheduleTemplates">Schedule Templates</a></li>
+                </ul>
+            </details>
+            <details class="nav-group">
+                <summary data-i18n="nav.administration">Administration</summary>
+                <ul>
+                    <li data-roles="Administrator"><a href="#absence-types" class="nav-link" data-i18n="nav.absenceTypes">Absence Types</a></li>
+                    <li data-roles="Administrator"><a href="#holiday-calendars" class="nav-link" data-i18n="nav.holidayCalendars">Holiday Calendars</a></li>
+                    <li data-roles="Administrator"><a href="#configuration" class="nav-link" data-i18n="nav.configuration">Configuration</a></li>
+                </ul>
+            </details>
+        </div>
     </nav>
     <div class="header-actions" id="header-actions">
+        <a href="#" id="logout-link" class="nav-link nav-logout" data-i18n="nav.logout">Logout</a>
         <select id="header-language-select" class="language-select" aria-label="Language">
             <option value="de">DE</option>
             <option value="en">EN</option>

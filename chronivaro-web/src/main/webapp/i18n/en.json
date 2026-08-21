@@ -8,6 +8,10 @@
     "success": "Operation successful"
   },
   "nav": {
+    "menu": "Menu",
+    "workspace": "Workspace",
+    "peoplePlanning": "People & Planning",
+    "administration": "Administration",
     "dashboard": "Dashboard",
     "presence": "Presence",
     "myTimes": "My Times",
