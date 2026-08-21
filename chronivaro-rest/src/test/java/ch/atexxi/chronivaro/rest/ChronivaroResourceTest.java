@@ -23,6 +23,18 @@ public class ChronivaroResourceTest extends AbstractChronivaroRestfulTest {
 	}
 
 	@Test
+	public void employeeShouldGetPresence() {
+		String authToken = authenticate("employee", "admin");
+		try (Response response = target()
+				.path("chronivaro/v1/presence")
+				.request(MediaType.APPLICATION_JSON)
+				.header("Authorization", authToken)
+				.get()) {
+			assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+		}
+	}
+
+	@Test
 	public void shouldAddAndCorrectWorkEntry() {
 		String authToken = authenticate();
 

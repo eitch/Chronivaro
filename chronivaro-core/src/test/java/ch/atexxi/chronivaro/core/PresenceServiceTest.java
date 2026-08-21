@@ -193,4 +193,67 @@ public class PresenceServiceTest {
 		assertEquals("VACATION", info3Public.absenceTypeCode());
 		assertEquals("Vacation", info3Public.absenceTypeName());
 	}
+
+	@Test
+	public void shouldAllowEmployeeToViewOwnTeamPresence() {
+		String teamId = "team-emp";
+		String otherTeamId = "team-other";
+
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
+			Resource team = tx.getResourceTemplate(TYPE_TEAM, true);
+			team.setId(teamId);
+			team.setName("Employee Team");
+			tx.add(team);
+
+			Resource otherTeam = tx.getResourceTemplate(TYPE_TEAM, true);
+			otherTeam.setId(otherTeamId);
+			otherTeam.setName("Other Team");
+			tx.add(otherTeam);
+
+			// Link employee user to an employee resource on team-emp
+			Resource empUserRes = createEmployee(tx, "emp-caller", "Emp Caller", ZonedDateTime.now());
+			empUserRes = tx.readLock(empUserRes);
+			empUserRes.setString(PARAM_USER_ID, "employee");
+			empUserRes.setRelation(PARAM_PRIMARY_TEAM, team);
+			tx.update(empUserRes);
+
+			// Teammate
+			Resource teammate = createEmployee(tx, "emp-teammate", "Emp Teammate", ZonedDateTime.now());
+			teammate = tx.readLock(teammate);
+			teammate.setRelation(PARAM_PRIMARY_TEAM, team);
+			tx.update(teammate);
+
+			// Other team employee
+			Resource otherEmp = createEmployee(tx, "emp-other", "Emp Other", ZonedDateTime.now());
+			otherEmp = tx.readLock(otherEmp);
+			otherEmp.setRelation(PARAM_PRIMARY_TEAM, otherTeam);
+			tx.update(otherEmp);
+
+			tx.commitOnClose();
+		}
+
+		Certificate empCert = runtimeMock.login("employee", "admin");
+		ServiceHandler serviceHandler = runtimeMock.getServiceHandler();
+
+		// 1. Employee calling without teamId -> automatically scopes to own team
+		PresenceService.PresenceArgument argNoTeam = new PresenceService.PresenceArgument();
+		PresenceService.PresenceResult resultNoTeam = serviceHandler.doService(empCert, new PresenceService(), argNoTeam);
+		assertTrue(resultNoTeam.isOk());
+		assertEquals(2, resultNoTeam.presenceInfos.size());
+		assertTrue(resultNoTeam.presenceInfos.stream().allMatch(i -> i.teamId().equals(teamId)));
+
+		// 2. Employee calling with own teamId -> succeeds
+		PresenceService.PresenceArgument argOwnTeam = new PresenceService.PresenceArgument();
+		argOwnTeam.teamId = teamId;
+		PresenceService.PresenceResult resultOwnTeam = serviceHandler.doService(empCert, new PresenceService(), argOwnTeam);
+		assertTrue(resultOwnTeam.isOk());
+		assertEquals(2, resultOwnTeam.presenceInfos.size());
+
+		// 3. Employee calling with different teamId -> fails with Access Denied
+		PresenceService.PresenceArgument argOtherTeam = new PresenceService.PresenceArgument();
+		argOtherTeam.teamId = otherTeamId;
+		PresenceService.PresenceResult resultOtherTeam = serviceHandler.doService(empCert, new PresenceService(), argOtherTeam);
+		assertFalse(resultOtherTeam.isOk());
+		assertTrue(resultOtherTeam.getMessage().contains("Access denied"));
+	}
 }

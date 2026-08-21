@@ -2,6 +2,7 @@ package ch.atexxi.chronivaro.core;
 
 import ch.atexxi.chronivaro.core.model.WorkingLocation;
 import ch.atexxi.chronivaro.core.service.ApproveAbsenceService;
+import ch.atexxi.chronivaro.core.service.PresenceService;
 import ch.atexxi.chronivaro.core.service.StartTimerService;
 import li.strolch.privilege.model.Certificate;
 import li.strolch.service.StringArgument;
@@ -69,6 +70,18 @@ public class RolePermissionTest {
 		ServiceResult result = serviceHandler.doService(supervisorCert, service, arg);
 		if (!result.isOk()) {
 			assertFalse("Should not be Access Denied: " + result.getMessage(),
+					result.getMessage().contains("may not perform service"));
+		}
+	}
+
+	@Test
+	public void employeeShouldBeAbleToViewPresence() {
+		ServiceHandler serviceHandler = runtimeMock.getServiceHandler();
+		PresenceService service = new PresenceService();
+		PresenceService.PresenceArgument arg = new PresenceService.PresenceArgument();
+		ServiceResult result = serviceHandler.doService(employeeCert, service, arg);
+		if (!result.isOk()) {
+			assertFalse("Should not be Access Denied for service execution: " + result.getMessage(),
 					result.getMessage().contains("may not perform service"));
 		}
 	}
