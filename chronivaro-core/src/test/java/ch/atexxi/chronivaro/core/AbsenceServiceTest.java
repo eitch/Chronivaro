@@ -431,6 +431,48 @@ public class AbsenceServiceTest {
 	}
 
 	@Test
+	public void shouldCancelDraftAbsenceWithoutVacationRefund() {
+		String employeeId = "emp-draft-cancel-test";
+		String absenceTypeCode = "VACATION";
+
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
+			createEmployee(tx, employeeId, "Draft Cancel Emp");
+			tx.commitOnClose();
+		}
+
+		ServiceHandler serviceHandler = runtimeMock.getServiceHandler();
+
+		// 1. Create draft vacation absence
+		RequestAbsenceService.RequestAbsenceArgument reqArg = new RequestAbsenceService.RequestAbsenceArgument();
+		reqArg.employeeId = employeeId;
+		reqArg.absenceTypeCode = absenceTypeCode;
+		reqArg.start = ZonedDateTime.parse("2026-06-01T00:00:00+02:00[Europe/Zurich]");
+		reqArg.end = ZonedDateTime.parse("2026-06-02T23:59:59+02:00[Europe/Zurich]");
+		reqArg.durationType = DURATION_FULL_DAY;
+		reqArg.asDraft = true;
+		li.strolch.service.StringResult createDraftResult = serviceHandler.doService(certificate,
+				new RequestAbsenceService(), reqArg);
+		assertTrue(createDraftResult.getMessage(), createDraftResult.isOk());
+		String absenceId = createDraftResult.getValue();
+
+		// 2. Cancel draft absence
+		ServiceResult cancelResult = serviceHandler.doService(certificate, new CancelAbsenceService(),
+				new StringArgument(absenceId));
+		assertTrue(cancelResult.getMessage(), cancelResult.isOk());
+
+		// 3. Verify state is CANCELLED and no vacation journal entries exist for this absence
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
+			Resource absence = tx.getResourceBy(TYPE_ABSENCE, absenceId, true);
+			assertEquals(STATE_CANCELLED, absence.getString(PARAM_STATE));
+
+			boolean hasVacationRefund = tx.streamResources(TYPE_VACATION_ACCOUNT_ENTRY)
+					.anyMatch(entry -> entry.hasRelation(PARAM_ABSENCE) &&
+							absenceId.equals(entry.getRelationId(PARAM_ABSENCE)));
+			assertFalse("Cancelling draft must not create vacation refund journal entry", hasVacationRefund);
+		}
+	}
+
+	@Test
 	public void shouldPreventOverlappingAbsences() {
 		String employeeId = "emp-overlap-test";
 

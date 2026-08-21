@@ -200,6 +200,7 @@ export default class MyAbsencesView {
         const absencesTbody = container.querySelector('#absences-tbody');
 
         const modal = container.querySelector('#absence-modal');
+        const modalTitle = container.querySelector('#absence-modal-title');
         const requestAbsenceBtn = container.querySelector('#request-absence-btn');
         const saveDraftBtn = container.querySelector('#save-draft-btn');
         const closeAbsenceModalBtn = container.querySelector('#close-absence-modal-btn');
@@ -214,6 +215,8 @@ export default class MyAbsencesView {
         const modalHours = container.querySelector('#modal-hours');
         const modalComment = container.querySelector('#modal-comment');
         const modalCommentLabel = container.querySelector('#modal-comment-label');
+
+        let currentEditingAbsence = null;
 
         // Populate Years (current year - 2 to current year + 2)
         const currentYear = new Date().getFullYear();
@@ -369,6 +372,7 @@ export default class MyAbsencesView {
                     let actionsHtml = '--';
                     if (absenceState === 'DRAFT') {
                         actionsHtml = `
+                            <button class="action-btn edit-btn" data-id="${absence.id}" data-version="${absence.version || 0}">${I18n.t('common.edit')}</button>
                             <button class="action-btn submit-btn" data-id="${absence.id}" data-version="${absence.version || 0}">${I18n.t('common.submit')}</button>
                             <button class="action-btn cancel-btn" data-id="${absence.id}" data-version="${absence.version || 0}">${I18n.t('common.cancel')}</button>
                         `;
@@ -385,6 +389,40 @@ export default class MyAbsencesView {
                         <td>${notes || '--'}</td>
                         <td>${actionsHtml}</td>
                     `;
+
+                    // Attach edit action
+                    const editBtn = row.querySelector('.edit-btn');
+                    if (editBtn) {
+                        editBtn.addEventListener('click', () => {
+                            currentEditingAbsence = absence;
+                            if (modalTitle) modalTitle.textContent = I18n.t('absences.editAbsence');
+
+                            const typeCode = absence.absenceTypeCode || absence.absenceTypeId;
+                            if (typeCode) {
+                                modalAbsenceType.value = typeCode;
+                            }
+                            updateModalFields();
+
+                            const startStr = (absence.start || absence.startDate || '').substring(0, 10);
+                            const endStr = (absence.end || absence.endDate || '').substring(0, 10);
+                            modalStartDate.value = startStr || new Date().toISOString().split('T')[0];
+                            modalEndDate.value = endStr || modalStartDate.value;
+
+                            const duration = absence.durationType || 'FULL_DAY';
+                            modalDurationType.value = duration;
+                            onDurationTypeChange();
+
+                            if (duration === 'HALF_DAY') {
+                                modalHalfDayPart.value = absence.dayPart || absence.halfDayPart || 'MORNING';
+                            } else if (duration === 'HOURS') {
+                                const hoursVal = absence.hours || (absence.minutes ? (absence.minutes / 60) : (absence.durationMinutes ? absence.durationMinutes / 60 : ''));
+                                modalHours.value = hoursVal;
+                            }
+
+                            modalComment.value = absence.comment || '';
+                            modal.style.display = 'flex';
+                        });
+                    }
 
                     // Attach submit action
                     const submitBtn = row.querySelector('.submit-btn');
@@ -503,6 +541,8 @@ export default class MyAbsencesView {
         refreshAbsencesBtn.addEventListener('click', loadAbsences);
 
         requestAbsenceBtn.addEventListener('click', () => {
+            currentEditingAbsence = null;
+            if (modalTitle) modalTitle.textContent = I18n.t('absences.requestAbsence');
             const todayStr = new Date().toISOString().split('T')[0];
             modalStartDate.value = todayStr;
             modalEndDate.value = todayStr;
@@ -537,15 +577,22 @@ export default class MyAbsencesView {
                 start: startDate + 'T00:00:00.000+01:00',
                 end: endDate + 'T23:59:59.999+01:00',
                 durationType: modalDurationType.value,
+                dayPart: modalDurationType.value === 'HALF_DAY' ? modalHalfDayPart.value : undefined,
                 halfDayPart: modalDurationType.value === 'HALF_DAY' ? modalHalfDayPart.value : undefined,
                 hours: modalDurationType.value === 'HOURS' ? parseFloat(modalHours.value) : undefined,
+                minutes: modalDurationType.value === 'HOURS' ? Math.round(parseFloat(modalHours.value) * 60) : undefined,
                 comment: modalComment.value.trim() || undefined,
                 state: 'DRAFT'
             };
 
             try {
-                await AbsenceApi.requestAbsence(payload);
+                if (currentEditingAbsence) {
+                    await AbsenceApi.updateAbsence(currentEditingAbsence.id, payload, currentEditingAbsence.version);
+                } else {
+                    await AbsenceApi.requestAbsence(payload);
+                }
                 modal.style.display = 'none';
+                currentEditingAbsence = null;
                 await NotificationDialog.info(I18n.t('absences.draftSaved'));
                 await loadAbsences();
                 await loadVacationAccount();
@@ -556,6 +603,7 @@ export default class MyAbsencesView {
 
         closeAbsenceModalBtn.addEventListener('click', () => {
             modal.style.display = 'none';
+            currentEditingAbsence = null;
         });
 
         absenceForm.addEventListener('submit', async (e) => {
@@ -578,14 +626,23 @@ export default class MyAbsencesView {
                 start: startDate + 'T00:00:00.000+01:00',
                 end: endDate + 'T23:59:59.999+01:00',
                 durationType: modalDurationType.value,
+                dayPart: modalDurationType.value === 'HALF_DAY' ? modalHalfDayPart.value : undefined,
                 halfDayPart: modalDurationType.value === 'HALF_DAY' ? modalHalfDayPart.value : undefined,
                 hours: modalDurationType.value === 'HOURS' ? parseFloat(modalHours.value) : undefined,
+                minutes: modalDurationType.value === 'HOURS' ? Math.round(parseFloat(modalHours.value) * 60) : undefined,
                 comment: modalComment.value.trim() || undefined
             };
 
             try {
-                await AbsenceApi.requestAbsence(payload);
+                if (currentEditingAbsence) {
+                    const updateRes = await AbsenceApi.updateAbsence(currentEditingAbsence.id, payload, currentEditingAbsence.version);
+                    const updatedVersion = (updateRes && updateRes.version !== undefined) ? updateRes.version : currentEditingAbsence.version;
+                    await AbsenceApi.submitAbsence(currentEditingAbsence.id, updatedVersion);
+                } else {
+                    await AbsenceApi.requestAbsence(payload);
+                }
                 modal.style.display = 'none';
+                currentEditingAbsence = null;
                 await NotificationDialog.info(I18n.t('absences.requestSubmitted'));
                 await loadAbsences();
                 await loadVacationAccount();

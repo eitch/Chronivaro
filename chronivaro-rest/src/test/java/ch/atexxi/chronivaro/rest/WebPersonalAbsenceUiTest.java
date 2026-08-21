@@ -61,6 +61,15 @@ public class WebPersonalAbsenceUiTest extends AbstractChronivaroRestfulTest {
 		assertTrue("View must contain absence table", viewContent.contains("absences-table"));
 		assertTrue("View must contain absence request modal", viewContent.contains("absence-modal"));
 		assertTrue("View must resolve absence state for status badge and label", viewContent.contains("absence.state || absence.status") || viewContent.contains("absence.state"));
+		assertTrue("View must contain edit-btn for draft absences", viewContent.contains("edit-btn"));
+		assertTrue("View must handle updateAbsence for draft editing", viewContent.contains("updateAbsence"));
+
+		File styleCss = new File(webDir, "assets/css/style.css");
+		assertTrue("style.css must exist", styleCss.exists());
+		String styleContent = Files.readString(styleCss.toPath());
+		assertTrue("style.css must contain .action-btn.submit-btn styling", styleContent.contains(".action-btn.submit-btn"));
+		assertTrue("style.css must contain .action-btn.edit-btn styling", styleContent.contains(".action-btn.edit-btn"));
+		assertTrue("style.css must contain .action-btn.cancel-btn styling", styleContent.contains(".action-btn.cancel-btn"));
 	}
 
 	@Test
@@ -141,6 +150,121 @@ public class WebPersonalAbsenceUiTest extends AbstractChronivaroRestfulTest {
 				.header("Authorization", authToken)
 				.header("If-Match", etag)
 				.post(Entity.json("{\"reason\":\"Cancelled due to changed plans\"}"))) {
+			assertEquals(Response.Status.OK.getStatusCode(), cancelRes.getStatus());
+			AbsenceDto cancelledDto = ChronivaroRestHelper.createGson().fromJson(
+					cancelRes.readEntity(String.class), AbsenceDto.class);
+			assertEquals("CANCELLED", cancelledDto.state());
+		}
+	}
+
+	@Test
+	public void shouldExecutePersonalDraftAbsenceWorkflow() {
+		String authToken = authenticate("admin", "admin");
+
+		// 1. Create a draft absence
+		ZonedDateTime start = ZonedDateTime.parse("2025-08-10T00:00:00.000+01:00");
+		ZonedDateTime end = ZonedDateTime.parse("2025-08-11T23:59:59.999+01:00");
+		AbsenceDto draftAbsence = new AbsenceDto(
+				null,
+				null,
+				"VACATION",
+				start,
+				end,
+				"FULL_DAY",
+				null,
+				null,
+				"Draft vacation",
+				"DRAFT"
+		);
+
+		String draftEtag;
+		AbsenceDto draftDto;
+		try (Response createRes = target().path("/chronivaro/v1/me/absences")
+				.request(MediaType.APPLICATION_JSON)
+				.header("Authorization", authToken)
+				.post(Entity.json(ChronivaroRestHelper.createGson().toJson(draftAbsence)))) {
+			assertEquals(Response.Status.OK.getStatusCode(), createRes.getStatus());
+			draftDto = ChronivaroRestHelper.createGson().fromJson(
+					createRes.readEntity(String.class), AbsenceDto.class);
+			assertNotNull("Created draft ID must not be null", draftDto.id());
+			assertEquals("DRAFT", draftDto.state());
+			draftEtag = createRes.getHeaderString("ETag");
+			assertNotNull("Created draft must have ETag", draftEtag);
+		}
+
+		// 2. Update the draft absence
+		AbsenceDto updateDto = new AbsenceDto(
+				draftDto.id(),
+				null,
+				"VACATION",
+				start,
+				end,
+				"FULL_DAY",
+				null,
+				null,
+				"Updated draft comment",
+				"DRAFT"
+		);
+
+		String updatedEtag;
+		try (Response updateRes = target().path("/chronivaro/v1/me/absences/" + draftDto.id())
+				.request(MediaType.APPLICATION_JSON)
+				.header("Authorization", authToken)
+				.header("If-Match", draftEtag)
+				.put(Entity.json(ChronivaroRestHelper.createGson().toJson(updateDto)))) {
+			assertEquals(Response.Status.OK.getStatusCode(), updateRes.getStatus());
+			AbsenceDto updatedResult = ChronivaroRestHelper.createGson().fromJson(
+					updateRes.readEntity(String.class), AbsenceDto.class);
+			assertEquals("Updated draft comment", updatedResult.comment());
+			assertEquals("DRAFT", updatedResult.state());
+			updatedEtag = updateRes.getHeaderString("ETag");
+			assertNotNull("Updated response must have ETag", updatedEtag);
+		}
+
+		// 3. Submit the updated draft absence
+		try (Response submitRes = target().path("/chronivaro/v1/me/absences/" + draftDto.id() + "/submit")
+				.request(MediaType.APPLICATION_JSON)
+				.header("Authorization", authToken)
+				.header("If-Match", updatedEtag)
+				.post(Entity.json("{}"))) {
+			assertEquals(Response.Status.OK.getStatusCode(), submitRes.getStatus());
+			AbsenceDto submittedDto = ChronivaroRestHelper.createGson().fromJson(
+					submitRes.readEntity(String.class), AbsenceDto.class);
+			assertEquals("SUBMITTED", submittedDto.state());
+		}
+
+		// 4. Create another draft and cancel it directly
+		AbsenceDto secondDraft = new AbsenceDto(
+				null,
+				null,
+				"VACATION",
+				ZonedDateTime.parse("2025-08-15T00:00:00.000+01:00"),
+				ZonedDateTime.parse("2025-08-16T23:59:59.999+01:00"),
+				"FULL_DAY",
+				null,
+				null,
+				"To be cancelled draft",
+				"DRAFT"
+		);
+
+		String secondDraftEtag;
+		AbsenceDto secondDraftDto;
+		try (Response createRes = target().path("/chronivaro/v1/me/absences")
+				.request(MediaType.APPLICATION_JSON)
+				.header("Authorization", authToken)
+				.post(Entity.json(ChronivaroRestHelper.createGson().toJson(secondDraft)))) {
+			assertEquals(Response.Status.OK.getStatusCode(), createRes.getStatus());
+			secondDraftDto = ChronivaroRestHelper.createGson().fromJson(
+					createRes.readEntity(String.class), AbsenceDto.class);
+			assertEquals("DRAFT", secondDraftDto.state());
+			secondDraftEtag = createRes.getHeaderString("ETag");
+		}
+
+		try (Response cancelRes = target().path("/chronivaro/v1/me/absences/" + secondDraftDto.id() + "/cancel")
+				.request(MediaType.APPLICATION_JSON)
+				.header("Authorization", authToken)
+				.header("If-Match", secondDraftEtag)
+				.post(Entity.json("{\"reason\":\"Discard draft\"}"))) {
 			assertEquals(Response.Status.OK.getStatusCode(), cancelRes.getStatus());
 			AbsenceDto cancelledDto = ChronivaroRestHelper.createGson().fromJson(
 					cancelRes.readEntity(String.class), AbsenceDto.class);

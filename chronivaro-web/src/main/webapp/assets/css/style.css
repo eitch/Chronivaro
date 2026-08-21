@@ -1275,11 +1275,40 @@ tr:has(.dropdown.show) {
     cursor: pointer;
     border: 1px solid var(--border-color);
     background-color: #ffffff;
+    color: var(--text-color);
     transition: all 0.2s;
 }
 
+.action-btn:hover {
+    background-color: #f1f5f9;
+}
+
+.action-btn.submit-btn {
+    color: #4338ca;
+    border-color: #c7d2fe;
+    background-color: #eef2ff;
+}
+
+.action-btn.submit-btn:hover {
+    background-color: #e0e7ff;
+    border-color: #6366f1;
+    color: #3730a3;
+}
+
+.action-btn.edit-btn {
+    color: #334155;
+    border-color: #cbd5e1;
+    background-color: #f8fafc;
+}
+
+.action-btn.edit-btn:hover {
+    background-color: #f1f5f9;
+    border-color: #94a3b8;
+    color: #1e293b;
+}
+
 .action-btn.cancel-btn {
-    color: var(--error-color);
+    color: #b91c1c;
     border-color: #fca5a5;
     background-color: #fff5f5;
 }
@@ -1287,6 +1316,7 @@ tr:has(.dropdown.show) {
 .action-btn.cancel-btn:hover {
     background-color: #fee2e2;
     border-color: #ef4444;
+    color: #991b1b;
 }
 
 .text-success {

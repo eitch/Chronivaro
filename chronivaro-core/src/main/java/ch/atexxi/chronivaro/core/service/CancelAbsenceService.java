@@ -31,7 +31,7 @@ public class CancelAbsenceService extends AbstractService<StringArgument, Servic
 			tx.readLock(absence);
 
 			String currentState = absence.getString(PARAM_STATE);
-			if (!currentState.equals(STATE_SUBMITTED) && !currentState.equals(STATE_APPROVED)) {
+			if (!currentState.equals(STATE_DRAFT) && !currentState.equals(STATE_SUBMITTED) && !currentState.equals(STATE_APPROVED)) {
 				throw new IllegalStateException("Absence in state " + currentState + " cannot be cancelled!");
 			}
 
