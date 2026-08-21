@@ -2,6 +2,7 @@ import ReportApi from '../api/ReportApi.js';
 import AbsenceTypeApi from '../api/AbsenceTypeApi.js';
 import TeamApi from '../api/TeamApi.js';
 import AuthApi from '../api/AuthApi.js';
+import NotificationDialog from '../utils/NotificationDialog.js';
 import Format from '../utils/Format.js';
 import I18n from '../i18n/I18n.js';
 
@@ -386,7 +387,7 @@ export default class ReportsView {
 			if (this.activeReportType === 'day') {
 				const date = this.filters.day.date;
 				if (!date) {
-					alert(I18n.t('reports.pleaseSpecifyDate'));
+					NotificationDialog.error(I18n.t('reports.pleaseSpecifyDate'));
 					return;
 				}
 				await ReportApi.downloadDayReportCsv(date, this.filters.day.employeeId);
@@ -394,7 +395,7 @@ export default class ReportsView {
 			} else if (this.activeReportType === 'month') {
 				const ym = this.filters.month.yearMonth;
 				if (!ym) {
-					alert(I18n.t('reports.pleaseSpecifyMonth'));
+					NotificationDialog.error(I18n.t('reports.pleaseSpecifyMonth'));
 					return;
 				}
 				await ReportApi.downloadMonthReportCsv(ym, this.filters.month.employeeId);
@@ -406,7 +407,7 @@ export default class ReportsView {
 				const teamId = this.filters.team.teamId;
 				const ym = this.filters.team.yearMonth;
 				if (!teamId || !ym) {
-					alert(I18n.t('reports.pleaseSpecifyTeam'));
+					NotificationDialog.error(I18n.t('reports.pleaseSpecifyTeam'));
 					return;
 				}
 				await ReportApi.downloadTeamReportCsv(teamId, ym);
@@ -416,7 +417,7 @@ export default class ReportsView {
 			}
 		} catch (err) {
 			console.error('Error exporting CSV', err);
-			alert(`${I18n.t('app.error')}: ${err.message}`);
+			NotificationDialog.error(`${I18n.t('app.error')}: ${err.message}`);
 		}
 	}
 
@@ -426,7 +427,7 @@ export default class ReportsView {
 			if (this.activeReportType === 'month') {
 				const ym = this.filters.month.yearMonth;
 				if (!ym) {
-					alert(I18n.t('reports.pleaseSpecifyMonth'));
+					NotificationDialog.error(I18n.t('reports.pleaseSpecifyMonth'));
 					return;
 				}
 				await ReportApi.downloadMonthReportPdf(ym, this.filters.month.employeeId, lang);
@@ -439,11 +440,11 @@ export default class ReportsView {
 				await ReportApi.downloadAbsenceReportPdf(params);
 
 			} else {
-				alert(I18n.t('reports.pdfOnlySupportedForMonthVacationAbsence') || 'PDF export is available for Month, Vacation, and Absence reports.');
+				NotificationDialog.error(I18n.t('reports.pdfOnlySupportedForMonthVacationAbsence') || 'PDF export is available for Month, Vacation, and Absence reports.');
 			}
 		} catch (err) {
 			console.error('Error exporting PDF', err);
-			alert(`${I18n.t('app.error')}: ${err.message}`);
+			NotificationDialog.error(`${I18n.t('app.error')}: ${err.message}`);
 		}
 	}
 

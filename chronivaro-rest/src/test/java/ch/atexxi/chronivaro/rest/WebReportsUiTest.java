@@ -326,6 +326,8 @@ public class WebReportsUiTest extends AbstractChronivaroRestfulTest {
 		assertTrue("ReportApi must use the absence status query parameter", reportApiContent.contains("status="));
 
 		assertTrue("ReportsView must use the AbsenceTypeApi public method", reportsViewContent.contains("AbsenceTypeApi.getAll()"));
+		assertTrue("ReportsView must import NotificationDialog", reportsViewContent.contains("NotificationDialog"));
+		assertFalse("ReportsView must not use alert()", reportsViewContent.contains("alert("));
 
 		File styleCss = new File(webDir, "assets/css/style.css");
 		assertTrue("style.css must exist", styleCss.exists());
