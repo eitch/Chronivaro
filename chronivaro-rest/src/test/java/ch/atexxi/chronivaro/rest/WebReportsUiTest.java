@@ -306,6 +306,11 @@ public class WebReportsUiTest extends AbstractChronivaroRestfulTest {
 		assertTrue("ReportApi must define getAbsenceReport", reportApiContent.contains("getAbsenceReport"));
 		assertTrue("ReportApi must define downloadAbsenceReportCsv", reportApiContent.contains("downloadAbsenceReportCsv"));
 		assertTrue("ReportApi must define downloadAbsenceReportPdf", reportApiContent.contains("downloadAbsenceReportPdf"));
+		assertTrue("ReportApi must address the REST servlet mapping", reportApiContent.contains("rest/chronivaro/v1/reports/day"));
+		assertTrue("ReportApi must use the absence type query parameter", reportApiContent.contains("absenceTypeCode="));
+		assertTrue("ReportApi must use the absence status query parameter", reportApiContent.contains("status="));
+
+		assertTrue("ReportsView must use the AbsenceTypeApi public method", reportsViewContent.contains("AbsenceTypeApi.getAll()"));
 
 		File styleCss = new File(webDir, "assets/css/style.css");
 		assertTrue("style.css must exist", styleCss.exists());

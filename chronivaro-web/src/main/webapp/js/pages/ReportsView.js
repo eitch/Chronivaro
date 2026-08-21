@@ -141,7 +141,7 @@ export default class ReportsView {
 
 	async loadReferenceData() {
 		try {
-			const types = await AbsenceTypeApi.getAbsenceTypes();
+			const types = await AbsenceTypeApi.getAll();
 			this.absenceTypes = types || [];
 			if (this.activeReportType === 'absences') {
 				this.populateAbsenceTypeSelect();
