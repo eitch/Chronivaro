@@ -281,6 +281,12 @@ public class ApprovalsQueueTest extends AbstractChronivaroRestfulTest {
 			assertTrue("Supervisor queue must contain Team 1 employee absence", ids.contains(abs1Id));
 			assertTrue("Supervisor queue must contain Team 1 supervisor absence", ids.contains(abs3Id));
 			assertFalse("Supervisor queue must NOT contain Team 2 marketing absence", ids.contains(abs2Id));
+
+			AbsenceDto abs1Dto = list.stream().filter(a -> a.id().equals(abs1Id)).findFirst().orElse(null);
+			assertNotNull(abs1Dto);
+			assertEquals("Employee User", abs1Dto.employeeName());
+			assertEquals("Engineering", abs1Dto.teamName());
+			assertEquals("Vacation", abs1Dto.absenceTypeName());
 		}
 
 		// 5. Supervisor filters with teamId=team-2 (not supervised) -> returns empty
@@ -422,6 +428,11 @@ public class ApprovalsQueueTest extends AbstractChronivaroRestfulTest {
 			assertTrue("Supervisor sees Team 1 employee period", empIds.contains("employee_emp"));
 			assertTrue("Supervisor sees Team 1 supervisor period", empIds.contains("supervisor_emp"));
 			assertFalse("Supervisor must NOT see Team 2 marketing period", empIds.contains("marketing_emp"));
+
+			PeriodStatusDto emp1Period = list.stream().filter(p -> p.employeeId().equals("employee_emp")).findFirst().orElse(null);
+			assertNotNull(emp1Period);
+			assertEquals("Employee User", emp1Period.employeeName());
+			assertEquals("Engineering", emp1Period.teamName());
 		}
 
 		String emp1PeriodId = PeriodHelper.getPeriodId("employee_emp", YearMonth.of(2026, 3));

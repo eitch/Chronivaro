@@ -56,7 +56,7 @@ public class AdminPeriodResource {
 		if (result.isOk()) {
 			try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
 				Resource period = tx.getResourceBy(TYPE_TIME_PERIOD, id, true);
-				return ConcurrencyHelper.toResponseWithETag(period, ChronivaroMapper.periodToDto(period));
+				return ConcurrencyHelper.toResponseWithETag(period, ChronivaroMapper.periodToDto(tx, period));
 			}
 		}
 		return ChronivaroRestHelper.toResponse(result);
@@ -93,7 +93,7 @@ public class AdminPeriodResource {
 		if (result.isOk()) {
 			try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
 				Resource period = tx.getResourceBy(TYPE_TIME_PERIOD, id, true);
-				return ConcurrencyHelper.toResponseWithETag(period, ChronivaroMapper.periodToDto(period));
+				return ConcurrencyHelper.toResponseWithETag(period, ChronivaroMapper.periodToDto(tx, period));
 			}
 		}
 		return ChronivaroRestHelper.toResponse(result);
@@ -130,7 +130,7 @@ public class AdminPeriodResource {
 		if (result.isOk()) {
 			try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
 				Resource period = tx.getResourceBy(TYPE_TIME_PERIOD, id, true);
-				return ConcurrencyHelper.toResponseWithETag(period, ChronivaroMapper.periodToDto(period));
+				return ConcurrencyHelper.toResponseWithETag(period, ChronivaroMapper.periodToDto(tx, period));
 			}
 		}
 		return ChronivaroRestHelper.toResponse(result);
@@ -162,7 +162,7 @@ public class AdminPeriodResource {
 		if (result.isOk()) {
 			try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
 				Resource period = tx.getResourceBy(TYPE_TIME_PERIOD, id, true);
-				return ConcurrencyHelper.toResponseWithETag(period, ChronivaroMapper.periodToDto(period));
+				return ConcurrencyHelper.toResponseWithETag(period, ChronivaroMapper.periodToDto(tx, period));
 			}
 		}
 		return ChronivaroRestHelper.toResponse(result);

@@ -283,7 +283,7 @@ public class ChronivaroResource {
 					.toList();
 			return PaginationHelper.toPagedOrListResponse(absences, offset, limit, a -> {
 				Resource type = tx.getResourceByRelation(a, PARAM_ABSENCE_TYPE, true);
-				return ChronivaroMapper.toDto(a, type.getString(PARAM_CODE));
+				return ChronivaroMapper.toDto(tx, a, type);
 			});
 		}
 	}
@@ -304,7 +304,7 @@ public class ChronivaroResource {
 						"Access denied to absence " + id);
 			}
 			Resource type = tx.getResourceByRelation(absence, PARAM_ABSENCE_TYPE, true);
-			return ConcurrencyHelper.toResponseWithETag(absence, ChronivaroMapper.toDto(absence, type.getString(PARAM_CODE)));
+			return ConcurrencyHelper.toResponseWithETag(absence, ChronivaroMapper.toDto(tx, absence, type));
 		}
 	}
 
@@ -342,7 +342,7 @@ public class ChronivaroResource {
 			try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
 				Resource absence = tx.getResourceBy(TYPE_ABSENCE, result.getValue(), true);
 				Resource type = tx.getResourceByRelation(absence, PARAM_ABSENCE_TYPE, true);
-				return ConcurrencyHelper.toResponseWithETag(absence, ChronivaroMapper.toDto(absence, type.getString(PARAM_CODE)));
+				return ConcurrencyHelper.toResponseWithETag(absence, ChronivaroMapper.toDto(tx, absence, type));
 			}
 		}
 		return ChronivaroRestHelper.toResponse(result);
@@ -385,7 +385,7 @@ public class ChronivaroResource {
 			try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
 				Resource absence = tx.getResourceBy(TYPE_ABSENCE, id, true);
 				Resource type = tx.getResourceByRelation(absence, PARAM_ABSENCE_TYPE, true);
-				return ConcurrencyHelper.toResponseWithETag(absence, ChronivaroMapper.toDto(absence, type.getString(PARAM_CODE)));
+				return ConcurrencyHelper.toResponseWithETag(absence, ChronivaroMapper.toDto(tx, absence, type));
 			}
 		}
 		return ChronivaroRestHelper.toResponse(result);
@@ -415,7 +415,7 @@ public class ChronivaroResource {
 			try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
 				Resource absence = tx.getResourceBy(TYPE_ABSENCE, id, true);
 				Resource type = tx.getResourceByRelation(absence, PARAM_ABSENCE_TYPE, true);
-				return ConcurrencyHelper.toResponseWithETag(absence, ChronivaroMapper.toDto(absence, type.getString(PARAM_CODE)));
+				return ConcurrencyHelper.toResponseWithETag(absence, ChronivaroMapper.toDto(tx, absence, type));
 			}
 		}
 		return ChronivaroRestHelper.toResponse(result);
@@ -423,6 +423,7 @@ public class ChronivaroResource {
 
 	@POST
 	@Path("me/absences/{id}/cancel")
+	@Consumes({MediaType.APPLICATION_JSON, MediaType.WILDCARD})
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response cancelAbsence(@Context HttpServletRequest request, @PathParam("id") String id) {
 		Certificate cert = (Certificate) request.getAttribute(STROLCH_CERTIFICATE);
@@ -445,7 +446,7 @@ public class ChronivaroResource {
 			try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
 				Resource absence = tx.getResourceBy(TYPE_ABSENCE, id, true);
 				Resource type = tx.getResourceByRelation(absence, PARAM_ABSENCE_TYPE, true);
-				return ConcurrencyHelper.toResponseWithETag(absence, ChronivaroMapper.toDto(absence, type.getString(PARAM_CODE)));
+				return ConcurrencyHelper.toResponseWithETag(absence, ChronivaroMapper.toDto(tx, absence, type));
 			}
 		}
 		return ChronivaroRestHelper.toResponse(result);
@@ -521,10 +522,9 @@ public class ChronivaroResource {
 
 			Optional<Resource> period = PeriodHelper.findPeriod(tx, employee.get().getId(), ym);
 			if (period.isPresent()) {
-				return ConcurrencyHelper.toResponseWithETag(period.get(), ChronivaroMapper.periodToDto(period.get()));
+				return ConcurrencyHelper.toResponseWithETag(period.get(), ChronivaroMapper.periodToDto(tx, period.get()));
 			}
-			ch.atexxi.chronivaro.rest.dto.PeriodStatusDto openDto = new ch.atexxi.chronivaro.rest.dto.PeriodStatusDto(
-					employee.get().getId(), ym.toString(), STATE_OPEN, null, null, null);
+			ch.atexxi.chronivaro.rest.dto.PeriodStatusDto openDto = ChronivaroMapper.createOpenPeriodDto(tx, employee.get().getId(), ym);
 			return Response.ok(ChronivaroRestHelper.createGson().toJson(openDto), MediaType.APPLICATION_JSON).build();
 		}
 	}
@@ -569,7 +569,7 @@ public class ChronivaroResource {
 		if (result.isOk()) {
 			try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
 				Resource period = PeriodHelper.getPeriod(tx, employeeId, ym, true);
-				return ConcurrencyHelper.toResponseWithETag(period, ChronivaroMapper.periodToDto(period));
+				return ConcurrencyHelper.toResponseWithETag(period, ChronivaroMapper.periodToDto(tx, period));
 			}
 		}
 		return ChronivaroRestHelper.toResponse(result);
@@ -590,7 +590,7 @@ public class ChronivaroResource {
 		if (result.isOk()) {
 			try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
 				Resource period = tx.getResourceBy(TYPE_TIME_PERIOD, id, true);
-				return ConcurrencyHelper.toResponseWithETag(period, ChronivaroMapper.periodToDto(period));
+				return ConcurrencyHelper.toResponseWithETag(period, ChronivaroMapper.periodToDto(tx, period));
 			}
 		}
 		return ChronivaroRestHelper.toResponse(result);

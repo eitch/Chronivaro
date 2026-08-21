@@ -58,7 +58,7 @@ public class ApprovalsResource {
 			List<String> supervisedEmployeeIds = ChronivaroModelHelper.getSupervisedEmployeeIds(tx, cert);
 			if (supervisedEmployeeIds.isEmpty()) {
 				List<Resource> empty = List.of();
-				return PaginationHelper.toPagedOrListResponse(empty, offset, limit, ChronivaroMapper::periodToDto);
+				return PaginationHelper.toPagedOrListResponse(empty, offset, limit, p -> ChronivaroMapper.periodToDto(tx, p));
 			}
 
 			Set<String> targetEmployeeIds = new HashSet<>(supervisedEmployeeIds);
@@ -74,7 +74,7 @@ public class ApprovalsResource {
 			}
 			if (targetEmployeeIds.isEmpty()) {
 				List<Resource> empty = List.of();
-				return PaginationHelper.toPagedOrListResponse(empty, offset, limit, ChronivaroMapper::periodToDto);
+				return PaginationHelper.toPagedOrListResponse(empty, offset, limit, p -> ChronivaroMapper.periodToDto(tx, p));
 			}
 
 			TimePeriodSearch search = new TimePeriodSearch()
@@ -85,7 +85,7 @@ public class ApprovalsResource {
 			}
 
 			SearchResult<Resource> searchResult = search.search(tx);
-			return PaginationHelper.toPagedOrListResponse(searchResult, offset, limit, ChronivaroMapper::periodToDto);
+			return PaginationHelper.toPagedOrListResponse(searchResult, offset, limit, p -> ChronivaroMapper.periodToDto(tx, p));
 		}
 	}
 
@@ -115,7 +115,7 @@ public class ApprovalsResource {
 		if (result.isOk()) {
 			try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
 				Resource period = tx.getResourceBy(TYPE_TIME_PERIOD, id, true);
-				return ConcurrencyHelper.toResponseWithETag(period, ChronivaroMapper.periodToDto(period));
+				return ConcurrencyHelper.toResponseWithETag(period, ChronivaroMapper.periodToDto(tx, period));
 			}
 		}
 		return ChronivaroRestHelper.toResponse(result);
@@ -152,7 +152,7 @@ public class ApprovalsResource {
 		if (result.isOk()) {
 			try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
 				Resource period = tx.getResourceBy(TYPE_TIME_PERIOD, id, true);
-				return ConcurrencyHelper.toResponseWithETag(period, ChronivaroMapper.periodToDto(period));
+				return ConcurrencyHelper.toResponseWithETag(period, ChronivaroMapper.periodToDto(tx, period));
 			}
 		}
 		return ChronivaroRestHelper.toResponse(result);
@@ -201,7 +201,7 @@ public class ApprovalsResource {
 				List<Resource> empty = List.of();
 				return PaginationHelper.toPagedOrListResponse(empty, offset, limit, absence -> {
 					Resource type = tx.getResourceByRelation(absence, PARAM_ABSENCE_TYPE, true);
-					return ChronivaroMapper.toDto(absence, type.getString(PARAM_CODE));
+					return ChronivaroMapper.toDto(tx, absence, type);
 				});
 			}
 
@@ -220,7 +220,7 @@ public class ApprovalsResource {
 				List<Resource> empty = List.of();
 				return PaginationHelper.toPagedOrListResponse(empty, offset, limit, absence -> {
 					Resource type = tx.getResourceByRelation(absence, PARAM_ABSENCE_TYPE, true);
-					return ChronivaroMapper.toDto(absence, type.getString(PARAM_CODE));
+					return ChronivaroMapper.toDto(tx, absence, type);
 				});
 			}
 
@@ -250,7 +250,7 @@ public class ApprovalsResource {
 
 			return PaginationHelper.toPagedOrListResponse(submittedAbsences, offset, limit, absence -> {
 				Resource type = tx.getResourceByRelation(absence, PARAM_ABSENCE_TYPE, true);
-				return ChronivaroMapper.toDto(absence, type.getString(PARAM_CODE));
+				return ChronivaroMapper.toDto(tx, absence, type);
 			});
 		}
 	}
@@ -272,7 +272,7 @@ public class ApprovalsResource {
 			try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
 				Resource absence = tx.getResourceBy(TYPE_ABSENCE, id, true);
 				Resource type = tx.getResourceByRelation(absence, PARAM_ABSENCE_TYPE, true);
-				return ConcurrencyHelper.toResponseWithETag(absence, ChronivaroMapper.toDto(absence, type.getString(PARAM_CODE)));
+				return ConcurrencyHelper.toResponseWithETag(absence, ChronivaroMapper.toDto(tx, absence, type));
 			}
 		}
 		return ChronivaroRestHelper.toResponse(result);
@@ -310,7 +310,7 @@ public class ApprovalsResource {
 			try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
 				Resource absence = tx.getResourceBy(TYPE_ABSENCE, id, true);
 				Resource type = tx.getResourceByRelation(absence, PARAM_ABSENCE_TYPE, true);
-				return ConcurrencyHelper.toResponseWithETag(absence, ChronivaroMapper.toDto(absence, type.getString(PARAM_CODE)));
+				return ConcurrencyHelper.toResponseWithETag(absence, ChronivaroMapper.toDto(tx, absence, type));
 			}
 		}
 		return ChronivaroRestHelper.toResponse(result);

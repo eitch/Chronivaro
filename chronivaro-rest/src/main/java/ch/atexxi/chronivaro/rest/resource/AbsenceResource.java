@@ -34,7 +34,7 @@ public class AbsenceResource {
 			List<Resource> absences = tx.streamResources(TYPE_ABSENCE).toList();
 			return PaginationHelper.toPagedOrListResponse(absences, offset, limit, a -> {
 				Resource type = tx.getResourceByRelation(a, PARAM_ABSENCE_TYPE, true);
-				return ChronivaroMapper.toDto(a, type.getString(PARAM_CODE));
+				return ChronivaroMapper.toDto(tx, a, type);
 			});
 		}
 	}
@@ -47,7 +47,7 @@ public class AbsenceResource {
 		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
 			Resource absence = tx.getResourceBy(TYPE_ABSENCE, id, true);
 			Resource type = tx.getResourceByRelation(absence, PARAM_ABSENCE_TYPE, true);
-			return ConcurrencyHelper.toResponseWithETag(absence, ChronivaroMapper.toDto(absence, type.getString(PARAM_CODE)));
+			return ConcurrencyHelper.toResponseWithETag(absence, ChronivaroMapper.toDto(tx, absence, type));
 		}
 	}
 
@@ -67,7 +67,7 @@ public class AbsenceResource {
 			try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
 				Resource absence = tx.getResourceBy(TYPE_ABSENCE, id, true);
 				Resource type = tx.getResourceByRelation(absence, PARAM_ABSENCE_TYPE, true);
-				return ConcurrencyHelper.toResponseWithETag(absence, ChronivaroMapper.toDto(absence, type.getString(PARAM_CODE)));
+				return ConcurrencyHelper.toResponseWithETag(absence, ChronivaroMapper.toDto(tx, absence, type));
 			}
 		}
 		return ChronivaroRestHelper.toResponse(result);
@@ -94,7 +94,7 @@ public class AbsenceResource {
 			try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
 				Resource absence = tx.getResourceBy(TYPE_ABSENCE, id, true);
 				Resource type = tx.getResourceByRelation(absence, PARAM_ABSENCE_TYPE, true);
-				return ConcurrencyHelper.toResponseWithETag(absence, ChronivaroMapper.toDto(absence, type.getString(PARAM_CODE)));
+				return ConcurrencyHelper.toResponseWithETag(absence, ChronivaroMapper.toDto(tx, absence, type));
 			}
 		}
 		return ChronivaroRestHelper.toResponse(result);
@@ -102,6 +102,7 @@ public class AbsenceResource {
 
 	@POST
 	@Path("{id}/cancel")
+	@Consumes({MediaType.APPLICATION_JSON, MediaType.WILDCARD})
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response cancelAbsence(@Context HttpServletRequest request, @PathParam("id") String id) {
 		Certificate cert = (Certificate) request.getAttribute(STROLCH_CERTIFICATE);
@@ -116,7 +117,7 @@ public class AbsenceResource {
 			try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
 				Resource absence = tx.getResourceBy(TYPE_ABSENCE, id, true);
 				Resource type = tx.getResourceByRelation(absence, PARAM_ABSENCE_TYPE, true);
-				return ConcurrencyHelper.toResponseWithETag(absence, ChronivaroMapper.toDto(absence, type.getString(PARAM_CODE)));
+				return ConcurrencyHelper.toResponseWithETag(absence, ChronivaroMapper.toDto(tx, absence, type));
 			}
 		}
 		return ChronivaroRestHelper.toResponse(result);

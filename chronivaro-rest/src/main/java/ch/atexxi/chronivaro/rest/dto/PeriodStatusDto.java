@@ -4,6 +4,9 @@ import java.time.ZonedDateTime;
 
 public record PeriodStatusDto(
 		String employeeId,
+		String employeeName,
+		String personalNumber,
+		String teamName,
 		String yearMonth,
 		String status,
 		ZonedDateTime submittedAt,
@@ -22,6 +25,21 @@ public record PeriodStatusDto(
 			ZonedDateTime approvedAt,
 			String approvedBy
 	) {
-		this(employeeId, yearMonth, status, submittedAt, approvedAt, approvedBy, null, null, null, null);
+		this(employeeId, null, null, null, yearMonth, status, submittedAt, approvedAt, approvedBy, null, null, null, null);
+	}
+
+	public PeriodStatusDto(
+			String employeeId,
+			String yearMonth,
+			String status,
+			ZonedDateTime submittedAt,
+			ZonedDateTime approvedAt,
+			String approvedBy,
+			ZonedDateTime rejectedAt,
+			String rejectedBy,
+			String comment,
+			String calculationSnapshot
+	) {
+		this(employeeId, null, null, null, yearMonth, status, submittedAt, approvedAt, approvedBy, rejectedAt, rejectedBy, comment, calculationSnapshot);
 	}
 }

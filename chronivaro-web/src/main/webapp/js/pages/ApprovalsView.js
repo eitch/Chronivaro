@@ -1,5 +1,6 @@
 import ApprovalsApi from '../api/ApprovalsApi.js';
 import AbsenceTypeApi from '../api/AbsenceTypeApi.js';
+import TeamApi from '../api/TeamApi.js';
 import NotificationDialog from '../utils/NotificationDialog.js';
 import Format from '../utils/Format.js';
 import I18n from '../i18n/I18n.js';
@@ -31,6 +32,7 @@ export default class ApprovalsView {
 		};
 
 		this.absenceTypes = [];
+		this.teams = [];
 	}
 
 	async render(params) {
@@ -66,11 +68,13 @@ export default class ApprovalsView {
 				<!-- Absences Filter Bar -->
 				<div class="filter-bar" id="absences-filter-bar">
 					<div class="filter-group">
-						<label for="absence-team-filter">${I18n.t('common.team')} ID:</label>
-						<input type="text" id="absence-team-filter" placeholder="e.g. team-1" value="${this.absenceFilters.teamId}">
+						<label for="absence-team-filter">${I18n.t('common.team')}:</label>
+						<select id="absence-team-filter">
+							<option value="">${I18n.t('common.allTeams')}</option>
+						</select>
 					</div>
 					<div class="filter-group">
-						<label for="absence-emp-filter">${I18n.t('common.employee')} ID:</label>
+						<label for="absence-emp-filter">${I18n.t('common.employee')}:</label>
 						<input type="text" id="absence-emp-filter" placeholder="e.g. employee_emp" value="${this.absenceFilters.employeeId}">
 					</div>
 					<div class="filter-group">
@@ -129,11 +133,13 @@ export default class ApprovalsView {
 				<!-- Periods Filter Bar -->
 				<div class="filter-bar" id="periods-filter-bar">
 					<div class="filter-group">
-						<label for="period-team-filter">${I18n.t('common.team')} ID:</label>
-						<input type="text" id="period-team-filter" placeholder="e.g. team-1" value="${this.periodFilters.teamId}">
+						<label for="period-team-filter">${I18n.t('common.team')}:</label>
+						<select id="period-team-filter">
+							<option value="">${I18n.t('common.allTeams')}</option>
+						</select>
 					</div>
 					<div class="filter-group">
-						<label for="period-emp-filter">${I18n.t('common.employee')} ID:</label>
+						<label for="period-emp-filter">${I18n.t('common.employee')}:</label>
 						<input type="text" id="period-emp-filter" placeholder="e.g. employee_emp" value="${this.periodFilters.employeeId}">
 					</div>
 					<div class="filter-group">
@@ -181,11 +187,31 @@ export default class ApprovalsView {
 	}
 
 	async init(container) {
-		await this.loadAbsenceTypes(container);
+		await Promise.all([this.loadAbsenceTypes(container), this.loadTeams(container)]);
 		if (this.activeTab === 'absences') {
 			await this.loadAbsences(container);
 		} else {
 			await this.loadPeriods(container);
+		}
+	}
+
+	async loadTeams(container) {
+		try {
+			this.teams = await TeamApi.getAll();
+			['#absence-team-filter', '#period-team-filter'].forEach(selId => {
+				const select = container.querySelector(selId);
+				if (select) {
+					select.innerHTML = `<option value="">${I18n.t('common.allTeams')}</option>`;
+					this.teams.forEach(t => {
+						const opt = document.createElement('option');
+						opt.value = t.id;
+						opt.textContent = `${t.name} (${t.id})`;
+						select.appendChild(opt);
+					});
+				}
+			});
+		} catch (e) {
+			console.warn('Could not load teams for filter:', e);
 		}
 	}
 
@@ -360,9 +386,22 @@ export default class ApprovalsView {
 					durationStr = absence.durationType || '';
 				}
 
+				const empDisplayName = absence.employeeName || absence.employeeId;
+				const empSubDetails = [
+					absence.personalNumber ? `#${absence.personalNumber}` : null,
+					absence.teamName || null
+				].filter(Boolean).join(' • ');
+
+				const typeDisplayName = absence.absenceTypeName || absence.absenceTypeCode || 'ABSENCE';
+
 				tr.innerHTML = `
-					<td><strong>${absence.employeeId}</strong></td>
-					<td><span class="status-badge badge-working">${absence.absenceTypeCode || 'ABSENCE'}</span></td>
+					<td>
+						<div class="employee-info-cell">
+							<strong>${empDisplayName}</strong>
+							${empSubDetails ? `<br><small class="text-muted">${empSubDetails}</small>` : ''}
+						</div>
+					</td>
+					<td><span class="status-badge badge-working">${typeDisplayName}</span></td>
 					<td>${dateRangeStr}</td>
 					<td>${durationStr}</td>
 					<td>${absence.comment || `<span class="text-muted">${I18n.t('common.none')}</span>`}</td>
@@ -388,8 +427,10 @@ export default class ApprovalsView {
 	}
 
 	async handleApproveAbsence(absence, container) {
+		const empDisplayName = absence.employeeName || absence.employeeId;
+		const typeDisplayName = absence.absenceTypeName || absence.absenceTypeCode;
 		const confirmed = await NotificationDialog.confirm(
-			I18n.t('approvals.confirmApproveAbsence', { employee: absence.employeeId, type: absence.absenceTypeCode, date: Format.date(absence.start) }),
+			I18n.t('approvals.confirmApproveAbsence', { employee: empDisplayName, type: typeDisplayName, date: Format.date(absence.start) }),
 			I18n.t('approvals.approveAbsenceTitle')
 		);
 		if (!confirmed) return;
@@ -405,8 +446,9 @@ export default class ApprovalsView {
 	}
 
 	async handleRejectAbsence(absence, container) {
+		const empDisplayName = absence.employeeName || absence.employeeId;
 		const reason = await NotificationDialog.prompt(
-			I18n.t('approvals.rejectAbsencePrompt', { employee: absence.employeeId }),
+			I18n.t('approvals.rejectAbsencePrompt', { employee: empDisplayName }),
 			I18n.t('approvals.rejectAbsenceTitle'),
 			`${I18n.t('common.rejectionReason')}...`,
 			'',
@@ -479,8 +521,19 @@ export default class ApprovalsView {
 					}
 				}
 
+				const empDisplayName = period.employeeName || period.employeeId;
+				const empSubDetails = [
+					period.personalNumber ? `#${period.personalNumber}` : null,
+					period.teamName || null
+				].filter(Boolean).join(' • ');
+
 				tr.innerHTML = `
-					<td><strong>${period.employeeId}</strong></td>
+					<td>
+						<div class="employee-info-cell">
+							<strong>${empDisplayName}</strong>
+							${empSubDetails ? `<br><small class="text-muted">${empSubDetails}</small>` : ''}
+						</div>
+					</td>
 					<td><span class="status-badge badge-submitted">${period.yearMonth}</span></td>
 					<td>${Format.dateTime(period.submittedAt)}</td>
 					<td>${period.comment || `<span class="text-muted">${I18n.t('common.none')}</span>`}</td>
@@ -507,8 +560,9 @@ export default class ApprovalsView {
 	}
 
 	async handleApprovePeriod(period, periodId, container) {
+		const empDisplayName = period.employeeName || period.employeeId;
 		const comment = await NotificationDialog.prompt(
-			I18n.t('approvals.approvePeriodPrompt', { employee: period.employeeId, period: period.yearMonth }),
+			I18n.t('approvals.approvePeriodPrompt', { employee: empDisplayName, period: period.yearMonth }),
 			I18n.t('approvals.approvePeriodTitle'),
 			`${I18n.t('common.comment')}...`,
 			'',
@@ -518,7 +572,7 @@ export default class ApprovalsView {
 
 		try {
 			await ApprovalsApi.approvePeriod(periodId, comment || null);
-			await NotificationDialog.info(I18n.t('approvals.periodApprovedSuccess', { employee: period.employeeId, period: period.yearMonth }), I18n.t('common.success'));
+			await NotificationDialog.info(I18n.t('approvals.periodApprovedSuccess', { employee: empDisplayName, period: period.yearMonth }), I18n.t('common.success'));
 			await this.loadPeriods(container);
 		} catch (err) {
 			console.error('Error approving period:', err);
@@ -527,8 +581,9 @@ export default class ApprovalsView {
 	}
 
 	async handleRejectPeriod(period, periodId, container) {
+		const empDisplayName = period.employeeName || period.employeeId;
 		const reason = await NotificationDialog.prompt(
-			I18n.t('approvals.rejectPeriodPrompt', { employee: period.employeeId, period: period.yearMonth }),
+			I18n.t('approvals.rejectPeriodPrompt', { employee: empDisplayName, period: period.yearMonth }),
 			I18n.t('approvals.rejectPeriodTitle'),
 			`${I18n.t('common.rejectionReason')}...`,
 			'',

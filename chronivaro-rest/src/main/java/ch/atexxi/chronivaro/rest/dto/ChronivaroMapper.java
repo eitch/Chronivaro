@@ -2,12 +2,13 @@ package ch.atexxi.chronivaro.rest.dto;
 
 import ch.atexxi.chronivaro.core.model.DaySummary;
 import ch.atexxi.chronivaro.core.model.MonthSummary;
+import ch.atexxi.chronivaro.core.model.WorkingLocation;
 import ch.atexxi.chronivaro.core.service.PresenceService;
 import li.strolch.model.Resource;
 import li.strolch.persistence.api.StrolchTransaction;
-import ch.atexxi.chronivaro.core.model.WorkingLocation;
 
 import java.time.Duration;
+import java.time.YearMonth;
 import java.time.ZonedDateTime;
 import java.util.List;
 
@@ -36,12 +37,54 @@ public class ChronivaroMapper {
 
 		return new WorkEntryDto(workEntry.getId(), workEntry.getRelationId(PARAM_EMPLOYEE), start, end, durationMinutes,
 				workEntry.getString(PARAM_SOURCE), workEntry.getString(PARAM_COMMENT),
-				workEntry.getString(PARAM_CREATED_BY), WorkingLocation.fromValue(workEntry.getString(PARAM_WORKING_LOCATION)));
+				workEntry.getString(PARAM_CREATED_BY),
+				WorkingLocation.fromValue(workEntry.getString(PARAM_WORKING_LOCATION)));
+	}
+
+	public static AbsenceDto toDto(StrolchTransaction tx, Resource absence, Resource type) {
+		String employeeId = absence.getRelationId(PARAM_EMPLOYEE);
+		String employeeName = null;
+		String personalNumber = null;
+		String teamName = null;
+		if (employeeId != null) {
+			Resource employee = tx.getResourceBy(TYPE_EMPLOYEE, employeeId);
+			if (employee != null) {
+				String firstName = employee.hasParameter(PARAM_FIRSTNAME) ? employee.getString(PARAM_FIRSTNAME) : "";
+				String lastName = employee.hasParameter(PARAM_LASTNAME) ? employee.getString(PARAM_LASTNAME) : "";
+				employeeName = (firstName + " " + lastName).trim();
+				if (employeeName.isEmpty())
+					employeeName = employee.getName();
+				if (employee.hasParameter(PARAM_PERSONAL_NUMBER))
+					personalNumber = employee.getString(PARAM_PERSONAL_NUMBER);
+				String teamId = employee.getRelationId(PARAM_PRIMARY_TEAM);
+				if (teamId != null) {
+					Resource team = tx.getResourceBy(TYPE_TEAM, teamId);
+					if (team != null)
+						teamName = team.getName();
+				}
+			}
+		}
+
+		String absenceTypeCode = type != null && type.hasParameter(PARAM_CODE) ? type.getString(PARAM_CODE) : null;
+		String absenceTypeName = type != null && type.hasParameter(PARAM_NAME) ? type.getString(PARAM_NAME) :
+				(type != null ? type.getName() : null);
+
+		return new AbsenceDto(absence.getId(), employeeId, employeeName, personalNumber, teamName, absenceTypeCode,
+				absenceTypeName, absence.getDate(PARAM_START), absence.getDate(PARAM_END),
+				absence.getString(PARAM_DURATION_TYPE),
+				absence.hasParameter(PARAM_DAY_PART) ? absence.getString(PARAM_DAY_PART) : null,
+				absence.hasParameter(PARAM_MINUTES) ? absence.getInteger(PARAM_MINUTES) : null,
+				absence.getString(PARAM_COMMENT), absence.getString(PARAM_STATE));
+	}
+
+	public static AbsenceDto toDto(StrolchTransaction tx, Resource absence) {
+		Resource type = tx.getResourceByRelation(absence, PARAM_ABSENCE_TYPE, false);
+		return toDto(tx, absence, type);
 	}
 
 	public static AbsenceDto toDto(Resource absence, String absenceTypeCode) {
-		return new AbsenceDto(absence.getId(), absence.getRelationId(PARAM_EMPLOYEE), absenceTypeCode,
-				absence.getDate(PARAM_START), absence.getDate(PARAM_END), absence.getString(PARAM_DURATION_TYPE),
+		return new AbsenceDto(absence.getId(), absence.getRelationId(PARAM_EMPLOYEE), null, null, null, absenceTypeCode,
+				null, absence.getDate(PARAM_START), absence.getDate(PARAM_END), absence.getString(PARAM_DURATION_TYPE),
 				absence.hasParameter(PARAM_DAY_PART) ? absence.getString(PARAM_DAY_PART) : null,
 				absence.hasParameter(PARAM_MINUTES) ? absence.getInteger(PARAM_MINUTES) : null,
 				absence.getString(PARAM_COMMENT), absence.getString(PARAM_STATE));
@@ -51,10 +94,10 @@ public class ChronivaroMapper {
 		return new DaySummaryDto(summary.date(), summary.state(), summary.stateLabel(), summary.targetMinutes(),
 				summary.actualMinutes(), summary.holidayMinutes(), summary.absenceMinutes(), summary.isOff(),
 				summary.getBalance(), summary.workingLocation(), summary
-						.workEntries()
-						.stream()
-						.map(e -> new WorkEntryRangeDto(e.id(), e.start(), e.end(), e.durationMinutes()))
-						.toList(), summary
+				.workEntries()
+				.stream()
+				.map(e -> new WorkEntryRangeDto(e.id(), e.start(), e.end(), e.durationMinutes()))
+				.toList(), summary
 				.breaks()
 				.stream()
 				.map(b -> new BreakRangeDto(b.start(), b.end(), b.durationMinutes()))
@@ -62,22 +105,13 @@ public class ChronivaroMapper {
 	}
 
 	public static MonthSummaryDto toDto(MonthSummary summary) {
-		return new MonthSummaryDto(
-				summary.employeeId(),
-				summary.yearMonth(),
-				summary.totalTargetMinutes(),
-				summary.totalActualMinutes(),
-				summary.paidAbsenceMinutes(),
-				summary.unpaidAbsenceMinutes(),
-				summary.vacationMinutes(),
-				summary.totalHolidayMinutes(),
-				summary.totalAbsenceMinutes(),
-				summary.initialBalanceMinutes(),
-				summary.getPeriodBalance(),
-				summary.manualCorrectionsMinutes(),
+		return new MonthSummaryDto(summary.employeeId(), summary.yearMonth(), summary.totalTargetMinutes(),
+				summary.totalActualMinutes(), summary.paidAbsenceMinutes(), summary.unpaidAbsenceMinutes(),
+				summary.vacationMinutes(), summary.totalHolidayMinutes(), summary.totalAbsenceMinutes(),
+				summary.initialBalanceMinutes(), summary.getPeriodBalance(), summary.manualCorrectionsMinutes(),
 				summary.getEndBalance(),
-				summary.daySummaries() != null ? summary.daySummaries().stream().map(ChronivaroMapper::toDto).toList() : List.of()
-		);
+				summary.daySummaries() != null ? summary.daySummaries().stream().map(ChronivaroMapper::toDto).toList() :
+						List.of());
 	}
 
 	public static TeamDto teamToDto(Resource team) {
@@ -178,39 +212,113 @@ public class ChronivaroMapper {
 				details != null ? details : "");
 	}
 
+	public static PeriodStatusDto periodToDto(StrolchTransaction tx, Resource period) {
+		String employeeId = period.getRelationId(PARAM_EMPLOYEE);
+		String employeeName = null;
+		String personalNumber = null;
+		String teamName = null;
+		if (employeeId != null) {
+			Resource employee = tx.getResourceBy(TYPE_EMPLOYEE, employeeId);
+			if (employee != null) {
+				String firstName = employee.hasParameter(PARAM_FIRSTNAME) ? employee.getString(PARAM_FIRSTNAME) : "";
+				String lastName = employee.hasParameter(PARAM_LASTNAME) ? employee.getString(PARAM_LASTNAME) : "";
+				employeeName = (firstName + " " + lastName).trim();
+				if (employeeName.isEmpty())
+					employeeName = employee.getName();
+				if (employee.hasParameter(PARAM_PERSONAL_NUMBER))
+					personalNumber = employee.getString(PARAM_PERSONAL_NUMBER);
+				String teamId = employee.getRelationId(PARAM_PRIMARY_TEAM);
+				if (teamId != null) {
+					Resource team = tx.getResourceBy(TYPE_TEAM, teamId);
+					if (team != null)
+						teamName = team.getName();
+				}
+			}
+		}
+
+		ZonedDateTime submittedAt =
+				period.hasParameter(PARAM_SUBMITTED_AT) && period.getDate(PARAM_SUBMITTED_AT).getYear() > 1970 ?
+						period.getDate(PARAM_SUBMITTED_AT) : null;
+		ZonedDateTime approvedAt =
+				period.hasParameter(PARAM_APPROVED_AT) && period.getDate(PARAM_APPROVED_AT).getYear() > 1970 ?
+						period.getDate(PARAM_APPROVED_AT) : null;
+		String approvedBy = period.hasParameter(PARAM_APPROVED_BY) && !period.getString(PARAM_APPROVED_BY).isEmpty() ?
+				period.getString(PARAM_APPROVED_BY) : null;
+		ZonedDateTime rejectedAt =
+				period.hasParameter(PARAM_REJECTED_AT) && period.getDate(PARAM_REJECTED_AT).getYear() > 1970 ?
+						period.getDate(PARAM_REJECTED_AT) : null;
+		String rejectedBy = period.hasParameter(PARAM_REJECTED_BY) && !period.getString(PARAM_REJECTED_BY).isEmpty() ?
+				period.getString(PARAM_REJECTED_BY) : null;
+		String comment = period.hasParameter(PARAM_COMMENT) && !period.getString(PARAM_COMMENT).isEmpty() ?
+				period.getString(PARAM_COMMENT) : null;
+		String calculationSnapshot = period.hasParameter(PARAM_CALCULATION_SNAPSHOT) && !period
+				.getString(PARAM_CALCULATION_SNAPSHOT)
+				.isEmpty() ? period.getString(PARAM_CALCULATION_SNAPSHOT) : null;
+		return new PeriodStatusDto(employeeId, employeeName, personalNumber, teamName,
+				period.getString(PARAM_YEAR_MONTH), period.getString(PARAM_STATE), submittedAt, approvedAt, approvedBy,
+				rejectedAt, rejectedBy, comment, calculationSnapshot);
+	}
+
 	public static PeriodStatusDto periodToDto(Resource period) {
-		ZonedDateTime submittedAt = period.hasParameter(PARAM_SUBMITTED_AT)
-				&& period.getDate(PARAM_SUBMITTED_AT).getYear() > 1970
-				? period.getDate(PARAM_SUBMITTED_AT) : null;
-		ZonedDateTime approvedAt = period.hasParameter(PARAM_APPROVED_AT)
-				&& period.getDate(PARAM_APPROVED_AT).getYear() > 1970
-				? period.getDate(PARAM_APPROVED_AT) : null;
-		String approvedBy = period.hasParameter(PARAM_APPROVED_BY)
-				&& !period.getString(PARAM_APPROVED_BY).isEmpty()
-				? period.getString(PARAM_APPROVED_BY) : null;
-		ZonedDateTime rejectedAt = period.hasParameter(PARAM_REJECTED_AT)
-				&& period.getDate(PARAM_REJECTED_AT).getYear() > 1970
-				? period.getDate(PARAM_REJECTED_AT) : null;
-		String rejectedBy = period.hasParameter(PARAM_REJECTED_BY)
-				&& !period.getString(PARAM_REJECTED_BY).isEmpty()
-				? period.getString(PARAM_REJECTED_BY) : null;
-		String comment = period.hasParameter(PARAM_COMMENT)
-				&& !period.getString(PARAM_COMMENT).isEmpty()
-				? period.getString(PARAM_COMMENT) : null;
-		String calculationSnapshot = period.hasParameter(PARAM_CALCULATION_SNAPSHOT)
-				&& !period.getString(PARAM_CALCULATION_SNAPSHOT).isEmpty()
-				? period.getString(PARAM_CALCULATION_SNAPSHOT) : null;
+		ZonedDateTime submittedAt =
+				period.hasParameter(PARAM_SUBMITTED_AT) && period.getDate(PARAM_SUBMITTED_AT).getYear() > 1970 ?
+						period.getDate(PARAM_SUBMITTED_AT) : null;
+		ZonedDateTime approvedAt =
+				period.hasParameter(PARAM_APPROVED_AT) && period.getDate(PARAM_APPROVED_AT).getYear() > 1970 ?
+						period.getDate(PARAM_APPROVED_AT) : null;
+		String approvedBy = period.hasParameter(PARAM_APPROVED_BY) && !period.getString(PARAM_APPROVED_BY).isEmpty() ?
+				period.getString(PARAM_APPROVED_BY) : null;
+		ZonedDateTime rejectedAt =
+				period.hasParameter(PARAM_REJECTED_AT) && period.getDate(PARAM_REJECTED_AT).getYear() > 1970 ?
+						period.getDate(PARAM_REJECTED_AT) : null;
+		String rejectedBy = period.hasParameter(PARAM_REJECTED_BY) && !period.getString(PARAM_REJECTED_BY).isEmpty() ?
+				period.getString(PARAM_REJECTED_BY) : null;
+		String comment = period.hasParameter(PARAM_COMMENT) && !period.getString(PARAM_COMMENT).isEmpty() ?
+				period.getString(PARAM_COMMENT) : null;
+		String calculationSnapshot = period.hasParameter(PARAM_CALCULATION_SNAPSHOT) && !period
+				.getString(PARAM_CALCULATION_SNAPSHOT)
+				.isEmpty() ? period.getString(PARAM_CALCULATION_SNAPSHOT) : null;
+		return new PeriodStatusDto(period.getRelationId(PARAM_EMPLOYEE), null, null, null,
+				period.getString(PARAM_YEAR_MONTH), period.getString(PARAM_STATE), submittedAt, approvedAt, approvedBy,
+				rejectedAt, rejectedBy, comment, calculationSnapshot);
+	}
+
+	public static PeriodStatusDto createOpenPeriodDto(StrolchTransaction tx, String employeeId, YearMonth yearMonth) {
+		String employeeName = null;
+		String personalNumber = null;
+		String teamName = null;
+		if (employeeId != null) {
+			Resource employee = tx.getResourceBy(TYPE_EMPLOYEE, employeeId);
+			if (employee != null) {
+				String firstName = employee.hasParameter(PARAM_FIRSTNAME) ? employee.getString(PARAM_FIRSTNAME) : "";
+				String lastName = employee.hasParameter(PARAM_LASTNAME) ? employee.getString(PARAM_LASTNAME) : "";
+				employeeName = (firstName + " " + lastName).trim();
+				if (employeeName.isEmpty())
+					employeeName = employee.getName();
+				if (employee.hasParameter(PARAM_PERSONAL_NUMBER))
+					personalNumber = employee.getString(PARAM_PERSONAL_NUMBER);
+				String teamId = employee.getRelationId(PARAM_PRIMARY_TEAM);
+				if (teamId != null) {
+					Resource team = tx.getResourceBy(TYPE_TEAM, teamId);
+					if (team != null)
+						teamName = team.getName();
+				}
+			}
+		}
 		return new PeriodStatusDto(
-				period.getRelationId(PARAM_EMPLOYEE),
-				period.getString(PARAM_YEAR_MONTH),
-				period.getString(PARAM_STATE),
-				submittedAt,
-				approvedAt,
-				approvedBy,
-				rejectedAt,
-				rejectedBy,
-				comment,
-				calculationSnapshot);
+				employeeId,
+				employeeName,
+				personalNumber,
+				teamName,
+				yearMonth.toString(),
+				STATE_OPEN,
+				null,
+				null,
+				null,
+				null,
+				null,
+				null,
+				null);
 	}
 
 	public static VacationAccountEntryDto vacationEntryToDto(Resource entry) {
@@ -218,100 +326,71 @@ public class ChronivaroMapper {
 		String comment = entry.hasParameter(PARAM_COMMENT) ? entry.getString(PARAM_COMMENT) : null;
 		String createdBy = entry.hasParameter(PARAM_CREATED_BY) ? entry.getString(PARAM_CREATED_BY) : null;
 		Integer version = entry.hasParameter(PARAM_VERSION) ? entry.getInteger(PARAM_VERSION) : null;
-		return new VacationAccountEntryDto(
-				entry.getId(),
-				entry.getRelationId(PARAM_EMPLOYEE),
-				entry.getDate(PARAM_DATE),
-				entry.getString(PARAM_VACATION_TYPE),
-				entry.getInteger(PARAM_VALUE),
-				absenceId,
-				comment,
-				createdBy,
-				version);
+		return new VacationAccountEntryDto(entry.getId(), entry.getRelationId(PARAM_EMPLOYEE),
+				entry.getDate(PARAM_DATE), entry.getString(PARAM_VACATION_TYPE), entry.getInteger(PARAM_VALUE),
+				absenceId, comment, createdBy, version);
 	}
 
-	public static VacationAccountSummaryDto vacationSummaryToDto(ch.atexxi.chronivaro.core.model.VacationAccountSummary summary,
-			java.util.List<Resource> entries) {
-		java.util.List<VacationAccountEntryDto> entryDtos = entries != null
-				? entries.stream().map(ChronivaroMapper::vacationEntryToDto).toList()
-				: java.util.List.of();
-		return new VacationAccountSummaryDto(
-				summary.employeeId(),
-				summary.year(),
-				summary.carryOverMinutes(),
-				summary.entitlementMinutes(),
-				summary.correctionsMinutes(),
-				summary.usageMinutes(),
-				summary.remainingMinutes(),
-				entryDtos);
+	public static VacationAccountSummaryDto vacationSummaryToDto(
+			ch.atexxi.chronivaro.core.model.VacationAccountSummary summary, java.util.List<Resource> entries) {
+		java.util.List<VacationAccountEntryDto> entryDtos = entries != null ?
+				entries.stream().map(ChronivaroMapper::vacationEntryToDto).toList() : java.util.List.of();
+		return new VacationAccountSummaryDto(summary.employeeId(), summary.year(), summary.carryOverMinutes(),
+				summary.entitlementMinutes(), summary.correctionsMinutes(), summary.usageMinutes(),
+				summary.remainingMinutes(), entryDtos);
 	}
 
 	public static TeamReportDto teamReportToDto(ch.atexxi.chronivaro.core.report.TeamReport report) {
-		java.util.List<TeamReportDto.TeamEmployeeSummaryDto> emps = report.employeeSummaries() != null
-				? report.employeeSummaries().stream().map(e -> new TeamReportDto.TeamEmployeeSummaryDto(
-						e.employeeId(),
-						e.employeeName(),
-						e.teamId(),
-						e.yearMonth().toString(),
-						e.targetMinutes(),
-						e.actualMinutes(),
-						e.holidayMinutes(),
-						e.absenceMinutes(),
-						e.initialBalanceMinutes(),
-						e.periodBalanceMinutes(),
-						e.endBalanceMinutes(),
-						e.periodState(),
-						e.missingBookingsCount()
-				)).toList()
-				: java.util.List.of();
+		java.util.List<TeamReportDto.TeamEmployeeSummaryDto> emps = report.employeeSummaries() != null ? report
+				.employeeSummaries()
+				.stream()
+				.map(e -> new TeamReportDto.TeamEmployeeSummaryDto(e.employeeId(), e.employeeName(), e.teamId(),
+						e.yearMonth().toString(), e.targetMinutes(), e.actualMinutes(), e.holidayMinutes(),
+						e.absenceMinutes(), e.initialBalanceMinutes(), e.periodBalanceMinutes(), e.endBalanceMinutes(),
+						e.periodState(), e.missingBookingsCount()))
+				.toList() : java.util.List.of();
 
 		return new TeamReportDto(report.teamId(), report.teamName(), report.yearMonth().toString(), emps);
 	}
 
-	public static AbsenceReportDto absenceReportToDto(java.util.List<ch.atexxi.chronivaro.core.report.AbsenceReportItem> items) {
-		java.util.List<AbsenceReportDto.AbsenceReportItemDto> itemDtos = items != null
-				? items.stream().map(item -> new AbsenceReportDto.AbsenceReportItemDto(
-						item.id(),
-						item.employeeId(),
-						item.employeeName(),
-						item.absenceTypeCode(),
-						item.absenceTypeName(),
+	public static AbsenceReportDto absenceReportToDto(
+			java.util.List<ch.atexxi.chronivaro.core.report.AbsenceReportItem> items) {
+		java.util.List<AbsenceReportDto.AbsenceReportItemDto> itemDtos = items != null ? items
+				.stream()
+				.map(item -> new AbsenceReportDto.AbsenceReportItemDto(item.id(), item.employeeId(),
+						item.employeeName(), item.absenceTypeCode(), item.absenceTypeName(),
 						item.start() != null ? item.start().toString() : null,
-						item.end() != null ? item.end().toString() : null,
-						item.durationType(),
-						item.dayPart(),
-						item.minutes(),
-						item.state(),
-						item.paid(),
-						item.comment(),
+						item.end() != null ? item.end().toString() : null, item.durationType(), item.dayPart(),
+						item.minutes(), item.state(), item.paid(), item.comment(),
 						item.submittedAt() != null ? item.submittedAt().toString() : null,
-						item.approvedAt() != null ? item.approvedAt().toString() : null,
-						item.approvedBy()
-				)).toList()
-				: java.util.List.of();
+						item.approvedAt() != null ? item.approvedAt().toString() : null, item.approvedBy()))
+				.toList() : java.util.List.of();
 
 		return new AbsenceReportDto(itemDtos);
 	}
 
 	public static ConfigurationDto configurationToDto(Resource config) {
 		return new ConfigurationDto(
-				config.hasParameter(PARAM_WEEKLY_TARGET_MINUTES) ? config.getInteger(PARAM_WEEKLY_TARGET_MINUTES) : DEFAULT_WEEKLY_TARGET_MINUTES,
-				config.hasParameter(PARAM_ANNUAL_VACATION_DAYS) ? config.getInteger(PARAM_ANNUAL_VACATION_DAYS) : DEFAULT_ANNUAL_VACATION_DAYS,
-				config.hasParameter(PARAM_MINUTES_PER_VACATION_DAY) ? config.getInteger(PARAM_MINUTES_PER_VACATION_DAY) : DEFAULT_MINUTES_PER_VACATION_DAY,
-				config.hasParameter(PARAM_VACATION_ABSENCE_TYPE_CODE) ? config.getString(PARAM_VACATION_ABSENCE_TYPE_CODE) : DEFAULT_VACATION_ABSENCE_TYPE_CODE,
+				config.hasParameter(PARAM_WEEKLY_TARGET_MINUTES) ? config.getInteger(PARAM_WEEKLY_TARGET_MINUTES) :
+						DEFAULT_WEEKLY_TARGET_MINUTES,
+				config.hasParameter(PARAM_ANNUAL_VACATION_DAYS) ? config.getInteger(PARAM_ANNUAL_VACATION_DAYS) :
+						DEFAULT_ANNUAL_VACATION_DAYS, config.hasParameter(PARAM_MINUTES_PER_VACATION_DAY) ?
+				config.getInteger(PARAM_MINUTES_PER_VACATION_DAY) : DEFAULT_MINUTES_PER_VACATION_DAY,
+				config.hasParameter(PARAM_VACATION_ABSENCE_TYPE_CODE) ?
+						config.getString(PARAM_VACATION_ABSENCE_TYPE_CODE) : DEFAULT_VACATION_ABSENCE_TYPE_CODE,
 				config.hasParameter(PARAM_COMPANY_NAME) ? config.getString(PARAM_COMPANY_NAME) : DEFAULT_COMPANY_NAME,
 				config.hasParameter(PARAM_COMPANY_LOGO) ? config.getString(PARAM_COMPANY_LOGO) : "",
-				config.hasParameter(PARAM_DEFAULT_LANGUAGE) ? config.getString(PARAM_DEFAULT_LANGUAGE) : DEFAULT_LANGUAGE,
-				ch.atexxi.chronivaro.core.model.ChronivaroVersionHelper.getVersion(config),
-				config.hasParameter(PARAM_UPDATED_BY) ? config.getString(PARAM_UPDATED_BY) : null
-		);
+				config.hasParameter(PARAM_DEFAULT_LANGUAGE) ? config.getString(PARAM_DEFAULT_LANGUAGE) :
+						DEFAULT_LANGUAGE, ch.atexxi.chronivaro.core.model.ChronivaroVersionHelper.getVersion(config),
+				config.hasParameter(PARAM_UPDATED_BY) ? config.getString(PARAM_UPDATED_BY) : null);
 	}
 
 	public static BrandingDto brandingToDto(Resource config) {
 		return new BrandingDto(
-				config != null && config.hasParameter(PARAM_COMPANY_NAME) ? config.getString(PARAM_COMPANY_NAME) : DEFAULT_COMPANY_NAME,
+				config != null && config.hasParameter(PARAM_COMPANY_NAME) ? config.getString(PARAM_COMPANY_NAME) :
+						DEFAULT_COMPANY_NAME,
 				config != null && config.hasParameter(PARAM_COMPANY_LOGO) ? config.getString(PARAM_COMPANY_LOGO) : "",
-				config != null && config.hasParameter(PARAM_DEFAULT_LANGUAGE) ? config.getString(PARAM_DEFAULT_LANGUAGE) : DEFAULT_LANGUAGE
-		);
+				config != null && config.hasParameter(PARAM_DEFAULT_LANGUAGE) ?
+						config.getString(PARAM_DEFAULT_LANGUAGE) : DEFAULT_LANGUAGE);
 	}
 }

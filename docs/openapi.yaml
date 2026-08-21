@@ -4331,9 +4331,25 @@ components:
         employeeId:
           type: string
           example: 'emp-001'
+        employeeName:
+          type: string
+          nullable: true
+          example: 'John Doe'
+        personalNumber:
+          type: string
+          nullable: true
+          example: 'PER-1001'
+        teamName:
+          type: string
+          nullable: true
+          example: 'Engineering'
         absenceTypeCode:
           type: string
           example: 'VACATION'
+        absenceTypeName:
+          type: string
+          nullable: true
+          example: 'Vacation'
         start:
           type: string
           format: date-time
@@ -4431,6 +4447,18 @@ components:
         employeeId:
           type: string
           example: 'emp-001'
+        employeeName:
+          type: string
+          nullable: true
+          example: 'John Doe'
+        personalNumber:
+          type: string
+          nullable: true
+          example: 'PER-1001'
+        teamName:
+          type: string
+          nullable: true
+          example: 'Engineering'
         yearMonth:
           type: string
           example: '2026-08'

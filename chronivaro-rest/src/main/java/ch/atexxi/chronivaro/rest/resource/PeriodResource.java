@@ -73,10 +73,9 @@ public class PeriodResource {
 
 			Optional<Resource> period = PeriodHelper.findPeriod(tx, targetEmployeeId, yearMonth);
 			if (period.isPresent()) {
-				return ConcurrencyHelper.toResponseWithETag(period.get(), ChronivaroMapper.periodToDto(period.get()));
+				return ConcurrencyHelper.toResponseWithETag(period.get(), ChronivaroMapper.periodToDto(tx, period.get()));
 			}
-			PeriodStatusDto openDto = new PeriodStatusDto(targetEmployeeId, yearMonth.toString(),
-					ch.atexxi.chronivaro.core.model.ChronivaroConstants.STATE_OPEN, null, null, null);
+			PeriodStatusDto openDto = ChronivaroMapper.createOpenPeriodDto(tx, targetEmployeeId, yearMonth);
 			return Response.ok(ChronivaroRestHelper.createGson().toJson(openDto), MediaType.APPLICATION_JSON).build();
 		}
 	}
@@ -125,7 +124,7 @@ public class PeriodResource {
 		if (result.isOk()) {
 			try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
 				Resource period = PeriodHelper.getPeriod(tx, employeeId, yearMonth, true);
-				return ConcurrencyHelper.toResponseWithETag(period, ChronivaroMapper.periodToDto(period));
+				return ConcurrencyHelper.toResponseWithETag(period, ChronivaroMapper.periodToDto(tx, period));
 			}
 		}
 		return ChronivaroRestHelper.toResponse(result);
@@ -165,7 +164,7 @@ public class PeriodResource {
 		if (result.isOk()) {
 			try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
 				Resource period = PeriodHelper.getPeriod(tx, dto.employeeId(), yearMonth, true);
-				return ConcurrencyHelper.toResponseWithETag(period, ChronivaroMapper.periodToDto(period));
+				return ConcurrencyHelper.toResponseWithETag(period, ChronivaroMapper.periodToDto(tx, period));
 			}
 		}
 		return ChronivaroRestHelper.toResponse(result);
@@ -209,7 +208,7 @@ public class PeriodResource {
 		if (result.isOk()) {
 			try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
 				Resource period = PeriodHelper.getPeriod(tx, dto.employeeId(), yearMonth, true);
-				return ConcurrencyHelper.toResponseWithETag(period, ChronivaroMapper.periodToDto(period));
+				return ConcurrencyHelper.toResponseWithETag(period, ChronivaroMapper.periodToDto(tx, period));
 			}
 		}
 		return ChronivaroRestHelper.toResponse(result);
@@ -253,7 +252,7 @@ public class PeriodResource {
 		if (result.isOk()) {
 			try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
 				Resource period = PeriodHelper.getPeriod(tx, dto.employeeId(), yearMonth, true);
-				return ConcurrencyHelper.toResponseWithETag(period, ChronivaroMapper.periodToDto(period));
+				return ConcurrencyHelper.toResponseWithETag(period, ChronivaroMapper.periodToDto(tx, period));
 			}
 		}
 		return ChronivaroRestHelper.toResponse(result);
@@ -290,7 +289,7 @@ public class PeriodResource {
 		if (result.isOk()) {
 			try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
 				Resource period = tx.getResourceBy(TYPE_TIME_PERIOD, id, true);
-				return ConcurrencyHelper.toResponseWithETag(period, ChronivaroMapper.periodToDto(period));
+				return ConcurrencyHelper.toResponseWithETag(period, ChronivaroMapper.periodToDto(tx, period));
 			}
 		}
 		return ChronivaroRestHelper.toResponse(result);
