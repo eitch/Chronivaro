@@ -564,5 +564,24 @@ public class ReportsResourceTest extends AbstractChronivaroRestfulTest {
 			byte[] pdfBytes = res.readEntity(byte[].class);
 			assertTrue(new String(pdfBytes, 0, 5).startsWith("%PDF-"));
 		}
+
+		// 8. Absences Report PDF via ?format=pdf for employee without explicit employeeId
+		try (Response res = target()
+				.path("chronivaro/v1/reports/absences")
+				.queryParam("from", "2026-08-01")
+				.queryParam("to", "2026-08-21")
+				.queryParam("format", "pdf")
+				.queryParam("lang", "de")
+				.request()
+				.header("Authorization", employeeToken)
+				.get()) {
+
+			assertEquals(200, res.getStatus());
+			assertTrue(res.getMediaType().toString().startsWith("application/pdf"));
+			assertTrue(res.getHeaderString("Content-Disposition").contains("absence-report-employee_emp"));
+			byte[] pdfBytes = res.readEntity(byte[].class);
+			assertNotNull(pdfBytes);
+			assertTrue(new String(pdfBytes, 0, 5).startsWith("%PDF-"));
+		}
 	}
 }

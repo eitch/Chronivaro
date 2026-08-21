@@ -140,7 +140,7 @@ export default class ReportApi {
 		if (state && state.trim()) queryParts.push(`status=${encodeURIComponent(state.trim())}`);
 		if (lang && lang.trim()) queryParts.push(`lang=${encodeURIComponent(lang.trim())}`);
 
-		const url = `/chronivaro/v1/reports/absences?${queryParts.join('&')}`;
+		const url = `rest/chronivaro/v1/reports/absences?${queryParts.join('&')}`;
 		const blob = await Rest.getBlob(url, {'Accept': 'application/pdf'});
 		const filename = `absence-report-${from || 'all'}-to-${to || 'all'}.pdf`;
 		ReportApi.triggerBlobDownload(blob, filename);

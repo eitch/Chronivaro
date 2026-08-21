@@ -338,6 +338,7 @@ public class ReportsResource {
 		if (isPdf(format, acceptHeader)) {
 			String teamName = null;
 			String employeeName = null;
+			String targetEmployeeId = employeeId;
 			Resource companyConfig;
 			try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
 				companyConfig = tx.getResourceBy(TYPE_GLOBAL_CONFIGURATION, "configuration", false);
@@ -347,10 +348,16 @@ public class ReportsResource {
 						teamName = teamRes.getName();
 					}
 				}
-				if (employeeId != null && !employeeId.trim().isEmpty()) {
-					Resource empRes = tx.getResourceBy(TYPE_EMPLOYEE, employeeId.trim());
+				if (targetEmployeeId != null && !targetEmployeeId.trim().isEmpty()) {
+					Resource empRes = tx.getResourceBy(TYPE_EMPLOYEE, targetEmployeeId.trim());
 					if (empRes != null) {
 						employeeName = empRes.getName();
+					}
+				} else if (teamId == null || teamId.trim().isEmpty()) {
+					Optional<Resource> callerEmp = ChronivaroModelHelper.findEmployeeByUser(tx, cert.getUserId());
+					if (callerEmp.isPresent() && !tx.getPrivilegeContext().hasRole(ROLE_HR) && !tx.getPrivilegeContext().hasRole(ROLE_ADMIN) && !tx.getPrivilegeContext().hasRole(ROLE_ADMINISTRATOR) && !tx.getPrivilegeContext().hasRole(ROLE_SUPERVISOR)) {
+						employeeName = callerEmp.get().getName();
+						targetEmployeeId = callerEmp.get().getId();
 					}
 				}
 			}
@@ -358,7 +365,7 @@ public class ReportsResource {
 			LocalDate fromDate = (fromStr != null && !fromStr.trim().isEmpty()) ? LocalDate.parse(fromStr.trim()) : null;
 			LocalDate toDate = (toStr != null && !toStr.trim().isEmpty()) ? LocalDate.parse(toStr.trim()) : null;
 			byte[] pdf = PdfExportHelper.exportAbsenceReportToPdf(result.items, teamName, employeeName, fromDate, toDate, companyConfig, lang);
-			String context = employeeId != null && !employeeId.isBlank() ? employeeId : (teamId != null && !teamId.isBlank() ? teamId : "all");
+			String context = targetEmployeeId != null && !targetEmployeeId.isBlank() ? targetEmployeeId : (teamId != null && !teamId.isBlank() ? teamId : "all");
 			String filename = PdfExportHelper.getAbsenceReportPdfFileName(context, fromDate, toDate);
 			return Response.ok(pdf, "application/pdf")
 					.header("Content-Disposition", "attachment; filename=\"" + filename + "\"")
