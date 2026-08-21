@@ -1,3 +1,4 @@
+import AuthApi from '../api/AuthApi.js';
 import PresenceApi from '../api/PresenceApi.js';
 import TeamApi from '../api/TeamApi.js';
 import LocationApi from '../api/LocationApi.js';
@@ -29,11 +30,17 @@ export default class PresenceView {
 			</div>
 		`;
 
+		const isPrivileged = AuthApi.hasRole('Supervisor') || AuthApi.hasRole('HR') || AuthApi.hasRole('Administrator');
 		const settingsToggle = container.querySelector('#settings-toggle');
 		const settingsMenu = container.querySelector('#settings-menu');
 		const teamFilter = container.querySelector('#team-filter');
 		const locationFilter = container.querySelector('#location-filter');
 		const presenceList = container.querySelector('#presence-list');
+
+		if (!isPrivileged) {
+			const teamFilterLabel = teamFilter.closest('label');
+			if (teamFilterLabel) teamFilterLabel.style.display = 'none';
+		}
 
 		settingsToggle.addEventListener('click', () => {
 			settingsMenu.classList.toggle('hidden');
@@ -41,14 +48,16 @@ export default class PresenceView {
 
 		let allTeams = [];
 		const loadFilters = async () => {
-			allTeams = await TeamApi.getAll();
-			allTeams.forEach(t => {
-				const opt = document.createElement('option');
-				opt.value = t.id;
-				opt.textContent = t.name;
-				if (params && params.teamId === t.id) opt.selected = true;
-				teamFilter.appendChild(opt);
-			});
+			if (isPrivileged) {
+				allTeams = await TeamApi.getAll();
+				allTeams.forEach(t => {
+					const opt = document.createElement('option');
+					opt.value = t.id;
+					opt.textContent = t.name;
+					if (params && params.teamId === t.id) opt.selected = true;
+					teamFilter.appendChild(opt);
+				});
+			}
 
 			const locations = await LocationApi.getAll();
 			locations.forEach(l => {
@@ -62,16 +71,21 @@ export default class PresenceView {
 
 		const refresh = async () => {
 			try {
-				const teamId = teamFilter.value;
+				const teamId = isPrivileged ? teamFilter.value : '';
 				const locationId = locationFilter.value;
 				const presenceInfos = await PresenceApi.getPresence(teamId, locationId);
 
-				if (presenceInfos.length === 0 && allTeams.length === 0) {
+				if (presenceInfos.length === 0 && (!isPrivileged || allTeams.length === 0)) {
 					presenceList.innerHTML = `<p>${I18n.t('presence.noEmployeesFound')}</p>`;
 					return;
 				}
 
-				const teamsToShow = teamId ? allTeams.filter(t => t.id === teamId) : allTeams;
+				let teamsToShow;
+				if (isPrivileged) {
+					teamsToShow = teamId ? allTeams.filter(t => t.id === teamId) : allTeams;
+				} else {
+					teamsToShow = Array.from(new Map(presenceInfos.map(i => [i.teamId, { id: i.teamId, name: i.teamName }])).values());
+				}
 
 				presenceList.innerHTML = '';
 				teamsToShow.forEach(team => {
