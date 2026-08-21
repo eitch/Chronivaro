@@ -112,7 +112,7 @@ Clients can supply custom correlation IDs via the `X-Correlation-Id` request hea
 
 Chronivaro enforces role-based privilege checks across all services and REST resources:
 
-- **Employee**: Record work entries, start/stop timers, view personal presence and balance, submit absence requests, submit personal monthly closing periods.
+- **Employee**: Record work entries, start/stop timers, view team presence ("Who is working?"), view personal balance, submit absence requests, submit personal monthly closing periods.
 - **Supervisor**: View team presence, approve/reject team absence requests, review submitted monthly periods for supervised teams with calculation snapshots.
 - **HR**: Manage employee profiles, administer vacation entitlements and manual adjustments, unlock/lock periods across the tenant, view all absence reports.
 - **Administrator**: Manage global configuration parameters, holiday calendars, teams, locations, schedule templates, and inspect tenant audit logs.
