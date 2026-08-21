@@ -436,7 +436,7 @@ Task 7 is split into subtasks **7.1** and **7.2** to separate the PDF generation
 ### Task 8: Employee Absence Draft Lifecycle & History View UX Improvements
 
 - **Specification Reference:** Section 6.6, Section 9.4, Section 12.1, Section 13.2
-- **Status:** `OPEN`
+- **Status:** `COMPLETED`
 - **Scope:**
   1. Fix CSS styling collision for `.action-btn.submit-btn`, `.action-btn.edit-btn`, and general `.action-btn` text contrast in `chronivaro-web/src/main/webapp/assets/css/style.css` so that action button text is clearly readable and meets WCAG AA contrast standards.
   2. Update `CancelAbsenceService` in `chronivaro-core` to allow cancelling absences in `STATE_DRAFT` without creating vacation refund journal records.
@@ -454,7 +454,7 @@ Task 7 is split into subtasks **7.1** and **7.2** to separate the PDF generation
   - Draft submission transitions the absence to `SUBMITTED`.
 - **Verification:**
   - Unit tests in `AbsenceServiceTest` verifying draft cancellation without vacation journal entries and draft updates.
-  - REST/UI tests in `WebPersonalAbsenceUiTest` and `VacationAndAbsenceRestTest` verifying draft lifecycle endpoints, modal operations, and action buttons.
+  - REST/UI tests in `WebPersonalAbsenceUiTest` verifying draft lifecycle endpoints, modal operations, and action buttons.
   - Full reactor build and test suite passing cleanly (`mvn clean test`).
 - **Dependencies:** Task 2.
 

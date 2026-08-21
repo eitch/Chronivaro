@@ -19,6 +19,7 @@ Audit date: 2026-08-19. `IMPLEMENTATION_SPECIFICATION.md` is authoritative; the 
 - **Administration Views Localization (Sections 4.2, 16, 18.5):** Complete localization of master data and system administration views (`EmployeesView`, `TeamsView`, `LocationsView`, `AbsenceTypesView`, `HolidayCalendarsView`, `ScheduleTemplatesView`, `SchedulesView`, `ConfigurationView`), modal forms, dynamic calculations, and notification dialogues (**Task 6.4**).
 - **Native PDF Report Generation Engine (Sections 4.2, 11.6.2, 17, 18.6):** Server-side PDF export engine (`PdfExportHelper` with OpenPDF) producing deterministic A4 PDF reports with embedded fonts, dynamic header branding (`companyName` and optional `companyLogo`), metadata boxes, KPI summaries, detailed data tables, page event footers with page counts, accessibility-compliant negative value formatting, and dual-language (Swiss German / English) localization for Month, Vacation, and Absence reports (**Task 7.1**).
 - **PDF REST Endpoints and Web UI Download Integration (Sections 4.2, 11.6.2, 13.2, 13.8, 17):** REST endpoints supporting `?format=pdf` / `Accept: application/pdf` streaming, URL route aliases (`.pdf`), and Web UI download integration in Reports and Monthly Closing views (**Task 7.2**).
+- **Employee Absence Draft Lifecycle & History View UX Improvements (Sections 6.6, 9.4, 12.1, 13.2):** High-contrast WCAG-compliant action button styles in CSS, draft absence cancellation in `CancelAbsenceService` without vacation journal side-effects, and pre-populated modal editing and update/submit flows in `MyAbsencesView.js` (**Task 8**).
 - **Presence & Privacy (Section 8):** Real-time binary `WORKING`/`NOT_WORKING` presence status with sensitive absence detail filtering for non-privileged viewers unless `visibleOnPublicStatus` is true.
 - **Audit Logging & Retention (Sections 6.10, 12, 13.6):** Full audit trail recording entity lifecycle events, parameter mutations, correlation IDs, user details, and retention purge service.
 - **Reporting Foundation & CSV Export (Sections 11.1–11.5, 12.1–12.2, 13.8):** Core calculation engines, Web UI report viewers, and deterministic RFC 4180 UTF-8 BOM CSV exports for Day, Month, Vacation, Team, and Absence reports.
@@ -28,7 +29,7 @@ Audit date: 2026-08-19. `IMPLEMENTATION_SPECIFICATION.md` is authoritative; the 
 
 ## Missing Requirements / Open Tasks
 
-- **Task 8: Employee Absence Draft Lifecycle & History View UX Improvements (Sections 6.6, 9.4, 12.1, 13.2):** Open task to fix `.action-btn.submit-btn` and action button styling contrast in CSS, enable draft absence cancellation in `CancelAbsenceService` without vacation journal side-effects, and add draft editing capability in `MyAbsencesView.js`.
+All tasks in the prioritized implementation backlog (Tasks 1 through 8) are completed and verified. No open implementation tasks remain.
 
 ---
 
