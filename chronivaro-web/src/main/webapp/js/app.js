@@ -51,6 +51,21 @@ class ChronivaroApp {
             });
         }
 
+        const headerBranding = document.getElementById('header-branding');
+        if (headerBranding) {
+            headerBranding.addEventListener('click', (e) => {
+                this.closeNavGroups();
+                if (navToggle && this.nav && this.nav.classList.contains('is-open')) {
+                    navToggle.setAttribute('aria-expanded', 'false');
+                    this.nav.classList.remove('is-open');
+                }
+                if (window.location.hash === '#dashboard' || window.location.hash === '') {
+                    e.preventDefault();
+                    this.route();
+                }
+            });
+        }
+
         const navToggle = document.getElementById('nav-toggle');
         if (navToggle) {
             navToggle.addEventListener('click', () => {

@@ -63,4 +63,30 @@ public class WebNavigationUiTest {
 		assertTrue("style.css must define .tab-btn with border-radius 0.375rem",
 				css.contains(".tab-btn") && css.contains("border-radius: 0.375rem;"));
 	}
+
+	@Test
+	public void shouldVerifyHeaderBrandingNavigatesToDashboard() throws IOException {
+		File htmlFile = new File(getWebappDir(), "index.html");
+		assertTrue("index.html must exist", htmlFile.exists());
+		String html = Files.readString(htmlFile.toPath());
+
+		assertTrue("header branding must be an anchor link to #dashboard",
+				html.contains("<a href=\"#dashboard\" class=\"header-branding\" id=\"header-branding\">"));
+
+		File cssFile = new File(getWebappDir(), "assets/css/style.css");
+		assertTrue("style.css must exist", cssFile.exists());
+		String css = Files.readString(cssFile.toPath());
+
+		assertTrue("style.css must style .header-branding as clickable link",
+				css.contains(".header-branding") && css.contains("cursor: pointer;"));
+		assertTrue("style.css must remove text decoration for .header-branding",
+				css.contains(".header-branding") && css.contains("text-decoration: none;"));
+
+		File appJsFile = new File(getWebappDir(), "js/app.js");
+		assertTrue("app.js must exist", appJsFile.exists());
+		String appJs = Files.readString(appJsFile.toPath());
+
+		assertTrue("app.js must handle header-branding click",
+				appJs.contains("headerBranding.addEventListener('click'"));
+	}
 }
