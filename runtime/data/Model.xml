@@ -28,4 +28,155 @@
         </ParameterBag>
     </Resource>
 
+    <!-- Preconfigured Default Absence Types -->
+    <Resource Id="VACATION" Name="Ferien" Type="AbsenceType">
+        <ParameterBag Id="parameters" Name="Parameters" Type="Parameters">
+            <Parameter Id="code" Name="Code" Type="String" Value="VACATION"/>
+            <Parameter Id="name" Name="Name" Type="String" Value="Ferien"/>
+            <Parameter Id="countAsTargetTime" Name="Count As Target Time" Type="Boolean" Value="true"/>
+            <Parameter Id="reduceVacationCredit" Name="Reduce Vacation Credit" Type="Boolean" Value="true"/>
+            <Parameter Id="paid" Name="Paid" Type="Boolean" Value="true"/>
+            <Parameter Id="approvalRequired" Name="Approval Required" Type="Boolean" Value="true"/>
+            <Parameter Id="commentRequired" Name="Comment Required" Type="Boolean" Value="false"/>
+            <Parameter Id="visibleOnPublicStatus" Name="Visible On Public Status" Type="Boolean" Value="false"/>
+            <Parameter Id="durationTypes" Name="Duration Types" Type="StringList" Value="HALF_DAY,FULL_DAY"/>
+            <Parameter Id="active" Name="Active" Type="Boolean" Value="true"/>
+        </ParameterBag>
+    </Resource>
+
+    <Resource Id="ILLNESS" Name="Krankheit" Type="AbsenceType">
+        <ParameterBag Id="parameters" Name="Parameters" Type="Parameters">
+            <Parameter Id="code" Name="Code" Type="String" Value="ILLNESS"/>
+            <Parameter Id="name" Name="Name" Type="String" Value="Krankheit"/>
+            <Parameter Id="countAsTargetTime" Name="Count As Target Time" Type="Boolean" Value="true"/>
+            <Parameter Id="reduceVacationCredit" Name="Reduce Vacation Credit" Type="Boolean" Value="false"/>
+            <Parameter Id="paid" Name="Paid" Type="Boolean" Value="true"/>
+            <Parameter Id="approvalRequired" Name="Approval Required" Type="Boolean" Value="true"/>
+            <Parameter Id="commentRequired" Name="Comment Required" Type="Boolean" Value="false"/>
+            <Parameter Id="visibleOnPublicStatus" Name="Visible On Public Status" Type="Boolean" Value="false"/>
+            <Parameter Id="durationTypes" Name="Duration Types" Type="StringList" Value="HOURS,HALF_DAY,FULL_DAY"/>
+            <Parameter Id="active" Name="Active" Type="Boolean" Value="true"/>
+        </ParameterBag>
+    </Resource>
+
+    <Resource Id="ACCIDENT" Name="Unfall" Type="AbsenceType">
+        <ParameterBag Id="parameters" Name="Parameters" Type="Parameters">
+            <Parameter Id="code" Name="Code" Type="String" Value="ACCIDENT"/>
+            <Parameter Id="name" Name="Name" Type="String" Value="Unfall"/>
+            <Parameter Id="countAsTargetTime" Name="Count As Target Time" Type="Boolean" Value="true"/>
+            <Parameter Id="reduceVacationCredit" Name="Reduce Vacation Credit" Type="Boolean" Value="false"/>
+            <Parameter Id="paid" Name="Paid" Type="Boolean" Value="true"/>
+            <Parameter Id="approvalRequired" Name="Approval Required" Type="Boolean" Value="true"/>
+            <Parameter Id="commentRequired" Name="Comment Required" Type="Boolean" Value="false"/>
+            <Parameter Id="visibleOnPublicStatus" Name="Visible On Public Status" Type="Boolean" Value="false"/>
+            <Parameter Id="durationTypes" Name="Duration Types" Type="StringList" Value="HOURS,HALF_DAY,FULL_DAY"/>
+            <Parameter Id="active" Name="Active" Type="Boolean" Value="true"/>
+        </ParameterBag>
+    </Resource>
+
+    <Resource Id="MILITARY_CIVIL_DEFENSE" Name="Militär / Zivilschutz" Type="AbsenceType">
+        <ParameterBag Id="parameters" Name="Parameters" Type="Parameters">
+            <Parameter Id="code" Name="Code" Type="String" Value="MILITARY_CIVIL_DEFENSE"/>
+            <Parameter Id="name" Name="Name" Type="String" Value="Militär / Zivilschutz"/>
+            <Parameter Id="countAsTargetTime" Name="Count As Target Time" Type="Boolean" Value="true"/>
+            <Parameter Id="reduceVacationCredit" Name="Reduce Vacation Credit" Type="Boolean" Value="false"/>
+            <Parameter Id="paid" Name="Paid" Type="Boolean" Value="true"/>
+            <Parameter Id="approvalRequired" Name="Approval Required" Type="Boolean" Value="true"/>
+            <Parameter Id="commentRequired" Name="Comment Required" Type="Boolean" Value="false"/>
+            <Parameter Id="visibleOnPublicStatus" Name="Visible On Public Status" Type="Boolean" Value="false"/>
+            <Parameter Id="durationTypes" Name="Duration Types" Type="StringList" Value="HALF_DAY,FULL_DAY"/>
+            <Parameter Id="active" Name="Active" Type="Boolean" Value="true"/>
+        </ParameterBag>
+    </Resource>
+
+    <Resource Id="DOCTOR_APPOINTMENT" Name="Arzttermin" Type="AbsenceType">
+        <ParameterBag Id="parameters" Name="Parameters" Type="Parameters">
+            <Parameter Id="code" Name="Code" Type="String" Value="DOCTOR_APPOINTMENT"/>
+            <Parameter Id="name" Name="Name" Type="String" Value="Arzttermin"/>
+            <Parameter Id="countAsTargetTime" Name="Count As Target Time" Type="Boolean" Value="true"/>
+            <Parameter Id="reduceVacationCredit" Name="Reduce Vacation Credit" Type="Boolean" Value="false"/>
+            <Parameter Id="paid" Name="Paid" Type="Boolean" Value="true"/>
+            <Parameter Id="approvalRequired" Name="Approval Required" Type="Boolean" Value="false"/>
+            <Parameter Id="commentRequired" Name="Comment Required" Type="Boolean" Value="false"/>
+            <Parameter Id="visibleOnPublicStatus" Name="Visible On Public Status" Type="Boolean" Value="false"/>
+            <Parameter Id="durationTypes" Name="Duration Types" Type="StringList" Value="HOURS"/>
+            <Parameter Id="active" Name="Active" Type="Boolean" Value="true"/>
+        </ParameterBag>
+    </Resource>
+
+    <Resource Id="TRAINING" Name="Weiterbildung" Type="AbsenceType">
+        <ParameterBag Id="parameters" Name="Parameters" Type="Parameters">
+            <Parameter Id="code" Name="Code" Type="String" Value="TRAINING"/>
+            <Parameter Id="name" Name="Name" Type="String" Value="Weiterbildung"/>
+            <Parameter Id="countAsTargetTime" Name="Count As Target Time" Type="Boolean" Value="true"/>
+            <Parameter Id="reduceVacationCredit" Name="Reduce Vacation Credit" Type="Boolean" Value="false"/>
+            <Parameter Id="paid" Name="Paid" Type="Boolean" Value="true"/>
+            <Parameter Id="approvalRequired" Name="Approval Required" Type="Boolean" Value="true"/>
+            <Parameter Id="commentRequired" Name="Comment Required" Type="Boolean" Value="true"/>
+            <Parameter Id="visibleOnPublicStatus" Name="Visible On Public Status" Type="Boolean" Value="false"/>
+            <Parameter Id="durationTypes" Name="Duration Types" Type="StringList" Value="HOURS,HALF_DAY,FULL_DAY"/>
+            <Parameter Id="active" Name="Active" Type="Boolean" Value="true"/>
+        </ParameterBag>
+    </Resource>
+
+    <Resource Id="PARENTAL_LEAVE" Name="Elternurlaub" Type="AbsenceType">
+        <ParameterBag Id="parameters" Name="Parameters" Type="Parameters">
+            <Parameter Id="code" Name="Code" Type="String" Value="PARENTAL_LEAVE"/>
+            <Parameter Id="name" Name="Name" Type="String" Value="Elternurlaub"/>
+            <Parameter Id="countAsTargetTime" Name="Count As Target Time" Type="Boolean" Value="true"/>
+            <Parameter Id="reduceVacationCredit" Name="Reduce Vacation Credit" Type="Boolean" Value="false"/>
+            <Parameter Id="paid" Name="Paid" Type="Boolean" Value="true"/>
+            <Parameter Id="approvalRequired" Name="Approval Required" Type="Boolean" Value="true"/>
+            <Parameter Id="commentRequired" Name="Comment Required" Type="Boolean" Value="false"/>
+            <Parameter Id="visibleOnPublicStatus" Name="Visible On Public Status" Type="Boolean" Value="false"/>
+            <Parameter Id="durationTypes" Name="Duration Types" Type="StringList" Value="HALF_DAY,FULL_DAY"/>
+            <Parameter Id="active" Name="Active" Type="Boolean" Value="true"/>
+        </ParameterBag>
+    </Resource>
+
+    <Resource Id="UNPAID_LEAVE" Name="Unbezahlter Urlaub" Type="AbsenceType">
+        <ParameterBag Id="parameters" Name="Parameters" Type="Parameters">
+            <Parameter Id="code" Name="Code" Type="String" Value="UNPAID_LEAVE"/>
+            <Parameter Id="name" Name="Name" Type="String" Value="Unbezahlter Urlaub"/>
+            <Parameter Id="countAsTargetTime" Name="Count As Target Time" Type="Boolean" Value="false"/>
+            <Parameter Id="reduceVacationCredit" Name="Reduce Vacation Credit" Type="Boolean" Value="false"/>
+            <Parameter Id="paid" Name="Paid" Type="Boolean" Value="false"/>
+            <Parameter Id="approvalRequired" Name="Approval Required" Type="Boolean" Value="true"/>
+            <Parameter Id="commentRequired" Name="Comment Required" Type="Boolean" Value="true"/>
+            <Parameter Id="visibleOnPublicStatus" Name="Visible On Public Status" Type="Boolean" Value="false"/>
+            <Parameter Id="durationTypes" Name="Duration Types" Type="StringList" Value="HALF_DAY,FULL_DAY"/>
+            <Parameter Id="active" Name="Active" Type="Boolean" Value="true"/>
+        </ParameterBag>
+    </Resource>
+
+    <Resource Id="OVERTIME_COMPENSATION" Name="Überstundenkompensation" Type="AbsenceType">
+        <ParameterBag Id="parameters" Name="Parameters" Type="Parameters">
+            <Parameter Id="code" Name="Code" Type="String" Value="OVERTIME_COMPENSATION"/>
+            <Parameter Id="name" Name="Name" Type="String" Value="Überstundenkompensation"/>
+            <Parameter Id="countAsTargetTime" Name="Count As Target Time" Type="Boolean" Value="false"/>
+            <Parameter Id="reduceVacationCredit" Name="Reduce Vacation Credit" Type="Boolean" Value="false"/>
+            <Parameter Id="paid" Name="Paid" Type="Boolean" Value="true"/>
+            <Parameter Id="approvalRequired" Name="Approval Required" Type="Boolean" Value="true"/>
+            <Parameter Id="commentRequired" Name="Comment Required" Type="Boolean" Value="false"/>
+            <Parameter Id="visibleOnPublicStatus" Name="Visible On Public Status" Type="Boolean" Value="false"/>
+            <Parameter Id="durationTypes" Name="Duration Types" Type="StringList" Value="HOURS,HALF_DAY,FULL_DAY"/>
+            <Parameter Id="active" Name="Active" Type="Boolean" Value="true"/>
+        </ParameterBag>
+    </Resource>
+
+    <Resource Id="OTHER" Name="Sonstige Abwesenheit" Type="AbsenceType">
+        <ParameterBag Id="parameters" Name="Parameters" Type="Parameters">
+            <Parameter Id="code" Name="Code" Type="String" Value="OTHER"/>
+            <Parameter Id="name" Name="Name" Type="String" Value="Sonstige Abwesenheit"/>
+            <Parameter Id="countAsTargetTime" Name="Count As Target Time" Type="Boolean" Value="false"/>
+            <Parameter Id="reduceVacationCredit" Name="Reduce Vacation Credit" Type="Boolean" Value="false"/>
+            <Parameter Id="paid" Name="Paid" Type="Boolean" Value="true"/>
+            <Parameter Id="approvalRequired" Name="Approval Required" Type="Boolean" Value="true"/>
+            <Parameter Id="commentRequired" Name="Comment Required" Type="Boolean" Value="true"/>
+            <Parameter Id="visibleOnPublicStatus" Name="Visible On Public Status" Type="Boolean" Value="false"/>
+            <Parameter Id="durationTypes" Name="Duration Types" Type="StringList" Value="HOURS,HALF_DAY,FULL_DAY"/>
+            <Parameter Id="active" Name="Active" Type="Boolean" Value="true"/>
+        </ParameterBag>
+    </Resource>
+
 </StrolchModel>
