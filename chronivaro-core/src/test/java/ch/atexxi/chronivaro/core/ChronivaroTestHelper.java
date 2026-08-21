@@ -69,7 +69,11 @@ public class ChronivaroTestHelper {
 	}
 
 	public static Resource createAbsenceType(StrolchTransaction tx, String code, String name) {
-		Resource absenceType = tx.getResourceTemplate(TYPE_ABSENCE_TYPE, true);
+		Resource absenceType = tx.getResourceBy(TYPE_ABSENCE_TYPE, code, false);
+		if (absenceType != null) {
+			return absenceType;
+		}
+		absenceType = tx.getResourceTemplate(TYPE_ABSENCE_TYPE, true);
 		absenceType.setId(code);
 		absenceType.setName(name);
 		absenceType.setString(PARAM_CODE, code);

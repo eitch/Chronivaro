@@ -155,7 +155,7 @@ public class PresenceServiceTest {
 		assertEquals(PresenceService.PresenceStatus.NOT_WORKING, info3.status());
 		assertEquals(PresenceService.PresenceStatus.NOT_WORKING.getLabel(), info3.statusLabel());
 		assertEquals("VACATION", info3.absenceTypeCode());
-		assertEquals("Vacation", info3.absenceTypeName());
+		assertEquals("Ferien", info3.absenceTypeName());
 
 		// Test Privacy
 		Certificate testCert = runtimeMock.login("supervisor", "admin");
@@ -191,7 +191,7 @@ public class PresenceServiceTest {
 				.findFirst()
 				.orElseThrow();
 		assertEquals("VACATION", info3Public.absenceTypeCode());
-		assertEquals("Vacation", info3Public.absenceTypeName());
+		assertEquals("Ferien", info3Public.absenceTypeName());
 	}
 
 	@Test

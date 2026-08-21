@@ -43,20 +43,7 @@ public class AbsenceServiceTest {
 		certificate = runtimeMock.login("admin", "admin");
 
 		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
-			Resource vacation = tx.getResourceTemplate(TYPE_ABSENCE_TYPE, true);
-			vacation.setId("vacation");
-			vacation.setName("Vacation");
-			vacation.setString(PARAM_CODE, "VACATION");
-			vacation.setBoolean(PARAM_REDUCE_VACATION_CREDIT, true);
-			tx.add(vacation);
-
-			Resource sick = tx.getResourceTemplate(TYPE_ABSENCE_TYPE, true);
-			sick.setId("sick");
-			sick.setName("Sick");
-			sick.setString(PARAM_CODE, "SICK");
-			sick.setBoolean(PARAM_REDUCE_VACATION_CREDIT, false);
-			tx.add(sick);
-
+			ChronivaroTestHelper.createAbsenceType(tx, "SICK", "Sick");
 			tx.commitOnClose();
 		}
 	}
@@ -292,14 +279,6 @@ public class AbsenceServiceTest {
 
 		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
 			createEmployee(tx, employeeId, "Comment Emp");
-
-			Resource training = tx.getResourceTemplate(TYPE_ABSENCE_TYPE, true);
-			training.setId(absenceTypeCode);
-			training.setName("Training");
-			training.setString(PARAM_CODE, absenceTypeCode);
-			training.setBoolean(PARAM_COMMENT_REQUIRED, true);
-			tx.add(training);
-
 			tx.commitOnClose();
 		}
 

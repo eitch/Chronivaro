@@ -167,16 +167,6 @@ public class ExtensiveIntegrationTest {
 		}
 
 		// 5. Add Absence
-		CreateAbsenceTypeService.AbsenceTypeArgument typeArg = new CreateAbsenceTypeService.AbsenceTypeArgument();
-		typeArg.code = "vacation";
-		typeArg.name = "Vacation";
-		typeArg.active = true;
-		typeArg.reduceVacationCredit = true;
-		typeArg.paid = true;
-		typeArg.approvalRequired = true;
-		typeArg.durationTypes = List.of(DURATION_HOURS, DURATION_HALF_DAY, DURATION_FULL_DAY);
-		assertTrue(serviceHandler.doService(certificate, new CreateAbsenceTypeService(), typeArg).isOk());
-
 		// Credit vacation entitlement for employee
 		CreditVacationEntitlementService.CreditVacationEntitlementArgument creditArg =
 				new CreditVacationEntitlementService.CreditVacationEntitlementArgument(employeeId, 2026, false);
@@ -184,14 +174,14 @@ public class ExtensiveIntegrationTest {
 
 		RequestAbsenceService.RequestAbsenceArgument absenceArg = new RequestAbsenceService.RequestAbsenceArgument();
 		absenceArg.employeeId = employeeId;
-		absenceArg.absenceTypeCode = "vacation";
+		absenceArg.absenceTypeCode = "VACATION";
 		absenceArg.start = ZonedDateTime.parse("2026-05-06T00:00:00+02:00[Europe/Zurich]");
 		absenceArg.end = ZonedDateTime.parse("2026-05-06T23:59:59+02:00[Europe/Zurich]");
-		absenceArg.durationType = DURATION_HOURS;
-		absenceArg.minutes = 240;
+		absenceArg.durationType = DURATION_HALF_DAY;
+		absenceArg.dayPart = DAY_PART_AFTERNOON;
 		li.strolch.service.api.ServiceResult absenceResult = serviceHandler.doService(certificate,
 				new RequestAbsenceService(), absenceArg);
-		assertTrue(absenceResult.isOk());
+		assertTrue(absenceResult.getMessage(), absenceResult.isOk());
 
 		String id;
 		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
