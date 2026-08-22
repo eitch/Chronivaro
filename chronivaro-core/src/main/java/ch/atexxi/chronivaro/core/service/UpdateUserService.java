@@ -20,6 +20,9 @@ public class UpdateUserService extends AbstractService<UpdateUserService.UpdateU
 	@Override
 	protected ServiceResult internalDoService(UpdateUserArgument arg) throws Exception {
 		DBC.PRE.assertNotEmpty("User identifier must not be empty", arg.userId);
+		if (arg.state == UserState.SYSTEM) {
+			return ServiceResult.error("Cannot set user state to SYSTEM!");
+		}
 
 		try (StrolchTransaction tx = openArgOrUserTx(arg)) {
 			PrivilegeHandler privilegeHandler = tx.getContainer().getPrivilegeHandler().getPrivilegeHandler();
@@ -36,7 +39,7 @@ public class UpdateUserService extends AbstractService<UpdateUserService.UpdateU
 				}
 			}
 
-			if (user == null) {
+			if (user == null || user.getUserState() == UserState.SYSTEM) {
 				return ServiceResult.error("User " + arg.userId + " not found!");
 			}
 

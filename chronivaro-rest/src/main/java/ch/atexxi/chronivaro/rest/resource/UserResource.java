@@ -46,6 +46,7 @@ public class UserResource {
 			List<Resource> employees = tx.streamResources(TYPE_EMPLOYEE).toList();
 
 			List<UserDto> dtos = allUsers.stream()
+					.filter(u -> u.getUserState() != UserState.SYSTEM)
 					.filter(u -> filterUser(u, query))
 					.map(u -> userToDto(u, employees))
 					.toList();
@@ -161,9 +162,9 @@ public class UserResource {
 
 	private static UserRep findUser(PrivilegeHandler privilegeHandler, Certificate cert, String id) {
 		UserRep user = privilegeHandler.getUser(cert, id);
-		if (user != null) return user;
+		if (user != null && user.getUserState() != UserState.SYSTEM) return user;
 		for (UserRep u : privilegeHandler.getUsers(cert)) {
-			if (id.equals(u.getUserId()) || id.equalsIgnoreCase(u.getUsername())) {
+			if (u.getUserState() != UserState.SYSTEM && (id.equals(u.getUserId()) || id.equalsIgnoreCase(u.getUsername()))) {
 				return u;
 			}
 		}

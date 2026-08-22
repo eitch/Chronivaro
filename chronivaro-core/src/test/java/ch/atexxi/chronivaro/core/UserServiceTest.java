@@ -124,4 +124,36 @@ public class UserServiceTest {
 		assertFalse(createResult.isOk());
 		assertTrue(createResult.getMessage().contains("already exists"));
 	}
+
+	@Test
+	public void shouldRejectSystemUserOperations() {
+		ServiceHandler serviceHandler = runtimeMock.getServiceHandler();
+
+		// 1. Cannot create user with SYSTEM state
+		CreateUserService.UserArgument createArg = new CreateUserService.UserArgument();
+		createArg.username = "systemuserfail";
+		createArg.firstname = "System";
+		createArg.lastname = "User";
+		createArg.roles = Set.of(ROLE_ADMINISTRATOR);
+		createArg.state = UserState.SYSTEM;
+
+		StringResult createResult = serviceHandler.doService(certificate, new CreateUserService(), createArg);
+		assertFalse(createResult.isOk());
+		assertTrue(createResult.getMessage().contains("Cannot create user with SYSTEM state"));
+
+		// 2. Cannot update system user (e.g. agent)
+		UpdateUserService.UpdateUserArgument updateArg = new UpdateUserService.UpdateUserArgument();
+		updateArg.userId = "agent";
+		updateArg.firstname = "ModifiedAgent";
+
+		ServiceResult updateResult = serviceHandler.doService(certificate, new UpdateUserService(), updateArg);
+		assertFalse(updateResult.isOk());
+		assertTrue(updateResult.getMessage().contains("not found"));
+
+		// 3. Cannot initiate registration challenge for system user
+		ServiceResult regResult = serviceHandler.doService(certificate, new InitiateUserRegistrationService(),
+				new StringArgument("agent"));
+		assertFalse(regResult.isOk());
+		assertTrue(regResult.getMessage().contains("not found"));
+	}
 }

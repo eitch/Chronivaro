@@ -137,7 +137,7 @@ export default class UsersView {
             try {
                 tbody.innerHTML = `<tr><td colspan="7" class="loading-cell" style="text-align: center; padding: 2rem;">${I18n.t('common.loading')}</td></tr>`;
                 const users = await UserApi.getAll(this.searchQuery);
-                this.users = Array.isArray(users) ? users : [];
+                this.users = (Array.isArray(users) ? users : []).filter(u => u.state !== 'SYSTEM');
                 tbody.innerHTML = '';
 
                 if (this.users.length === 0) {

@@ -26,6 +26,11 @@ public class CreateUserService extends AbstractService<CreateUserService.UserArg
 		DBC.PRE.assertNotEmpty("Lastname must not be empty", arg.lastname);
 		DBC.PRE.assertNotNull("Roles must not be null", arg.roles);
 		DBC.PRE.assertFalse("At least one role must be specified", arg.roles.isEmpty());
+		if (arg.state == UserState.SYSTEM) {
+			StringResult result = new StringResult(ServiceResultState.FAILED);
+			result.setMessage("Cannot create user with SYSTEM state!");
+			return result;
+		}
 
 		String userId;
 		try (StrolchTransaction tx = openArgOrUserTx(arg)) {

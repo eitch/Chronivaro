@@ -32,6 +32,17 @@ public class UserResourceTest extends AbstractChronivaroRestfulTest {
 					}.getType());
 			assertNotNull(users);
 			assertTrue(users.stream().anyMatch(u -> "admin".equals(u.username())));
+			assertFalse("System users must not be returned", users.stream().anyMatch(u -> "agent".equals(u.username())));
+			assertFalse("Users with SYSTEM state must not be returned", users.stream().anyMatch(u -> "SYSTEM".equalsIgnoreCase(u.state())));
+		}
+
+		// Verify system user (agent) cannot be retrieved directly
+		try (Response response = target()
+				.path("chronivaro/v1/admin/users/agent")
+				.request(MediaType.APPLICATION_JSON)
+				.header("Authorization", authToken)
+				.get()) {
+			assertEquals(Response.Status.NOT_FOUND.getStatusCode(), response.getStatus());
 		}
 
 		// 2. Create pure user

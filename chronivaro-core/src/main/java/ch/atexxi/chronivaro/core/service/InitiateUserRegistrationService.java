@@ -5,6 +5,7 @@ import li.strolch.persistence.api.StrolchTransaction;
 import li.strolch.privilege.handler.PrivilegeHandler;
 import li.strolch.privilege.model.Usage;
 import li.strolch.privilege.model.UserRep;
+import li.strolch.privilege.model.UserState;
 import li.strolch.service.StringArgument;
 import li.strolch.service.api.AbstractService;
 import li.strolch.service.api.ServiceResult;
@@ -34,7 +35,7 @@ public class InitiateUserRegistrationService extends AbstractService<StringArgum
 				}
 			}
 
-			if (user == null) {
+			if (user == null || user.getUserState() == UserState.SYSTEM) {
 				return ServiceResult.error("User " + arg.value + " not found!");
 			}
 
