@@ -231,20 +231,29 @@ The following foundational areas are verified as fully implemented in the reposi
 ### Task 12: Implement Detailed Monthly Period Inspection Endpoint and Approvals Detail View
 
 - **Specification Reference:** Section 4.1 (#11), Section 9.5, Section 12.1 (#6), Section 13.2
-- **Status:** `OPEN`
+- **Status:** `COMPLETED`
 - **Scope:**
-  1. Implement `GET /approvals/periods/{id}` endpoint in `ApprovalsResource.java` returning the complete `MonthSummaryDto` (days, work intervals, breaks, absences, target/actual calculations, comments) for the submitted period under supervisor authorization.
-  2. Extend `ApprovalsApi.js` and `ApprovalsView.js` in `chronivaro-web` with a detailed period inspection dialog/modal.
-  3. Allow supervisors to review the full daily breakdown in the inspection modal and approve or reject (with required reason) directly from that detail view as well as the summary table.
+  1. Implemented `GET /approvals/periods/{id}` endpoint in `ApprovalsResource.java` returning the complete `MonthSummaryDto` (daily breakdown, work intervals, breaks, absences, target/actual calculations, comments) for the submitted period under supervisor authorization with scoping checks.
+  2. Updated `MonthSummaryService.java` and `PeriodHelper.java` to populate and preserve daily work entry ranges and breaks across live queries and calculation snapshots.
+  3. Extended `ApprovalsApi.js` and `ApprovalsView.js` in `chronivaro-web` with a detailed period inspection dialog/modal (`#period-inspect-modal`).
+  4. Added "Inspect" button to submitted period rows and enabled supervisors to review the full daily breakdown in the inspection modal and approve or reject (with required reason) directly from that detail view as well as the summary table.
+  5. Added corresponding i18n translation keys in German (`de.json`) and English (`en.json`).
 - **Affected Components:**
+  - `chronivaro-core/src/main/java/ch/atexxi/chronivaro/core/service/MonthSummaryService.java`
+  - `chronivaro-core/src/main/java/ch/atexxi/chronivaro/core/model/PeriodHelper.java`
   - `chronivaro-rest/src/main/java/ch/atexxi/chronivaro/rest/resource/ApprovalsResource.java`
-  - `chronivaro-rest/src/test/java/ch/atexxi/chronivaro/rest/ApprovalsResourceTest.java`
+  - `chronivaro-rest/src/test/java/ch/atexxi/chronivaro/rest/ApprovalsQueueTest.java`
   - `chronivaro-web/src/main/webapp/js/api/ApprovalsApi.js`
   - `chronivaro-web/src/main/webapp/js/pages/ApprovalsView.js`
+  - `chronivaro-web/src/main/webapp/i18n/de.json`
+  - `chronivaro-web/src/main/webapp/i18n/en.json`
 - **Acceptance Criteria:**
   - `GET /chronivaro/v1/approvals/periods/{id}` returns the full monthly detail report for the submitted period to authorized supervisors.
   - `ApprovalsView.js` allows clicking a submitted period row to open a full inspection modal displaying daily time blocks, breaks, absences, and balances.
   - Direct approve and reject actions can be executed from within the inspection modal.
+- **Verification:**
+  - REST test in `ApprovalsQueueTest` validating `GET /approvals/periods/{id}` 200 OK return with day summaries, 403 Forbidden for unsupervised employee periods, 404 Not Found for missing periods, and HR/Admin permissions.
+  - Full reactor test suite passing cleanly (`mvn clean test`).
 - **Dependencies:** `MonthSummaryService` baseline.
 
 ---
