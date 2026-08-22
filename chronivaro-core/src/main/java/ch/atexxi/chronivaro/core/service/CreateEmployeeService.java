@@ -1,6 +1,7 @@
 package ch.atexxi.chronivaro.core.service;
 
 import ch.atexxi.chronivaro.core.model.ChronivaroAuditHelper;
+import ch.atexxi.chronivaro.core.model.VacationHelper;
 import li.strolch.model.Resource;
 import li.strolch.persistence.api.StrolchTransaction;
 import li.strolch.privilege.base.PrivilegeConstants;
@@ -82,12 +83,26 @@ public class CreateEmployeeService extends AbstractService<CreateEmployeeService
 				schedule.setInteger(PARAM_DAILY_TARGET_MINUTES_SATURDAY, template.getInteger(PARAM_DAILY_TARGET_MINUTES_SATURDAY));
 				schedule.setInteger(PARAM_DAILY_TARGET_MINUTES_SUNDAY, template.getInteger(PARAM_DAILY_TARGET_MINUTES_SUNDAY));
 
+				int weeklyMin = template.getInteger(PARAM_DAILY_TARGET_MINUTES_MONDAY)
+						+ template.getInteger(PARAM_DAILY_TARGET_MINUTES_TUESDAY)
+						+ template.getInteger(PARAM_DAILY_TARGET_MINUTES_WEDNESDAY)
+						+ template.getInteger(PARAM_DAILY_TARGET_MINUTES_THURSDAY)
+						+ template.getInteger(PARAM_DAILY_TARGET_MINUTES_FRIDAY)
+						+ template.getInteger(PARAM_DAILY_TARGET_MINUTES_SATURDAY)
+						+ template.getInteger(PARAM_DAILY_TARGET_MINUTES_SUNDAY);
+				schedule.setInteger(PARAM_WEEKLY_TARGET_MINUTES, weeklyMin);
+				schedule.setDouble(PARAM_EMPLOYMENT_RATE, (double) weeklyMin / (5.0 * DEFAULT_MINUTES_PER_VACATION_DAY));
+
 				initVersion(schedule, tx);
 				tx.add(schedule);
 				ChronivaroAuditHelper.audit(tx, TYPE_EMPLOYMENT_SCHEDULE, schedule.getId(), AUDIT_ACTION_CREATE,
 						"Created schedule for " + employee.getName() + " from template " + template.getName());
 				employee.setRelation(PARAM_CURRENT_SCHEDULE, schedule);
+			} else {
+				employee.removeParameter(BAG_RELATIONS, PARAM_CURRENT_SCHEDULE);
 			}
+
+			VacationHelper.creditOrRecalculateEntitlement(tx, employeeId, arg.joinDate.getYear(), false);
 
 			tx.commitOnClose();
 		}

@@ -13,7 +13,9 @@ public class ScheduleHelper {
 
 	public static Optional<Resource> findScheduleVersion(StrolchTransaction tx, String employeeId) {
 		Resource employee = tx.getResourceBy(TYPE_EMPLOYEE, employeeId, true);
-		return Optional.ofNullable(tx.getResourceByRelation(employee, PARAM_CURRENT_SCHEDULE, true));
+		if (!employee.hasRelation(PARAM_CURRENT_SCHEDULE))
+			return Optional.empty();
+		return Optional.ofNullable(tx.getResourceByRelation(employee, PARAM_CURRENT_SCHEDULE, false));
 	}
 
 	public static Optional<Resource> findScheduleVersion(StrolchTransaction tx, String employeeId, LocalDate date) {
@@ -36,11 +38,13 @@ public class ScheduleHelper {
 		if (version.isEmpty()) {
 			Resource employee = tx.getResourceBy(TYPE_EMPLOYEE, employeeId, true);
 			if (employee.hasRelation(PARAM_CURRENT_SCHEDULE)) {
-				Resource current = tx.getResourceByRelation(employee, PARAM_CURRENT_SCHEDULE, true);
-				LocalDate from = current.getDate(PARAM_VALID_FROM).toLocalDate();
-				if (!date.isBefore(from)) {
-					if (!current.hasParameter(PARAM_VALID_TO) || !date.isAfter(current.getDate(PARAM_VALID_TO).toLocalDate())) {
-						return Optional.of(current);
+				Resource current = tx.getResourceByRelation(employee, PARAM_CURRENT_SCHEDULE, false);
+				if (current != null) {
+					LocalDate from = current.getDate(PARAM_VALID_FROM).toLocalDate();
+					if (!date.isBefore(from)) {
+						if (!current.hasParameter(PARAM_VALID_TO) || !date.isAfter(current.getDate(PARAM_VALID_TO).toLocalDate())) {
+							return Optional.of(current);
+						}
 					}
 				}
 			}

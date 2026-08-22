@@ -1,6 +1,7 @@
 package ch.atexxi.chronivaro.core.service;
 
 import ch.atexxi.chronivaro.core.model.ChronivaroAuditHelper;
+import ch.atexxi.chronivaro.core.model.VacationHelper;
 import li.strolch.model.Resource;
 import li.strolch.persistence.api.StrolchTransaction;
 import li.strolch.service.api.AbstractService;
@@ -8,6 +9,8 @@ import li.strolch.service.api.ServiceArgument;
 import li.strolch.service.api.ServiceResult;
 
 import java.time.ZonedDateTime;
+import java.util.Set;
+import java.util.TreeSet;
 
 import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
 import static ch.atexxi.chronivaro.core.model.ChronivaroVersionHelper.bumpVersion;
@@ -87,6 +90,28 @@ public class UpdateScheduleService
 			tx.commitOnClose();
 		}
 
+		try (StrolchTransaction tx = openArgOrUserTx(arg).rollbackOnFailure()) {
+			Resource schedule = tx.getResourceBy(TYPE_EMPLOYMENT_SCHEDULE, arg.id, true);
+			String employeeId = schedule.getRelationId(PARAM_EMPLOYEE);
+
+			Set<Integer> years = new TreeSet<>();
+			years.add(arg.validFrom.getYear());
+			if (arg.validTo != null) {
+				years.add(arg.validTo.getYear());
+			}
+			tx.streamResources(TYPE_VACATION_ACCOUNT_ENTRY)
+					.filter(e -> e.hasRelation(PARAM_EMPLOYEE) && employeeId.equals(e.getRelationId(PARAM_EMPLOYEE))
+							&& VACATION_ENTITLEMENT.equals(e.getString(PARAM_VACATION_TYPE)))
+					.map(e -> e.getDate(PARAM_DATE).getYear())
+					.forEach(years::add);
+
+			for (int year : years) {
+				VacationHelper.creditOrRecalculateEntitlement(tx, employeeId, year, true);
+			}
+
+			tx.commitOnClose();
+		}
+
 		return ServiceResult.success();
 	}
 
@@ -94,10 +119,10 @@ public class UpdateScheduleService
 		ZonedDateTime now = ZonedDateTime.now();
 		Resource schedule = tx
 				.streamResources(TYPE_EMPLOYMENT_SCHEDULE)
-				.filter(s -> s.getRelationId(PARAM_EMPLOYEE).equals(employeeId))
+				.filter(s -> s.hasRelation(PARAM_EMPLOYEE) && employeeId.equals(s.getRelationId(PARAM_EMPLOYEE)))
 				.filter(s -> {
 					ZonedDateTime validFrom = s.getDate(PARAM_VALID_FROM);
-					ZonedDateTime validTo = s.getDate(PARAM_VALID_TO);
+					ZonedDateTime validTo = s.hasParameter(PARAM_VALID_TO) ? s.getDate(PARAM_VALID_TO) : null;
 					return !now.isBefore(validFrom) && (validTo == null || !now.isAfter(validTo));
 				})
 				.findFirst()
@@ -136,15 +161,23 @@ public class UpdateScheduleService
 		schedule.setInteger(PARAM_DAILY_TARGET_MINUTES_FRIDAY, arg.friday);
 		schedule.setInteger(PARAM_DAILY_TARGET_MINUTES_SATURDAY, arg.saturday);
 		schedule.setInteger(PARAM_DAILY_TARGET_MINUTES_SUNDAY, arg.sunday);
+
+		int weeklyMinutes = arg.monday + arg.tuesday + arg.wednesday + arg.thursday + arg.friday + arg.saturday + arg.sunday;
+		schedule.setInteger(PARAM_WEEKLY_TARGET_MINUTES, weeklyMinutes);
+		if (arg.employmentRate != null) {
+			schedule.setDouble(PARAM_EMPLOYMENT_RATE, arg.employmentRate);
+		} else {
+			schedule.setDouble(PARAM_EMPLOYMENT_RATE, (double) weeklyMinutes / (5.0 * DEFAULT_MINUTES_PER_VACATION_DAY));
+		}
 	}
 
 	private boolean hasWorkEntries(StrolchTransaction tx, String employeeId, Resource schedule) {
 		ZonedDateTime validFrom = schedule.getDate(PARAM_VALID_FROM);
-		ZonedDateTime validTo = schedule.getDate(PARAM_VALID_TO);
+		ZonedDateTime validTo = schedule.hasParameter(PARAM_VALID_TO) ? schedule.getDate(PARAM_VALID_TO) : null;
 
 		return tx
 				.streamResources(TYPE_WORK_ENTRY)
-				.filter(e -> e.getRelationId(PARAM_EMPLOYEE).equals(employeeId))
+				.filter(e -> e.hasRelation(PARAM_EMPLOYEE) && employeeId.equals(e.getRelationId(PARAM_EMPLOYEE)))
 				.anyMatch(e -> {
 					ZonedDateTime start = e.getDate(PARAM_START);
 					if (start.isBefore(validFrom))
@@ -167,6 +200,7 @@ public class UpdateScheduleService
 		public String id;
 		public ZonedDateTime validFrom;
 		public ZonedDateTime validTo;
+		public Double employmentRate;
 		public int monday;
 		public int tuesday;
 		public int wednesday;

@@ -296,6 +296,71 @@ public class VacationHelper {
 		}
 	}
 
+	public static Optional<String> creditOrRecalculateEntitlement(StrolchTransaction tx, String employeeId, int year,
+			boolean forceRecalculate) {
+		Resource employee = tx.getResourceBy(TYPE_EMPLOYEE, employeeId, true);
+
+		int entitlementMinutes = calculateAnnualEntitlement(tx, employeeId, year);
+		Optional<Resource> existing = findEntitlementEntry(tx, employeeId, year);
+
+		String username = tx.getCertificate() != null ? tx.getCertificate().getUsername() : "system";
+
+		if (existing.isPresent()) {
+			Resource entry = existing.get();
+			if (forceRecalculate) {
+				int currentCredited = entry.getInteger(PARAM_VALUE)
+						+ getEntitlementAdjustmentCorrections(tx, employeeId, year);
+				int delta = entitlementMinutes - currentCredited;
+				if (delta != 0) {
+					String empName = employee.hasParameter(PARAM_FIRSTNAME) && employee.hasParameter(PARAM_LASTNAME)
+							? employee.getString(PARAM_FIRSTNAME) + " " + employee.getString(PARAM_LASTNAME)
+							: employee.getName();
+					Resource corr = tx.getResourceTemplate(TYPE_VACATION_ACCOUNT_ENTRY, true);
+					corr.setName("Vacation Entitlement Recalculation " + year + " (" + empName + ")");
+					corr.setRelation(PARAM_EMPLOYEE, employee);
+					corr.setString(PARAM_VACATION_TYPE, VACATION_CORRECTION);
+					LocalDate joinDate = ChronivaroModelHelper.getJoinDate(employee);
+					LocalDate creditDate = joinDate.isAfter(LocalDate.of(year, 1, 1)) ? joinDate : LocalDate.of(year, 1, 1);
+					corr.setDate(PARAM_DATE, creditDate.atStartOfDay(ChronivaroModelHelper.getEmployeeTimezone(employee)));
+					corr.setInteger(PARAM_VALUE, delta);
+					corr.setString(PARAM_COMMENT, "Recalculated vacation entitlement adjustment for year " + year
+							+ " (" + (delta > 0 ? "+" + delta : String.valueOf(delta)) + " minutes)");
+					corr.setString(PARAM_CREATED_BY, username);
+
+					ChronivaroVersionHelper.initVersion(corr, tx);
+					tx.add(corr);
+
+					ChronivaroAuditHelper.audit(tx, TYPE_VACATION_ACCOUNT_ENTRY, corr.getId(), AUDIT_ACTION_CREATE,
+							"Recalculated vacation entitlement adjustment for year " + year + " from "
+									+ currentCredited + " to " + entitlementMinutes + " minutes (delta: " + delta + ")");
+					return Optional.of(corr.getId());
+				}
+			}
+			return Optional.of(entry.getId());
+		} else {
+			Resource entry = tx.getResourceTemplate(TYPE_VACATION_ACCOUNT_ENTRY, true);
+			String empName = employee.hasParameter(PARAM_FIRSTNAME) && employee.hasParameter(PARAM_LASTNAME)
+					? employee.getString(PARAM_FIRSTNAME) + " " + employee.getString(PARAM_LASTNAME)
+					: employee.getName();
+			entry.setName("Vacation Entitlement " + year + " (" + empName + ")");
+			entry.setRelation(PARAM_EMPLOYEE, employee);
+			entry.setString(PARAM_VACATION_TYPE, VACATION_ENTITLEMENT);
+			LocalDate joinDate = ChronivaroModelHelper.getJoinDate(employee);
+			LocalDate creditDate = joinDate.isAfter(LocalDate.of(year, 1, 1)) ? joinDate : LocalDate.of(year, 1, 1);
+			entry.setDate(PARAM_DATE, creditDate.atStartOfDay(ChronivaroModelHelper.getEmployeeTimezone(employee)));
+			entry.setInteger(PARAM_VALUE, entitlementMinutes);
+			entry.setString(PARAM_COMMENT, "Annual vacation entitlement " + year);
+			entry.setString(PARAM_CREATED_BY, username);
+
+			ChronivaroVersionHelper.initVersion(entry, tx);
+			tx.add(entry);
+
+			ChronivaroAuditHelper.audit(tx, TYPE_VACATION_ACCOUNT_ENTRY, entry.getId(), AUDIT_ACTION_CREATE,
+					"Credited annual vacation entitlement for year " + year + " (" + entitlementMinutes + " minutes)");
+			return Optional.of(entry.getId());
+		}
+	}
+
 	public static boolean isVacationAbsence(StrolchTransaction tx, Resource absence) {
 		Resource absenceType = tx.getResourceByRelation(absence, PARAM_ABSENCE_TYPE, true);
 		if (absenceType.getBoolean(PARAM_REDUCE_VACATION_CREDIT)) {
