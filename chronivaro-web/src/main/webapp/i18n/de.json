@@ -25,6 +25,7 @@
     "absenceTypes": "Abwesenheitsarten",
     "holidayCalendars": "Feiertagskalender",
     "scheduleTemplates": "Arbeitsplanvorlagen",
+    "users": "Benutzer",
     "configuration": "Konfiguration",
     "logout": "Abmelden"
   },
@@ -651,7 +652,30 @@
       "Supervisor": "Vorgesetzter",
       "HR": "Personalabteilung",
       "Administrator": "Administrator"
+    },
+    "state": {
+      "ENABLED": "Aktiv",
+      "DISABLED": "Deaktiviert"
     }
+  },
+  "users": {
+    "title": "Benutzerverwaltung",
+    "subtitle": "Verwalten Sie Systembenutzer, Rollen und Registrierungseinladungen unabhängig von Mitarbeiterprofilen.",
+    "addUser": "Benutzer hinzufügen",
+    "editUser": "Benutzer bearbeiten",
+    "username": "Benutzername",
+    "roles": "Rollen",
+    "type": "Typ",
+    "typeEmployee": "Mitarbeiter",
+    "typePureUser": "Systembenutzer",
+    "language": "Sprache",
+    "sendInvitation": "Einladung senden",
+    "searchPlaceholder": "Benutzer nach Name, E-Mail oder Benutzername suchen...",
+    "confirmSendInvitation": "Möchten Sie eine Registrierungseinladung (Passwort-Challenge) an Benutzer \"{username}\" senden?",
+    "invitationSentSuccess": "Registrierungseinladung für \"{username}\" erfolgreich ausgelöst.",
+    "userCreatedSuccess": "Benutzer \"{username}\" erfolgreich erstellt.",
+    "userUpdatedSuccess": "Benutzer \"{username}\" erfolgreich aktualisiert.",
+    "errorSelectAtLeastOneRole": "Bitte wählen Sie mindestens eine Rolle aus."
   },
   "user": {
     "profile": "Benutzerprofil",

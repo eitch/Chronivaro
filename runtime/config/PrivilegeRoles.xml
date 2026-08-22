@@ -21,6 +21,30 @@
         <Privilege name="RemoveResource" policy="ModelPrivilege">
             <AllAllowed>true</AllAllowed>
         </Privilege>
+        <Privilege name="PrivilegeAddUser" policy="UserAccessPrivilege">
+            <AllAllowed>true</AllAllowed>
+        </Privilege>
+        <Privilege name="PrivilegeGetUser" policy="UserAccessPrivilege">
+            <AllAllowed>true</AllAllowed>
+        </Privilege>
+        <Privilege name="PrivilegeModifyUser" policy="UserAccessPrivilege">
+            <AllAllowed>true</AllAllowed>
+        </Privilege>
+        <Privilege name="PrivilegeRemoveUser" policy="UserAccessPrivilege">
+            <AllAllowed>true</AllAllowed>
+        </Privilege>
+        <Privilege name="PrivilegeSetUserLocale" policy="UserAccessPrivilege">
+            <AllAllowed>true</AllAllowed>
+        </Privilege>
+        <Privilege name="PrivilegeSetUserPassword" policy="UserAccessPrivilege">
+            <AllAllowed>true</AllAllowed>
+        </Privilege>
+        <Privilege name="PrivilegeSetUserState" policy="UserAccessPrivilege">
+            <AllAllowed>true</AllAllowed>
+        </Privilege>
+        <Privilege name="RequirePasswordChange" policy="UserAccessPrivilege">
+            <AllAllowed>true</AllAllowed>
+        </Privilege>
     </Role>
 
     <Role name="Employee">

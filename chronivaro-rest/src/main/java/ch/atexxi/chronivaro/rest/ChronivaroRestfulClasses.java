@@ -30,6 +30,7 @@ public class ChronivaroRestfulClasses {
 		restfulClasses.add(ScheduleTemplateResource.class);
 		restfulClasses.add(SystemResource.class);
 		restfulClasses.add(TeamResource.class);
+		restfulClasses.add(UserResource.class);
 		return restfulClasses;
 	}
 

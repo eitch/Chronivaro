@@ -25,6 +25,7 @@
     "absenceTypes": "Absence Types",
     "holidayCalendars": "Holiday Calendars",
     "scheduleTemplates": "Schedule Templates",
+    "users": "Users",
     "configuration": "Configuration",
     "logout": "Logout"
   },
@@ -651,7 +652,30 @@
       "Supervisor": "Supervisor",
       "HR": "Human Resources",
       "Administrator": "Administrator"
+    },
+    "state": {
+      "ENABLED": "Enabled",
+      "DISABLED": "Disabled"
     }
+  },
+  "users": {
+    "title": "User Management",
+    "subtitle": "Manage system users, roles, and registration invitations independently from employee profiles.",
+    "addUser": "Add User",
+    "editUser": "Edit User",
+    "username": "Username",
+    "roles": "Roles",
+    "type": "Type",
+    "typeEmployee": "Employee",
+    "typePureUser": "System User",
+    "language": "Language",
+    "sendInvitation": "Send Invitation",
+    "searchPlaceholder": "Search users by name, email, or username...",
+    "confirmSendInvitation": "Do you want to send a registration invitation (password challenge) to user \"{username}\"?",
+    "invitationSentSuccess": "Registration invitation for \"{username}\" initiated successfully.",
+    "userCreatedSuccess": "User \"{username}\" created successfully.",
+    "userUpdatedSuccess": "User \"{username}\" updated successfully.",
+    "errorSelectAtLeastOneRole": "Please select at least one role."
   },
   "user": {
     "profile": "User Profile",

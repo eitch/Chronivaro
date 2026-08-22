@@ -15,6 +15,7 @@ import HolidayCalendarsView from './pages/HolidayCalendarsView.js';
 import SchedulesView from './pages/SchedulesView.js';
 import ScheduleTemplatesView from './pages/ScheduleTemplatesView.js';
 import ConfigurationView from './pages/ConfigurationView.js';
+import UsersView from './pages/UsersView.js';
 import ConfigurationApi from './api/ConfigurationApi.js';
 import CompleteRegistrationView from './pages/CompleteRegistrationView.js';
 import I18n from './i18n/I18n.js';
@@ -386,6 +387,9 @@ class ChronivaroApp {
                 break;
             case 'configuration':
                 view = new ConfigurationView(this);
+                break;
+            case 'users':
+                view = new UsersView(this);
                 break;
             case 'schedules':
                 view = new SchedulesView(this);
