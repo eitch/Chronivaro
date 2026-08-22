@@ -11,7 +11,7 @@ Chronivaro is a Resource-Order-Activity based working time and absence managemen
 - **Supervisor Approval Queues**: Dedicated approval inbox for team supervisors and HR managers with optimistic concurrency validation, team/type filters, and mandatory rejection feedback.
 - **Monthly Period Closing Workflow**: Employee period submission, calculation snapshot generation, supervisor approval, rejection comment inspection, and administrator period locking.
 - **Reporting & RFC 4180 CSV Export**: Daily summaries, monthly reports, vacation account journals, team overviews, and filtered absence reports with UTF-8 BOM encoding for seamless Excel import.
-- **Tenant Administration**: Master data management for employees, employment schedules, teams, locations, holiday calendars, absence types, and global tenant parameters.
+- **Tenant Administration & User Self-Service**: Master data management for employees, employment schedules, teams, locations, holiday calendars, absence types, global tenant parameters, and user self-service password changes accessible directly from the header user info dropdown.
 - **Audit Logging**: Immutable audit records capturing all state transitions, approvals, rejections, locks, and configuration updates.
 - **Standalone Embedded Jetty Execution**: Single self-contained fat-JAR (`chronivaro.jar`) delivering both frontend web assets and REST API endpoints without external servlet containers.
 
