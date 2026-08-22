@@ -18,6 +18,7 @@ import li.strolch.rest.RestfulStrolchComponent;
 import li.strolch.service.api.ServiceHandler;
 import li.strolch.service.api.ServiceResult;
 import li.strolch.service.api.ServiceResultState;
+import li.strolch.utils.helper.ExceptionHelper;
 
 import java.time.LocalDate;
 import java.time.YearMonth;
@@ -52,7 +53,7 @@ public class ChronivaroRestHelper {
 	}
 
 	public static StrolchTransaction openTx(Certificate cert) {
-		return RestfulStrolchComponent.getInstance().openTx(cert, ChronivaroRestHelper.class, false);
+		return RestfulStrolchComponent.getInstance().openTx(cert, ExceptionHelper.getCallerMethod(2), false);
 	}
 
 	public static ServiceHandler getServiceHandler() {
