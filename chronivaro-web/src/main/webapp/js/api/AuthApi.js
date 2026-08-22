@@ -11,6 +11,11 @@ export default class AuthApi {
 		localStorage.setItem('authToken', result.authToken);
 		localStorage.setItem('roles', JSON.stringify(result.roles || []));
 		localStorage.setItem('username', result.username || username);
+		if (result.userId) {
+			localStorage.setItem('userId', result.userId);
+		} else {
+			localStorage.setItem('userId', result.username || username);
+		}
 		if (result.firstname) {
 			localStorage.setItem('firstname', result.firstname);
 		} else {
@@ -36,12 +41,12 @@ export default class AuthApi {
 	}
 
 	static async changePassword(newPassword) {
-		const username = this.getUsername();
-		if (!username) {
+		const userId = this.getUserId();
+		if (!userId) {
 			throw new Error('User not logged in');
 		}
 		const password = btoa(newPassword);
-		return await Rest.put(`rest/strolch/privilege/users/${encodeURIComponent(username)}/password`, {
+		return await Rest.put(`rest/strolch/privilege/users/${encodeURIComponent(userId)}/password`, {
 			password
 		});
 	}
@@ -51,6 +56,7 @@ export default class AuthApi {
 		localStorage.removeItem('roles');
 		localStorage.removeItem('userLocale');
 		localStorage.removeItem('username');
+		localStorage.removeItem('userId');
 		localStorage.removeItem('firstname');
 		localStorage.removeItem('lastname');
 		// We could call the logout endpoint too if needed
@@ -73,6 +79,10 @@ export default class AuthApi {
 		return localStorage.getItem('username') || '';
 	}
 
+	static getUserId() {
+		return localStorage.getItem('userId') || this.getUsername();
+	}
+
 	static getFirstname() {
 		return localStorage.getItem('firstname') || '';
 	}
@@ -90,6 +100,7 @@ export default class AuthApi {
 
 	static getUser() {
 		return {
+			userId: this.getUserId(),
 			username: this.getUsername(),
 			firstname: this.getFirstname(),
 			lastname: this.getLastname(),

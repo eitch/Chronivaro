@@ -142,7 +142,7 @@ class ChronivaroApp {
                 this.closeNavGroups();
                 if (changePasswordModal) {
                     closePasswordModal();
-                    changePasswordModal.style.display = 'flex';
+                    changePasswordModal.style.display = 'block';
                     const newPwdInput = document.getElementById('change-pwd-new');
                     if (newPwdInput) newPwdInput.focus();
                 }
@@ -188,6 +188,9 @@ class ChronivaroApp {
                     await AuthApi.changePassword(newPassword);
                     closePasswordModal();
                     await NotificationDialog.info(I18n.t('user.passwordChangeSuccess') || 'Password changed successfully.', I18n.t('common.success'));
+                    AuthApi.logout();
+                    this.updateUserMenu();
+                    this.navigate('login');
                 } catch (err) {
                     console.error('Failed to change password', err);
                     if (changePasswordError) {

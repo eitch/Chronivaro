@@ -146,7 +146,7 @@ export default class MyTimesView {
                                 modalEndTime.max = toLocalDateTimeInputString(new Date().toISOString());
                             }
                             modalComment.value = entry.comment || '';
-                            modal.style.display = 'flex';
+                            modal.style.display = 'block';
                         });
                     }
 

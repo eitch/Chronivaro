@@ -9,7 +9,6 @@
         <Roles>
             <Role>StrolchAdmin</Role>
             <Role>Administrator</Role>
-            <Role>Employee</Role>
             <Role>Supervisor</Role>
             <Role>HR</Role>
             <Role>ModelAccessor</Role>

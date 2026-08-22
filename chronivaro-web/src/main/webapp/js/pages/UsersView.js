@@ -222,7 +222,7 @@ export default class UsersView {
                 box.checked = userRoles.includes(box.value);
             });
 
-            modal.style.display = 'flex';
+            modal.style.display = 'block';
         };
 
         const inviteUser = async (id) => {
@@ -255,7 +255,7 @@ export default class UsersView {
             usernameInput.required = true;
             container.querySelector('#user-locale').value = 'de';
             container.querySelector('#user-state').value = 'ENABLED';
-            modal.style.display = 'flex';
+            modal.style.display = 'block';
         });
 
         closeModalBtn.addEventListener('click', closeModal);

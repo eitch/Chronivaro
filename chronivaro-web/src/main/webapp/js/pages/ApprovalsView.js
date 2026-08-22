@@ -636,7 +636,7 @@ export default class ApprovalsView {
 		`;
 
 		modalBody.innerHTML = `<div class="loading-spinner" style="text-align: center; padding: 2rem;">${I18n.t('common.loading')}</div>`;
-		modal.style.display = 'flex';
+		modal.style.display = 'block';
 
 		this.currentInspectedPeriod = { period, periodId };
 

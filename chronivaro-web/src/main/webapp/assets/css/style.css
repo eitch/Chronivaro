@@ -755,6 +755,8 @@ tr:hover {
     overflow: auto;
     background-color: rgba(15, 23, 42, 0.5);
     backdrop-filter: blur(8px);
+    align-items: flex-start;
+    justify-content: center;
 }
 
 .notification-dialog-overlay {
@@ -772,6 +774,9 @@ tr:hover {
     max-width: 500px;
     position: relative;
     border: 1px solid var(--border-color);
+    box-sizing: border-box;
+    height: fit-content;
+    max-height: 90vh;
 }
 
 .modal-content.wide {

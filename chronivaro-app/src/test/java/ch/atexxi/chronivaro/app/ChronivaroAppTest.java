@@ -783,15 +783,17 @@ public class ChronivaroAppTest {
 				.build();
 		HttpResponse<String> empAuthRes = httpClient.send(empAuthReq, HttpResponse.BodyHandlers.ofString());
 		assertEquals(200, empAuthRes.statusCode());
-		String empToken = JsonParser.parseString(empAuthRes.body()).getAsJsonObject().get("authToken").getAsString();
+		JsonObject empAuthJson = JsonParser.parseString(empAuthRes.body()).getAsJsonObject();
+		String empToken = empAuthJson.get("authToken").getAsString();
+		String empUserId = empAuthJson.has("userId") ? empAuthJson.get("userId").getAsString() : "employee";
 		assertNotNull(empToken);
 
-		// 2. Change password for employee
+		// 2. Change password for employee using userId from auth response
 		JsonObject changePwdPayload = new JsonObject();
 		changePwdPayload.addProperty("password", Base64.getEncoder().encodeToString("NewPassword456!".getBytes()));
 
 		HttpRequest changePwdReq = HttpRequest.newBuilder()
-				.uri(URI.create("http://127.0.0.1:" + boundPort + "/rest/strolch/privilege/users/employee/password"))
+				.uri(URI.create("http://127.0.0.1:" + boundPort + "/rest/strolch/privilege/users/" + empUserId + "/password"))
 				.header("Authorization", empToken)
 				.header("Content-Type", "application/json")
 				.PUT(HttpRequest.BodyPublishers.ofString(changePwdPayload.toString()))
@@ -824,6 +826,46 @@ public class ChronivaroAppTest {
 		JsonObject newLoginJson = JsonParser.parseString(newLoginRes.body()).getAsJsonObject();
 		assertTrue(newLoginJson.has("authToken"));
 		assertEquals("employee", newLoginJson.get("username").getAsString());
+
+		// 5. Admin user password change using userId from auth response
+		JsonObject adminAuthPayload = new JsonObject();
+		adminAuthPayload.addProperty("username", "admin");
+		adminAuthPayload.addProperty("password", Base64.getEncoder().encodeToString("admin".getBytes()));
+
+		HttpRequest adminAuthReq = HttpRequest.newBuilder()
+				.uri(URI.create("http://127.0.0.1:" + boundPort + "/rest/strolch/authentication"))
+				.header("Content-Type", "application/json")
+				.POST(HttpRequest.BodyPublishers.ofString(adminAuthPayload.toString()))
+				.build();
+		HttpResponse<String> adminAuthRes = httpClient.send(adminAuthReq, HttpResponse.BodyHandlers.ofString());
+		assertEquals(200, adminAuthRes.statusCode());
+		JsonObject adminAuthJson = JsonParser.parseString(adminAuthRes.body()).getAsJsonObject();
+		String adminToken = adminAuthJson.get("authToken").getAsString();
+		String adminUserId = adminAuthJson.get("userId").getAsString();
+
+		JsonObject adminChangePwdPayload = new JsonObject();
+		adminChangePwdPayload.addProperty("password", Base64.getEncoder().encodeToString("AdminNewPassword789!".getBytes()));
+
+		HttpRequest adminChangePwdReq = HttpRequest.newBuilder()
+				.uri(URI.create("http://127.0.0.1:" + boundPort + "/rest/strolch/privilege/users/" + adminUserId + "/password"))
+				.header("Authorization", adminToken)
+				.header("Content-Type", "application/json")
+				.PUT(HttpRequest.BodyPublishers.ofString(adminChangePwdPayload.toString()))
+				.build();
+		HttpResponse<String> adminChangePwdRes = httpClient.send(adminChangePwdReq, HttpResponse.BodyHandlers.ofString());
+		assertEquals(200, adminChangePwdRes.statusCode());
+
+		JsonObject adminReAuthPayload = new JsonObject();
+		adminReAuthPayload.addProperty("username", "admin");
+		adminReAuthPayload.addProperty("password", Base64.getEncoder().encodeToString("AdminNewPassword789!".getBytes()));
+
+		HttpRequest adminReAuthReq = HttpRequest.newBuilder()
+				.uri(URI.create("http://127.0.0.1:" + boundPort + "/rest/strolch/authentication"))
+				.header("Content-Type", "application/json")
+				.POST(HttpRequest.BodyPublishers.ofString(adminReAuthPayload.toString()))
+				.build();
+		HttpResponse<String> adminReAuthRes = httpClient.send(adminReAuthReq, HttpResponse.BodyHandlers.ofString());
+		assertEquals(200, adminReAuthRes.statusCode());
 
 		this.app.stop();
 		assertFalse(this.app.isRunning());

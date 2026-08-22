@@ -420,7 +420,7 @@ export default class MyAbsencesView {
                             }
 
                             modalComment.value = absence.comment || '';
-                            modal.style.display = 'flex';
+                            modal.style.display = 'block';
                         });
                     }
 
@@ -555,7 +555,7 @@ export default class MyAbsencesView {
                 modalAbsenceType.selectedIndex = 1;
                 updateModalFields();
             }
-            modal.style.display = 'flex';
+            modal.style.display = 'block';
         });
 
         saveDraftBtn.addEventListener('click', async () => {
