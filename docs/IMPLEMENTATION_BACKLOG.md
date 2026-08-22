@@ -195,26 +195,35 @@ The following foundational areas are verified as fully implemented in the reposi
 ### Task 11: Restrict Employee Work Entry Edits to Shortening/Comments and Add MyTimes UI Controls
 
 - **Specification Reference:** Section 4.1 (#4, #5), Section 6.4, Section 9.1, Section 9.3, Section 12.1 (#1, #2), Section 13.2
-- **Status:** `OPEN`
+- **Status:** `COMPLETED`
 - **Scope:**
-  1. Update `StopTimerService` to accept an optional `comment` string and persist it to the `WorkEntry`. Update `DashboardView.js` timer stop modal/input to allow entering comments when stopping.
-  2. Update `CorrectWorkEntryService` and `ChronivaroResource.updateWorkEntry` (`PUT /me/work-entries/{id}`):
-     - For regular employee role: enforce that `start` is unchanged, `end` is less than or equal to previous `end` (shorten-only restriction), and permit updating `comment`.
-     - Reject attempts by regular employees to move `start` earlier or extend `end` with validation errors.
-     - Separate administrative full corrections (moving start, extending end, manual addition, deletion) to privileged admin/HR service endpoints.
-  3. Update `MyTimesView.js` to provide action controls for shortening end times and editing comments on open work entries.
+  1. Updated `StopTimerService` to accept an optional `comment` string and persist it to the `WorkEntry`. Updated `DashboardView.js` to allow entering comments when stopping the timer.
+  2. Updated `CorrectWorkEntryService` and `ChronivaroResource`:
+     - For regular employee role: enforced that `start` is unchanged, `end` is less than or equal to previous `end` (shorten-only restriction), and permitted updating `comment`.
+     - Rejected attempts by regular employees to move `start` earlier or extend `end` with validation errors.
+     - Separated administrative full corrections and deletions to privileged endpoints (`PUT /admin/work-entries/{id}`, `DELETE /admin/work-entries/{id}`) and `RemoveWorkEntryService`.
+  3. Updated `MyTimesView.js` to provide action controls and a modal dialog for shortening end times and editing comments on recorded work entries.
+  4. Updated German (`de.json`) and English (`en.json`) translations with full key parity.
 - **Affected Components:**
   - `chronivaro-core/src/main/java/ch/atexxi/chronivaro/core/service/StopTimerService.java`
   - `chronivaro-core/src/main/java/ch/atexxi/chronivaro/core/service/CorrectWorkEntryService.java`
-  - `chronivaro-core/src/main/java/ch/atexxi/chronivaro/core/model/WorkEntryHelper.java`
+  - `chronivaro-core/src/main/java/ch/atexxi/chronivaro/core/service/RemoveWorkEntryService.java`
+  - `chronivaro-core/src/main/java/ch/atexxi/chronivaro/core/model/ChronivaroModelHelper.java`
+  - `chronivaro-core/src/test/java/ch/atexxi/chronivaro/core/WorkEntryServiceTest.java`
   - `chronivaro-rest/src/main/java/ch/atexxi/chronivaro/rest/resource/ChronivaroResource.java`
-  - `chronivaro-web/src/main/webapp/js/api/TimerApi.js`
+  - `chronivaro-web/src/main/webapp/js/api/WorkEntryApi.js`
   - `chronivaro-web/src/main/webapp/js/pages/DashboardView.js`
   - `chronivaro-web/src/main/webapp/js/pages/MyTimesView.js`
+  - `chronivaro-web/src/main/webapp/i18n/de.json`
+  - `chronivaro-web/src/main/webapp/i18n/en.json`
 - **Acceptance Criteria:**
   - Timer stop persists optional work entry comments.
   - Calling `PUT /me/work-entries/{id}` allows employees to shorten the end time and update comments, but rejects any start time modification or end time extension.
   - `MyTimesView.js` provides UI dialogues for editing comments and shortening time blocks.
+  - Full corrections and deletions available to administrators.
+- **Verification:**
+  - Unit tests in `WorkEntryServiceTest` (`shouldStopTimerWithComment`, `shouldAllowEmployeeToShortenWorkEntryAndEditComment`, `shouldRejectEmployeeExtendingWorkEntry`, `shouldRejectEmployeeModifyingStartTime`, `shouldAllowAdminToPerformFullCorrectionAndDeletion`) passed.
+  - Full reactor test suite passing cleanly (`mvn clean test`).
 - **Dependencies:** `CorrectWorkEntryService` and `StopTimerService` baseline.
 
 ---

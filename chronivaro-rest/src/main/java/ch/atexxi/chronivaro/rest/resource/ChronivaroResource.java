@@ -192,6 +192,52 @@ public class ChronivaroResource {
 		return ChronivaroRestHelper.toResponse(result);
 	}
 
+	@PUT
+	@Path("admin/work-entries/{id}")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response adminUpdateWorkEntry(@Context HttpServletRequest request, @PathParam("id") String id, String data) {
+		Certificate cert = (Certificate) request.getAttribute(STROLCH_CERTIFICATE);
+		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
+			Resource workEntry = tx.getResourceBy(TYPE_WORK_ENTRY, id, true);
+			ConcurrencyHelper.validateIfMatch(request, workEntry);
+		}
+
+		ServiceHandler serviceHandler = ChronivaroRestHelper.getServiceHandler();
+		WorkEntryDto dto = ChronivaroRestHelper.createGson().fromJson(data, WorkEntryDto.class);
+
+		if (dto.start() != null && dto.end() != null && (dto.end().isBefore(dto.start()) || dto.end().isEqual(dto.start()))) {
+			return ChronivaroRestHelper.toErrorResponse(Response.Status.BAD_REQUEST, "INVALID_ENTRY_DURATION",
+					"Work entry end time must be strictly after start time");
+		}
+
+		CorrectWorkEntryService.CorrectWorkEntryArgument arg = new CorrectWorkEntryService.CorrectWorkEntryArgument();
+		arg.workEntryId = id;
+		arg.start = dto.start();
+		arg.end = dto.end();
+		arg.comment = dto.comment();
+		arg.workingLocation = dto.workingLocation();
+
+		ServiceResult result = serviceHandler.doService(cert, new CorrectWorkEntryService(), arg);
+		if (result.isOk()) {
+			try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
+				Resource workEntry = tx.getResourceBy(TYPE_WORK_ENTRY, id, true);
+				return ConcurrencyHelper.toResponseWithETag(workEntry, ChronivaroMapper.toDto(workEntry));
+			}
+		}
+		return ChronivaroRestHelper.toResponse(result);
+	}
+
+	@DELETE
+	@Path("admin/work-entries/{id}")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response adminDeleteWorkEntry(@Context HttpServletRequest request, @PathParam("id") String id) {
+		Certificate cert = (Certificate) request.getAttribute(STROLCH_CERTIFICATE);
+		ServiceHandler serviceHandler = ChronivaroRestHelper.getServiceHandler();
+		ServiceResult result = serviceHandler.doService(cert, new RemoveWorkEntryService(), new StringArgument(id));
+		return ChronivaroRestHelper.toResponse(result);
+	}
+
 	@GET
 	@Path("me/vacation-account")
 	@Produces(MediaType.APPLICATION_JSON)
@@ -482,8 +528,9 @@ public class ChronivaroResource {
 
 	@POST
 	@Path("me/timer/stop")
+	@Consumes({MediaType.APPLICATION_JSON, MediaType.WILDCARD})
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response stopTimer(@Context HttpServletRequest request) {
+	public Response stopTimer(@Context HttpServletRequest request, String data) {
 		Certificate cert = (Certificate) request.getAttribute(STROLCH_CERTIFICATE);
 		ServiceHandler serviceHandler = ChronivaroRestHelper.getServiceHandler();
 
@@ -496,9 +543,23 @@ public class ChronivaroResource {
 			employeeId = employee.get().getId();
 		}
 
-		StopTimerService.StopTimerArgument arg = new StopTimerService.StopTimerArgument(employeeId);
+		String comment = null;
+		if (isNotEmpty(data)) {
+			try {
+				TimerStopDto stopDto = ChronivaroRestHelper.createGson().fromJson(data, TimerStopDto.class);
+				if (stopDto != null) {
+					comment = stopDto.comment();
+				}
+			} catch (Exception ignored) {
+			}
+		}
+
+		StopTimerService.StopTimerArgument arg = new StopTimerService.StopTimerArgument(employeeId, comment);
 		ServiceResult result = serviceHandler.doService(cert, new StopTimerService(), arg);
 		return ChronivaroRestHelper.toResponse(result);
+	}
+
+	private record TimerStopDto(String comment) {
 	}
 
 	@GET

@@ -31,6 +31,10 @@ export default class DashboardView {
 					<button id="stop-timer" disabled>${I18n.t('dashboard.stop')}</button>
 					<button id="change-working-location" type="button" disabled>${I18n.t('dashboard.changeLocation')}</button>
 				</div>
+				<div id="timer-comment-container" class="form-group" style="margin-top: 10px;">
+					<label for="timer-comment">${I18n.t('common.comment')}:</label>
+					<input type="text" id="timer-comment" placeholder="${I18n.t('dashboard.optionalComment')}" style="width: 100%; max-width: 400px; padding: 6px 10px; margin-top: 4px; display: block;">
+				</div>
 			</div>
 			<div id="day-summary">
 				<h3>${I18n.t('dashboard.todaySummary')}</h3>
@@ -115,9 +119,13 @@ export default class DashboardView {
       			locationSelectionCleared = true;
       		});
 
+        const timerCommentInput = container.querySelector('#timer-comment');
+
         stopBtn.addEventListener('click', async () => {
             try {
-                await WorkEntryApi.stopTimer();
+                const comment = timerCommentInput ? timerCommentInput.value.trim() : null;
+                await WorkEntryApi.stopTimer(comment);
+                if (timerCommentInput) timerCommentInput.value = '';
                 await refresh();
             } catch (err) {
                 NotificationDialog.error(err.message);
@@ -126,7 +134,9 @@ export default class DashboardView {
 
 		changeWorkingLocationBtn.addEventListener('click', async () => {
 			try {
-				await WorkEntryApi.stopTimer();
+				const comment = timerCommentInput ? timerCommentInput.value.trim() : null;
+				await WorkEntryApi.stopTimer(comment);
+				if (timerCommentInput) timerCommentInput.value = '';
 				locationSelectionCleared = true;
 				workingLocations.forEach(input => {
 					input.checked = false;

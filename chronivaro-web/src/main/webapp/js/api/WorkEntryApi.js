@@ -6,8 +6,22 @@ export default class WorkEntryApi {
         return await Rest.post('rest/chronivaro/v1/me/timer/start', {workingLocation});
     }
 
-    static async stopTimer() {
-        return await Rest.post('rest/chronivaro/v1/me/timer/stop');
+    static async stopTimer(comment) {
+        return await Rest.post('rest/chronivaro/v1/me/timer/stop', comment ? {comment} : {});
+    }
+
+    static async updateWorkEntry(id, data, etag) {
+        const headers = etag ? {'If-Match': etag} : {};
+        return await Rest.put(`rest/chronivaro/v1/me/work-entries/${id}`, data, headers);
+    }
+
+    static async adminUpdateWorkEntry(id, data, etag) {
+        const headers = etag ? {'If-Match': etag} : {};
+        return await Rest.put(`rest/chronivaro/v1/admin/work-entries/${id}`, data, headers);
+    }
+
+    static async adminDeleteWorkEntry(id) {
+        return await Rest.delete(`rest/chronivaro/v1/admin/work-entries/${id}`);
     }
 
     static async getDaySummary(date) {

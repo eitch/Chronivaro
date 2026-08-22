@@ -146,6 +146,7 @@
     "workingLocation": "Arbeitsort",
     "start": "Starten",
     "stop": "Stoppen",
+    "optionalComment": "Optionaler Kommentar beim Stoppen...",
     "greeting": "Willkommen zurück, {name}",
     "clockIn": "Timer starten",
     "clockOut": "Timer stoppen",
@@ -202,7 +203,13 @@
     "invalidDuration": "Endzeit muss nach der Startzeit liegen.",
     "notes": "Notizen",
     "confirmDelete": "Möchten Sie diesen Zeiteintrag wirklich löschen?",
-    "noEntries": "Keine Zeitbuchungen für diesen Zeitraum vorhanden."
+    "noEntries": "Keine Zeitbuchungen für diesen Zeitraum vorhanden.",
+    "shortenEntry": "Zeitbuchung verkürzen / bearbeiten",
+    "shortenDialogTitle": "Zeitbuchung anpassen",
+    "shortenHelpText": "Sie können die Endzeit vorverlegen (verkürzen) und den Kommentar anpassen.",
+    "entryUpdated": "Zeitbuchung erfolgreich aktualisiert.",
+    "shortenOnlyError": "Als Mitarbeiter können Sie Buchungen nur verkürzen und Startzeiten nicht verändern.",
+    "shortenTime": "Verkürzte Endzeit"
   },
   "absences": {
     "title": "Abwesenheiten & Ferien",

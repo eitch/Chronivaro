@@ -146,6 +146,7 @@
     "workingLocation": "Working location",
     "start": "Start",
     "stop": "Stop",
+    "optionalComment": "Optional comment when stopping...",
     "greeting": "Welcome back, {name}",
     "clockIn": "Start Timer",
     "clockOut": "Stop Timer",
@@ -202,7 +203,13 @@
     "invalidDuration": "End time must be after start time.",
     "notes": "Notes",
     "confirmDelete": "Are you sure you want to delete this time entry?",
-    "noEntries": "No time entries recorded for this period."
+    "noEntries": "No time entries recorded for this period.",
+    "shortenEntry": "Shorten / Edit Work Entry",
+    "shortenDialogTitle": "Adjust Work Entry",
+    "shortenHelpText": "You can shorten the end time and update the comment.",
+    "entryUpdated": "Work entry updated successfully.",
+    "shortenOnlyError": "As an employee you can only shorten entries and cannot modify start times.",
+    "shortenTime": "Shortened End Time"
   },
   "absences": {
     "title": "Absences & Vacation",
