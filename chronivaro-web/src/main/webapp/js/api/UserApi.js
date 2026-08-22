@@ -34,7 +34,7 @@ export default class UserApi {
 
     static async setUserPassword(userId, password) {
         password = btoa(password);
-        await Rest.put(`rest/strolch/privilege/users/${userId}/password`, {
+        await Rest.put(`rest/strolch/privilege/users/${encodeURIComponent(userId)}/password`, {
             password
         });
     }

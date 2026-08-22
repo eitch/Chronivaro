@@ -754,6 +754,82 @@ public class ChronivaroAppTest {
 	}
 
 	@Test
+	public void shouldAllowUserToChangeOwnPasswordAndAuthenticateWithNewPassword() throws Exception {
+		ChronivaroAppConfig config = new ChronivaroAppConfig(
+				true,
+				"127.0.0.1",
+				0,
+				"/",
+				null,
+				TARGET_PATH,
+				"dev"
+		);
+
+		this.app = new ChronivaroApp(config);
+		this.app.start();
+
+		int boundPort = this.app.getPort();
+		HttpClient httpClient = HttpClient.newHttpClient();
+
+		// 1. Employee login with initial password
+		JsonObject empAuthPayload = new JsonObject();
+		empAuthPayload.addProperty("username", "employee");
+		empAuthPayload.addProperty("password", Base64.getEncoder().encodeToString("admin".getBytes()));
+
+		HttpRequest empAuthReq = HttpRequest.newBuilder()
+				.uri(URI.create("http://127.0.0.1:" + boundPort + "/rest/strolch/authentication"))
+				.header("Content-Type", "application/json")
+				.POST(HttpRequest.BodyPublishers.ofString(empAuthPayload.toString()))
+				.build();
+		HttpResponse<String> empAuthRes = httpClient.send(empAuthReq, HttpResponse.BodyHandlers.ofString());
+		assertEquals(200, empAuthRes.statusCode());
+		String empToken = JsonParser.parseString(empAuthRes.body()).getAsJsonObject().get("authToken").getAsString();
+		assertNotNull(empToken);
+
+		// 2. Change password for employee
+		JsonObject changePwdPayload = new JsonObject();
+		changePwdPayload.addProperty("password", Base64.getEncoder().encodeToString("NewPassword456!".getBytes()));
+
+		HttpRequest changePwdReq = HttpRequest.newBuilder()
+				.uri(URI.create("http://127.0.0.1:" + boundPort + "/rest/strolch/privilege/users/employee/password"))
+				.header("Authorization", empToken)
+				.header("Content-Type", "application/json")
+				.PUT(HttpRequest.BodyPublishers.ofString(changePwdPayload.toString()))
+				.build();
+		HttpResponse<String> changePwdRes = httpClient.send(changePwdReq, HttpResponse.BodyHandlers.ofString());
+		assertEquals(200, changePwdRes.statusCode());
+
+		// 3. Login with old password should fail
+		HttpRequest oldLoginReq = HttpRequest.newBuilder()
+				.uri(URI.create("http://127.0.0.1:" + boundPort + "/rest/strolch/authentication"))
+				.header("Content-Type", "application/json")
+				.POST(HttpRequest.BodyPublishers.ofString(empAuthPayload.toString()))
+				.build();
+		HttpResponse<String> oldLoginRes = httpClient.send(oldLoginReq, HttpResponse.BodyHandlers.ofString());
+		assertTrue("Login with old password should fail, got status: " + oldLoginRes.statusCode(),
+				oldLoginRes.statusCode() == 401 || oldLoginRes.statusCode() == 403 || oldLoginRes.statusCode() == 400);
+
+		// 4. Login with new password should succeed
+		JsonObject newAuthPayload = new JsonObject();
+		newAuthPayload.addProperty("username", "employee");
+		newAuthPayload.addProperty("password", Base64.getEncoder().encodeToString("NewPassword456!".getBytes()));
+
+		HttpRequest newLoginReq = HttpRequest.newBuilder()
+				.uri(URI.create("http://127.0.0.1:" + boundPort + "/rest/strolch/authentication"))
+				.header("Content-Type", "application/json")
+				.POST(HttpRequest.BodyPublishers.ofString(newAuthPayload.toString()))
+				.build();
+		HttpResponse<String> newLoginRes = httpClient.send(newLoginReq, HttpResponse.BodyHandlers.ofString());
+		assertEquals(200, newLoginRes.statusCode());
+		JsonObject newLoginJson = JsonParser.parseString(newLoginRes.body()).getAsJsonObject();
+		assertTrue(newLoginJson.has("authToken"));
+		assertEquals("employee", newLoginJson.get("username").getAsString());
+
+		this.app.stop();
+		assertFalse(this.app.isRunning());
+	}
+
+	@Test
 	public void shouldPreserveArchitecturalSeparationWithoutJettyInCoreOrRest() {
 		// Verify that chronivaro-core and chronivaro-rest classes have no dependencies on org.eclipse.jetty
 		Class<?>[] nonJettyClasses = new Class<?>[]{

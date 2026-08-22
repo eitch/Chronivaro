@@ -18,6 +18,7 @@ import ConfigurationView from './pages/ConfigurationView.js';
 import UsersView from './pages/UsersView.js';
 import ConfigurationApi from './api/ConfigurationApi.js';
 import CompleteRegistrationView from './pages/CompleteRegistrationView.js';
+import NotificationDialog from './utils/NotificationDialog.js';
 import I18n from './i18n/I18n.js';
 
 class ChronivaroApp {
@@ -108,9 +109,94 @@ class ChronivaroApp {
             }
         });
 
+        this.setupChangePasswordModal();
+
         I18n.onLanguageChange((lang) => {
             this.onLanguageChanged(lang);
         });
+    }
+
+    setupChangePasswordModal() {
+        const changePasswordBtn = document.getElementById('change-password-btn');
+        const changePasswordModal = document.getElementById('change-password-modal');
+        const changePasswordForm = document.getElementById('change-password-form');
+        const changePasswordCloseIcon = document.getElementById('change-password-close-icon');
+        const changePasswordCancelBtn = document.getElementById('change-password-cancel-btn');
+        const changePasswordError = document.getElementById('change-password-error');
+
+        const closePasswordModal = () => {
+            if (changePasswordModal) {
+                changePasswordModal.style.display = 'none';
+            }
+            if (changePasswordForm) {
+                changePasswordForm.reset();
+            }
+            if (changePasswordError) {
+                changePasswordError.style.display = 'none';
+                changePasswordError.textContent = '';
+            }
+        };
+
+        if (changePasswordBtn) {
+            changePasswordBtn.addEventListener('click', () => {
+                this.closeNavGroups();
+                if (changePasswordModal) {
+                    closePasswordModal();
+                    changePasswordModal.style.display = 'flex';
+                    const newPwdInput = document.getElementById('change-pwd-new');
+                    if (newPwdInput) newPwdInput.focus();
+                }
+            });
+        }
+
+        if (changePasswordCloseIcon) {
+            changePasswordCloseIcon.addEventListener('click', closePasswordModal);
+        }
+
+        if (changePasswordCancelBtn) {
+            changePasswordCancelBtn.addEventListener('click', closePasswordModal);
+        }
+
+        if (changePasswordForm) {
+            changePasswordForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                if (changePasswordError) {
+                    changePasswordError.style.display = 'none';
+                    changePasswordError.textContent = '';
+                }
+
+                const newPassword = document.getElementById('change-pwd-new')?.value;
+                const confirmPassword = document.getElementById('change-pwd-confirm')?.value;
+
+                if (!newPassword) {
+                    if (changePasswordError) {
+                        changePasswordError.textContent = I18n.t('errors.validationError');
+                        changePasswordError.style.display = 'block';
+                    }
+                    return;
+                }
+
+                if (newPassword !== confirmPassword) {
+                    if (changePasswordError) {
+                        changePasswordError.textContent = I18n.t('user.passwordMismatch') || I18n.t('auth.passwordMismatch');
+                        changePasswordError.style.display = 'block';
+                    }
+                    return;
+                }
+
+                try {
+                    await AuthApi.changePassword(newPassword);
+                    closePasswordModal();
+                    await NotificationDialog.info(I18n.t('user.passwordChangeSuccess') || 'Password changed successfully.', I18n.t('common.success'));
+                } catch (err) {
+                    console.error('Failed to change password', err);
+                    if (changePasswordError) {
+                        changePasswordError.textContent = err.message || I18n.t('app.error');
+                        changePasswordError.style.display = 'block';
+                    }
+                }
+            });
+        }
     }
 
     async start() {
@@ -235,7 +321,7 @@ class ChronivaroApp {
             });
         }
 
-        document.querySelectorAll('header [data-i18n]').forEach(el => {
+        document.querySelectorAll('header [data-i18n], #change-password-modal [data-i18n]').forEach(el => {
             const key = el.getAttribute('data-i18n');
             if (key) {
                 el.textContent = I18n.t(key);

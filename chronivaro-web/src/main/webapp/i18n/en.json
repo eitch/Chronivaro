@@ -683,7 +683,12 @@
     "name": "Name",
     "firstName": "First Name",
     "lastName": "Last Name",
-    "username": "Username"
+    "username": "Username",
+    "changePassword": "Change Password",
+    "newPassword": "New Password",
+    "confirmPassword": "Confirm Password",
+    "passwordMismatch": "Passwords do not match.",
+    "passwordChangeSuccess": "Password changed successfully."
   },
   "errors": {
     "unauthorized": "You must be logged in to perform this action.",

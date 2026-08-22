@@ -139,6 +139,7 @@
 
     <Role name="Employee">
         <Privilege name="li.strolch.service.api.Service" policy="DefaultPrivilege">
+            <Allow>li.strolch.service.privilege.users.PrivilegeSetUserPasswordService</Allow>
             <Allow>ch.atexxi.chronivaro.core.service.DaySummaryService</Allow>
             <Allow>ch.atexxi.chronivaro.core.service.MonthSummaryService</Allow>
             <Allow>ch.atexxi.chronivaro.core.service.RequestAbsenceService</Allow>
@@ -166,6 +167,7 @@
 
     <Role name="Supervisor">
         <Privilege name="li.strolch.service.api.Service" policy="DefaultPrivilege">
+            <Allow>li.strolch.service.privilege.users.PrivilegeSetUserPasswordService</Allow>
             <Allow>ch.atexxi.chronivaro.core.service.AddWorkEntryService</Allow>
             <Allow>ch.atexxi.chronivaro.core.service.CorrectWorkEntryService</Allow>
             <Allow>ch.atexxi.chronivaro.core.service.RemoveWorkEntryService</Allow>
@@ -192,10 +194,14 @@
             <Allow>ch.atexxi.chronivaro.core.search.TimePeriodSearch</Allow>
             <Allow>ch.atexxi.chronivaro.core.search.VacationAccountEntrySearch</Allow>
         </Privilege>
+        <Privilege name="PrivilegeSetUserPassword" policy="DefaultPrivilege">
+            <AllAllowed>true</AllAllowed>
+        </Privilege>
     </Role>
 
     <Role name="HR">
         <Privilege name="li.strolch.service.api.Service" policy="DefaultPrivilege">
+            <Allow>li.strolch.service.privilege.users.PrivilegeSetUserPasswordService</Allow>
             <Allow>ch.atexxi.chronivaro.core.service.AddWorkEntryService</Allow>
             <Allow>ch.atexxi.chronivaro.core.service.CorrectWorkEntryService</Allow>
             <Allow>ch.atexxi.chronivaro.core.service.RemoveWorkEntryService</Allow>
@@ -225,6 +231,9 @@
             <Allow>ch.atexxi.chronivaro.core.search.AbsenceSearch</Allow>
             <Allow>ch.atexxi.chronivaro.core.search.TimePeriodSearch</Allow>
             <Allow>ch.atexxi.chronivaro.core.search.VacationAccountEntrySearch</Allow>
+        </Privilege>
+        <Privilege name="PrivilegeSetUserPassword" policy="DefaultPrivilege">
+            <AllAllowed>true</AllAllowed>
         </Privilege>
     </Role>
 </Roles>

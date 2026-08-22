@@ -35,6 +35,17 @@ export default class AuthApi {
 		});
 	}
 
+	static async changePassword(newPassword) {
+		const username = this.getUsername();
+		if (!username) {
+			throw new Error('User not logged in');
+		}
+		const password = btoa(newPassword);
+		return await Rest.put(`rest/strolch/privilege/users/${encodeURIComponent(username)}/password`, {
+			password
+		});
+	}
+
 	static logout() {
 		localStorage.removeItem('authToken');
 		localStorage.removeItem('roles');

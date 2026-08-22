@@ -8,6 +8,7 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import org.junit.Test;
 
+import java.util.Base64;
 import java.util.List;
 import java.util.Set;
 
@@ -106,6 +107,16 @@ public class UserResourceTest extends AbstractChronivaroRestfulTest {
 				.request(MediaType.APPLICATION_JSON)
 				.header("Authorization", authToken)
 				.post(Entity.json(""))) {
+			assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+		}
+
+		// 6. Set Password
+		String passwordJson = "{\"password\":\"" + Base64.getEncoder().encodeToString("NewPassword123!".getBytes()) + "\"}";
+		try (Response response = target()
+				.path("strolch/privilege/users/" + createdUserId + "/password")
+				.request(MediaType.APPLICATION_JSON)
+				.header("Authorization", authToken)
+				.put(Entity.json(passwordJson))) {
 			assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
 		}
 	}
