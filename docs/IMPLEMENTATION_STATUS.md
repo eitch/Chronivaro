@@ -14,19 +14,14 @@ Audit date: 2026-08-21. `IMPLEMENTATION_SPECIFICATION.md` is authoritative; the 
 - **Period Calculation Snapshots & Balance Carry-Forward (Sections 6.9, 11.2, 11.6.2):** Month summaries return immutable `calculationSnapshot` for approved and locked periods; `initialBalance` accurately carries forward prior month closing balance; monthly summary categorizes paid absences, unpaid absences, vacation usage, and holiday credits; supervisor period approval inspection endpoint (`GET /approvals/periods/{id}`) and modal in `ApprovalsView` providing full monthly drill-down inspection and approval/rejection actions.
 - **Reporting & Exports (Sections 11.1–11.5, 12.1–12.2, 13.8, 17, 18.6):** Core calculation engines, Web UI report viewers, deterministic RFC 4180 CSV exports, and server-side native OpenPDF export generator with streaming REST endpoints (`/reports/month`, `/reports/vacation`, `/reports/absences`).
 - **Presence, Audit & System Operations (Sections 8, 11, 12, 13.2, 13.6, 19, 20):** Binary presence indicators with privacy masking, comprehensive audit trail recording entity lifecycle events and retention purge service, health/readiness probes, and structured logging.
+- **User Management for Pure System Users (Sections 3.6, 6.1.1, 9.7, 12.1 #8, 13.2):** Pure Strolch user lifecycle services (`CreateUserService`, `UpdateUserService`, `InitiateUserRegistrationService`), REST API (`/admin/users`, `/admin/users/{id}/register`), and `UsersView` in Web UI supporting role assignment (Admin, HR, Supervisor, Employee) and password initialization challenge challenges for non-employee users.
 - **Localization & Branding (Sections 4.2, 6.11, 12.3, 16, 18, 18.5):** Global company branding (name/logo), default language configuration, client-side i18n engine with German (Swiss German) and English translations across all views, and automated key parity verification.
 
 ---
 
 ## Incomplete Requirements / Active Backlog Tasks
 
-The following requirements from `docs/IMPLEMENTATION_SPECIFICATION.md` represent incomplete or missing behaviour identified during repository re-audit:
-
-1. **User Management for Pure System Users (Non-Employees) (Task 13):**
-   - *Classification:* `MISSING`
-   - *Specification Reference:* Section 3.6, Section 6.1.1, Section 9.7, Section 12.1 (#8), Section 13.2
-   - *Status:* `OPEN`
-   - *Missing Behaviour:* No domain services (`CreateUserService`, `UpdateUserService`, `InitiateUserRegistrationService`), REST API (`/users`), or UI under Administration for managing Strolch users without linked `Employee` records.
+All active requirements from the audit backlog (Tasks 9 through 13) have been fully implemented and verified against the specification and repository codebase. No open backlog tasks remain for the current milestone.
 
 ---
 

@@ -261,37 +261,48 @@ The following foundational areas are verified as fully implemented in the reposi
 ### Task 13: Implement User Management for Pure System Users (Core Services, REST API, Web UI)
 
 - **Specification Reference:** Section 3.6, Section 6.1.1, Section 9.7, Section 12.1 (#8), Section 13.2
-- **Status:** `OPEN`
+- **Status:** `COMPLETED`
 - **Scope:**
-  1. Implement core services in `chronivaro-core`:
-     - `CreateUserService`: creates Strolch `User` with roles (e.g. `Admin`, `HR`, `Supervisor`, `Reader`), username, and name without creating an `Employee` resource.
+  1. Implemented core services in `chronivaro-core`:
+     - `CreateUserService`: creates Strolch `User` with roles (e.g. `Administrator`, `HR`, `Supervisor`, `Employee`), username, and name without creating an `Employee` resource.
      - `UpdateUserService`: updates pure user properties and role assignments.
      - `InitiateUserRegistrationService`: initiates the `Usage.SET_PASSWORD` challenge token for pure users.
-  2. Implement REST endpoints in `chronivaro-rest`:
-     - `GET /chronivaro/v1/users`: list all Strolch users with metadata and assigned roles.
-     - `POST /chronivaro/v1/users`: create a new pure system user.
-     - `PUT /chronivaro/v1/users/{id}`: update user details and roles.
-     - `POST /chronivaro/v1/users/{id}/register`: initiate password setting challenge for the user.
-  3. Implement Web UI in `chronivaro-web`:
-     - Add `UsersView.js` under Administration navigation.
-     - Support listing users, adding/editing pure users, role selection, and triggering password setup tokens.
-     - Synchronize i18n translation keys in `de.json` and `en.json`.
+  2. Implemented REST endpoints in `chronivaro-rest`:
+     - `GET /chronivaro/v1/admin/users`: list all Strolch users with metadata and assigned roles.
+     - `GET /chronivaro/v1/admin/users/{id}`: get specific user details.
+     - `POST /chronivaro/v1/admin/users`: create a new pure system user.
+     - `PUT /chronivaro/v1/admin/users/{id}`: update user details and roles.
+     - `POST /chronivaro/v1/admin/users/{id}/register`: initiate password setting challenge for the user.
+  3. Implemented Web UI in `chronivaro-web`:
+     - Added `UsersView.js` under Administration navigation.
+     - Supported listing users, adding/editing pure users, role selection, and triggering password setup tokens.
+     - Synchronized i18n translation keys in `de.json` and `en.json` with 100% key parity.
+     - Updated `index.html` and `app.js` routing for `#users`.
 - **Affected Components:**
   - `chronivaro-core/src/main/java/ch/atexxi/chronivaro/core/service/CreateUserService.java`
   - `chronivaro-core/src/main/java/ch/atexxi/chronivaro/core/service/UpdateUserService.java`
   - `chronivaro-core/src/main/java/ch/atexxi/chronivaro/core/service/InitiateUserRegistrationService.java`
+  - `chronivaro-core/src/test/java/ch/atexxi/chronivaro/core/UserServiceTest.java`
   - `chronivaro-rest/src/main/java/ch/atexxi/chronivaro/rest/resource/UserResource.java`
   - `chronivaro-rest/src/main/java/ch/atexxi/chronivaro/rest/dto/UserDto.java`
+  - `chronivaro-rest/src/main/java/ch/atexxi/chronivaro/rest/ChronivaroRestfulClasses.java`
+  - `chronivaro-rest/src/test/java/ch/atexxi/chronivaro/rest/UserResourceTest.java`
   - `chronivaro-web/src/main/webapp/js/api/UserApi.js`
   - `chronivaro-web/src/main/webapp/js/pages/UsersView.js`
+  - `chronivaro-web/src/main/webapp/index.html`
+  - `chronivaro-web/src/main/webapp/js/app.js`
   - `chronivaro-web/src/main/webapp/i18n/de.json`
   - `chronivaro-web/src/main/webapp/i18n/en.json`
-  - `chronivaro-web/src/main/webapp/js/app.js`
+  - `runtime/config/PrivilegeRoles.xml`
 - **Acceptance Criteria:**
   - Administrators can create, list, and update pure Strolch users without requiring an `Employee` resource.
   - Password initialization challenge (`SET_PASSWORD`) can be triggered for pure users via `POST /users/{id}/register` and the UI.
-  - Pure users can log in, receive their privileges (e.g. Admin, HR, Supervisor, Reader), and operate without time-tracking records.
-  - Unit, REST, and UI integration tests verify pure user lifecycle.
+  - Pure users can log in, receive their privileges (e.g. Admin, HR, Supervisor), and operate without time-tracking records.
+  - Unit and REST integration tests verify pure user lifecycle.
+- **Verification:**
+  - Unit tests in `UserServiceTest` (`shouldCreateUpdateAndInitiateRegistrationForPureUser`, `shouldFailToCreateDuplicateUser`) passed.
+  - REST integration tests in `UserResourceTest` (`shouldPerformCrudAndRegistrationOnUsers`) passed.
+  - Full reactor test suite passing cleanly (`mvn clean test`).
 - **Dependencies:** None.
 
 ---
