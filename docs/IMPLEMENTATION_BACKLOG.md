@@ -169,7 +169,7 @@ The following foundational areas are verified as fully implemented in the reposi
 ### Task 10: Automate Vacation Entitlement Granting on Employee Creation and Schedule Corrections
 
 - **Specification Reference:** Section 6.7, Section 6.7.1, Section 7.5
-- **Status:** `OPEN`
+- **Status:** `COMPLETED`
 - **Scope:**
   1. In `CreateEmployeeService`, automatically calculate and book initial pro-rated annual vacation entitlement (from `joinDate`/`entryDate` to end of calendar year) as an `ENTITLEMENT` entry in `VacationAccountEntry`.
   2. In `UpdateEmployeeService`, recalculate pro-rated annual entitlement when `exitDate` is set or changed, and generate an audited `CORRECTION` entry in `VacationAccountEntry` for the delta.
@@ -180,11 +180,14 @@ The following foundational areas are verified as fully implemented in the reposi
   - `chronivaro-core/src/main/java/ch/atexxi/chronivaro/core/service/UpdateEmployeeService.java`
   - `chronivaro-core/src/main/java/ch/atexxi/chronivaro/core/service/UpdateScheduleService.java`
   - `chronivaro-core/src/main/java/ch/atexxi/chronivaro/core/service/CreditVacationEntitlementService.java`
-  - `chronivaro-core/src/test/java/ch/atexxi/chronivaro/core/VacationJournalTest.java`
+  - `chronivaro-core/src/test/java/ch/atexxi/chronivaro/core/VacationEntitlementServiceTest.java`
 - **Acceptance Criteria:**
   - Creating a new employee automatically credits pro-rated vacation days for their join year in `VacationAccountEntry`.
   - Updating an employee's `exitDate` or changing schedule employment rate automatically posts a `CORRECTION` entry for the difference without altering prior records.
   - Unit tests verify automated entitlement calculation upon employee creation and adjustments upon schedule/exit date changes.
+- **Verification:**
+  - Unit tests in `VacationEntitlementServiceTest` (`testAutomatedVacationEntitlementOnEmployeeCreation`, `testAutomatedVacationCorrectionOnExitDateUpdate`, `testAutomatedVacationCorrectionOnScheduleUpdate`) passing and validating pro-rated journal bookings and adjustments.
+  - Full reactor test suite passing cleanly (`mvn clean test`).
 - **Dependencies:** `VacationAccountEntry` journal and `VacationHelper` baseline.
 
 ---
