@@ -124,6 +124,29 @@ public class PeriodHelper {
 				if (ds.workingLocation() != null) {
 					dayJson.addProperty("workingLocation", ds.workingLocation().name());
 				}
+				if (ds.workEntries() != null && !ds.workEntries().isEmpty()) {
+					JsonArray weArray = new JsonArray();
+					for (WorkEntryRange we : ds.workEntries()) {
+						JsonObject weObj = new JsonObject();
+						weObj.addProperty("id", we.id());
+						weObj.addProperty("start", we.start());
+						weObj.addProperty("end", we.end());
+						weObj.addProperty("durationMinutes", we.durationMinutes());
+						weArray.add(weObj);
+					}
+					dayJson.add("workEntries", weArray);
+				}
+				if (ds.breaks() != null && !ds.breaks().isEmpty()) {
+					JsonArray bArray = new JsonArray();
+					for (BreakRange b : ds.breaks()) {
+						JsonObject bObj = new JsonObject();
+						bObj.addProperty("start", b.start());
+						bObj.addProperty("end", b.end());
+						bObj.addProperty("durationMinutes", b.durationMinutes());
+						bArray.add(bObj);
+					}
+					dayJson.add("breaks", bArray);
+				}
 				dayArray.add(dayJson);
 			}
 			json.add("daySummaries", dayArray);
@@ -162,7 +185,34 @@ public class PeriodHelper {
 					boolean isOff = d.has("isOff") && d.get("isOff").getAsBoolean();
 					WorkingLocation loc = d.has("workingLocation") && !d.get("workingLocation").isJsonNull()
 							? WorkingLocation.valueOf(d.get("workingLocation").getAsString()) : null;
-					daySummaries.add(new DaySummary(date, state, stateLabel, target, actual, holiday, absence, isOff, loc, List.of(), List.of()));
+					List<WorkEntryRange> ranges = new ArrayList<>();
+					if (d.has("workEntries") && d.get("workEntries").isJsonArray()) {
+						for (JsonElement weElem : d.getAsJsonArray("workEntries")) {
+							if (weElem.isJsonObject()) {
+								JsonObject weObj = weElem.getAsJsonObject();
+								ranges.add(new WorkEntryRange(
+										weObj.has("id") ? weObj.get("id").getAsString() : "",
+										weObj.has("start") ? weObj.get("start").getAsString() : "",
+										weObj.has("end") ? weObj.get("end").getAsString() : "",
+										weObj.has("durationMinutes") ? weObj.get("durationMinutes").getAsInt() : 0
+								));
+							}
+						}
+					}
+					List<BreakRange> breaks = new ArrayList<>();
+					if (d.has("breaks") && d.get("breaks").isJsonArray()) {
+						for (JsonElement bElem : d.getAsJsonArray("breaks")) {
+							if (bElem.isJsonObject()) {
+								JsonObject bObj = bElem.getAsJsonObject();
+								breaks.add(new BreakRange(
+										bObj.has("start") ? bObj.get("start").getAsString() : "",
+										bObj.has("end") ? bObj.get("end").getAsString() : "",
+										bObj.has("durationMinutes") ? bObj.get("durationMinutes").getAsInt() : 0
+								));
+							}
+						}
+					}
+					daySummaries.add(new DaySummary(date, state, stateLabel, target, actual, holiday, absence, isOff, loc, ranges, breaks));
 				}
 			}
 		}

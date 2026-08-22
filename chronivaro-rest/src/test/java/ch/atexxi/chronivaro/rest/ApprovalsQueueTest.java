@@ -6,6 +6,7 @@ import ch.atexxi.chronivaro.core.service.PeriodActionArgument;
 import ch.atexxi.chronivaro.core.service.RequestAbsenceService;
 import ch.atexxi.chronivaro.core.service.SubmitPeriodService;
 import ch.atexxi.chronivaro.rest.dto.AbsenceDto;
+import ch.atexxi.chronivaro.rest.dto.MonthSummaryDto;
 import ch.atexxi.chronivaro.rest.dto.PagedResultDto;
 import ch.atexxi.chronivaro.rest.dto.PeriodStatusDto;
 import ch.atexxi.chronivaro.rest.resource.ChronivaroRestHelper;
@@ -438,6 +439,52 @@ public class ApprovalsQueueTest extends AbstractChronivaroRestfulTest {
 		String emp1PeriodId = PeriodHelper.getPeriodId("employee_emp", YearMonth.of(2026, 3));
 		String supPeriodId = PeriodHelper.getPeriodId("supervisor_emp", YearMonth.of(2026, 3));
 		String mktPeriodId = PeriodHelper.getPeriodId("marketing_emp", YearMonth.of(2026, 3));
+
+		// 4b. Supervisor fetches detailed monthly report for submitted period emp1PeriodId -> 200 OK
+		try (Response response = target()
+				.path("chronivaro/v1/approvals/periods/" + emp1PeriodId)
+				.request(MediaType.APPLICATION_JSON)
+				.header(HttpHeaders.AUTHORIZATION, supervisorToken)
+				.get()) {
+			assertEquals(200, response.getStatus());
+			MonthSummaryDto detail = ChronivaroRestHelper.createGson().fromJson(
+					response.readEntity(String.class), MonthSummaryDto.class);
+			assertEquals("employee_emp", detail.employeeId());
+			assertEquals(YearMonth.of(2026, 3), detail.yearMonth());
+			assertNotNull(detail.daySummaries());
+			assertEquals(31, detail.daySummaries().size());
+			assertTrue("Should have total target minutes calculated", detail.totalTargetMinutes() > 0);
+		}
+
+		// 4c. Supervisor attempts to fetch detailed monthly report for mktPeriodId (not supervised) -> 403 FORBIDDEN
+		try (Response response = target()
+				.path("chronivaro/v1/approvals/periods/" + mktPeriodId)
+				.request(MediaType.APPLICATION_JSON)
+				.header(HttpHeaders.AUTHORIZATION, supervisorToken)
+				.get()) {
+			assertEquals(403, response.getStatus());
+		}
+
+		// 4d. HR user fetches detailed monthly report for mktPeriodId -> 200 OK
+		try (Response response = target()
+				.path("chronivaro/v1/approvals/periods/" + mktPeriodId)
+				.request(MediaType.APPLICATION_JSON)
+				.header(HttpHeaders.AUTHORIZATION, hrToken)
+				.get()) {
+			assertEquals(200, response.getStatus());
+			MonthSummaryDto detail = ChronivaroRestHelper.createGson().fromJson(
+					response.readEntity(String.class), MonthSummaryDto.class);
+			assertEquals("marketing_emp", detail.employeeId());
+		}
+
+		// 4e. Request non-existent period detail -> 404 NOT FOUND
+		try (Response response = target()
+				.path("chronivaro/v1/approvals/periods/non-existent-period")
+				.request(MediaType.APPLICATION_JSON)
+				.header(HttpHeaders.AUTHORIZATION, supervisorToken)
+				.get()) {
+			assertEquals(404, response.getStatus());
+		}
 
 		// 5. Supervisor approves employee_emp period -> SUCCESS
 		JsonObject approveReq = new JsonObject();

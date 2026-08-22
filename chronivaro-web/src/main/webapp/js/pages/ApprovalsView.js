@@ -178,6 +178,29 @@ export default class ApprovalsView {
 					<button id="period-next-btn" class="secondary-btn" disabled>${I18n.t('common.next')} &raquo;</button>
 				</div>
 			</section>
+
+			<!-- Period Inspection Modal -->
+			<div id="period-inspect-modal" class="modal">
+				<div class="modal-content extra-wide" style="max-width: 1050px; max-height: 90vh; overflow-y: auto; width: 95%;">
+					<div class="modal-header" style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border-color); padding-bottom: 1rem;">
+						<div>
+							<h3 id="inspect-modal-title" style="margin: 0 0 0.5rem 0;">${I18n.t('approvals.inspectPeriodTitle')}</h3>
+							<div id="inspect-modal-subtitle" class="text-muted" style="margin: 0; font-size: 0.95rem; line-height: 1.5;"></div>
+						</div>
+						<button type="button" id="inspect-modal-close-icon-btn" class="close-btn" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-muted);">&times;</button>
+					</div>
+
+					<div id="inspect-modal-body">
+						<div class="loading-spinner" style="text-align: center; padding: 2rem;">${I18n.t('common.loading')}</div>
+					</div>
+
+					<div class="modal-actions" style="margin-top: 1.5rem; border-top: 1px solid var(--border-color); padding-top: 1rem; display: flex; justify-content: flex-end; gap: 0.75rem;">
+						<button type="button" id="inspect-modal-approve-btn" class="primary-btn">${I18n.t('common.approve')}</button>
+						<button type="button" id="inspect-modal-reject-btn" class="danger-btn">${I18n.t('common.reject')}</button>
+						<button type="button" id="inspect-modal-close-btn" class="secondary-btn">${I18n.t('common.close')}</button>
+					</div>
+				</div>
+			</div>
 		`;
 
 		this.bindEvents(container);
@@ -339,6 +362,43 @@ export default class ApprovalsView {
 			this.periodFilters.offset += this.periodFilters.limit;
 			this.loadPeriods(container);
 		});
+
+		// Modal close buttons
+		const modal = container.querySelector('#period-inspect-modal');
+		const closeIconBtn = container.querySelector('#inspect-modal-close-icon-btn');
+		const closeBtn = container.querySelector('#inspect-modal-close-btn');
+		const modalApproveBtn = container.querySelector('#inspect-modal-approve-btn');
+		const modalRejectBtn = container.querySelector('#inspect-modal-reject-btn');
+
+		const closeModal = () => {
+			modal.style.display = 'none';
+			this.currentInspectedPeriod = null;
+		};
+
+		if (closeIconBtn) closeIconBtn.addEventListener('click', closeModal);
+		if (closeBtn) closeBtn.addEventListener('click', closeModal);
+
+		if (modalApproveBtn) {
+			modalApproveBtn.addEventListener('click', async () => {
+				if (!this.currentInspectedPeriod) return;
+				const { period, periodId } = this.currentInspectedPeriod;
+				const success = await this.handleApprovePeriod(period, periodId, container);
+				if (success) {
+					closeModal();
+				}
+			});
+		}
+
+		if (modalRejectBtn) {
+			modalRejectBtn.addEventListener('click', async () => {
+				if (!this.currentInspectedPeriod) return;
+				const { period, periodId } = this.currentInspectedPeriod;
+				const success = await this.handleRejectPeriod(period, periodId, container);
+				if (success) {
+					closeModal();
+				}
+			});
+		}
 	}
 
 	async loadAbsences(container) {
@@ -539,14 +599,17 @@ export default class ApprovalsView {
 					<td>${period.comment || `<span class="text-muted">${I18n.t('common.none')}</span>`}</td>
 					<td>${snapshotHtml}</td>
 					<td class="action-buttons-cell">
+						<button class="secondary-btn inspect-btn" data-id="${periodId}">${I18n.t('approvals.inspect')}</button>
 						<button class="primary-btn approve-btn" data-id="${periodId}">${I18n.t('common.approve')}</button>
 						<button class="danger-btn reject-btn" data-id="${periodId}">${I18n.t('common.reject')}</button>
 					</td>
 				`;
 
+				const inspectBtn = tr.querySelector('.inspect-btn');
 				const approveBtn = tr.querySelector('.approve-btn');
 				const rejectBtn = tr.querySelector('.reject-btn');
 
+				inspectBtn.addEventListener('click', () => this.handleInspectPeriod(period, periodId, container));
 				approveBtn.addEventListener('click', () => this.handleApprovePeriod(period, periodId, container));
 				rejectBtn.addEventListener('click', () => this.handleRejectPeriod(period, periodId, container));
 
@@ -559,6 +622,143 @@ export default class ApprovalsView {
 		}
 	}
 
+	async handleInspectPeriod(period, periodId, container) {
+		const modal = container.querySelector('#period-inspect-modal');
+		const modalSubtitle = container.querySelector('#inspect-modal-subtitle');
+		const modalBody = container.querySelector('#inspect-modal-body');
+
+		const empDisplayName = period.employeeName || period.employeeId;
+		modalSubtitle.innerHTML = `
+			<strong>${empDisplayName}</strong> (${period.teamName || I18n.t('common.none')}) • 
+			${I18n.t('periods.period')}: <strong>${period.yearMonth}</strong> • 
+			${I18n.t('periods.submittedAt', { time: Format.dateTime(period.submittedAt) })}
+			${period.comment ? `<br><em>${I18n.t('common.comment')}: "${period.comment}"</em>` : ''}
+		`;
+
+		modalBody.innerHTML = `<div class="loading-spinner" style="text-align: center; padding: 2rem;">${I18n.t('common.loading')}</div>`;
+		modal.style.display = 'flex';
+
+		this.currentInspectedPeriod = { period, periodId };
+
+		try {
+			const data = await ApprovalsApi.getSubmittedPeriodDetail(periodId);
+			this.renderPeriodDetailModalContent(modalBody, data, period);
+		} catch (err) {
+			console.error('Error loading submitted period details:', err);
+			modalBody.innerHTML = `<div class="error-msg" style="color: var(--error-color); padding: 1.5rem; text-align: center;">${err.message || I18n.t('app.error')}</div>`;
+		}
+	}
+
+	renderPeriodDetailModalContent(container, data, period) {
+		if (!data) {
+			container.innerHTML = `<div class="empty-state">${I18n.t('common.noData')}</div>`;
+			return;
+		}
+
+		const periodBalClass = data.periodBalanceMinutes > 0 ? 'positive' : (data.periodBalanceMinutes < 0 ? 'negative' : 'neutral');
+		const periodBalSign = data.periodBalanceMinutes > 0 ? '+' : '';
+		const endBalClass = data.endBalanceMinutes > 0 ? 'positive' : (data.endBalanceMinutes < 0 ? 'negative' : 'neutral');
+		const endBalSign = data.endBalanceMinutes > 0 ? '+' : '';
+
+		let daysHtml = '';
+		if (!data.daySummaries || data.daySummaries.length === 0) {
+			daysHtml = `<tr><td colspan="9" class="empty-cell">${I18n.t('periods.noDailyRecords')}</td></tr>`;
+		} else {
+			daysHtml = data.daySummaries.map(day => {
+				const dayBalClass = day.balance > 0 ? 'positive' : (day.balance < 0 ? 'negative' : 'neutral');
+				const dayBalSign = day.balance > 0 ? '+' : '';
+				const isWeekend = day.isOff && day.targetMinutes === 0;
+				const dayStateText = I18n.t(`enums.dayState.${day.state}`, {}, day.stateLabel || day.state);
+				const locText = day.workingLocation ? I18n.t(`enums.workingLocation.${day.workingLocation}`, {}, day.workingLocation) : '-';
+
+				let entriesSummary = '-';
+				if (day.workEntries && day.workEntries.length > 0) {
+					entriesSummary = day.workEntries.map(e => `${e.start}-${e.end} (${Format.duration(e.durationMinutes)})`).join(', ');
+				}
+
+				return `
+					<tr class="${isWeekend ? 'row-off' : ''}">
+						<td><strong>${day.date}</strong></td>
+						<td>${Format.duration(day.targetMinutes)}</td>
+						<td>${Format.duration(day.actualMinutes)}</td>
+						<td>${day.holidayMinutes > 0 ? Format.duration(day.holidayMinutes) : '-'}</td>
+						<td>${day.absenceMinutes > 0 ? Format.duration(day.absenceMinutes) : '-'}</td>
+						<td class="${dayBalClass}"><strong>${dayBalSign}${Format.duration(day.balance)}</strong></td>
+						<td><small>${locText}</small></td>
+						<td><small>${entriesSummary}</small></td>
+						<td><span class="status-badge state-${(day.state || 'OPEN').toLowerCase()}">${dayStateText}</span></td>
+					</tr>
+				`;
+			}).join('');
+		}
+
+		container.innerHTML = `
+			<!-- Summary Metrics Grid -->
+			<div class="summary-grid report-summary-grid" style="margin-bottom: 1.5rem;">
+				<div class="summary-card">
+					<div class="card-title">${I18n.t('times.targetTime')}</div>
+					<div class="card-value">${Format.duration(data.totalTargetMinutes)}</div>
+					<div class="card-sub">${data.totalTargetMinutes} min</div>
+				</div>
+				<div class="summary-card">
+					<div class="card-title">${I18n.t('times.actualTime')}</div>
+					<div class="card-value">${Format.duration(data.totalActualMinutes)}</div>
+					<div class="card-sub">${data.totalActualMinutes} min</div>
+				</div>
+				<div class="summary-card">
+					<div class="card-title">${I18n.t('periods.holidayHours')}</div>
+					<div class="card-value">${Format.duration(data.totalHolidayMinutes)}</div>
+					<div class="card-sub">${data.totalHolidayMinutes} min</div>
+				</div>
+				<div class="summary-card">
+					<div class="card-title">${I18n.t('periods.paidAbsence')}</div>
+					<div class="card-value">${Format.duration(data.paidAbsenceMinutes ?? data.totalPaidAbsenceMinutes ?? data.totalAbsenceMinutes ?? 0)}</div>
+					<div class="card-sub">${data.paidAbsenceMinutes ?? data.totalPaidAbsenceMinutes ?? data.totalAbsenceMinutes ?? 0} min</div>
+				</div>
+				<div class="summary-card">
+					<div class="card-title">${I18n.t('reports.initialBalance')}</div>
+					<div class="card-value">${Format.duration(data.initialBalanceMinutes)}</div>
+					<div class="card-sub">${data.initialBalanceMinutes} min</div>
+				</div>
+				<div class="summary-card">
+					<div class="card-title">${I18n.t('reports.periodBalance')}</div>
+					<div class="card-value ${periodBalClass}">${periodBalSign}${Format.duration(data.periodBalanceMinutes)}</div>
+					<div class="card-sub">${periodBalSign}${data.periodBalanceMinutes} min</div>
+				</div>
+				<div class="summary-card highlight-card">
+					<div class="card-title">${I18n.t('reports.endBalance')}</div>
+					<div class="card-value ${endBalClass}">${endBalSign}${Format.duration(data.endBalanceMinutes)}</div>
+					<div class="card-sub">${endBalSign}${data.endBalanceMinutes} min</div>
+				</div>
+			</div>
+
+			<!-- Daily Breakdown Table -->
+			<div class="report-section card" style="padding: 1rem;">
+				<h4 style="margin-top: 0; margin-bottom: 0.75rem;">${I18n.t('reports.dailyBreakdown')}</h4>
+				<div class="table-container" style="max-height: 400px; overflow-y: auto;">
+					<table class="data-table">
+						<thead>
+							<tr>
+								<th>${I18n.t('common.date')}</th>
+								<th>${I18n.t('common.target')}</th>
+								<th>${I18n.t('common.actual')}</th>
+								<th>${I18n.t('periods.holiday')}</th>
+								<th>${I18n.t('periods.absence')}</th>
+								<th>${I18n.t('reports.dayBalance')}</th>
+								<th>${I18n.t('common.location')}</th>
+								<th>${I18n.t('reports.workBlocks')}</th>
+								<th>${I18n.t('common.status')}</th>
+							</tr>
+						</thead>
+						<tbody>
+							${daysHtml}
+						</tbody>
+					</table>
+				</div>
+			</div>
+		`;
+	}
+
 	async handleApprovePeriod(period, periodId, container) {
 		const empDisplayName = period.employeeName || period.employeeId;
 		const comment = await NotificationDialog.prompt(
@@ -568,15 +768,17 @@ export default class ApprovalsView {
 			'',
 			false
 		);
-		if (comment === null) return; // User cancelled
+		if (comment === null) return false; // User cancelled
 
 		try {
 			await ApprovalsApi.approvePeriod(periodId, comment || null);
 			await NotificationDialog.info(I18n.t('approvals.periodApprovedSuccess', { employee: empDisplayName, period: period.yearMonth }), I18n.t('common.success'));
 			await this.loadPeriods(container);
+			return true;
 		} catch (err) {
 			console.error('Error approving period:', err);
 			await NotificationDialog.error(err.message || I18n.t('app.error'));
+			return false;
 		}
 	}
 
@@ -589,15 +791,17 @@ export default class ApprovalsView {
 			'',
 			true
 		);
-		if (reason === null) return; // User cancelled
+		if (reason === null) return false; // User cancelled
 
 		try {
 			await ApprovalsApi.rejectPeriod(periodId, reason);
 			await NotificationDialog.info(I18n.t('approvals.periodRejectedSuccess', { period: period.yearMonth }), I18n.t('common.success'));
 			await this.loadPeriods(container);
+			return true;
 		} catch (err) {
 			console.error('Error rejecting period:', err);
 			await NotificationDialog.error(err.message || I18n.t('app.error'));
+			return false;
 		}
 	}
 }

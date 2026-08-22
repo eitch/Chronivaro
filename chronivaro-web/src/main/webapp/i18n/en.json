@@ -349,7 +349,12 @@
     "approveSelected": "Approve Selected",
     "rejectSelected": "Reject Selected",
     "rejectionReason": "Rejection Reason",
-    "noPendingApprovals": "No pending approval requests."
+    "noPendingApprovals": "No pending approval requests.",
+    "inspect": "Inspect",
+    "inspectPeriodTitle": "Inspect Monthly Period",
+    "inspectPeriodDesc": "Review monthly overview, working hours, breaks, and balances for approval.",
+    "periodDetails": "Period Details",
+    "approvalActions": "Approval Actions"
   },
   "reports": {
     "title": "Reports & Analytics",

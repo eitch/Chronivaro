@@ -15,6 +15,10 @@ export default class ApprovalsApi {
 		return await Rest.get(url);
 	}
 
+	static async getSubmittedPeriodDetail(periodId) {
+		return await Rest.get(`rest/chronivaro/v1/approvals/periods/${encodeURIComponent(periodId)}`);
+	}
+
 	static async approvePeriod(periodId, comment = null, etag = null) {
 		const headers = etag ? {'If-Match': etag} : {};
 		const body = comment !== null && comment !== undefined ? {comment} : {};

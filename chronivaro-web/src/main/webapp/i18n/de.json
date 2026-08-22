@@ -349,7 +349,12 @@
     "approveSelected": "Ausgewählte genehmigen",
     "rejectSelected": "Ausgewählte ablehnen",
     "rejectionReason": "Ablehnungsgrund",
-    "noPendingApprovals": "Keine ausstehenden Genehmigungen vorhanden."
+    "noPendingApprovals": "Keine ausstehenden Genehmigungen vorhanden.",
+    "inspect": "Prüfen",
+    "inspectPeriodTitle": "Monatsabschluss prüfen",
+    "inspectPeriodDesc": "Monatsübersicht, Arbeitszeiten, Pausen und Saldi zur Genehmigung einsehen.",
+    "periodDetails": "Periodendetails",
+    "approvalActions": "Genehmigungsaktionen"
   },
   "reports": {
     "title": "Berichte & Auswertungen",

@@ -6,6 +6,7 @@ import ch.atexxi.chronivaro.core.search.AbsenceSearch;
 import ch.atexxi.chronivaro.core.search.TimePeriodSearch;
 import ch.atexxi.chronivaro.core.service.ApproveAbsenceService;
 import ch.atexxi.chronivaro.core.service.ApprovePeriodService;
+import ch.atexxi.chronivaro.core.service.MonthSummaryService;
 import ch.atexxi.chronivaro.core.service.PeriodActionArgument;
 import ch.atexxi.chronivaro.core.service.RejectAbsenceService;
 import ch.atexxi.chronivaro.core.service.RejectPeriodService;
@@ -32,6 +33,7 @@ import li.strolch.service.api.ServiceHandler;
 import li.strolch.service.api.ServiceResult;
 
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.time.ZonedDateTime;
 import java.util.*;
 
@@ -87,6 +89,50 @@ public class ApprovalsResource {
 			SearchResult<Resource> searchResult = search.search(tx);
 			return PaginationHelper.toPagedOrListResponse(searchResult, offset, limit, p -> ChronivaroMapper.periodToDto(tx, p));
 		}
+	}
+
+	@GET
+	@Path("periods/{id}")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response getSubmittedPeriodDetail(
+			@Context HttpServletRequest request,
+			@PathParam("id") String id) {
+
+		Certificate cert = (Certificate) request.getAttribute(StrolchRestfulConstants.STROLCH_CERTIFICATE);
+		String employeeId;
+		YearMonth yearMonth;
+		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
+			Resource period = tx.getResourceBy(TYPE_TIME_PERIOD, id, false);
+			if (period == null) {
+				return ChronivaroRestHelper.toErrorResponse(Response.Status.NOT_FOUND, "NOT_FOUND",
+						"Time period " + id + " not found");
+			}
+			employeeId = period.getRelationId(PARAM_EMPLOYEE);
+			if (isEmpty(employeeId)) {
+				return ChronivaroRestHelper.toErrorResponse(Response.Status.BAD_REQUEST, "BAD_REQUEST",
+						"Time period " + id + " has no associated employee");
+			}
+			try {
+				yearMonth = YearMonth.parse(period.getString(PARAM_YEAR_MONTH));
+			} catch (Exception e) {
+				return ChronivaroRestHelper.toErrorResponse(Response.Status.BAD_REQUEST, "BAD_REQUEST",
+						"Invalid yearMonth in period: " + period.getString(PARAM_YEAR_MONTH));
+			}
+			ChronivaroModelHelper.assertCanManageEmployee(tx, employeeId);
+		}
+
+		ServiceHandler serviceHandler = ChronivaroRestHelper.getServiceHandler();
+		MonthSummaryService.MonthSummaryArgument arg = new MonthSummaryService.MonthSummaryArgument();
+		arg.employeeId = employeeId;
+		arg.yearMonth = yearMonth;
+
+		MonthSummaryService.MonthSummaryResult result = serviceHandler.doService(cert, new MonthSummaryService(), arg);
+		if (!result.isOk()) {
+			return ChronivaroRestHelper.toResponse(result);
+		}
+
+		return Response.ok(ChronivaroRestHelper.createGson().toJson(ChronivaroMapper.toDto(result.monthSummary)),
+				MediaType.APPLICATION_JSON).build();
 	}
 
 	@POST

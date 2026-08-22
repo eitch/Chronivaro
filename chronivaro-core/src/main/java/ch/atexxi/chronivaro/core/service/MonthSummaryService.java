@@ -12,6 +12,7 @@ import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -91,9 +92,13 @@ public class MonthSummaryService
 					.atStartOfDay(zone)
 					.minusNanos(1);
 			List<Resource> entries = WorkEntryHelper.findWorkEntries(tx, employeeId, from, to);
+			List<WorkEntryRange> ranges = new ArrayList<>();
+			List<BreakRange> breaks = new ArrayList<>();
 			int actual = 0;
 			DayState state = DayState.NOT_WORKING;
 			WorkingLocation workingLocation = null;
+			DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
+			ZonedDateTime lastEnd = null;
 
 			for (Resource entry : entries) {
 				ZonedDateTime start = entry.getDate(PARAM_START);
@@ -107,7 +112,18 @@ public class MonthSummaryService
 				ZonedDateTime effectiveEnd = isActive ? (now.isBefore(to) ? now : to) :
 						(end.isAfter(to) ? to : end);
 				if (effectiveEnd.isAfter(effectiveStart)) {
-					actual += (int) java.time.Duration.between(effectiveStart, effectiveEnd).toMinutes();
+					int duration = (int) java.time.Duration.between(effectiveStart, effectiveEnd).toMinutes();
+					actual += duration;
+					ranges.add(new WorkEntryRange(entry.getId(), effectiveStart.format(timeFormatter),
+							isActive ? "..." : effectiveEnd.format(timeFormatter), duration));
+					if (lastEnd != null && start.isAfter(lastEnd)) {
+						int breakDuration = (int) java.time.Duration.between(lastEnd, start).toMinutes();
+						if (breakDuration > 0) {
+							breaks.add(new BreakRange(lastEnd.format(timeFormatter), start.format(timeFormatter),
+									breakDuration));
+						}
+					}
+					lastEnd = end;
 				}
 				if (workingLocation == null && entry.hasParameter(PARAM_WORKING_LOCATION)) {
 					try {
@@ -126,7 +142,7 @@ public class MonthSummaryService
 
 			daySummaries.add(
 					new DaySummary(date, state, state.getLabel(), target, actual, holiday, creditedAbsence, target == 0,
-							workingLocation, List.of(), List.of()));
+							workingLocation, ranges, breaks));
 		}
 
 		int totalCreditedAbsence = totalPaidAbsence + totalVacationAbsence;
