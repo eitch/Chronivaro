@@ -70,7 +70,7 @@ Historische Auswertungen müssen auch dann reproduzierbar bleiben, wenn sich Arb
 
 Der erste produktiv nutzbare Umfang enthält:
 
-1. Mitarbeiter-, Benutzer- und Teamverwaltung (einschliesslich reiner Systembenutzer ohne Mitarbeiterprofil)
+1. Mitarbeiter-, Benutzer- und Teamverwaltung (einschliesslich reiner Systembenutzer ohne Mitarbeiterprofil, Benutzerlöschung und Mitarbeiterdeaktivierung/-reaktivierung)
 2. versionierte Arbeitsmodelle mit individuellen Sollzeiten
 3. Feiertagskalender
 4. Arbeitszeiterfassung mit mehreren Arbeitsblöcken pro Tag und Kommentarfunktion
@@ -82,7 +82,7 @@ Der erste produktiv nutzbare Umfang enthält:
 10. Soll-/Ist-Auswertung und Zeitsaldo
 11. Monatsabschluss mit Genehmigungsworkflow und detaillierter Inspektionsansicht für Vorgesetzte
 12. Rollen und Berechtigungen
-13. Audit-Log
+13. Audit-Log mit UI-Ansicht zur Einsichtnahme und Filterung von Revisionsereignissen
 14. CSV-Export
 
 ### 4.2 Erweiterungen des implementierten Grundumfangs
@@ -133,6 +133,12 @@ Pflichtattribute:
 | `active` | fachlicher Aktivstatus |
 | `currentWorkDayId` | Referenz auf den aktuellen `WorkDay` |
 
+Regeln:
+
+- Eine `Employee`-Ressource wird bei Benutzerlöschungen niemals physisch aus dem System gelöscht, um historische Buchungen, Saldi und Berichte konsistent und reproduzierbar zu halten.
+- Wird der mit dem Mitarbeiter verknüpfte Strolch-Benutzer gelöscht, wird der `Employee` automatisch auf inaktiv gesetzt (`active = false`).
+- Ein inaktiver Mitarbeiter kann später wieder aktiviert werden (`active = true`). Bei der Reaktivierung wird der zugehörige Strolch-Benutzer im System neu angelegt und für die Registrierung/Passwortvergabe freigegeben.
+
 ### 6.1.1 User – Strolch-Benutzer (auch für Nicht-Mitarbeiter)
 
 Strolch verwaltet Benutzer und Rollen unabhängig von der fachlichen `Employee`-Ressource.
@@ -142,7 +148,11 @@ Regeln:
 - Jeder `Employee` referenziert einen Strolch-Benutzer (`personId`), um sich anzumelden und Arbeitszeiten zu erfassen.
 - Es können Strolch-Benutzer ohne verknüpftes `Employee`-Profil existieren (z. B. reine Systemadministratoren, HR-Personal ohne Zeiterfassung, reine Vorgesetzte oder externe Revisoren).
 - Reine Benutzer besitzen Rollen (z. B. `Admin`, `HR`, `Supervisor`, `Reader`), Benutzername, Name und Status, werden jedoch nicht in der Mitarbeiterübersicht, Zeiterfassung oder Statusanzeige geführt.
-- Die Benutzerverwaltung erlaubt die Pflege dieser Benutzer inklusive Rollenzuweisung und Passwort-Initialisierung (`SET_PASSWORD`-Challenge).
+- Die Benutzerverwaltung erlaubt die Pflege dieser Benutzer inklusive Rollenzuweisung, Löschung und Passwort-Initialisierung (`SET_PASSWORD`-Challenge).
+- **Löschen von Benutzern:**
+  - Wird ein reiner Strolch-Benutzer (ohne Mitarbeiterverknüpfung) gelöscht, wird das Benutzerkonto in Strolch entfernt.
+  - Wird ein Strolch-Benutzer gelöscht, der mit einem `Employee` verknüpft ist, wird der Strolch-Benutzer entfernt und die zugehörige `Employee`-Ressource auf `active = false` gesetzt. Die `Employee`-Ressource selbst wird nicht gelöscht.
+  - Bei einer späteren Reaktivierung des Mitarbeiters wird ein neuer Strolch-Benutzer erstellt und mit dem Mitarbeiter verknüpft.
 
 ### 6.2 EmploymentScheduleVersion – versionierter Arbeitsplan
 
@@ -381,6 +391,11 @@ Mindestens zu protokollieren:
 - fachliche Begründung, sofern erforderlich
 - Korrelations-ID der auslösenden Anfrage
 
+Regeln:
+
+- Revisionsrelevante Vorgänge (z. B. Anlage, Änderung oder Löschung von Benutzern, Deaktivierung und Reaktivierung von Mitarbeitern, Anpassung von Buchungen, Genehmigungen, Periodensperrungen) werden als unveränderliche `AuditEvent`-Einträge festgehalten.
+- Audit-Ereignisse können über Filterkriterien (Zeitraum, Entitätstyp, Entitäts-ID, Benutzer, Aktion) abgefragt und in einer dedizierten Benutzeroberfläche eingesehen werden.
+
 ### 6.11 Globale Anwendungskonfiguration
 
 Zusätzlich zu den bereits bestehenden globalen Einstellungen unterstützt Chronivaro mindestens folgende produktweite Darstellungs- und Lokalisierungswerte:
@@ -550,6 +565,32 @@ Für Personen, die das System administrieren, überwachen oder leiten, ohne selb
 2. Das System erstellt den Benutzer ohne verknüpfte `Employee`-Ressource.
 3. Der Administrator löst die Registrierung / Passwort-Challenge (`Usage.SET_PASSWORD`) aus.
 4. Der Benutzer erhält den Aktivierungslink, setzt sein Passwort und kann sich mit seinen zugewiesenen Rollen am System anmelden.
+
+### 9.8 Löschen von Benutzern und Mitarbeiterdeaktivierung
+
+1. Ein Administrator wählt in der Benutzerverwaltung oder Mitarbeiterübersicht die Löschung eines Benutzers aus.
+2. Handelt es sich um einen reinen Strolch-Benutzer (ohne Mitarbeiterverknüpfung):
+   - Der Benutzer wird aus dem System gelöscht.
+3. Handelt es sich um einen Strolch-Benutzer, der mit einer `Employee`-Ressource verknüpft ist:
+   - Die `Employee`-Ressource wird **nicht** gelöscht, um historische Buchungen, Saldi und Auswertungen unverändert und reproduzierbar zu erhalten.
+   - Der `Employee` wird auf inaktiv gesetzt (`active = false`).
+   - Der Strolch-Benutzer wird aus dem System gelöscht, sodass keine Anmeldung mehr möglich ist.
+4. Der Vorgang wird im Audit-Log revisionssicher protokolliert.
+
+### 9.9 Reaktivierung von Mitarbeitern
+
+1. Ein Administrator öffnet einen inaktiven Mitarbeiter in der Mitarbeiterverwaltung und wählt die Aktion "Reaktivieren".
+2. Der Aktivstatus des Mitarbeiters wird wieder auf `active = true` gesetzt.
+3. Das System erstellt automatisch einen neuen Strolch-Benutzer mit dem konfigurierten Benutzernamen und den erforderlichen Rollen.
+4. Der Administrator löst anschliessend die Registrierung / Passwort-Challenge (`Usage.SET_PASSWORD`) aus, damit der Mitarbeiter sein Passwort festlegen und sich wieder anmelden kann.
+5. Der Vorgang wird im Audit-Log revisionssicher protokolliert.
+
+### 9.10 Einsichtnahme in das Audit-Log
+
+1. Ein berechtigter Benutzer (z. B. Administrator oder Revisor) öffnet die Audit-Log-Ansicht in der Benutzeroberfläche.
+2. Die Ansicht erlaubt das Filtern nach Datumsbereich (`from`, `to`), Entitätstyp (`entityType`), Entitäts-ID (`entityId`), ausführendem Benutzer (`username`) und Aktion (`action`).
+3. Die Treffer werden in einer übersichtlichen, paginierten Tabelle mit Zeitstempel, Benutzer, Aktion, betroffener Entität und Zusammenfassung dargestellt.
+4. Per Klick auf einen Eintrag können die vollständigen Detaildaten (Vorher-/Nachher-Werte, Begründung, Korrelations-ID) in einer Detailansicht eingesehen werden.
 
 ## 10. Validierungen
 
@@ -721,13 +762,14 @@ Die UI wird mit HTML, CSS und Vanilla JavaScript umgesetzt. Es wird kein Fronten
    - CSV-Export
    - PDF-Export für Monatsreport, Ferienübersicht und Abwesenheitsreport
 8. **Administration**
-   - Benutzerverwaltung (für reine Systembenutzer sowie Mitarbeiterbenutzer, Rollenzuweisung und Passwort-Challenge)
-   - Mitarbeiter und Teams
+   - Benutzerverwaltung (für reine Systembenutzer sowie Mitarbeiterbenutzer, Rollenzuweisung, Benutzerlöschung und Passwort-Challenge)
+   - Mitarbeiter und Teams (inkl. Deaktivieren bei Benutzerlöschung und Reaktivieren mit automatischer Neuerstellung des Strolch-Benutzers)
    - Registrierungsprozess auslösen
    - Arbeitspläne
    - Standorte und Feiertage
    - Abwesenheitsarten
    - globale Einstellungen einschliesslich Standardsprache, Firmenname und optionalem Firmenlogo
+   - Audit-Log-Ansicht zur filterbaren und detaillierten Einsicht aller protokollierten Systemereignisse (Filter nach Zeitraum, Entität, Benutzer und Aktion)
 
 ### 12.2 UI-Grundsätze
 
@@ -939,20 +981,26 @@ GET    /reports/absences.pdf
 #### Administration
 
 ```text
-GET/POST/PUT /users
-POST         /users/{id}/register
-GET/POST/PUT /employees
-POST         /employees/{id}/register
-GET/POST/PUT /teams
-GET/POST/PUT /locations
-GET/POST/PUT /holiday-calendars
-GET/POST/PUT /absence-types
-GET/POST/PUT /employees/{id}/schedule-versions
-GET/POST/PUT /configuration
+GET/POST/PUT        /users
+DELETE              /users/{id}
+POST                /users/{id}/register
+GET/POST/PUT        /employees
+POST                /employees/{id}/register
+POST                /employees/{id}/reactivate
+GET/POST/PUT        /teams
+GET/POST/PUT        /locations
+GET/POST/PUT        /holiday-calendars
+GET/POST/PUT        /absence-types
+GET/POST/PUT        /employees/{id}/schedule-versions
+GET/POST/PUT        /configuration
+GET                 /audits?from={date}&to={date}&entityType={type}&entityId={id}&username={user}&action={action}&offset={offset}&limit={limit}
 ```
 
 - `GET/POST/PUT /users`: Verwaltung reiner Strolch-Benutzer (Systemadmins, HR-Manager, Revisoren) unabhängig von Mitarbeiterprofilen.
+- `DELETE /users/{id}`: Löschen eines Strolch-Benutzers. Handelt es sich um einen mit einem `Employee` verknüpften Benutzer, wird der Strolch-Benutzer entfernt und der `Employee` auf `active = false` gesetzt (die `Employee`-Ressource bleibt unverändert erhalten).
 - `POST /users/{id}/register`: Passwort-Challenge (`Usage.SET_PASSWORD`) für reine Benutzer auslösen.
+- `POST /employees/{id}/reactivate`: Reaktivieren eines inaktiven Mitarbeiters (`active = true`) und automatische Neuerstellung des verknüpften Strolch-Benutzers.
+- `GET /audits`: Revisionssichere Abfrage und Filterung von Audit-Ereignissen mit Pagination.
 
 Die endgültigen DTOs und HTTP-Statuscodes werden pro Endpunkt in der OpenAPI-Spezifikation festgelegt.
 
@@ -1277,7 +1325,7 @@ Mindestens folgende Berechtigungen werden getrennt geprüft:
 
 - eigene Zeiten lesen und verkürzen / kommentieren
 - fremde Zeiten lesen und administrativ korrigieren / erfassen / löschen
-- Benutzer und Rollen administrieren (auch für reine Systembenutzer)
+- Benutzer und Rollen administrieren (auch für reine Systembenutzer, inklusive Benutzerlöschung und Mitarbeiterreaktivierung)
 - Abwesenheiten genehmigen
 - Perioden genehmigen und wieder öffnen
 - Ferienkonten korrigieren
@@ -1285,6 +1333,7 @@ Mindestens folgende Berechtigungen werden getrennt geprüft:
 - Anwesenheitsstatus lesen
 - sensible Abwesenheitsgründe lesen
 - Konfiguration administrieren
+- Audit-Log einsehen und filtern
 
 ### 17.3 Datenschutz
 
@@ -1362,10 +1411,13 @@ Mindestens folgende Fälle:
 - korrekte Ableitung von Unterbrüchen zwischen mehreren Arbeitsblöcken
 - Saldo über Monatsgrenzen
 - Ferienjournal mit Anspruch, Bezug, Korrektur und Verfall
+- Löschen von Benutzern mit automatischer Deaktivierung verknüpfter Mitarbeiter ohne Datenverlust
+- Reaktivierung inaktiver Mitarbeiter mit automatischer Neuerstellung des Strolch-Benutzers
+- Erfassung und strukturierte Filterung von Audit-Events
 
 ### 19.2 REST-Integrationstests
 
-- erfolgreiche CRUD-Operationen
+- erfolgreiche CRUD-Operationen (inkl. Benutzerlöschung und Mitarbeiterreaktivierung)
 - Validierungsfehler und Fehlerformat
 - Rollen- und Teamgrenzen
 - Zugriff auf sensible Abwesenheitsgründe
@@ -1375,6 +1427,7 @@ Mindestens folgende Fälle:
 - PDF-Export für Monatsreport, Ferienübersicht und Abwesenheitsreport
 - identische Berechtigungsgrenzen zwischen UI, CSV und PDF
 - Lokalisierung von REST-Fehlermeldungen bei stabilem `errorCode`
+- Abfrage von Audit-Ereignissen über `/audits` mit Filterkriterien und Pagination
 
 ### 19.3 UI-Tests
 
@@ -1390,6 +1443,8 @@ Mindestens folgende Fälle:
 - Sprachwechsel nach Login und Persistenz in Browser Storage sowie auf dem Strolch-Benutzer
 - vollständige deutsche und englische UI-Texte ohne fehlende Übersetzungsschlüssel
 - Anzeige von Firmenname und optionalem Firmenlogo in der globalen Anwendung
+- Benutzerverwaltung mit Benutzerlöschung sowie Deaktivierung/Reaktivierung von Mitarbeitern
+- Audit-Log-Ansicht mit Filterung und Detaildarstellung von Audit-Einträgen
 
 ### 19.4 Übersetzungs- und Exporttests
 
@@ -1417,7 +1472,7 @@ Mindestens folgende Fälle:
 
 Das MVP gilt als fachlich abnahmebereit, wenn:
 
-1. ein Administrator Mitarbeiter, Benutzer (auch reine Systembenutzer), Teams, Standorte, Feiertagskalender und Arbeitspläne verwalten kann;
+1. ein Administrator Mitarbeiter, Benutzer (auch reine Systembenutzer), Teams, Standorte, Feiertagskalender und Arbeitspläne verwalten sowie Benutzer löschen kann (wobei verknüpfte Mitarbeiter nicht gelöscht, sondern deaktiviert werden und bei Reaktivierung der Benutzer neu erstellt wird);
 2. ein Mitarbeiter mehrere Arbeitsblöcke pro Tag erfassen und kommentieren kann, wobei Unterbrüche aus den zeitlichen Lücken abgeleitet werden;
 3. Mitarbeiter ihre offenen Zeitbuchungen bei Bedarf verkürzen (Endzeit vorverlegen) und kommentieren können, während unzulässige Verlängerungen verhindert werden;
 4. die Anwendung Überlappungen und mehrere laufende Buchungen verhindert;
@@ -1432,7 +1487,7 @@ Das MVP gilt als fachlich abnahmebereit, wenn:
 13. Monatsperioden eingereicht, vom Vorgesetzten über eine detaillierte Inspektionsansicht geprüft, genehmigt, abgelehnt, gesperrt und begründet wieder geöffnet werden können;
 14. ein Monatsreport Sollzeit, Istzeit, Abwesenheiten und Saldo zeigt;
 15. der Monatsreport als CSV exportiert werden kann;
-16. alle fachlich relevanten Änderungen im Audit-Log nachvollziehbar sind;
+16. alle fachlich relevanten Änderungen im Audit-Log nachvollziehbar sind und über eine dedizierte UI-Ansicht filterbar eingesehen werden können;
 17. die definierten Kernberechnungen automatisiert getestet sind;
 18. Chronivaro ohne externen Servlet-Container als eigenständige Java-Anwendung gestartet werden kann;
 19. Embedded Jetty sowohl das Frontend als auch die bestehende REST API bereitstellt;
