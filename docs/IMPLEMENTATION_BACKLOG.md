@@ -139,40 +139,14 @@ The following foundational areas are verified as fully implemented in the reposi
 - **Audit-Log Web UI & Detailed Inspection (Sections 4.1 #13, 6.10, 9.10, 12.1 #8, 12.8, 19.3, 20 #16):** Full administration navigation view (`AuditLogView.js`), REST API client (`AuditLogApi.js`), multi-field filtering (`from`, `to`, `entityType`, `entityId`, `username`, `action`), responsive paginated table, detail inspection modal rendering correlation IDs, before/after snapshot values, reasons, and parameters, and complete German (Swiss German) and English translations.
 - **User Management for Pure Users & System User Protection (Sections 3.6, 6.1.1, 9.7, 10.5, 12.1 #8, 13.2):** Pure Strolch user lifecycle services (`CreateUserService`, `UpdateUserService`, `InitiateUserRegistrationService`), REST API (`/admin/users`, `/admin/users/{id}/register`), `UsersView` in Web UI supporting role assignment (Admin, HR, Supervisor, Employee) and password initialization challenges; system users (`UserState.SYSTEM`) are protected and excluded from administration views and challenge initiation.
 - **Non-Destructive User Deletion and Employee Deactivation (Sections 6.1, 6.1.1, 9.8, 10.5, 13.2, 20 #15):** Non-destructive user deletion service (`RemoveUserService`), REST API (`DELETE /admin/users/{id}`), UI deletion action with confirmation dialogs in `UsersView.js`; deleting a user linked to an employee sets `Employee.active = false` without deleting any historical bookings (`WorkDay`, `WorkEntry`, `Absence`, `VacationAccountEntry`, `TimePeriod`, `EmploymentSchedule`); physical deletion of employees with historical bookings is blocked in `RemoveEmployeeService`; all user deletions and employee deactivations are recorded in the immutable audit log.
+- **Employee Reactivation Workflow (Sections 6.1, 6.1.1, 9.9, 13.2):** Employee reactivation service (`ReactivateEmployeeService`), REST API (`POST /admin/employees/{id}/reactivate`), UI reactivation action with confirmation dialogs in `EmployeesView.js`; reactivates inactive employees (`active = true`), re-creates/restores associated Strolch user accounts with appropriate role assignments, allows initiating password setup challenges (`Usage.SET_PASSWORD`), and records reactivation in the audit log.
 - **Localization & Branding (Sections 4.2, 6.11, 12.3, 16, 18, 18.5):** Global company branding (name/logo), default language configuration, client-side i18n engine with German (Swiss German) and English translations across all views, and automated key parity verification.
 
 ---
 
 ## Prioritized Implementation Backlog
 
-### Task 3: Employee Reactivation Workflow
-- **Classification:** `MISSING`
-- **Specification Reference:**
-  - Section 6.1 (*Employee – Regeln*)
-  - Section 6.1.1 (*Verknüpfung zwischen Strolch-Benutzern und Mitarbeitern*)
-  - Section 9.9 (*Reaktivierung von Mitarbeitern*)
-  - Section 13.2 (*Administration: POST /employees/{id}/reactivate*)
-- **Current Implementation Location:**
-  - No service, REST endpoint, or UI button currently exists.
-- **Missing Behaviour:**
-  - Missing `ReactivateEmployeeService` in `chronivaro-core`.
-  - Missing `POST /rest/chronivaro/v1/admin/employees/{id}/reactivate` in `EmployeeResource`.
-  - Missing "Reactivate" action button in `EmployeesView.js` for inactive employees.
-  - When reactivated: `Employee.active` is set to `true`, a new Strolch user account is recreated with the employee's username, email, name, and default role (`Employee`), and an administrator can initiate a password registration challenge (`Usage.SET_PASSWORD`).
-  - Reactivation is recorded in the Audit Log (`AUDIT_ACTION_UPDATE` / `AUDIT_ACTION_ACTIVATE`).
-- **Scope & Modules:**
-  - `chronivaro-core`: `ReactivateEmployeeService`, `ReactivateEmployeeCommand`.
-  - `chronivaro-rest`: `EmployeeResource` (`POST /admin/employees/{id}/reactivate`).
-  - `chronivaro-web`: `EmployeesView.js`, `EmployeeApi.js`, i18n locales.
-  - Tests: Unit and REST integration tests in `chronivaro-core` and `chronivaro-rest`.
-- **Dependencies:**
-  - `PrivilegeHandler`, `InitiateUserRegistrationService`.
-- **Acceptance Criteria:**
-  1. `POST /rest/chronivaro/v1/admin/employees/{id}/reactivate` successfully reactivates an inactive employee (`active = true`).
-  2. A new Strolch user is created for the reactivated employee with appropriate role assignments.
-  3. A password setup challenge can be initiated for the reactivated user.
-  4. Reactivation is logged in the Audit Log.
-  5. `EmployeesView.js` displays a "Reactivate" button for inactive employees and updates the employee's status upon success.
+All prioritized backlog tasks (Tasks 1 through 3) have been fully implemented, verified, and integrated into the baseline. No active backlog tasks remain.
 
 ---
 

@@ -2135,6 +2135,76 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
 
+  /chronivaro/v1/admin/employees/{id}/reactivate:
+    post:
+      summary: Reactivate inactive employee
+      description: Sets employee status to active, re-creates or enables the associated Strolch user account, and audits the reactivation.
+      operationId: reactivateEmployee
+      tags:
+        - Admin - Employees
+      security:
+        - CookieAuth: []
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Employee identifier
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Employee reactivated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponseDto'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /chronivaro/v1/admin/employees/{id}/register:
+    post:
+      summary: Initiate employee user registration
+      description: Triggers password reset / initial registration challenge for the employee's linked user account.
+      operationId: initiateEmployeeRegistration
+      tags:
+        - Admin - Employees
+      security:
+        - CookieAuth: []
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Employee identifier
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Registration initiated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponseDto'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
   # ==========================================
   # Admin - Teams
   # ==========================================
