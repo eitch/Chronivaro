@@ -9,34 +9,64 @@ import I18n from '../i18n/I18n.js';
 export default class EmployeesView {
     constructor(app) {
         this.app = app;
+        this.statusFilter = 'all';
+        this.searchQuery = '';
+        this.employees = [];
     }
 
     async render() {
         const container = document.createElement('div');
         container.id = 'employees-view';
+        container.className = 'page-container';
         container.innerHTML = `
-			<h2>${I18n.t('employees.title')}</h2>
-			<div class="actions">
-				<button id="add-employee-btn">${I18n.t('employees.addEmployee')}</button>
+			<div class="page-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+				<div>
+					<h2 style="margin: 0 0 0.5rem 0;">${I18n.t('employees.title')}</h2>
+				</div>
+				<div class="actions">
+					<button id="add-employee-btn" class="primary-btn">${I18n.t('employees.addEmployee')}</button>
+				</div>
 			</div>
-			<table id="employees-table">
-				<thead>
-					<tr>
-						<th>${I18n.t('employees.username')}</th>
-						<th>${I18n.t('employees.persNr')}</th>
-						<th>${I18n.t('employees.firstName')}</th>
-						<th>${I18n.t('employees.lastName')}</th>
-						<th>${I18n.t('employees.birthdate')}</th>
-						<th>${I18n.t('common.team')}</th>
-						<th>${I18n.t('common.location')}</th>
-						<th>${I18n.t('common.active')}</th>
-						<th>${I18n.t('common.actions')}</th>
-					</tr>
-				</thead>
-				<tbody>
-					<tr><td colspan="9">${I18n.t('common.loading')}</td></tr>
-				</tbody>
-			</table>
+
+			<!-- Status Filter Bar -->
+			<div class="filter-bar card" style="display: flex; flex-wrap: wrap; gap: 1rem; align-items: flex-end; padding: 1rem; margin-bottom: 1.5rem;">
+				<div class="filter-group" style="display: flex; flex-direction: column; gap: 0.25rem;">
+					<label for="employee-status-filter" style="font-weight: 500; font-size: 0.875rem;">${I18n.t('employees.filterStatus')}:</label>
+					<select id="employee-status-filter" style="padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 4px; min-width: 140px;">
+						<option value="all" ${this.statusFilter === 'all' ? 'selected' : ''}>${I18n.t('common.all')}</option>
+						<option value="active" ${this.statusFilter === 'active' ? 'selected' : ''}>${I18n.t('common.active')}</option>
+						<option value="inactive" ${this.statusFilter === 'inactive' ? 'selected' : ''}>${I18n.t('common.inactive')}</option>
+					</select>
+				</div>
+				<div class="filter-group" style="flex: 1; max-width: 350px; display: flex; flex-direction: column; gap: 0.25rem;">
+					<label for="employee-search-filter" style="font-weight: 500; font-size: 0.875rem;">${I18n.t('common.search')}:</label>
+					<input type="search" id="employee-search-filter" placeholder="${I18n.t('employees.searchPlaceholder')}" value="${this.searchQuery}" style="padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 4px; width: 100%;">
+				</div>
+				<div class="filter-actions" style="display: flex; gap: 0.5rem; margin-left: auto;">
+					<button id="employee-filter-reset-btn" class="secondary-btn">${I18n.t('common.reset')}</button>
+				</div>
+			</div>
+
+			<div class="table-container card" style="padding: 1rem; overflow: visible;">
+				<table id="employees-table" class="data-table">
+					<thead>
+						<tr>
+							<th>${I18n.t('employees.username')}</th>
+							<th>${I18n.t('employees.persNr')}</th>
+							<th>${I18n.t('employees.firstName')}</th>
+							<th>${I18n.t('employees.lastName')}</th>
+							<th>${I18n.t('employees.birthdate')}</th>
+							<th>${I18n.t('common.team')}</th>
+							<th>${I18n.t('common.location')}</th>
+							<th>${I18n.t('common.active')}</th>
+							<th>${I18n.t('common.actions')}</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr><td colspan="9" class="loading-cell" style="text-align: center; padding: 2rem;">${I18n.t('common.loading')}</td></tr>
+					</tbody>
+				</table>
+			</div>
 
 			<div id="employee-modal" class="modal">
 				<div class="modal-content wide">
@@ -160,61 +190,120 @@ export default class EmployeesView {
             templateSelect.templates = templates;
         };
 
+        const statusFilterSelect = container.querySelector('#employee-status-filter');
+        const searchFilterInput = container.querySelector('#employee-search-filter');
+        const resetFilterBtn = container.querySelector('#employee-filter-reset-btn');
+
+        statusFilterSelect.addEventListener('change', (e) => {
+            this.statusFilter = e.target.value;
+            renderEmployees();
+        });
+
+        searchFilterInput.addEventListener('input', (e) => {
+            this.searchQuery = e.target.value.trim().toLowerCase();
+            renderEmployees();
+        });
+
+        resetFilterBtn.addEventListener('click', () => {
+            this.statusFilter = 'all';
+            this.searchQuery = '';
+            statusFilterSelect.value = 'all';
+            searchFilterInput.value = '';
+            renderEmployees();
+        });
+
+        const renderEmployees = () => {
+            tbody.innerHTML = '';
+            let filtered = this.employees || [];
+
+            if (this.statusFilter === 'active') {
+                filtered = filtered.filter(e => e.active);
+            } else if (this.statusFilter === 'inactive') {
+                filtered = filtered.filter(e => !e.active);
+            }
+
+            if (this.searchQuery) {
+                const q = this.searchQuery.toLowerCase();
+                filtered = filtered.filter(e =>
+                    (e.username && e.username.toLowerCase().includes(q)) ||
+                    (e.personalNumber && e.personalNumber.toLowerCase().includes(q)) ||
+                    (e.firstname && e.firstname.toLowerCase().includes(q)) ||
+                    (e.lastname && e.lastname.toLowerCase().includes(q)) ||
+                    (e.teamName && e.teamName.toLowerCase().includes(q)) ||
+                    (e.locationName && e.locationName.toLowerCase().includes(q))
+                );
+            }
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="9" class="empty-cell" style="text-align: center; padding: 2rem; color: var(--text-muted);">${I18n.t('common.noData')}</td></tr>`;
+                return;
+            }
+
+            filtered.forEach(emp => {
+                const row = document.createElement('tr');
+                if (!emp.active) {
+                    row.classList.add('inactive-row');
+                }
+                const statusBadge = emp.active
+                    ? `<span class="status-badge badge-active">${I18n.t('common.active')}</span>`
+                    : `<span class="status-badge badge-inactive">${I18n.t('common.inactive')}</span>`;
+
+                row.innerHTML = `
+					<td>${emp.username}</td>
+					<td>${emp.personalNumber}</td>
+					<td>${emp.firstname}</td>
+					<td>${emp.lastname}</td>
+					<td>${emp.birthdate || ''}</td>
+					<td>${emp.teamName || ''}</td>
+					<td>${emp.locationName || ''}</td>
+					<td>${statusBadge}</td>
+					<td>
+						<div class="dropdown">
+							<button class="ghost dropdown-toggle" data-id="${emp.id}">${I18n.t('common.actions')}</button>
+							<div class="dropdown-content">
+								<button class="edit-btn" data-id="${emp.id}">${I18n.t('common.edit')}</button>
+								${emp.active ? `<button class="register-btn" data-id="${emp.id}">${I18n.t('employees.register')}</button>` : `<button class="reactivate-btn" data-id="${emp.id}">${I18n.t('employees.reactivate')}</button>`}
+								<button class="schedules-btn" data-id="${emp.id}">${I18n.t('employees.schedules')}</button>
+								<button class="delete-btn" data-id="${emp.id}">${I18n.t('common.delete')}</button>
+							</div>
+						</div>
+					</td>
+				`;
+                tbody.appendChild(row);
+            });
+
+            container.querySelectorAll('.dropdown-toggle').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    container.querySelectorAll('.dropdown').forEach(d => {
+                        if (d !== btn.parentElement) d.classList.remove('show');
+                    });
+                    btn.parentElement.classList.toggle('show');
+                });
+            });
+
+            container.querySelectorAll('.edit-btn').forEach(btn => {
+                btn.addEventListener('click', () => editEmployee(btn.dataset.id));
+            });
+            container.querySelectorAll('.register-btn').forEach(btn => {
+                btn.addEventListener('click', () => registerEmployee(btn.dataset.id));
+            });
+            container.querySelectorAll('.reactivate-btn').forEach(btn => {
+                btn.addEventListener('click', () => reactivateEmployee(btn.dataset.id));
+            });
+            container.querySelectorAll('.schedules-btn').forEach(btn => {
+                btn.addEventListener('click', () => this.app.navigate('schedules', {employeeId: btn.dataset.id}));
+            });
+            container.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.addEventListener('click', () => deleteEmployee(btn.dataset.id));
+            });
+        };
+
         const refresh = async () => {
             try {
-                const employees = await EmployeeApi.getAll();
-                tbody.innerHTML = '';
-                employees.forEach(emp => {
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-						<td>${emp.username}</td>
-						<td>${emp.personalNumber}</td>
-						<td>${emp.firstname}</td>
-						<td>${emp.lastname}</td>
-						<td>${emp.birthdate}</td>
-						<td>${emp.teamName || ''}</td>
-						<td>${emp.locationName || ''}</td>
-						<td>${emp.active ? I18n.t('common.yes') : I18n.t('common.no')}</td>
-						<td>
-							<div class="dropdown">
-								<button class="ghost dropdown-toggle" data-id="${emp.id}">${I18n.t('common.actions')}</button>
-								<div class="dropdown-content">
-									<button class="edit-btn" data-id="${emp.id}">${I18n.t('common.edit')}</button>
-									${emp.active ? `<button class="register-btn" data-id="${emp.id}">${I18n.t('employees.register')}</button>` : `<button class="reactivate-btn" data-id="${emp.id}">${I18n.t('employees.reactivate')}</button>`}
-									<button class="schedules-btn" data-id="${emp.id}">${I18n.t('employees.schedules')}</button>
-									<button class="delete-btn" data-id="${emp.id}">${I18n.t('common.delete')}</button>
-								</div>
-							</div>
-						</td>
-					`;
-                    tbody.appendChild(row);
-                });
-
-                container.querySelectorAll('.dropdown-toggle').forEach(btn => {
-                    btn.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        container.querySelectorAll('.dropdown').forEach(d => {
-                            if (d !== btn.parentElement) d.classList.remove('show');
-                        });
-                        btn.parentElement.classList.toggle('show');
-                    });
-                });
-
-                container.querySelectorAll('.edit-btn').forEach(btn => {
-                    btn.addEventListener('click', () => editEmployee(btn.dataset.id));
-                });
-                container.querySelectorAll('.register-btn').forEach(btn => {
-                    btn.addEventListener('click', () => registerEmployee(btn.dataset.id));
-                });
-                container.querySelectorAll('.reactivate-btn').forEach(btn => {
-                    btn.addEventListener('click', () => reactivateEmployee(btn.dataset.id));
-                });
-                container.querySelectorAll('.schedules-btn').forEach(btn => {
-                    btn.addEventListener('click', () => this.app.navigate('schedules', {employeeId: btn.dataset.id}));
-                });
-                container.querySelectorAll('.delete-btn').forEach(btn => {
-                    btn.addEventListener('click', () => deleteEmployee(btn.dataset.id));
-                });
+                tbody.innerHTML = `<tr><td colspan="9" class="loading-cell" style="text-align: center; padding: 2rem;">${I18n.t('common.loading')}</td></tr>`;
+                this.employees = await EmployeeApi.getAll();
+                renderEmployees();
             } catch (err) {
                 console.error(err);
                 tbody.innerHTML = `<tr><td colspan="9" class="error">${err.message}</td></tr>`;

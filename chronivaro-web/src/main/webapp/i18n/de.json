@@ -466,7 +466,9 @@
     "reactivateSuccess": "Mitarbeiter erfolgreich reaktiviert.",
     "confirmDelete": "Sind Sie sicher, dass Sie Mitarbeiter {id} löschen möchten?",
     "saveEmployee": "Mitarbeiter speichern",
-    "deleteEmployee": "Mitarbeiter löschen"
+    "deleteEmployee": "Mitarbeiter löschen",
+    "filterStatus": "Status-Filter",
+    "searchPlaceholder": "Mitarbeiter suchen..."
   },
   "teams": {
     "title": "Teams",

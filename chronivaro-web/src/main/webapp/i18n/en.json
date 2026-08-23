@@ -466,7 +466,9 @@
     "reactivateSuccess": "Employee reactivated successfully.",
     "confirmDelete": "Are you sure you want to delete employee {id}?",
     "saveEmployee": "Save Employee",
-    "deleteEmployee": "Delete Employee"
+    "deleteEmployee": "Delete Employee",
+    "filterStatus": "Status Filter",
+    "searchPlaceholder": "Search employees..."
   },
   "teams": {
     "title": "Teams",
