@@ -624,6 +624,10 @@ button.ghost:hover {
 .form-group input[type="email"],
 .form-group input[type="number"],
 .form-group input[type="date"],
+.form-group input[type="datetime-local"],
+.form-group input[type="month"],
+.form-group input[type="time"],
+.form-group input[type="search"],
 .form-group select,
 .form-group textarea {
     width: 100%;
@@ -632,6 +636,8 @@ button.ghost:hover {
     border-radius: 0.5rem;
     box-sizing: border-box;
     font-size: 0.875rem;
+    font-family: inherit;
+    color: var(--text-color);
     transition: all 0.2s;
     background-color: white;
 }
@@ -642,6 +648,26 @@ button.ghost:hover {
     outline: none;
     border-color: var(--primary-color);
     box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+/* Calendar & date picker button styling */
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="datetime-local"]::-webkit-calendar-picker-indicator,
+input[type="month"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    border-radius: 0.25rem;
+    padding: 0.25rem;
+    opacity: 0.7;
+    transition: opacity 0.2s, background-color 0.2s;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator:hover,
+input[type="datetime-local"]::-webkit-calendar-picker-indicator:hover,
+input[type="month"]::-webkit-calendar-picker-indicator:hover,
+input[type="time"]::-webkit-calendar-picker-indicator:hover {
+    opacity: 1;
+    background-color: #f1f5f9;
 }
 
 /* Fix for checkboxes and radio buttons alignment */
