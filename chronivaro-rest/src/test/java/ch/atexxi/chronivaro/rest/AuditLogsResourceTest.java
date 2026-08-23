@@ -188,4 +188,37 @@ public class AuditLogsResourceTest extends AbstractChronivaroRestfulTest {
 			assertNotNull(error.correlationId());
 		}
 	}
+
+	@Test
+	public void shouldGetAuditLogDetailsAndSnapshots() {
+		Certificate adminCert = runtimeMock.getPrivilegeHandler().authenticate("admin", "admin".toCharArray());
+		try (StrolchTransaction tx = runtimeMock.openUserTx(adminCert, false)) {
+			ChronivaroAuditHelper.audit(tx, TYPE_EMPLOYEE, "emp-snapshot-1", AUDIT_ACTION_UPDATE, "Updated target hours",
+					"weeklyTargetMinutes", "2400", "2520", "Target minutes adjusted", "test-corr-id-999");
+			tx.commitOnClose();
+		}
+
+		try (Response response = target()
+				.path("chronivaro/v1/admin/audit-logs")
+				.queryParam("entityId", "emp-snapshot-1")
+				.request(MediaType.APPLICATION_JSON)
+				.header("Authorization", this.adminAuthToken)
+				.get()) {
+			assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+
+			List<AuditLogDto> logs = ChronivaroRestHelper
+					.createGson()
+					.fromJson(response.readEntity(String.class), new TypeToken<List<AuditLogDto>>() {
+					}.getType());
+			assertEquals(1, logs.size());
+			AuditLogDto log = logs.getFirst();
+			assertEquals("emp-snapshot-1", log.entityId());
+			assertEquals("Updated target hours", log.reason());
+			assertEquals("weeklyTargetMinutes", log.paramName());
+			assertEquals("2400", log.oldValue());
+			assertEquals("2520", log.newValue());
+			assertEquals("test-corr-id-999", log.correlationId());
+			assertEquals("Target minutes adjusted", log.details());
+		}
+	}
 }

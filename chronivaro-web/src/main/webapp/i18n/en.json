@@ -26,6 +26,7 @@
     "holidayCalendars": "Holiday Calendars",
     "scheduleTemplates": "Schedule Templates",
     "users": "Users",
+    "auditLog": "Audit Log",
     "configuration": "Configuration",
     "logout": "Logout"
   },
@@ -676,6 +677,29 @@
     "userCreatedSuccess": "User \"{username}\" created successfully.",
     "userUpdatedSuccess": "User \"{username}\" updated successfully.",
     "errorSelectAtLeastOneRole": "Please select at least one role."
+  },
+  "auditLog": {
+    "title": "Audit Log",
+    "subtitle": "System-wide immutable audit trail and security event inspection.",
+    "entityType": "Entity Type",
+    "entityId": "Entity ID",
+    "entityIdPlaceholder": "e.g. emp-001",
+    "user": "User",
+    "userPlaceholder": "e.g. admin",
+    "action": "Action",
+    "timestamp": "Timestamp",
+    "summary": "Summary",
+    "noEntriesFound": "No audit log records found.",
+    "totalRecords": "Total: {count} entries",
+    "errorLoading": "Error loading audit logs.",
+    "detailTitle": "Audit Log Entry Details",
+    "logId": "Log ID",
+    "correlationId": "Correlation ID",
+    "reason": "Reason / Justification",
+    "paramName": "Changed Field",
+    "oldValue": "Previous Value",
+    "newValue": "New Value",
+    "details": "Details"
   },
   "user": {
     "profile": "User Profile",

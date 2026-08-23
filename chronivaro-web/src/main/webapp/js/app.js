@@ -16,6 +16,7 @@ import SchedulesView from './pages/SchedulesView.js';
 import ScheduleTemplatesView from './pages/ScheduleTemplatesView.js';
 import ConfigurationView from './pages/ConfigurationView.js';
 import UsersView from './pages/UsersView.js';
+import AuditLogView from './pages/AuditLogView.js';
 import ConfigurationApi from './api/ConfigurationApi.js';
 import CompleteRegistrationView from './pages/CompleteRegistrationView.js';
 import NotificationDialog from './utils/NotificationDialog.js';
@@ -479,6 +480,9 @@ class ChronivaroApp {
                 break;
             case 'users':
                 view = new UsersView(this);
+                break;
+            case 'audit-log':
+                view = new AuditLogView(this);
                 break;
             case 'schedules':
                 view = new SchedulesView(this);

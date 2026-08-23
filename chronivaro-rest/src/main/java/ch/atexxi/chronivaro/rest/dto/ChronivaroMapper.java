@@ -203,13 +203,19 @@ public class ChronivaroMapper {
 
 	public static AuditLogDto auditLogToDto(Resource auditEvent) {
 		String details = auditEvent.getString(PARAM_DETAILS);
+		String reason = auditEvent.getString(PARAM_REASON);
 		if (details == null || details.isEmpty()) {
-			details = auditEvent.getString(PARAM_REASON);
+			details = reason;
 		}
 		return new AuditLogDto(auditEvent.getId(), auditEvent.getDate(PARAM_DATE),
 				auditEvent.getString(PARAM_CREATED_BY), auditEvent.getString(PARAM_ACTION),
 				auditEvent.getString(PARAM_ELEMENT_TYPE), auditEvent.getString(PARAM_ELEMENT_ID),
-				details != null ? details : "");
+				details != null ? details : "",
+				reason != null ? reason : "",
+				auditEvent.getString(PARAM_NAME),
+				auditEvent.getString(PARAM_OLD_VALUE),
+				auditEvent.getString(PARAM_NEW_VALUE),
+				auditEvent.getString(PARAM_CORRELATION_ID));
 	}
 
 	public static PeriodStatusDto periodToDto(StrolchTransaction tx, Resource period) {

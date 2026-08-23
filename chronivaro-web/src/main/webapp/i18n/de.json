@@ -26,6 +26,7 @@
     "holidayCalendars": "Feiertagskalender",
     "scheduleTemplates": "Arbeitsplanvorlagen",
     "users": "Benutzer",
+    "auditLog": "Audit-Log",
     "configuration": "Konfiguration",
     "logout": "Abmelden"
   },
@@ -676,6 +677,29 @@
     "userCreatedSuccess": "Benutzer \"{username}\" erfolgreich erstellt.",
     "userUpdatedSuccess": "Benutzer \"{username}\" erfolgreich aktualisiert.",
     "errorSelectAtLeastOneRole": "Bitte wählen Sie mindestens eine Rolle aus."
+  },
+  "auditLog": {
+    "title": "Audit-Log",
+    "subtitle": "Systemweite revisionssichere Audit-Protokollierung und Sicherheitsereignisse.",
+    "entityType": "Entitätstyp",
+    "entityId": "Entitäts-ID",
+    "entityIdPlaceholder": "z. B. emp-001",
+    "user": "Benutzer",
+    "userPlaceholder": "z. B. admin",
+    "action": "Aktion",
+    "timestamp": "Zeitstempel",
+    "summary": "Zusammenfassung",
+    "noEntriesFound": "Keine Audit-Log-Einträge gefunden.",
+    "totalRecords": "Gesamt: {count} Einträge",
+    "errorLoading": "Fehler beim Laden der Audit-Logs.",
+    "detailTitle": "Audit-Log-Eintragsdetails",
+    "logId": "Log-ID",
+    "correlationId": "Korrelations-ID",
+    "reason": "Grund / Begründung",
+    "paramName": "Geändertes Feld",
+    "oldValue": "Vorheriger Wert",
+    "newValue": "Neuer Wert",
+    "details": "Details"
   },
   "user": {
     "profile": "Benutzerprofil",
