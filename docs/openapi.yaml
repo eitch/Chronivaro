@@ -3363,6 +3363,212 @@ paths:
           $ref: '#/components/responses/InternalServerError'
 
   # ==========================================
+  # Admin - Users
+  # ==========================================
+  /chronivaro/v1/admin/users:
+    get:
+      summary: List all users
+      description: Returns all active non-system users, optionally filtered by a query string.
+      operationId: listUsers
+      tags:
+        - Admin - Users
+      security:
+        - CookieAuth: []
+        - BearerAuth: []
+      parameters:
+        - name: query
+          in: query
+          required: false
+          description: Search term matching username, firstname, lastname, or email
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Users retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserDto'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      summary: Create a new user
+      description: Creates a new user account with specified roles and user state.
+      operationId: createUser
+      tags:
+        - Admin - Users
+      security:
+        - CookieAuth: []
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserDto'
+      responses:
+        '201':
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserDto'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /chronivaro/v1/admin/users/{id}:
+    get:
+      summary: Get user by ID
+      description: Retrieves detailed user profile and linked employee information.
+      operationId: getUserById
+      tags:
+        - Admin - Users
+      security:
+        - CookieAuth: []
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: User identifier or username
+          schema:
+            type: string
+      responses:
+        '200':
+          description: User retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserDto'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    put:
+      summary: Update user
+      description: Updates user attributes, roles, and status.
+      operationId: updateUser
+      tags:
+        - Admin - Users
+      security:
+        - CookieAuth: []
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: User identifier
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserDto'
+      responses:
+        '200':
+          description: User updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserDto'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      summary: Delete user
+      description: Deletes a user account. If linked to an employee, automatically deactivates the employee non-destructively.
+      operationId: removeUser
+      tags:
+        - Admin - Users
+      security:
+        - CookieAuth: []
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: User identifier or username
+          schema:
+            type: string
+      responses:
+        '200':
+          description: User deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponseDto'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /chronivaro/v1/admin/users/{id}/register:
+    post:
+      summary: Initiate user registration
+      description: Triggers password reset / initial registration challenge for the user.
+      operationId: initiateUserRegistration
+      tags:
+        - Admin - Users
+      security:
+        - CookieAuth: []
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: User identifier
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Registration initiated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponseDto'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # ==========================================
   # Admin - Audit Logs, Configuration & Corrections
   # ==========================================
   /chronivaro/v1/admin/audit-logs:
@@ -3858,6 +4064,54 @@ components:
           items:
             type: string
           example: ['AppUser', 'Administrator']
+
+    UserDto:
+      type: object
+      required:
+        - username
+        - firstname
+        - lastname
+        - roles
+      properties:
+        id:
+          type: string
+          example: 'usr-001'
+        username:
+          type: string
+          example: 'johndoe'
+        firstname:
+          type: string
+          example: 'John'
+        lastname:
+          type: string
+          example: 'Doe'
+        email:
+          type: string
+          format: email
+          example: 'john.doe@example.com'
+        roles:
+          type: array
+          items:
+            type: string
+          example: ['Employee']
+        state:
+          type: string
+          enum: [ENABLED, DISABLED, SYSTEM]
+          example: 'ENABLED'
+        locale:
+          type: string
+          example: 'de'
+        hasLinkedEmployee:
+          type: boolean
+          example: true
+        employeeId:
+          type: string
+          nullable: true
+          example: 'emp-001'
+        employeeName:
+          type: string
+          nullable: true
+          example: 'John Doe'
 
     RegistrationInitiateRequestDto:
       type: object
