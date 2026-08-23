@@ -13,6 +13,7 @@ import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 public class EmployeeResourceTest extends AbstractChronivaroRestfulTest {
 
@@ -162,6 +163,83 @@ public class EmployeeResourceTest extends AbstractChronivaroRestfulTest {
 				.header("Authorization", authToken)
 				.post(Entity.json(""))) {
 			assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+		}
+	}
+
+	@Test
+	public void shouldReactivateEmployee() {
+		String authToken = authenticate();
+
+		// 1. Create an active employee
+		EmployeeDto newEmployee = new EmployeeDto(null, "PN_REACT", "Reactivate", "Me", LocalDate.of(1992, 8, 15),
+				"team-1", "team-1", "location-1", "location-1", "Europe/Zurich", LocalDate.of(2025, 1, 1), null, true,
+				null, "react_user_rest", "react_rest@example.com", null);
+		String json = ChronivaroRestHelper.createGson().toJson(newEmployee);
+
+		try (Response response = target()
+				.path("chronivaro/v1/admin/employees")
+				.request(MediaType.APPLICATION_JSON)
+				.header("Authorization", authToken)
+				.post(Entity.json(json))) {
+			assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+		}
+
+		String employeeId;
+		try (Response response = target()
+				.path("chronivaro/v1/admin/employees")
+				.request(MediaType.APPLICATION_JSON)
+				.header("Authorization", authToken)
+				.get()) {
+			assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+			List<EmployeeDto> employees = ChronivaroRestHelper
+					.createGson()
+					.fromJson(response.readEntity(String.class), new TypeToken<List<EmployeeDto>>() {
+					}.getType());
+			employeeId = employees.stream().filter(e -> e.username().equals("react_user_rest")).findFirst().orElseThrow().id();
+		}
+
+		// 2. Deactivate employee by deleting the user account
+		try (Response response = target()
+				.path("chronivaro/v1/admin/users/react_user_rest")
+				.request(MediaType.APPLICATION_JSON)
+				.header("Authorization", authToken)
+				.delete()) {
+			assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+		}
+
+		// Verify employee is inactive
+		try (Response response = target()
+				.path("chronivaro/v1/admin/employees/" + employeeId)
+				.request(MediaType.APPLICATION_JSON)
+				.header("Authorization", authToken)
+				.get()) {
+			assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+			EmployeeDto employee = ChronivaroRestHelper
+					.createGson()
+					.fromJson(response.readEntity(String.class), EmployeeDto.class);
+			assertFalse(employee.active());
+		}
+
+		// 3. Reactivate employee via POST /admin/employees/{id}/reactivate
+		try (Response response = target()
+				.path("chronivaro/v1/admin/employees/" + employeeId + "/reactivate")
+				.request(MediaType.APPLICATION_JSON)
+				.header("Authorization", authToken)
+				.post(Entity.json(""))) {
+			assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+		}
+
+		// Verify employee is now active
+		try (Response response = target()
+				.path("chronivaro/v1/admin/employees/" + employeeId)
+				.request(MediaType.APPLICATION_JSON)
+				.header("Authorization", authToken)
+				.get()) {
+			assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+			EmployeeDto employee = ChronivaroRestHelper
+					.createGson()
+					.fromJson(response.readEntity(String.class), EmployeeDto.class);
+			assertTrue(employee.active());
 		}
 	}
 }

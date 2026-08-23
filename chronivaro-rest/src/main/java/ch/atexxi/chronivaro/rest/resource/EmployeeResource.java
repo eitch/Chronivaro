@@ -392,6 +392,17 @@ public class EmployeeResource {
 	}
 
 	@POST
+	@Path("{id}/reactivate")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response reactivateEmployee(@Context HttpServletRequest request, @PathParam("id") String id) {
+		Certificate cert = (Certificate) request.getAttribute(StrolchRestfulConstants.STROLCH_CERTIFICATE);
+		ServiceHandler serviceHandler = ChronivaroRestHelper.getServiceHandler();
+		ServiceResult result = serviceHandler.doService(cert, new ReactivateEmployeeService(),
+				new StringArgument(id));
+		return ChronivaroRestHelper.toResponse(result);
+	}
+
+	@POST
 	@Path("{id}/register")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response initiateRegistration(@Context HttpServletRequest request, @PathParam("id") String id) {

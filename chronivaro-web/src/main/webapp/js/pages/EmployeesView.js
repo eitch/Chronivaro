@@ -180,7 +180,7 @@ export default class EmployeesView {
 								<button class="ghost dropdown-toggle" data-id="${emp.id}">${I18n.t('common.actions')}</button>
 								<div class="dropdown-content">
 									<button class="edit-btn" data-id="${emp.id}">${I18n.t('common.edit')}</button>
-									<button class="register-btn" data-id="${emp.id}">${I18n.t('employees.register')}</button>
+									${emp.active ? `<button class="register-btn" data-id="${emp.id}">${I18n.t('employees.register')}</button>` : `<button class="reactivate-btn" data-id="${emp.id}">${I18n.t('employees.reactivate')}</button>`}
 									<button class="schedules-btn" data-id="${emp.id}">${I18n.t('employees.schedules')}</button>
 									<button class="delete-btn" data-id="${emp.id}">${I18n.t('common.delete')}</button>
 								</div>
@@ -205,6 +205,9 @@ export default class EmployeesView {
                 });
                 container.querySelectorAll('.register-btn').forEach(btn => {
                     btn.addEventListener('click', () => registerEmployee(btn.dataset.id));
+                });
+                container.querySelectorAll('.reactivate-btn').forEach(btn => {
+                    btn.addEventListener('click', () => reactivateEmployee(btn.dataset.id));
                 });
                 container.querySelectorAll('.schedules-btn').forEach(btn => {
                     btn.addEventListener('click', () => this.app.navigate('schedules', {employeeId: btn.dataset.id}));
@@ -254,6 +257,18 @@ export default class EmployeesView {
                 try {
                     await EmployeeApi.register(id);
                     NotificationDialog.info(I18n.t('employees.registerSuccess'));
+                } catch (err) {
+                    NotificationDialog.error(err.message);
+                }
+            }
+        };
+
+        const reactivateEmployee = async (id) => {
+            if (await NotificationDialog.confirm(I18n.t('employees.confirmReactivate', { id }))) {
+                try {
+                    await EmployeeApi.reactivate(id);
+                    NotificationDialog.info(I18n.t('employees.reactivateSuccess'));
+                    refresh();
                 } catch (err) {
                     NotificationDialog.error(err.message);
                 }

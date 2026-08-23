@@ -1,7 +1,10 @@
 package ch.atexxi.chronivaro.core;
 
 import ch.atexxi.chronivaro.core.service.CreateEmployeeService;
+import ch.atexxi.chronivaro.core.service.InitiateEmployeeRegistrationService;
+import ch.atexxi.chronivaro.core.service.ReactivateEmployeeService;
 import ch.atexxi.chronivaro.core.service.RemoveEmployeeService;
+import ch.atexxi.chronivaro.core.service.RemoveUserService;
 import ch.atexxi.chronivaro.core.service.UpdateEmployeeService;
 import li.strolch.model.Resource;
 import li.strolch.persistence.api.StrolchTransaction;
@@ -203,5 +206,87 @@ public class EmployeeServiceTest {
 				new StringArgument(employeeId));
 		assertFalse(removeResult.isOk());
 		assertTrue(removeResult.getMessage().contains("historical bookings exist"));
+	}
+
+	@Test
+	public void shouldReactivateInactiveEmployee() {
+		ServiceHandler serviceHandler = runtimeMock.getServiceHandler();
+
+		String username = "reactivateuser";
+		CreateEmployeeService.EmployeeArgument createArg = new CreateEmployeeService.EmployeeArgument();
+		createArg.personalNumber = "999";
+		createArg.firstname = "To";
+		createArg.lastname = "Reactivate";
+		createArg.email = "reactivate@example.com";
+		createArg.teamId = "team1";
+		createArg.locationId = "loc1";
+		createArg.timezone = "Europe/Zurich";
+		createArg.joinDate = LocalDate.of(2026, 1, 1);
+		createArg.active = true;
+		createArg.username = username;
+
+		ServiceResult createResult = serviceHandler.doService(certificate, new CreateEmployeeService(), createArg);
+		assertTrue(createResult.getMessage(), createResult.isOk());
+
+		String employeeId;
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
+			Resource employee = tx.streamResources(TYPE_EMPLOYEE)
+					.filter(e -> username.equals(e.getString(PARAM_USERNAME)))
+					.findFirst()
+					.orElseThrow();
+			employeeId = employee.getId();
+
+			// Add a schedule
+			Resource schedule = tx.getResourceTemplate(TYPE_EMPLOYMENT_SCHEDULE, true);
+			schedule.setName("Schedule for " + employee.getName());
+			schedule.setRelation(PARAM_EMPLOYEE, employee);
+			schedule.setDate(PARAM_VALID_FROM, LocalDate.of(2026, 1, 1).atStartOfDay(java.time.ZoneId.of("Europe/Zurich")));
+			schedule.setInteger(PARAM_WEEKLY_TARGET_MINUTES, 2400);
+			tx.add(schedule);
+
+			tx.commitOnClose();
+		}
+
+		// Deactivate employee by removing the linked user account (non-destructive user deletion)
+		ServiceResult removeUserResult = serviceHandler.doService(certificate, new RemoveUserService(),
+				new StringArgument(username));
+		assertTrue(removeUserResult.getMessage(), removeUserResult.isOk());
+
+		// Verify employee is inactive and user does not exist
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
+			Resource employee = tx.getResourceBy(TYPE_EMPLOYEE, employeeId, true);
+			assertFalse(employee.getBoolean(PARAM_ACTIVE));
+			UserRep user = runtimeMock.getPrivilegeHandler().getPrivilegeHandler().getUser(certificate, username);
+			assertNull(user);
+		}
+
+		// Reactivate the employee
+		ServiceResult reactivateResult = serviceHandler.doService(certificate, new ReactivateEmployeeService(),
+				new StringArgument(employeeId));
+		assertTrue(reactivateResult.getMessage(), reactivateResult.isOk());
+
+		// Verify employee is active and user account is recreated
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
+			Resource employee = tx.getResourceBy(TYPE_EMPLOYEE, employeeId, true);
+			assertTrue(employee.getBoolean(PARAM_ACTIVE));
+			UserRep user = runtimeMock.getPrivilegeHandler().getPrivilegeHandler().getUser(certificate, username);
+			assertNotNull(user);
+			assertEquals(username, user.getUsername());
+			assertEquals("To", user.getFirstname());
+			assertEquals("Reactivate", user.getLastname());
+			assertEquals("reactivate@example.com", user.getEmail());
+			assertTrue(user.getRoles().contains(ROLE_EMPLOYEE));
+		}
+
+		// Verify registration challenge can be initiated on the reactivated employee
+		ServiceResult regResult = serviceHandler.doService(certificate, new InitiateEmployeeRegistrationService(),
+				new StringArgument(employeeId));
+		assertTrue(regResult.getMessage(), regResult.isOk());
+
+		// Attempting to reactivate an already active employee should return an error
+		ServiceResult secondReactivateResult = serviceHandler.doService(certificate, new ReactivateEmployeeService(),
+				new StringArgument(employeeId));
+		assertFalse(secondReactivateResult.isOk());
+		assertTrue(secondReactivateResult.getMessage().contains("already active"));
 	}
 }

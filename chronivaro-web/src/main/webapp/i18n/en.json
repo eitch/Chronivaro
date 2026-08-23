@@ -458,9 +458,12 @@
     "noTeamsAvailable": "No teams available",
     "noLocationsAvailable": "No locations available",
     "register": "Register",
+    "reactivate": "Reactivate",
     "schedules": "Schedules",
     "confirmRegister": "Are you sure you want to initiate registration for employee {id}?",
     "registerSuccess": "Registration initiated successfully.",
+    "confirmReactivate": "Are you sure you want to reactivate employee {id}?",
+    "reactivateSuccess": "Employee reactivated successfully.",
     "confirmDelete": "Are you sure you want to delete employee {id}?",
     "saveEmployee": "Save Employee",
     "deleteEmployee": "Delete Employee"

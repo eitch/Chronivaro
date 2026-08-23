@@ -124,6 +124,7 @@
             <Allow>ch.atexxi.chronivaro.core.service.PresenceService</Allow>
             <Allow>ch.atexxi.chronivaro.core.service.CreateEmployeeService</Allow>
             <Allow>ch.atexxi.chronivaro.core.service.UpdateEmployeeService</Allow>
+            <Allow>ch.atexxi.chronivaro.core.service.ReactivateEmployeeService</Allow>
             <Allow>ch.atexxi.chronivaro.core.service.SubmitPeriodService</Allow>
             <Allow>ch.atexxi.chronivaro.core.service.ApprovePeriodService</Allow>
             <Allow>ch.atexxi.chronivaro.core.service.RejectPeriodService</Allow>

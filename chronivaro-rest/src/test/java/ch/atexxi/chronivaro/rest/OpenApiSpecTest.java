@@ -93,6 +93,7 @@ public class OpenApiSpecTest {
 				"/chronivaro/v1/periods/close-year:",
 				"/chronivaro/v1/admin/employees:",
 				"/chronivaro/v1/admin/employees/{id}:",
+				"/chronivaro/v1/admin/employees/{id}/reactivate:",
 				"/chronivaro/v1/admin/employees/{id}/schedules:",
 				"/chronivaro/v1/admin/employees/{id}/vacation-account:",
 				"/chronivaro/v1/admin/employees/{id}/vacation-correction:",

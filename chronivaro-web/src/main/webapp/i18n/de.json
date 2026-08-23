@@ -458,9 +458,12 @@
     "noTeamsAvailable": "Keine Teams verfügbar",
     "noLocationsAvailable": "Keine Standorte verfügbar",
     "register": "Registrieren",
+    "reactivate": "Reaktivieren",
     "schedules": "Arbeitspläne",
     "confirmRegister": "Sind Sie sicher, dass Sie die Registrierung für Mitarbeiter {id} initiieren möchten?",
     "registerSuccess": "Registrierung erfolgreich initiiert.",
+    "confirmReactivate": "Sind Sie sicher, dass Sie Mitarbeiter {id} reaktivieren möchten?",
+    "reactivateSuccess": "Mitarbeiter erfolgreich reaktiviert.",
     "confirmDelete": "Sind Sie sicher, dass Sie Mitarbeiter {id} löschen möchten?",
     "saveEmployee": "Mitarbeiter speichern",
     "deleteEmployee": "Mitarbeiter löschen"
