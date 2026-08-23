@@ -1,8 +1,11 @@
 package ch.atexxi.chronivaro.core;
 
+import ch.atexxi.chronivaro.core.service.CreateEmployeeService;
 import ch.atexxi.chronivaro.core.service.CreateUserService;
 import ch.atexxi.chronivaro.core.service.InitiateUserRegistrationService;
+import ch.atexxi.chronivaro.core.service.RemoveUserService;
 import ch.atexxi.chronivaro.core.service.UpdateUserService;
+import li.strolch.model.Resource;
 import li.strolch.persistence.api.StrolchTransaction;
 import li.strolch.privilege.base.PrivilegeConstants;
 import li.strolch.privilege.model.Certificate;
@@ -17,6 +20,8 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import java.time.LocalDate;
+import java.util.List;
 import java.util.Set;
 
 import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
@@ -155,5 +160,117 @@ public class UserServiceTest {
 				new StringArgument("agent"));
 		assertFalse(regResult.isOk());
 		assertTrue(regResult.getMessage().contains("not found"));
+
+		// 4. Cannot delete system user
+		ServiceResult deleteResult = serviceHandler.doService(certificate, new RemoveUserService(),
+				new StringArgument("agent"));
+		assertFalse(deleteResult.isOk());
+		assertTrue(deleteResult.getMessage().contains("not found"));
+	}
+
+	@Test
+	public void shouldDeletePureUserAndAudit() {
+		ServiceHandler serviceHandler = runtimeMock.getServiceHandler();
+		String username = "puredeleteme";
+
+		CreateUserService.UserArgument createArg = new CreateUserService.UserArgument();
+		createArg.username = username;
+		createArg.firstname = "To";
+		createArg.lastname = "Delete";
+		createArg.roles = Set.of(ROLE_HR);
+
+		StringResult createResult = serviceHandler.doService(certificate, new CreateUserService(), createArg);
+		assertTrue(createResult.getMessage(), createResult.isOk());
+		String userId = createResult.getValue();
+
+		ServiceResult deleteResult = serviceHandler.doService(certificate, new RemoveUserService(),
+				new StringArgument(userId));
+		assertTrue(deleteResult.getMessage(), deleteResult.isOk());
+
+		UserRep deletedUser = runtimeMock.getPrivilegeHandler().getPrivilegeHandler().getUser(certificate, username);
+		assertNull(deletedUser);
+
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
+			boolean audited = tx.streamResources(TYPE_AUDIT_EVENT)
+					.anyMatch(r -> "User".equals(r.getString(PARAM_ELEMENT_TYPE))
+							&& userId.equals(r.getString(PARAM_ELEMENT_ID))
+							&& AUDIT_ACTION_REMOVE.equals(r.getString(PARAM_ACTION)));
+			assertTrue("User deletion must be audited", audited);
+		}
+	}
+
+	@Test
+	public void shouldDeleteEmployeeLinkedUserAndDeactivateEmployeeWithoutDataLoss() {
+		ServiceHandler serviceHandler = runtimeMock.getServiceHandler();
+		String username = "emplinkeduser";
+
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
+			Resource loc = tx.getResourceTemplate(TYPE_LOCATION, true);
+			loc.setId("userTestLoc");
+			loc.setName("User Test Loc");
+			tx.add(loc);
+
+			Resource team = tx.getResourceTemplate(TYPE_TEAM, true);
+			team.setId("userTestTeam");
+			team.setName("User Test Team");
+			tx.add(team);
+
+			tx.commitOnClose();
+		}
+
+		CreateEmployeeService.EmployeeArgument empArg = new CreateEmployeeService.EmployeeArgument();
+		empArg.personalNumber = "999";
+		empArg.firstname = "Linked";
+		empArg.lastname = "Employee";
+		empArg.birthdate = LocalDate.of(1985, 3, 15);
+		empArg.teamId = "userTestTeam";
+		empArg.locationId = "userTestLoc";
+		empArg.timezone = "Europe/Zurich";
+		empArg.joinDate = LocalDate.of(2026, 1, 1);
+		empArg.active = true;
+		empArg.username = username;
+
+		ServiceResult empResult = serviceHandler.doService(certificate, new CreateEmployeeService(), empArg);
+		assertTrue(empResult.getMessage(), empResult.isOk());
+
+		String employeeId;
+		String userId;
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
+			Resource employee = tx.streamResources(TYPE_EMPLOYEE)
+					.filter(e -> username.equals(e.getString(PARAM_USERNAME)))
+					.findFirst()
+					.orElseThrow();
+			employeeId = employee.getId();
+			userId = employee.getString(PARAM_USER_ID);
+			assertTrue(employee.getBoolean(PARAM_ACTIVE));
+		}
+
+		// Delete the user
+		ServiceResult deleteResult = serviceHandler.doService(certificate, new RemoveUserService(),
+				new StringArgument(userId));
+		assertTrue(deleteResult.getMessage(), deleteResult.isOk());
+
+		// Verify user account is deleted in PrivilegeHandler
+		UserRep deletedUser = runtimeMock.getPrivilegeHandler().getPrivilegeHandler().getUser(certificate, username);
+		assertNull(deletedUser);
+
+		// Verify Employee resource is preserved, set to active = false, and audited
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
+			Resource employee = tx.getResourceBy(TYPE_EMPLOYEE, employeeId);
+			assertNotNull("Employee resource must not be physically removed", employee);
+			assertFalse("Employee must be marked inactive", employee.getBoolean(PARAM_ACTIVE));
+
+			boolean empDeactivatedAudited = tx.streamResources(TYPE_AUDIT_EVENT)
+					.anyMatch(r -> TYPE_EMPLOYEE.equals(r.getString(PARAM_ELEMENT_TYPE))
+							&& employeeId.equals(r.getString(PARAM_ELEMENT_ID))
+							&& AUDIT_ACTION_DEACTIVATE.equals(r.getString(PARAM_ACTION)));
+			assertTrue("Employee deactivation must be audited", empDeactivatedAudited);
+
+			boolean userDeletionAudited = tx.streamResources(TYPE_AUDIT_EVENT)
+					.anyMatch(r -> "User".equals(r.getString(PARAM_ELEMENT_TYPE))
+							&& userId.equals(r.getString(PARAM_ELEMENT_ID))
+							&& AUDIT_ACTION_REMOVE.equals(r.getString(PARAM_ACTION)));
+			assertTrue("User deletion must be audited", userDeletionAudited);
+		}
 	}
 }

@@ -160,4 +160,48 @@ public class EmployeeServiceTest {
 			assertFalse(employee.hasParameter(PARAM_BIRTHDATE));
 		}
 	}
+
+	@Test
+	public void shouldPreventRemovingEmployeeWithHistoricalBookings() {
+		ServiceHandler serviceHandler = runtimeMock.getServiceHandler();
+
+		String username = "empwithhistory";
+		CreateEmployeeService.EmployeeArgument createArg = new CreateEmployeeService.EmployeeArgument();
+		createArg.personalNumber = "789";
+		createArg.firstname = "Has";
+		createArg.lastname = "History";
+		createArg.teamId = "team1";
+		createArg.locationId = "loc1";
+		createArg.timezone = "Europe/Zurich";
+		createArg.joinDate = LocalDate.of(2026, 1, 1);
+		createArg.active = true;
+		createArg.username = username;
+
+		ServiceResult createResult = serviceHandler.doService(certificate, new CreateEmployeeService(), createArg);
+		assertTrue(createResult.getMessage(), createResult.isOk());
+
+		String employeeId;
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
+			Resource employee = tx.streamResources(TYPE_EMPLOYEE)
+					.filter(e -> username.equals(e.getString(PARAM_USERNAME)))
+					.findFirst()
+					.orElseThrow();
+			employeeId = employee.getId();
+
+			// Add a historical work day / entry
+			Resource workDay = tx.getResourceTemplate(TYPE_WORK_DAY, true);
+			workDay.setId("wd-test-hist");
+			workDay.setName("2026-01-05");
+			workDay.setRelation(PARAM_EMPLOYEE, employee);
+			tx.add(workDay);
+
+			tx.commitOnClose();
+		}
+
+		// Attempting physical deletion must be blocked
+		ServiceResult removeResult = serviceHandler.doService(certificate, new RemoveEmployeeService(),
+				new StringArgument(employeeId));
+		assertFalse(removeResult.isOk());
+		assertTrue(removeResult.getMessage().contains("historical bookings exist"));
+	}
 }

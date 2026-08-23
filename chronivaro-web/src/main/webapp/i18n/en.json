@@ -676,6 +676,10 @@
     "invitationSentSuccess": "Registration invitation for \"{username}\" initiated successfully.",
     "userCreatedSuccess": "User \"{username}\" created successfully.",
     "userUpdatedSuccess": "User \"{username}\" updated successfully.",
+    "deleteUser": "Delete User",
+    "confirmDelete": "Are you sure you want to delete user \"{username}\"?",
+    "confirmDeleteWithEmployee": "User \"{username}\" is linked to an employee. Deleting this user will deactivate the employee non-destructively, preserving all historical bookings. Do you want to continue?",
+    "userDeletedSuccess": "User \"{username}\" deleted successfully.",
     "errorSelectAtLeastOneRole": "Please select at least one role."
   },
   "auditLog": {

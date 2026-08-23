@@ -2,6 +2,7 @@ package ch.atexxi.chronivaro.rest.resource;
 
 import ch.atexxi.chronivaro.core.service.CreateUserService;
 import ch.atexxi.chronivaro.core.service.InitiateUserRegistrationService;
+import ch.atexxi.chronivaro.core.service.RemoveUserService;
 import ch.atexxi.chronivaro.core.service.UpdateUserService;
 import ch.atexxi.chronivaro.rest.dto.UserDto;
 import jakarta.servlet.http.HttpServletRequest;
@@ -146,6 +147,16 @@ public class UserResource {
 		Certificate cert = (Certificate) request.getAttribute(StrolchRestfulConstants.STROLCH_CERTIFICATE);
 		ServiceHandler serviceHandler = ChronivaroRestHelper.getServiceHandler();
 		ServiceResult result = serviceHandler.doService(cert, new InitiateUserRegistrationService(), new StringArgument(id));
+		return ChronivaroRestHelper.toResponse(result);
+	}
+
+	@DELETE
+	@Path("{id}")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response removeUser(@Context HttpServletRequest request, @PathParam("id") String id) {
+		Certificate cert = (Certificate) request.getAttribute(StrolchRestfulConstants.STROLCH_CERTIFICATE);
+		ServiceHandler serviceHandler = ChronivaroRestHelper.getServiceHandler();
+		ServiceResult result = serviceHandler.doService(cert, new RemoveUserService(), new StringArgument(id));
 		return ChronivaroRestHelper.toResponse(result);
 	}
 

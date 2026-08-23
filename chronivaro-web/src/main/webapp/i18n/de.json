@@ -676,6 +676,10 @@
     "invitationSentSuccess": "Registrierungseinladung für \"{username}\" erfolgreich ausgelöst.",
     "userCreatedSuccess": "Benutzer \"{username}\" erfolgreich erstellt.",
     "userUpdatedSuccess": "Benutzer \"{username}\" erfolgreich aktualisiert.",
+    "deleteUser": "Benutzer löschen",
+    "confirmDelete": "Möchten Sie den Benutzer \"{username}\" wirklich löschen?",
+    "confirmDeleteWithEmployee": "Der Benutzer \"{username}\" ist mit einem Mitarbeiter verknüpft. Das Löschen dieses Benutzers deaktiviert den Mitarbeiter zerstörungsfrei und behält alle historischen Buchungen bei. Möchten Sie fortfahren?",
+    "userDeletedSuccess": "Benutzer \"{username}\" erfolgreich gelöscht.",
     "errorSelectAtLeastOneRole": "Bitte wählen Sie mindestens eine Rolle aus."
   },
   "auditLog": {

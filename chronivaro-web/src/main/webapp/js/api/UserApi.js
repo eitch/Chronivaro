@@ -23,6 +23,10 @@ export default class UserApi {
         return await Rest.put(`rest/chronivaro/v1/admin/users/${encodeURIComponent(userId)}`, user);
     }
 
+    static async remove(userId) {
+        return await Rest.delete(`rest/chronivaro/v1/admin/users/${encodeURIComponent(userId)}`);
+    }
+
     static async initiateRegistration(userId) {
         return await Rest.post(`rest/chronivaro/v1/admin/users/${encodeURIComponent(userId)}/register`, {});
     }

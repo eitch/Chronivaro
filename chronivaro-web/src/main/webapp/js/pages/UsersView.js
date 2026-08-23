@@ -182,6 +182,7 @@ export default class UsersView {
 						<td class="action-buttons-cell" style="white-space: nowrap;">
 							<button type="button" class="secondary-btn edit-user-btn" data-id="${user.id}">${I18n.t('common.edit')}</button>
 							<button type="button" class="primary-btn invite-user-btn" data-id="${user.id}" title="${I18n.t('users.sendInvitation')}">${I18n.t('users.sendInvitation')}</button>
+							<button type="button" class="danger-btn delete-user-btn" data-id="${user.id}" title="${I18n.t('users.deleteUser')}">${I18n.t('common.delete')}</button>
 						</td>
 					`;
                     tbody.appendChild(row);
@@ -192,6 +193,9 @@ export default class UsersView {
                 });
                 container.querySelectorAll('.invite-user-btn').forEach(btn => {
                     btn.addEventListener('click', () => inviteUser(btn.dataset.id));
+                });
+                container.querySelectorAll('.delete-user-btn').forEach(btn => {
+                    btn.addEventListener('click', () => deleteUser(btn.dataset.id));
                 });
             } catch (err) {
                 console.error(err);
@@ -233,6 +237,25 @@ export default class UsersView {
                 try {
                     await UserApi.initiateRegistration(id);
                     await NotificationDialog.info(I18n.t('users.invitationSentSuccess', { username }), I18n.t('common.success'));
+                } catch (err) {
+                    console.error(err);
+                    await NotificationDialog.error(err.message || I18n.t('app.error'));
+                }
+            }
+        };
+
+        const deleteUser = async (id) => {
+            const user = this.users.find(u => u.id === id || u.username === id);
+            const username = user ? user.username : id;
+            const confirmMsg = user && user.hasLinkedEmployee
+                ? I18n.t('users.confirmDeleteWithEmployee', { username })
+                : I18n.t('users.confirmDelete', { username });
+
+            if (await NotificationDialog.confirm(confirmMsg)) {
+                try {
+                    await UserApi.remove(id);
+                    await NotificationDialog.info(I18n.t('users.userDeletedSuccess', { username }), I18n.t('common.success'));
+                    await refresh();
                 } catch (err) {
                     console.error(err);
                     await NotificationDialog.error(err.message || I18n.t('app.error'));

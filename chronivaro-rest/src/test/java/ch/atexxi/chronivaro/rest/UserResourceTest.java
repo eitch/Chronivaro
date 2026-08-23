@@ -119,5 +119,32 @@ public class UserResourceTest extends AbstractChronivaroRestfulTest {
 				.put(Entity.json(passwordJson))) {
 			assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
 		}
+
+		// 7. Delete User
+		try (Response response = target()
+				.path("chronivaro/v1/admin/users/" + createdUserId)
+				.request(MediaType.APPLICATION_JSON)
+				.header("Authorization", authToken)
+				.delete()) {
+			assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+		}
+
+		// Verify deleted user no longer exists
+		try (Response response = target()
+				.path("chronivaro/v1/admin/users/" + createdUserId)
+				.request(MediaType.APPLICATION_JSON)
+				.header("Authorization", authToken)
+				.get()) {
+			assertEquals(Response.Status.NOT_FOUND.getStatusCode(), response.getStatus());
+		}
+
+		// Verify system user cannot be deleted
+		try (Response response = target()
+				.path("chronivaro/v1/admin/users/agent")
+				.request(MediaType.APPLICATION_JSON)
+				.header("Authorization", authToken)
+				.delete()) {
+			assertEquals(Response.Status.BAD_REQUEST.getStatusCode(), response.getStatus());
+		}
 	}
 }

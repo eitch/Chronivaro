@@ -134,6 +134,8 @@ public class ChronivaroConstants {
 	public static final String AUDIT_ACTION_STOP = "STOP";
 	public static final String AUDIT_ACTION_PURGE = "PURGE";
 	public static final String AUDIT_ACTION_CORRECT = "CORRECT";
+	public static final String AUDIT_ACTION_DEACTIVATE = "DEACTIVATE";
+	public static final String AUDIT_ACTION_REACTIVATE = "REACTIVATE";
 	public static final String AUDIT_ACTION_REGISTRATION_INITIATED = "REGISTRATION_INITIATED";
 	public static final String AUDIT_ACTION_REGISTRATION_COMPLETED = "REGISTRATION_COMPLETED";
 

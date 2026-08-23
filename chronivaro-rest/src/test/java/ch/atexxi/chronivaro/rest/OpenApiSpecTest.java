@@ -41,6 +41,7 @@ public class OpenApiSpecTest {
 				"LocationDto:",
 				"HolidayCalendarDto:",
 				"HolidayDto:",
+				"UserDto:",
 				"AuditLogDto:",
 				"ConfigurationDto:",
 				"TeamReportDto:",
@@ -106,6 +107,9 @@ public class OpenApiSpecTest {
 				"/chronivaro/v1/admin/holiday-calendars/{id}/holidays:",
 				"/chronivaro/v1/admin/schedule-templates:",
 				"/chronivaro/v1/admin/schedule-templates/{id}:",
+				"/chronivaro/v1/admin/users:",
+				"/chronivaro/v1/admin/users/{id}:",
+				"/chronivaro/v1/admin/users/{id}/register:",
 				"/chronivaro/v1/admin/audit-logs:",
 				"/chronivaro/v1/admin/configuration:",
 				"/chronivaro/v1/admin/corrections:"
