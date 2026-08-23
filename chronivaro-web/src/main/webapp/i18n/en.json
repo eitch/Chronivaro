@@ -651,7 +651,8 @@
       "USAGE": "Vacation Taken",
       "CARRY_OVER": "Carry-Over from Previous Year",
       "CORRECTION": "Adjustment / Correction",
-      "EXPIRATION": "Expired Entitlement"
+      "EXPIRATION": "Expired Entitlement",
+      "EXPIRY": "Expired Entitlement"
     },
     "roles": {
       "Employee": "Employee",

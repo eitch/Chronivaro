@@ -651,7 +651,8 @@
       "USAGE": "Ferienbezug",
       "CARRY_OVER": "Übertrag aus Vorjahr",
       "CORRECTION": "Korrektur / Anpassung",
-      "EXPIRATION": "Verfallener Anspruch"
+      "EXPIRATION": "Verfallener Anspruch",
+      "EXPIRY": "Verfallener Anspruch"
     },
     "roles": {
       "Employee": "Mitarbeiter",

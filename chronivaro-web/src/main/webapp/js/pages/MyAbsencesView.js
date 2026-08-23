@@ -265,7 +265,7 @@ export default class MyAbsencesView {
             journalTbody.innerHTML = `<tr><td colspan="5">${I18n.t('absences.loadingJournal')}</td></tr>`;
             try {
                 const response = await VacationAccountApi.getMyVacationAccount(year);
-                const summary = response.summary || {};
+                const summary = (response && response.summary) ? response.summary : (response || {});
                 const entries = response.entries || [];
 
                 cardEntitlement.textContent = Format.durationDays(summary.entitlementMinutes);
@@ -287,14 +287,16 @@ export default class MyAbsencesView {
                 } else {
                     entries.forEach(entry => {
                         const row = document.createElement('tr');
-                        const isPositive = entry.amountMinutes >= 0;
+                        const entryValue = entry.value !== undefined ? entry.value : entry.amountMinutes;
+                        const isPositive = entryValue >= 0;
                         const sign = isPositive ? '+' : '';
-                        const formattedAmount = `${sign}${Format.durationDays(entry.amountMinutes)}`;
+                        const formattedAmount = `${sign}${Format.durationDays(entryValue)}`;
                         const amountClass = isPositive ? 'text-success' : 'text-danger';
-                        const typeLabel = I18n.t(`enums.vacationEntryType.${entry.entryType}`, {}, entry.entryType);
+                        const entryType = entry.vacationType || entry.entryType || entry.type || entry.bookingType;
+                        const typeLabel = I18n.t(`enums.vacationEntryType.${entryType}`, {}, entryType);
 
                         row.innerHTML = `
-                            <td>${Format.date(entry.effectiveDate)}</td>
+                            <td>${Format.date(entry.date || entry.effectiveDate)}</td>
                             <td><span class="journal-type-badge">${typeLabel}</span></td>
                             <td class="${amountClass}">${formattedAmount}</td>
                             <td>${entry.comment || '--'}</td>

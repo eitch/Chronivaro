@@ -63,6 +63,10 @@ public class WebPersonalAbsenceUiTest extends AbstractChronivaroRestfulTest {
 		assertTrue("View must resolve absence state for status badge and label", viewContent.contains("absence.state || absence.status") || viewContent.contains("absence.state"));
 		assertTrue("View must contain edit-btn for draft absences", viewContent.contains("edit-btn"));
 		assertTrue("View must handle updateAbsence for draft editing", viewContent.contains("updateAbsence"));
+		assertTrue("View must resolve vacation entry type from vacationType property",
+				viewContent.contains("entry.vacationType") || viewContent.contains("entry.vacationType ||"));
+		assertTrue("View must localize vacationEntryType",
+				viewContent.contains("enums.vacationEntryType."));
 
 		File styleCss = new File(webDir, "assets/css/style.css");
 		assertTrue("style.css must exist", styleCss.exists());
