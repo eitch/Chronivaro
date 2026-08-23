@@ -90,4 +90,17 @@ public class WebEmployeesUiTest {
 		assertTrue("EmployeesView table-container card must not force overflow-x: auto inline",
 				!viewJs.contains("<div class=\"table-container card\" style=\"padding: 1rem; overflow-x: auto;\">"));
 	}
+
+	@Test
+	public void shouldVerifyEmployeeFormValidationRules() throws IOException {
+		File viewFile = new File(getWebappDir(), "js/pages/EmployeesView.js");
+		assertTrue("EmployeesView.js must exist", viewFile.exists());
+		String viewJs = Files.readString(viewFile.toPath());
+
+		// Verify optional / hidden fields do not have required attribute preventing form submission when hidden
+		assertTrue("sched-template select must not have required attribute",
+				!viewJs.contains("id=\"sched-template\" required"));
+		assertTrue("emp-id input must not have required attribute",
+				!viewJs.contains("id=\"emp-id\" required"));
+	}
 }

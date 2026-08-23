@@ -83,7 +83,7 @@ export default class EmployeesView {
 							</div>
 							<div class="form-group" id="emp-id-group">
 								<label for="emp-id">${I18n.t('common.id')}:</label>
-								<input type="text" id="emp-id" required>
+								<input type="text" id="emp-id">
 							</div>
 							<div class="form-group">
 								<label for="emp-pers-nr">${I18n.t('employees.personalNumber')}:</label>
@@ -131,7 +131,7 @@ export default class EmployeesView {
 							<div class="form-grid">
 								<div class="form-group">
 									<label for="sched-template">${I18n.t('employees.applyTemplate')}</label>
-									<select id="sched-template" required>
+									<select id="sched-template">
 										<option value="">${I18n.t('employees.selectTemplatePrompt')}</option>
 									</select>
 								</div>
@@ -324,7 +324,7 @@ export default class EmployeesView {
                     container.querySelector('#emp-pers-nr').value = emp.personalNumber;
                     container.querySelector('#emp-firstname').value = emp.firstname;
                     container.querySelector('#emp-lastname').value = emp.lastname;
-                    container.querySelector('#emp-birthdate').value = emp.birthdate;
+                    container.querySelector('#emp-birthdate').value = emp.birthdate || '';
                     container.querySelector('#emp-team').value = emp.teamId;
                     container.querySelector('#emp-location').value = emp.locationId;
                     container.querySelector('#emp-timezone').value = emp.timezone;
@@ -381,7 +381,7 @@ export default class EmployeesView {
             modalTitle.innerText = I18n.t('employees.addEmployee');
             form.reset();
             container.querySelector('#emp-id-group').style.display = 'none';
-            container.querySelector('#emp-id').required = false;
+            container.querySelector('#emp-id').disabled = false;
             container.querySelector('#emp-username-group').style.display = 'block';
             container.querySelector('#emp-username').required = true;
             container.querySelector('#emp-username').value = '';
