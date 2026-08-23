@@ -138,46 +138,12 @@ The following foundational areas are verified as fully implemented in the reposi
 - **Presence, Audit & System Operations (Sections 8, 11, 12, 13.2, 13.6, 19, 20):** Binary presence indicators with privacy masking, comprehensive audit trail recording entity lifecycle events and retention purge service (`AuditEventSearch`, `AuditLogsResource`), health/readiness probes, and structured logging.
 - **Audit-Log Web UI & Detailed Inspection (Sections 4.1 #13, 6.10, 9.10, 12.1 #8, 12.8, 19.3, 20 #16):** Full administration navigation view (`AuditLogView.js`), REST API client (`AuditLogApi.js`), multi-field filtering (`from`, `to`, `entityType`, `entityId`, `username`, `action`), responsive paginated table, detail inspection modal rendering correlation IDs, before/after snapshot values, reasons, and parameters, and complete German (Swiss German) and English translations.
 - **User Management for Pure Users & System User Protection (Sections 3.6, 6.1.1, 9.7, 10.5, 12.1 #8, 13.2):** Pure Strolch user lifecycle services (`CreateUserService`, `UpdateUserService`, `InitiateUserRegistrationService`), REST API (`/admin/users`, `/admin/users/{id}/register`), `UsersView` in Web UI supporting role assignment (Admin, HR, Supervisor, Employee) and password initialization challenges; system users (`UserState.SYSTEM`) are protected and excluded from administration views and challenge initiation.
+- **Non-Destructive User Deletion and Employee Deactivation (Sections 6.1, 6.1.1, 9.8, 10.5, 13.2, 20 #15):** Non-destructive user deletion service (`RemoveUserService`), REST API (`DELETE /admin/users/{id}`), UI deletion action with confirmation dialogs in `UsersView.js`; deleting a user linked to an employee sets `Employee.active = false` without deleting any historical bookings (`WorkDay`, `WorkEntry`, `Absence`, `VacationAccountEntry`, `TimePeriod`, `EmploymentSchedule`); physical deletion of employees with historical bookings is blocked in `RemoveEmployeeService`; all user deletions and employee deactivations are recorded in the immutable audit log.
 - **Localization & Branding (Sections 4.2, 6.11, 12.3, 16, 18, 18.5):** Global company branding (name/logo), default language configuration, client-side i18n engine with German (Swiss German) and English translations across all views, and automated key parity verification.
 
 ---
 
 ## Prioritized Implementation Backlog
-
-### Task 2: Non-Destructive User Deletion and Employee Deactivation
-- **Classification:** `PARTIALLY_IMPLEMENTED`
-- **Specification Reference:**
-  - Section 6.1 (*Employee – Regeln*)
-  - Section 6.1.1 (*Verknüpfung zwischen Strolch-Benutzern und Mitarbeitern*)
-  - Section 9.8 (*Löschen von Benutzern und Mitarbeiterdeaktivierung*)
-  - Section 10.5 (*Datensicherheit und Zugriffsschutz*)
-  - Section 13.2 (*Administration Endpunkte: DELETE /users/{id}*)
-  - Section 20, Item 15 (*Fachliche Akzeptanzkriterien*)
-- **Current Implementation Location:**
-  - `chronivaro-core`: `ch.atexxi.chronivaro.core.service.RemoveEmployeeService`
-  - `chronivaro-rest`: `ch.atexxi.chronivaro.rest.resource.UserResource`, `ch.atexxi.chronivaro.rest.resource.EmployeeResource`
-  - `chronivaro-web`: `js/pages/UsersView.js`, `js/pages/EmployeesView.js`
-- **Missing Behaviour:**
-  - `UserResource` lacks a `DELETE /rest/chronivaro/v1/admin/users/{id}` endpoint.
-  - `RemoveEmployeeService` currently physically cascade-deletes the `Employee` resource and all associated child entities (`WorkDay`, `WorkEntry`, `Absence`, `VacationAccountEntry`, `TimePeriod`, `EmploymentSchedule`).
-  - Required behaviour per Sections 6.1 & 9.8: `Employee` resources must never be physically deleted. Deleting a user linked to an employee must remove the Strolch user login while setting `Employee.active = false` and retaining all historical records. Deleting a pure user simply removes the Strolch user account.
-  - `RemoveEmployeeService` must prevent physical deletion when historical data exists or perform soft deactivation (`active = false`).
-  - User deletion and employee deactivation must be recorded in the audit log (`AUDIT_ACTION_REMOVE`, `AUDIT_ACTION_DEACTIVATE`).
-- **Scope & Modules:**
-  - `chronivaro-core`: `RemoveUserService` (or updated `RemoveEmployeeService`), audit logging.
-  - `chronivaro-rest`: `UserResource` (`DELETE /admin/users/{id}`), `EmployeeResource`.
-  - `chronivaro-web`: User deletion action in `UsersView.js` and `UserApi.js`, status display.
-  - Tests: `UserServiceTest`, `UserResourceTest`, `EmployeeResourceTest`.
-- **Dependencies:**
-  - `PrivilegeHandler`, `ChronivaroAuditHelper`.
-- **Acceptance Criteria:**
-  1. `DELETE /rest/chronivaro/v1/admin/users/{id}` removes a pure Strolch user account.
-  2. If the deleted user is linked to an `Employee`, the Strolch user account is deleted and the linked `Employee` resource is marked as `active = false` without deleting any historical bookings (`WorkDay`, `WorkEntry`, `Absence`, `VacationAccountEntry`, `TimePeriod`, `EmploymentSchedule`).
-  3. Physical deletion of employees with existing historical records is blocked or converted to soft deactivation.
-  4. Actions are logged to the Audit Log with appropriate action types (`AUDIT_ACTION_REMOVE`, `AUDIT_ACTION_DEACTIVATE`).
-  5. The Users and Employees administration views reflect the changes and deactivated states.
-
----
 
 ### Task 3: Employee Reactivation Workflow
 - **Classification:** `MISSING`
@@ -200,7 +166,7 @@ The following foundational areas are verified as fully implemented in the reposi
   - `chronivaro-web`: `EmployeesView.js`, `EmployeeApi.js`, i18n locales.
   - Tests: Unit and REST integration tests in `chronivaro-core` and `chronivaro-rest`.
 - **Dependencies:**
-  - Task 2 (Non-Destructive User Deletion and Employee Deactivation), `PrivilegeHandler`, `InitiateUserRegistrationService`.
+  - `PrivilegeHandler`, `InitiateUserRegistrationService`.
 - **Acceptance Criteria:**
   1. `POST /rest/chronivaro/v1/admin/employees/{id}/reactivate` successfully reactivates an inactive employee (`active = true`).
   2. A new Strolch user is created for the reactivated employee with appropriate role assignments.

@@ -16,6 +16,7 @@ Audit date: 2026-08-21. `IMPLEMENTATION_SPECIFICATION.md` is authoritative; the 
 - **Presence, Audit & System Operations (Sections 8, 11, 12, 13.2, 13.6, 19, 20):** Binary presence indicators with privacy masking, comprehensive audit trail recording entity lifecycle events and retention purge service (`AuditEventSearch`, `AuditLogsResource`), health/readiness probes, and structured logging.
 - **Audit-Log Web UI & Detailed Inspection (Sections 4.1 #13, 6.10, 9.10, 12.1 #8, 12.8, 19.3, 20 #16):** Full administration navigation view (`AuditLogView.js`), REST API client (`AuditLogApi.js`), multi-field filtering (`from`, `to`, `entityType`, `entityId`, `username`, `action`), responsive paginated table, detail inspection modal rendering correlation IDs, before/after snapshot values, reasons, and parameters, and complete German (Swiss German) and English translations.
 - **User Management for Pure Users & System User Protection (Sections 3.6, 6.1.1, 9.7, 10.5, 12.1 #8, 13.2):** Pure Strolch user lifecycle services (`CreateUserService`, `UpdateUserService`, `InitiateUserRegistrationService`), REST API (`/admin/users`, `/admin/users/{id}/register`), `UsersView` in Web UI supporting role assignment (Admin, HR, Supervisor, Employee) and password initialization challenges; system users (`UserState.SYSTEM`) are protected and excluded from administration views and challenge initiation.
+- **Non-Destructive User Deletion and Employee Deactivation (Sections 6.1, 6.1.1, 9.8, 10.5, 13.2, 20 #15):** Non-destructive user deletion service (`RemoveUserService`), REST API (`DELETE /admin/users/{id}`), UI deletion action with confirmation dialogs in `UsersView.js`; deleting a user linked to an employee sets `Employee.active = false` without deleting any historical bookings (`WorkDay`, `WorkEntry`, `Absence`, `VacationAccountEntry`, `TimePeriod`, `EmploymentSchedule`); physical deletion of employees with historical bookings is blocked in `RemoveEmployeeService`; all user deletions and employee deactivations are recorded in the immutable audit log.
 - **Localization & Branding (Sections 4.2, 6.11, 12.3, 16, 18, 18.5):** Global company branding (name/logo), default language configuration, client-side i18n engine with German (Swiss German) and English translations across all views, and automated key parity verification.
 
 ---
@@ -24,8 +25,7 @@ Audit date: 2026-08-21. `IMPLEMENTATION_SPECIFICATION.md` is authoritative; the 
 
 The following incomplete and partially implemented requirements are prioritized in `docs/IMPLEMENTATION_BACKLOG.md`:
 
-1. **Task 2: Non-Destructive User Deletion and Employee Deactivation (`PARTIALLY_IMPLEMENTED`)** – Implement `DELETE /rest/chronivaro/v1/admin/users/{id}`, soft deactivation (`active = false`) of linked `Employee` records preserving historical data, and audit logging.
-2. **Task 3: Employee Reactivation Workflow (`MISSING`)** – Implement `ReactivateEmployeeService`, `POST /rest/chronivaro/v1/admin/employees/{id}/reactivate`, UI reactivation action in `EmployeesView.js`, and user account recreation.
+1. **Task 3: Employee Reactivation Workflow (`MISSING`)** – Implement `ReactivateEmployeeService`, `POST /rest/chronivaro/v1/admin/employees/{id}/reactivate`, UI reactivation action in `EmployeesView.js`, and user account recreation.
 
 ---
 
