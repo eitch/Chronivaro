@@ -38,10 +38,11 @@ class ChronivaroApp {
             this.route();
         });
 
-        const logoutLink = document.getElementById('logout-link');
-        if (logoutLink) {
-            logoutLink.addEventListener('click', (e) => {
+        const logoutBtn = document.getElementById('logout-btn') || document.getElementById('logout-link');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', (e) => {
                 e.preventDefault();
+                this.closeNavGroups();
                 AuthApi.logout();
                 this.updateUserMenu();
                 this.navigate('login');

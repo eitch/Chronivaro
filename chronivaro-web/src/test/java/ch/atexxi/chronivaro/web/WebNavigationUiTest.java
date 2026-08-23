@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 public class WebNavigationUiTest {
@@ -124,5 +125,36 @@ public class WebNavigationUiTest {
 
 		assertTrue("app.js must have updateUserMenu method", appJs.contains("updateUserMenu()"));
 		assertTrue("app.js must hide ModelAccessor role", appJs.contains("role !== 'ModelAccessor'"));
+	}
+
+	@Test
+	public void shouldVerifyLogoutMovedToUserDropdown() throws IOException {
+		File htmlFile = new File(getWebappDir(), "index.html");
+		assertTrue("index.html must exist", htmlFile.exists());
+		String html = Files.readString(htmlFile.toPath());
+
+		// Verify logout button is inside user-dropdown-actions and not a standalone link outside user-menu
+		assertTrue("index.html must contain logout-btn inside user dropdown",
+				html.contains("id=\"logout-btn\"") && html.contains("user-dropdown-logout-btn"));
+		assertFalse("index.html must not contain standalone logout-link in main header",
+				html.contains("id=\"logout-link\""));
+
+		File cssFile = new File(getWebappDir(), "assets/css/style.css");
+		assertTrue("style.css must exist", cssFile.exists());
+		String css = Files.readString(cssFile.toPath());
+
+		assertTrue("style.css must style .user-dropdown-logout-btn",
+				css.contains(".user-dropdown-logout-btn"));
+
+		File appJsFile = new File(getWebappDir(), "js/app.js");
+		assertTrue("app.js must exist", appJsFile.exists());
+		String appJs = Files.readString(appJsFile.toPath());
+
+		assertTrue("app.js must handle logout-btn click",
+				appJs.contains("document.getElementById('logout-btn')"));
+		assertTrue("app.js must call AuthApi.logout()",
+				appJs.contains("AuthApi.logout()"));
+		assertTrue("app.js must close nav groups on logout",
+				appJs.contains("this.closeNavGroups();") && appJs.contains("AuthApi.logout();"));
 	}
 }

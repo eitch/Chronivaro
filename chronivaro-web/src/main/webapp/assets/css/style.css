@@ -208,6 +208,11 @@ header {
     color: var(--primary-color, #2563eb);
 }
 
+.user-dropdown-logout-btn:hover {
+    background-color: #fef2f2;
+    color: #dc2626;
+}
+
 .user-dropdown-action-icon {
     font-size: 0.95rem;
     line-height: 1;
@@ -322,10 +327,6 @@ header h1 {
     white-space: nowrap;
 }
 
-.nav-logout {
-    white-space: nowrap;
-}
-
 .nav-toggle {
     display: none;
 }
@@ -411,10 +412,6 @@ nav a.active {
     .nav-dashboard {
         width: 100%;
         box-sizing: border-box;
-    }
-
-    .nav-logout {
-        margin: 0;
     }
 }
 
