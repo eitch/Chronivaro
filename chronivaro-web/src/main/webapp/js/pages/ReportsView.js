@@ -207,22 +207,32 @@ export default class ReportsView {
 		if (currentVal) select.value = currentVal;
 	}
 
+	canSelectEmployee() {
+		return AuthApi.hasRole('Supervisor') || AuthApi.hasRole('HR') || AuthApi.hasRole('Administrator') || AuthApi.hasRole('StrolchAdmin');
+	}
+
 	renderFilterFields() {
+		const canSelectEmp = this.canSelectEmployee();
+
 		if (this.activeReportType === 'day') {
 			this.filterBar.innerHTML = `
 				<div class="filter-group">
 					<label for="filter-day-date">${I18n.t('common.date')} *:</label>
 					<input type="date" id="filter-day-date" value="${this.filters.day.date}" required>
 				</div>
+				${canSelectEmp ? `
 				<div class="filter-group">
 					<label for="filter-day-emp">${I18n.t('common.employee')} ID (${I18n.t('common.optional')}):</label>
 					<input type="text" id="filter-day-emp" placeholder="${I18n.t('reports.defaultCurrentUser')}" value="${this.filters.day.employeeId}">
 				</div>
+				` : ''}
 			`;
 			const dateInput = this.filterBar.querySelector('#filter-day-date');
 			const empInput = this.filterBar.querySelector('#filter-day-emp');
 			dateInput.addEventListener('change', () => { this.filters.day.date = dateInput.value; });
-			empInput.addEventListener('input', () => { this.filters.day.employeeId = empInput.value; });
+			if (empInput) {
+				empInput.addEventListener('input', () => { this.filters.day.employeeId = empInput.value; });
+			}
 
 		} else if (this.activeReportType === 'month') {
 			this.filterBar.innerHTML = `
@@ -230,15 +240,19 @@ export default class ReportsView {
 					<label for="filter-month-ym">${I18n.t('common.month')} (YYYY-MM) *:</label>
 					<input type="month" id="filter-month-ym" value="${this.filters.month.yearMonth}" required>
 				</div>
+				${canSelectEmp ? `
 				<div class="filter-group">
 					<label for="filter-month-emp">${I18n.t('common.employee')} ID (${I18n.t('common.optional')}):</label>
 					<input type="text" id="filter-month-emp" placeholder="${I18n.t('reports.defaultCurrentUser')}" value="${this.filters.month.employeeId}">
 				</div>
+				` : ''}
 			`;
 			const ymInput = this.filterBar.querySelector('#filter-month-ym');
 			const empInput = this.filterBar.querySelector('#filter-month-emp');
 			ymInput.addEventListener('change', () => { this.filters.month.yearMonth = ymInput.value; });
-			empInput.addEventListener('input', () => { this.filters.month.employeeId = empInput.value; });
+			if (empInput) {
+				empInput.addEventListener('input', () => { this.filters.month.employeeId = empInput.value; });
+			}
 
 		} else if (this.activeReportType === 'vacation') {
 			this.filterBar.innerHTML = `
@@ -246,15 +260,19 @@ export default class ReportsView {
 					<label for="filter-vacation-year">${I18n.t('common.year')} *:</label>
 					<input type="number" id="filter-vacation-year" min="2000" max="2100" value="${this.filters.vacation.year}" required>
 				</div>
+				${canSelectEmp ? `
 				<div class="filter-group">
 					<label for="filter-vacation-emp">${I18n.t('common.employee')} ID (${I18n.t('common.optional')}):</label>
 					<input type="text" id="filter-vacation-emp" placeholder="${I18n.t('reports.defaultCurrentUser')}" value="${this.filters.vacation.employeeId}">
 				</div>
+				` : ''}
 			`;
 			const yearInput = this.filterBar.querySelector('#filter-vacation-year');
 			const empInput = this.filterBar.querySelector('#filter-vacation-emp');
 			yearInput.addEventListener('change', () => { this.filters.vacation.year = yearInput.value; });
-			empInput.addEventListener('input', () => { this.filters.vacation.employeeId = empInput.value; });
+			if (empInput) {
+				empInput.addEventListener('input', () => { this.filters.vacation.employeeId = empInput.value; });
+			}
 
 		} else if (this.activeReportType === 'team') {
 			this.filterBar.innerHTML = `
@@ -282,10 +300,12 @@ export default class ReportsView {
 					<label for="filter-absences-to">${I18n.t('common.to')}:</label>
 					<input type="date" id="filter-absences-to" value="${this.filters.absences.to}">
 				</div>
+				${canSelectEmp ? `
 				<div class="filter-group">
 					<label for="filter-absences-emp">${I18n.t('common.employee')} ID:</label>
 					<input type="text" id="filter-absences-emp" placeholder="${I18n.t('common.all')} / ${I18n.t('common.optional')}" value="${this.filters.absences.employeeId}">
 				</div>
+				` : ''}
 				<div class="filter-group">
 					<label for="filter-absence-type">${I18n.t('absences.absenceType')}:</label>
 					<select id="filter-absence-type">
@@ -311,7 +331,9 @@ export default class ReportsView {
 
 			fromInput.addEventListener('change', () => { this.filters.absences.from = fromInput.value; });
 			toInput.addEventListener('change', () => { this.filters.absences.to = toInput.value; });
-			empInput.addEventListener('input', () => { this.filters.absences.employeeId = empInput.value; });
+			if (empInput) {
+				empInput.addEventListener('input', () => { this.filters.absences.employeeId = empInput.value; });
+			}
 			typeSelect.addEventListener('change', () => { this.filters.absences.type = typeSelect.value; });
 			stateSelect.addEventListener('change', () => { this.filters.absences.state = stateSelect.value; });
 

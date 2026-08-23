@@ -283,6 +283,9 @@ public class WebReportsUiTest extends AbstractChronivaroRestfulTest {
 		assertTrue("ReportsView must render vacation report", reportsViewContent.contains("renderVacationReport"));
 		assertTrue("ReportsView must render team report", reportsViewContent.contains("renderTeamReport"));
 		assertTrue("ReportsView must render absence report", reportsViewContent.contains("renderAbsenceReport"));
+		assertTrue("ReportsView must define canSelectEmployee helper", reportsViewContent.contains("canSelectEmployee()"));
+		assertTrue("ReportsView must conditionally render employee ID filter for privileged roles only",
+				reportsViewContent.contains("canSelectEmp") && reportsViewContent.contains("canSelectEmp ?"));
 		assertTrue("ReportsView must not auto-run an implicit report for administrators",
 				reportsViewContent.contains("AuthApi.hasRole('Employee')")
 						&& reportsViewContent.contains("AuthApi.hasRole('Supervisor')"));
