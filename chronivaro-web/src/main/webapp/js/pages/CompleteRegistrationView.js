@@ -42,11 +42,11 @@ export default class CompleteRegistrationView {
 					<input type="password" id="password-confirm" required>
 				</div>
 				<div id="registration-error" class="error" style="display: none;"></div>
-				<div id="registration-success" class="success" style="display: none;">
-					${I18n.t('auth.registrationSuccess')} <a href="#login">${I18n.t('auth.loginLinkText')}</a>.
-				</div>
 				<button type="submit">${I18n.t('auth.setPassword')}</button>
 			</form>
+			<div id="registration-success" class="success" style="display: none;">
+				${I18n.t('auth.registrationSuccess')} <a href="#login">${I18n.t('auth.loginLinkText')}</a>.
+			</div>
 		`;
 
         const form = container.querySelector('#complete-registration-form');
