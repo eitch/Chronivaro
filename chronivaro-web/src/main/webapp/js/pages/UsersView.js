@@ -31,7 +31,7 @@ export default class UsersView {
 				</div>
 			</div>
 
-			<div class="table-container card" style="padding: 1rem; overflow-x: auto;">
+			<div class="table-container card" style="padding: 1rem; overflow: visible;">
 				<table id="users-table" class="data-table">
 					<thead>
 						<tr>
@@ -179,13 +179,28 @@ export default class UsersView {
 						<td>${rolesBadges}</td>
 						<td>${typeBadge}</td>
 						<td>${stateBadge}</td>
-						<td class="action-buttons-cell" style="white-space: nowrap;">
-							<button type="button" class="secondary-btn edit-user-btn" data-id="${user.id}">${I18n.t('common.edit')}</button>
-							<button type="button" class="primary-btn invite-user-btn" data-id="${user.id}" title="${I18n.t('users.sendInvitation')}">${I18n.t('users.sendInvitation')}</button>
-							<button type="button" class="danger-btn delete-user-btn" data-id="${user.id}" title="${I18n.t('users.deleteUser')}">${I18n.t('common.delete')}</button>
+						<td>
+							<div class="dropdown">
+								<button class="ghost dropdown-toggle" data-id="${user.id}">${I18n.t('common.actions')}</button>
+								<div class="dropdown-content">
+									<button class="edit-user-btn" data-id="${user.id}">${I18n.t('common.edit')}</button>
+									<button class="invite-user-btn" data-id="${user.id}">${I18n.t('users.sendInvitation')}</button>
+									<button class="delete-btn delete-user-btn" data-id="${user.id}">${I18n.t('common.delete')}</button>
+								</div>
+							</div>
 						</td>
 					`;
                     tbody.appendChild(row);
+                });
+
+                container.querySelectorAll('.dropdown-toggle').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        container.querySelectorAll('.dropdown').forEach(d => {
+                            if (d !== btn.parentElement) d.classList.remove('show');
+                        });
+                        btn.parentElement.classList.toggle('show');
+                    });
                 });
 
                 container.querySelectorAll('.edit-user-btn').forEach(btn => {
@@ -325,6 +340,11 @@ export default class UsersView {
         });
 
         await refresh();
+
+        document.addEventListener('click', () => {
+            container.querySelectorAll('.dropdown').forEach(d => d.classList.remove('show'));
+        });
+
         return container;
     }
 }
