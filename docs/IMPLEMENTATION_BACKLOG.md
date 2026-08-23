@@ -116,6 +116,12 @@ Do not continue with the next numbered task automatically.
 ### E. Vacation Granting Timing (Section 6.7.1)
 - **Clarification:** Full entitlement is granted upfront per January 1st (or pro-rated per `entryDate`) as `ENTITLEMENT` journal records; schedule changes post `CORRECTION` adjustments.
 
+### F. REST Administrative Endpoints URI Structure (Sections 13.1 & 13.2)
+- **Clarification:** Administrative endpoints are grouped under `/rest/chronivaro/v1/admin/*` (e.g. `/admin/users`, `/admin/audit-logs`, `/admin/absence-types`, `/admin/locations`, `/admin/holiday-calendars`, `/admin/configuration`) for clear JAX-RS path-based role enforcement and privilege mapping.
+
+### G. Employee Inactivation vs Physical Deletion (Sections 6.1, 9.8, 10.5, 13.2)
+- **Clarification:** In accordance with Section 6.1 and 9.8, `Employee` records must never be physically deleted once created in order to maintain historical audit trails, time records, and vacation balances. User deletion for linked employees performs a soft deactivation (`active = false`), and `DELETE /employees/{id}` is treated as soft deactivation. Full reactivation is handled via `POST /employees/{id}/reactivate`.
+
 ---
 
 ## Verified Implementation Baseline
@@ -129,15 +135,111 @@ The following foundational areas are verified as fully implemented in the reposi
 - **Vacation Journal Immutability & Year-End Carry-Over (Sections 6.7, 6.7.1, 7.5, 11.3):** Automatic calculation and crediting of pro-rated annual vacation entitlement on employee creation; automated `CORRECTION` entries upon schedule employment rate or `exitDate` updates while preserving record immutability; automated year-end carry-over service transferring unexpired balances as `CARRY_OVER` entries with FIFO consumption.
 - **Period Calculation Snapshots & Balance Carry-Forward (Sections 6.9, 11.2, 11.6.2):** Month summaries return immutable `calculationSnapshot` for approved and locked periods; `initialBalance` accurately carries forward prior month closing balance; monthly summary categorizes paid absences, unpaid absences, vacation usage, and holiday credits; supervisor period approval inspection endpoint (`GET /approvals/periods/{id}`) and modal in `ApprovalsView` providing full monthly drill-down inspection and approval/rejection actions.
 - **Reporting & Exports (Sections 11.1–11.5, 12.1–12.2, 13.8, 17, 18.6):** Core calculation engines, Web UI report viewers, deterministic RFC 4180 CSV exports, and server-side native OpenPDF export generator with streaming REST endpoints (`/reports/month`, `/reports/vacation`, `/reports/absences`).
-- **Presence, Audit & System Operations (Sections 8, 11, 12, 13.2, 13.6, 19, 20):** Binary presence indicators with privacy masking, comprehensive audit trail recording entity lifecycle events and retention purge service, health/readiness probes, and structured logging.
-- **User Management for Pure System Users (Sections 3.6, 6.1.1, 9.7, 12.1 #8, 13.2):** Pure Strolch user lifecycle services (`CreateUserService`, `UpdateUserService`, `InitiateUserRegistrationService`), REST API (`/admin/users`, `/admin/users/{id}/register`), and `UsersView` in Web UI supporting role assignment (Admin, HR, Supervisor, Employee) and password initialization challenge for non-employee users.
+- **Presence, Audit & System Operations (Sections 8, 11, 12, 13.2, 13.6, 19, 20):** Binary presence indicators with privacy masking, comprehensive audit trail recording entity lifecycle events and retention purge service (`AuditEventSearch`, `AuditLogsResource`), health/readiness probes, and structured logging.
+- **User Management for Pure Users & System User Protection (Sections 3.6, 6.1.1, 9.7, 10.5, 12.1 #8, 13.2):** Pure Strolch user lifecycle services (`CreateUserService`, `UpdateUserService`, `InitiateUserRegistrationService`), REST API (`/admin/users`, `/admin/users/{id}/register`), `UsersView` in Web UI supporting role assignment (Admin, HR, Supervisor, Employee) and password initialization challenges; system users (`UserState.SYSTEM`) are protected and excluded from administration views and challenge initiation.
 - **Localization & Branding (Sections 4.2, 6.11, 12.3, 16, 18, 18.5):** Global company branding (name/logo), default language configuration, client-side i18n engine with German (Swiss German) and English translations across all views, and automated key parity verification.
 
 ---
 
 ## Prioritized Implementation Backlog
 
-All prioritized backlog tasks (Tasks 9 through 13) have been fully implemented, tested, and verified. No open or pending implementation tasks remain for the current milestone.
+### Task 1: Audit Log UI, Navigation, Filter Controls, and Detail Modal
+- **Classification:** `PARTIALLY_IMPLEMENTED`
+- **Specification Reference:**
+  - Section 4.1, Item 13 (*Audit-Log einsehen*)
+  - Section 6.10 (*AuditLog*)
+  - Section 9.10 (*Einsichtnahme in das Audit-Log*)
+  - Section 12.1, Item 8 (*Audit-Log-Ansicht*)
+  - Section 12.8 (*Administration – Audit-Log*)
+  - Section 19.3 (*Lieferobjekte – Web-Oberfläche*)
+  - Section 20, Item 16 (*Fachliche Akzeptanzkriterien*)
+- **Current Implementation Location:**
+  - `chronivaro-core`: `ch.atexxi.chronivaro.core.search.AuditEventSearch`
+  - `chronivaro-rest`: `ch.atexxi.chronivaro.rest.resource.AuditLogsResource` (`GET /rest/chronivaro/v1/admin/audit-logs`)
+  - `chronivaro-rest`: `ch.atexxi.chronivaro.rest.dto.AuditLogDto`
+  - `chronivaro-web`: Missing UI view and navigation entry
+- **Missing Behaviour:**
+  - `chronivaro-web` lacks a dedicated view (`AuditLogView.js`), an administration navigation entry in `index.html`, and routing in `app.js`.
+  - Filter controls for date range (`from`, `to`), `entityType`, `entityId`, `username`, and `action` need to be implemented.
+  - A paginated table displaying audit entries (timestamp, user, action, entity type, entity ID, summary) is missing.
+  - A detail inspection modal showing before/after property changes, justification, and correlation ID is missing.
+  - Internationalization keys (DE/EN) for audit log elements need to be added to `locales/de.json` and `locales/en.json`.
+- **Scope & Modules:**
+  - `chronivaro-web`: `js/pages/AuditLogView.js`, `js/api/AuditLogApi.js`, `index.html`, `js/app.js`, `locales/de.json`, `locales/en.json`.
+- **Dependencies:**
+  - `AuditLogsResource` (already implemented and available at `/rest/chronivaro/v1/admin/audit-logs`).
+- **Acceptance Criteria:**
+  1. An "Audit Log" navigation item is available in the Administration menu for users with the `Administrator` role.
+  2. The view provides filter inputs for `from` date, `to` date, `entityType`, `entityId`, `username`, and `action`.
+  3. Query results are rendered in a responsive, paginated table showing timestamp, actor username, action, entity type, entity ID, and summary.
+  4. Clicking on a row or detail button opens a modal displaying full audit details including correlation ID, client IP, before/after snapshots, and change justification.
+  5. All UI labels, table headers, filter placeholders, and modal texts are fully localized in German and English.
+
+---
+
+### Task 2: Non-Destructive User Deletion and Employee Deactivation
+- **Classification:** `PARTIALLY_IMPLEMENTED`
+- **Specification Reference:**
+  - Section 6.1 (*Employee – Regeln*)
+  - Section 6.1.1 (*Verknüpfung zwischen Strolch-Benutzern und Mitarbeitern*)
+  - Section 9.8 (*Löschen von Benutzern und Mitarbeiterdeaktivierung*)
+  - Section 10.5 (*Datensicherheit und Zugriffsschutz*)
+  - Section 13.2 (*Administration Endpunkte: DELETE /users/{id}*)
+  - Section 20, Item 15 (*Fachliche Akzeptanzkriterien*)
+- **Current Implementation Location:**
+  - `chronivaro-core`: `ch.atexxi.chronivaro.core.service.RemoveEmployeeService`
+  - `chronivaro-rest`: `ch.atexxi.chronivaro.rest.resource.UserResource`, `ch.atexxi.chronivaro.rest.resource.EmployeeResource`
+  - `chronivaro-web`: `js/pages/UsersView.js`, `js/pages/EmployeesView.js`
+- **Missing Behaviour:**
+  - `UserResource` lacks a `DELETE /rest/chronivaro/v1/admin/users/{id}` endpoint.
+  - `RemoveEmployeeService` currently physically cascade-deletes the `Employee` resource and all associated child entities (`WorkDay`, `WorkEntry`, `Absence`, `VacationAccountEntry`, `TimePeriod`, `EmploymentSchedule`).
+  - Required behaviour per Sections 6.1 & 9.8: `Employee` resources must never be physically deleted. Deleting a user linked to an employee must remove the Strolch user login while setting `Employee.active = false` and retaining all historical records. Deleting a pure user simply removes the Strolch user account.
+  - `RemoveEmployeeService` must prevent physical deletion when historical data exists or perform soft deactivation (`active = false`).
+  - User deletion and employee deactivation must be recorded in the audit log (`AUDIT_ACTION_REMOVE`, `AUDIT_ACTION_DEACTIVATE`).
+- **Scope & Modules:**
+  - `chronivaro-core`: `RemoveUserService` (or updated `RemoveEmployeeService`), audit logging.
+  - `chronivaro-rest`: `UserResource` (`DELETE /admin/users/{id}`), `EmployeeResource`.
+  - `chronivaro-web`: User deletion action in `UsersView.js` and `UserApi.js`, status display.
+  - Tests: `UserServiceTest`, `UserResourceTest`, `EmployeeResourceTest`.
+- **Dependencies:**
+  - `PrivilegeHandler`, `ChronivaroAuditHelper`.
+- **Acceptance Criteria:**
+  1. `DELETE /rest/chronivaro/v1/admin/users/{id}` removes a pure Strolch user account.
+  2. If the deleted user is linked to an `Employee`, the Strolch user account is deleted and the linked `Employee` resource is marked as `active = false` without deleting any historical bookings (`WorkDay`, `WorkEntry`, `Absence`, `VacationAccountEntry`, `TimePeriod`, `EmploymentSchedule`).
+  3. Physical deletion of employees with existing historical records is blocked or converted to soft deactivation.
+  4. Actions are logged to the Audit Log with appropriate action types (`AUDIT_ACTION_REMOVE`, `AUDIT_ACTION_DEACTIVATE`).
+  5. The Users and Employees administration views reflect the changes and deactivated states.
+
+---
+
+### Task 3: Employee Reactivation Workflow
+- **Classification:** `MISSING`
+- **Specification Reference:**
+  - Section 6.1 (*Employee – Regeln*)
+  - Section 6.1.1 (*Verknüpfung zwischen Strolch-Benutzern und Mitarbeitern*)
+  - Section 9.9 (*Reaktivierung von Mitarbeitern*)
+  - Section 13.2 (*Administration: POST /employees/{id}/reactivate*)
+- **Current Implementation Location:**
+  - No service, REST endpoint, or UI button currently exists.
+- **Missing Behaviour:**
+  - Missing `ReactivateEmployeeService` in `chronivaro-core`.
+  - Missing `POST /rest/chronivaro/v1/admin/employees/{id}/reactivate` in `EmployeeResource`.
+  - Missing "Reactivate" action button in `EmployeesView.js` for inactive employees.
+  - When reactivated: `Employee.active` is set to `true`, a new Strolch user account is recreated with the employee's username, email, name, and default role (`Employee`), and an administrator can initiate a password registration challenge (`Usage.SET_PASSWORD`).
+  - Reactivation is recorded in the Audit Log (`AUDIT_ACTION_UPDATE` / `AUDIT_ACTION_ACTIVATE`).
+- **Scope & Modules:**
+  - `chronivaro-core`: `ReactivateEmployeeService`, `ReactivateEmployeeCommand`.
+  - `chronivaro-rest`: `EmployeeResource` (`POST /admin/employees/{id}/reactivate`).
+  - `chronivaro-web`: `EmployeesView.js`, `EmployeeApi.js`, i18n locales.
+  - Tests: Unit and REST integration tests in `chronivaro-core` and `chronivaro-rest`.
+- **Dependencies:**
+  - Task 2 (Non-Destructive User Deletion and Employee Deactivation), `PrivilegeHandler`, `InitiateUserRegistrationService`.
+- **Acceptance Criteria:**
+  1. `POST /rest/chronivaro/v1/admin/employees/{id}/reactivate` successfully reactivates an inactive employee (`active = true`).
+  2. A new Strolch user is created for the reactivated employee with appropriate role assignments.
+  3. A password setup challenge can be initiated for the reactivated user.
+  4. Reactivation is logged in the Audit Log.
+  5. `EmployeesView.js` displays a "Reactivate" button for inactive employees and updates the employee's status upon success.
 
 ---
 
