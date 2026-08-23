@@ -404,13 +404,14 @@ Zusätzlich zu den bereits bestehenden globalen Einstellungen unterstützt Chron
 | --- | --- |
 | `defaultLanguage` | Standardsprache der Anwendung; initial `de` oder `en` |
 | `companyName` | global angezeigter Firmenname |
-| `companyLogo` | optionales globales Firmenlogo |
+| `companyLogo` | optionales globales Firmenlogo (unterstützt Bild-Upload und Speicherung/Auslieferung) |
 
 Regeln:
 
 - Die initial unterstützten Sprachen sind Deutsch (`de`) und Englisch (`en`).
 - Weitere Sprachen müssen ohne Änderung der fachlichen Kernlogik ergänzbar sein.
 - `companyName` und `companyLogo` gelten global und sind nicht benutzer-, team- oder reportspezifisch.
+- In der Systemkonfiguration der Administration kann eine Bilddatei für das Firmenlogo hochgeladen werden.
 - Ist ein Firmenlogo konfiguriert, wird es sowohl in der Anwendung als auch in unterstützten PDF-Reports angezeigt.
 - Ist kein Firmenlogo konfiguriert, dürfen UI und PDF-Ausgabe keine leeren oder fehlerhaften Platzhalter anzeigen.
 
@@ -581,9 +582,10 @@ Für Personen, die das System administrieren, überwachen oder leiten, ohne selb
 
 1. Ein Administrator öffnet einen inaktiven Mitarbeiter in der Mitarbeiterverwaltung und wählt die Aktion "Reaktivieren".
 2. Der Aktivstatus des Mitarbeiters wird wieder auf `active = true` gesetzt.
-3. Das System erstellt automatisch einen neuen Strolch-Benutzer mit dem konfigurierten Benutzernamen und den erforderlichen Rollen.
-4. Der Administrator löst anschliessend die Registrierung / Passwort-Challenge (`Usage.SET_PASSWORD`) aus, damit der Mitarbeiter sein Passwort festlegen und sich wieder anmelden kann.
-5. Der Vorgang wird im Audit-Log revisionssicher protokolliert.
+3. Das System prüft und initialisiert das Ferienkonto und den Ferienanspruch für das laufende Anspruchsjahr (pro-rata ab Reaktivierungsdatum bzw. gemäß gültigem Arbeitsplan), sofern für den Zeitraum noch keine gültige Anspruchsbuchung existiert.
+4. Das System erstellt automatisch einen neuen Strolch-Benutzer mit dem konfigurierten Benutzernamen und den erforderlichen Rollen.
+5. Der Administrator löst anschliessend die Registrierung / Passwort-Challenge (`Usage.SET_PASSWORD`) aus, damit der Mitarbeiter sein Passwort festlegen und sich wieder anmelden kann.
+6. Der Vorgang wird im Audit-Log revisionssicher protokolliert.
 
 ### 9.10 Einsichtnahme in das Audit-Log
 
@@ -647,15 +649,20 @@ Die Darstellung muss Vorgesetzten ermöglichen, lange Arbeitsblöcke und die daz
 
 ### 11.3 Ferienübersicht
 
+- Mitarbeiteridentifikation über Anzeigename und Personalnummer (beziehungsweise Benutzername, statt roher interner Mitarbeiter-ID)
 - Jahresanspruch
 - Übertrag aus Vorjahr
 - Korrekturen
 - bezogene Ferien
 - genehmigte zukünftige Ferien
 - noch verfügbare Ferien
+- tabellarische Kontobuchungen mit sauber lokalisiertem Buchungstyp (z. B. Anspruch, Übertrag, Bezug, Korrektur, Verfall) und definierten Werten (keine `undefined`-Minutenwerte)
 
 ### 11.4 Teamreport
 
+- Nur sichtbar und aufrufbar für Rollen mit Berechtigung (Vorgesetzter, HR, Administrator); nicht verfügbar für reine Mitarbeiter-Rollen
+- Auswahl des auszuwertenden Teams über eine Dropdown-Auswahl (keine manuelle Eingabe einer Team-ID)
+- Datumsauswahl für den Berichtsmonat über Datumswähler/Monatsauswahl
 - Soll-/Istzeit pro Mitarbeiter
 - Saldo pro Mitarbeiter
 - fehlende Buchungen
@@ -729,6 +736,11 @@ Die UI wird mit HTML, CSS und Vanilla JavaScript umgesetzt. Es wird kein Fronten
 
 ### 12.1 Seiten
 
+0. **Header & Navigation / Benutzer-Menü**
+   - Anzeige des angemeldeten Benutzers und seiner Rolle
+   - Dropdown-Menü für Benutzerinformationen (Benutzername, Personalnummer/Rolle, Spracheinstellungen)
+   - Platzierung des Abmelde-Buttons ("Logout") innerhalb des Benutzer-Dropdown-Menüs (nicht als freistehender Button in der Hauptnavigation)
+
 1. **Dashboard**
    - heutige Soll- und Istzeit
    - aktueller Status
@@ -746,9 +758,9 @@ Die UI wird mit HTML, CSS und Vanilla JavaScript umgesetzt. Es wird kein Fronten
    - hohe visuelle Kontraste für alle Aktionsschaltflächen gemäss Barrierefreiheitsanforderungen (WCAG AA), sodass Text- und Hintergrundfarben klar unterscheidbar sind
    - Kalenderdarstellung
 4. **Ferien**
-   - Kontoübersicht
-   - geplante und bezogene Ferien
-   - Kontobuchungen
+   - Kontoübersicht (Anzeige von Name und Personalnummer/Benutzername des Mitarbeiters statt roher interner Mitarbeiter-ID)
+   - geplante und bezogene Ferien mit korrekter Initialisierung (keine `undefined`-Minutenangaben bei reaktivierten oder bestehenden Mitarbeitern)
+   - Kontobuchungen mit sauber formatierten und lokalisierten Buchungstypen
 5. **Status**
    - Filter nach Team und Standort
    - farblicher Status
@@ -756,19 +768,22 @@ Die UI wird mit HTML, CSS und Vanilla JavaScript umgesetzt. Es wird kein Fronten
 6. **Genehmigungen**
    - offene Abwesenheiten
    - eingereichte Monatsperioden mit Detailprüfung (Öffnen des vollständigen Monatsreports in einer Inspektionsansicht mit direkter Genehmigungs-/Ablehnungsaktion)
-7. **Reports**
-   - Zeitraum und Mitarbeiter/Team auswählen
+7. **Reports & Export**
+   - Zeitraum über Datumswähler / Monatsauswahl wählen (keine manuelle Texteingabe von Datumswerten)
+   - Mitarbeiter-Auswahl für berechtigte Rollen zweistufig (zuerst Team-Auswahl, danach Mitarbeiter-Auswahl per Dropdown; keine manuelle Eingabe einer Mitarbeiter-ID)
+   - Monatsreport: Datumsauswahl per Datumswähler/Monatsauswahl
+   - Team-Monatsübersicht: Nur für Rollen mit entsprechender Berechtigung (Supervisor, HR, Admin) sichtbar; Team-Auswahl per Dropdown und Datumsauswahl per Datumswähler
    - Soll-/Ist-Vergleich
    - CSV-Export
    - PDF-Export für Monatsreport, Ferienübersicht und Abwesenheitsreport
 8. **Administration**
    - Benutzerverwaltung (für reine Systembenutzer sowie Mitarbeiterbenutzer, Rollenzuweisung, Benutzerlöschung und Passwort-Challenge)
-   - Mitarbeiter und Teams (inkl. Deaktivieren bei Benutzerlöschung und Reaktivieren mit automatischer Neuerstellung des Strolch-Benutzers)
+   - Mitarbeiter und Teams (inkl. Deaktivieren bei Benutzerlöschung und Reaktivieren mit automatischer Neuerstellung des Strolch-Benutzers sowie Ferieninitialisierung)
    - Registrierungsprozess auslösen
    - Arbeitspläne
    - Standorte und Feiertage
    - Abwesenheitsarten
-   - globale Einstellungen einschliesslich Standardsprache, Firmenname und optionalem Firmenlogo
+   - globale Einstellungen: zentrierter Einstellungsbereich/Container mit Beschreibungstext unterhalb des Titels; Unterstützung für das Hochladen einer Bilddatei für das Firmenlogo
    - Audit-Log-Ansicht zur filterbaren und detaillierten Einsicht aller protokollierten Systemereignisse (Filter nach Zeitraum, Entität, Benutzer und Aktion)
 
 ### 12.2 UI-Grundsätze

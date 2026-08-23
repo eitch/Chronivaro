@@ -1,6 +1,6 @@
 # Chronivaro Implementation Status
 
-Audit date: 2026-08-21. `IMPLEMENTATION_SPECIFICATION.md` is authoritative; the repository is authoritative for current implementation state.
+Audit date: 2026-08-23. `IMPLEMENTATION_SPECIFICATION.md` is authoritative; the repository is authoritative for current implementation state.
 
 ---
 
@@ -24,7 +24,13 @@ Audit date: 2026-08-21. `IMPLEMENTATION_SPECIFICATION.md` is authoritative; the 
 
 ## Incomplete Requirements / Active Backlog Tasks
 
-All prioritized backlog tasks (Tasks 1 through 3) have been fully implemented, verified, and integrated into the baseline. No active backlog tasks remain.
+The following prioritized backlog tasks (Tasks 1 through 5) address recently identified usability issues, UI layout improvements, and vacation workflow bug fixes:
+
+- **Task 1: Navigation & Header – Move Logout Action into User Dropdown Info Menu (Section 12.1 #0):** Move the standalone logout button out of the main navigation bar into the user info dropdown menu component.
+- **Task 2: Reports & CSV Export – Hierarchical Employee Selection and Month Date Picker (Sections 11.4, 12.1 #7):** Implement two-step employee selection (team dropdown first, then employee dropdown) for authorized roles and replace manual date text entry with a month/date picker.
+- **Task 3: Vacation Overview – Vacation Initialization on Reactivation, Display Info, and Booking Type Localization (Sections 6.7, 9.9, 11.3, 12.1 #4):** Ensure vacation entitlement is verified and initialized upon employee reactivation; display username/personnel number instead of raw internal ID; fix booking type rendering to show localized type labels without `undefined` strings.
+- **Task 4: Team Monthly Overview – Role-Based Visibility, Team Dropdown, and Date Picker (Sections 11.4, 12.1 #7):** Restrict overview visibility to supervisor/HR/admin roles (hidden for employee-only roles); replace manual team ID text input with team dropdown and manual date text input with date picker.
+- **Task 5: System Configuration – Company Logo Image Upload and Settings Layout (Sections 6.11, 12.1 #8):** Support image file upload (storage and serving) for company logo; center the settings container layout and position descriptions below titles.
 
 ---
 

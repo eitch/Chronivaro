@@ -146,7 +146,61 @@ The following foundational areas are verified as fully implemented in the reposi
 
 ## Prioritized Implementation Backlog
 
-All prioritized backlog tasks (Tasks 1 through 3) have been fully implemented, verified, and integrated into the baseline. No active backlog tasks remain.
+### Task 1: Navigation & Header – Move Logout Action into User Dropdown Info Menu
+
+- **Goal:** Improve header layout and navigation cleanliness by moving the logout button from the main navigation bar into the user's information dropdown menu.
+- **Scope:**
+  - Update `Navigation.js` / header components in `chronivaro-web` to move the logout action into the user profile/info dropdown component.
+  - Ensure the user dropdown properly displays the user's name, role/info, language switch (if applicable), and a clearly accessible logout button with appropriate styling and accessibility attributes.
+  - Verify responsive display on mobile and desktop viewports.
+  - Update UI tests where navigation/logout interactions are validated.
+
+---
+
+### Task 2: Reports & CSV Export – Hierarchical Employee Selection and Month Date Picker
+
+- **Goal:** Replace manual text inputs in reports and CSV export with intuitive selection controls (team-first employee selection and date pickers).
+- **Scope:**
+  - Update `ReportsView.js` / report filter components to allow authorized roles (Supervisor, HR, Admin) to filter employees hierarchically: first select a team from a dropdown, then select an employee within that team from a dropdown (instead of manually entering an employee ID).
+  - Add date/month picker controls for the Month Report (replacing manual text field input of date/period).
+  - Retain existing query parameter bindings and CSV/PDF export API compatibility.
+  - Update relevant frontend tests.
+
+---
+
+### Task 3: Vacation Overview – Vacation Initialization on Reactivation, Display Info, and Booking Type Localization
+
+- **Goal:** Resolve missing/undefined vacation account values, display user-friendly identification, and fix booking type rendering in the Vacation Overview.
+- **Scope:**
+  - **Vacation Account Initialization:** Ensure `ReactivateEmployeeService` (and any related employee initialization paths in `chronivaro-core`) verifies and initializes the vacation account / entitlement entries for the active year upon reactivation so that reactivated employees do not have undefined/empty balances.
+  - **Employee Identification:** Update the vacation overview page (`VacationView.js`) and DTOs to display employee username and/or personnel number rather than raw internal UUID/ID.
+  - **Booking Type Formatting & Localization:** Fix the booking type display in the vacation account journal table so it renders properly localized labels (e.g. `Entitlement`, `Carry Over`, `Usage`, `Correction`, `Expiry`) instead of falling back to missing keys like `enums.vacationEntryType.undefined`. Ensure defensive handling for null/undefined entry types in both web frontend and i18n bundles (`de.json`, `en.json`).
+  - Add/update unit and integration tests in `chronivaro-core` and `chronivaro-web`.
+
+---
+
+### Task 4: Team Monthly Overview – Role-Based Visibility, Team Dropdown, and Date Picker
+
+- **Goal:** Restrict Team Monthly Overview to authorized roles and replace manual ID/date text inputs with dropdown and date picker controls.
+- **Scope:**
+  - **Access Restriction:** Ensure the Team Monthly Overview section/view is only visible and accessible to roles with appropriate supervisory/administrative permissions (Supervisor, HR, Admin), and hidden for users holding only the `Employee` role.
+  - **Team Selection Dropdown:** Replace the manual team ID text input with a searchable/selectable dropdown of available teams.
+  - **Date Picker:** Replace the text input for the report date/month with a date/month picker.
+  - Update authorization checks in REST / UI and add tests verifying role visibility and selection behavior.
+
+---
+
+### Task 5: System Configuration – Company Logo Image Upload and Settings Layout
+
+- **Goal:** Enable image file upload for the company logo in system administration and improve the settings view layout.
+- **Scope:**
+  - **Logo Image Upload:**
+    - Extend configuration management in `chronivaro-core` and `chronivaro-rest` (`ConfigurationResource.java`, `UpdateConfigurationService.java` or dedicated logo upload endpoint) to accept image file uploads (e.g., PNG/JPEG/SVG or Base64 data URI), validate file size and MIME type, and store/serve the company logo.
+    - Update `ConfigurationView.js` in `chronivaro-web` to provide an image file upload input with preview and remove options.
+  - **Settings Layout Alignment:**
+    - Center the settings container (`div`) on the page for a balanced, focused appearance.
+    - Position section description texts directly below section titles rather than misaligned side-by-side or unformatted positions.
+  - Add backend and frontend tests for logo upload, validation, and configuration retrieval.
 
 ---
 
