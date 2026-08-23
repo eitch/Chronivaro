@@ -136,46 +136,13 @@ The following foundational areas are verified as fully implemented in the reposi
 - **Period Calculation Snapshots & Balance Carry-Forward (Sections 6.9, 11.2, 11.6.2):** Month summaries return immutable `calculationSnapshot` for approved and locked periods; `initialBalance` accurately carries forward prior month closing balance; monthly summary categorizes paid absences, unpaid absences, vacation usage, and holiday credits; supervisor period approval inspection endpoint (`GET /approvals/periods/{id}`) and modal in `ApprovalsView` providing full monthly drill-down inspection and approval/rejection actions.
 - **Reporting & Exports (Sections 11.1–11.5, 12.1–12.2, 13.8, 17, 18.6):** Core calculation engines, Web UI report viewers, deterministic RFC 4180 CSV exports, and server-side native OpenPDF export generator with streaming REST endpoints (`/reports/month`, `/reports/vacation`, `/reports/absences`).
 - **Presence, Audit & System Operations (Sections 8, 11, 12, 13.2, 13.6, 19, 20):** Binary presence indicators with privacy masking, comprehensive audit trail recording entity lifecycle events and retention purge service (`AuditEventSearch`, `AuditLogsResource`), health/readiness probes, and structured logging.
+- **Audit-Log Web UI & Detailed Inspection (Sections 4.1 #13, 6.10, 9.10, 12.1 #8, 12.8, 19.3, 20 #16):** Full administration navigation view (`AuditLogView.js`), REST API client (`AuditLogApi.js`), multi-field filtering (`from`, `to`, `entityType`, `entityId`, `username`, `action`), responsive paginated table, detail inspection modal rendering correlation IDs, before/after snapshot values, reasons, and parameters, and complete German (Swiss German) and English translations.
 - **User Management for Pure Users & System User Protection (Sections 3.6, 6.1.1, 9.7, 10.5, 12.1 #8, 13.2):** Pure Strolch user lifecycle services (`CreateUserService`, `UpdateUserService`, `InitiateUserRegistrationService`), REST API (`/admin/users`, `/admin/users/{id}/register`), `UsersView` in Web UI supporting role assignment (Admin, HR, Supervisor, Employee) and password initialization challenges; system users (`UserState.SYSTEM`) are protected and excluded from administration views and challenge initiation.
 - **Localization & Branding (Sections 4.2, 6.11, 12.3, 16, 18, 18.5):** Global company branding (name/logo), default language configuration, client-side i18n engine with German (Swiss German) and English translations across all views, and automated key parity verification.
 
 ---
 
 ## Prioritized Implementation Backlog
-
-### Task 1: Audit Log UI, Navigation, Filter Controls, and Detail Modal
-- **Classification:** `PARTIALLY_IMPLEMENTED`
-- **Specification Reference:**
-  - Section 4.1, Item 13 (*Audit-Log einsehen*)
-  - Section 6.10 (*AuditLog*)
-  - Section 9.10 (*Einsichtnahme in das Audit-Log*)
-  - Section 12.1, Item 8 (*Audit-Log-Ansicht*)
-  - Section 12.8 (*Administration – Audit-Log*)
-  - Section 19.3 (*Lieferobjekte – Web-Oberfläche*)
-  - Section 20, Item 16 (*Fachliche Akzeptanzkriterien*)
-- **Current Implementation Location:**
-  - `chronivaro-core`: `ch.atexxi.chronivaro.core.search.AuditEventSearch`
-  - `chronivaro-rest`: `ch.atexxi.chronivaro.rest.resource.AuditLogsResource` (`GET /rest/chronivaro/v1/admin/audit-logs`)
-  - `chronivaro-rest`: `ch.atexxi.chronivaro.rest.dto.AuditLogDto`
-  - `chronivaro-web`: Missing UI view and navigation entry
-- **Missing Behaviour:**
-  - `chronivaro-web` lacks a dedicated view (`AuditLogView.js`), an administration navigation entry in `index.html`, and routing in `app.js`.
-  - Filter controls for date range (`from`, `to`), `entityType`, `entityId`, `username`, and `action` need to be implemented.
-  - A paginated table displaying audit entries (timestamp, user, action, entity type, entity ID, summary) is missing.
-  - A detail inspection modal showing before/after property changes, justification, and correlation ID is missing.
-  - Internationalization keys (DE/EN) for audit log elements need to be added to `locales/de.json` and `locales/en.json`.
-- **Scope & Modules:**
-  - `chronivaro-web`: `js/pages/AuditLogView.js`, `js/api/AuditLogApi.js`, `index.html`, `js/app.js`, `locales/de.json`, `locales/en.json`.
-- **Dependencies:**
-  - `AuditLogsResource` (already implemented and available at `/rest/chronivaro/v1/admin/audit-logs`).
-- **Acceptance Criteria:**
-  1. An "Audit Log" navigation item is available in the Administration menu for users with the `Administrator` role.
-  2. The view provides filter inputs for `from` date, `to` date, `entityType`, `entityId`, `username`, and `action`.
-  3. Query results are rendered in a responsive, paginated table showing timestamp, actor username, action, entity type, entity ID, and summary.
-  4. Clicking on a row or detail button opens a modal displaying full audit details including correlation ID, client IP, before/after snapshots, and change justification.
-  5. All UI labels, table headers, filter placeholders, and modal texts are fully localized in German and English.
-
----
 
 ### Task 2: Non-Destructive User Deletion and Employee Deactivation
 - **Classification:** `PARTIALLY_IMPLEMENTED`
