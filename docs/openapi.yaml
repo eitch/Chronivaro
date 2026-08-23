@@ -5311,6 +5311,21 @@ components:
         details:
           type: string
           example: 'Created employee John Doe'
+        reason:
+          type: string
+          example: 'Schedule updated'
+        paramName:
+          type: string
+          example: 'weeklyTargetMinutes'
+        oldValue:
+          type: string
+          example: '2400'
+        newValue:
+          type: string
+          example: '2520'
+        correlationId:
+          type: string
+          example: 'corr-12345'
 
     PagedAuditLogDto:
       type: object
