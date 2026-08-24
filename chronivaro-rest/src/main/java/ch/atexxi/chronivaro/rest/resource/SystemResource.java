@@ -23,8 +23,10 @@ import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
 import java.lang.management.OperatingSystemMXBean;
 import java.lang.management.ThreadMXBean;
+import java.net.URI;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Date;
 import java.util.List;
 
@@ -82,6 +84,51 @@ public class SystemResource {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getBrandingRoot() {
 		return getBranding();
+	}
+
+	@GET
+	@Path("branding/logo")
+	@Produces({"image/png", "image/jpeg", "image/svg+xml", "image/gif", "image/webp", "image/x-icon", "*/*"})
+	public Response getBrandingLogoRoot() {
+		return getBrandingLogo();
+	}
+
+	@GET
+	@Path("system/branding/logo")
+	@Produces({"image/png", "image/jpeg", "image/svg+xml", "image/gif", "image/webp", "image/x-icon", "*/*"})
+	public Response getBrandingLogo() {
+		StrolchAgent agent = getAgent();
+		if (agent != null) {
+			try {
+				String logo = agent.runAsAgentWithResult(ctx -> {
+					try (StrolchTransaction tx = agent.openTx(ctx.getCertificate(), "GetBrandingLogo", true)) {
+						Resource config = tx.getResourceBy(TYPE_GLOBAL_CONFIGURATION, "configuration", false);
+						if (config != null && config.hasParameter(PARAM_COMPANY_LOGO)) {
+							return config.getString(PARAM_COMPANY_LOGO);
+						}
+						return "";
+					}
+				});
+				if (logo != null && !logo.isBlank()) {
+					String trimmed = logo.trim();
+					if (trimmed.startsWith("data:")) {
+						int semicolonIdx = trimmed.indexOf(";base64,");
+						if (semicolonIdx > 5) {
+							String mimeType = trimmed.substring(5, semicolonIdx).trim();
+							String base64Payload = trimmed.substring(semicolonIdx + 8);
+							byte[] imageBytes = Base64.getDecoder().decode(base64Payload);
+							return Response.ok(imageBytes, mimeType)
+									.header("Cache-Control", "public, max-age=3600")
+									.build();
+						}
+					} else if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+						return Response.temporaryRedirect(URI.create(trimmed)).build();
+					}
+				}
+			} catch (Exception ignored) {
+			}
+		}
+		return Response.status(Response.Status.NOT_FOUND).build();
 	}
 
 	@GET

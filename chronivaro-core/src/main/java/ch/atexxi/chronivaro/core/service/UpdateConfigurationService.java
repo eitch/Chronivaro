@@ -7,10 +7,25 @@ import li.strolch.service.api.AbstractService;
 import li.strolch.service.api.ServiceArgument;
 import li.strolch.service.api.ServiceResult;
 
+import java.net.URI;
+import java.util.Base64;
+import java.util.Set;
+
 import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
 import static ch.atexxi.chronivaro.core.model.ChronivaroVersionHelper.bumpVersion;
 
 public class UpdateConfigurationService extends AbstractService<UpdateConfigurationService.UpdateConfigurationArgument, ServiceResult> {
+
+	private static final int MAX_LOGO_DATA_URI_LENGTH = 7_000_000; // ~5MB base64 payload
+	private static final Set<String> SUPPORTED_IMAGE_MIME_TYPES = Set.of(
+			"image/png",
+			"image/jpeg",
+			"image/jpg",
+			"image/svg+xml",
+			"image/gif",
+			"image/webp",
+			"image/x-icon"
+	);
 
 	public static class UpdateConfigurationArgument extends ServiceArgument {
 		public Integer weeklyTargetMinutes;
@@ -102,12 +117,32 @@ public class UpdateConfigurationService extends AbstractService<UpdateConfigurat
 			return true;
 		}
 		String trimmed = logo.trim();
-		if (trimmed.startsWith("data:image/") && trimmed.contains(";base64,")) {
-			return true;
+		if (trimmed.startsWith("data:")) {
+			if (trimmed.length() > MAX_LOGO_DATA_URI_LENGTH) {
+				return false;
+			}
+			int semicolonIdx = trimmed.indexOf(";base64,");
+			if (semicolonIdx <= 5) {
+				return false;
+			}
+			String mimeType = trimmed.substring(5, semicolonIdx).trim().toLowerCase();
+			if (!SUPPORTED_IMAGE_MIME_TYPES.contains(mimeType)) {
+				return false;
+			}
+			String base64Payload = trimmed.substring(semicolonIdx + 8);
+			if (base64Payload.isBlank()) {
+				return false;
+			}
+			try {
+				Base64.getDecoder().decode(base64Payload);
+				return true;
+			} catch (IllegalArgumentException e) {
+				return false;
+			}
 		}
 		if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
 			try {
-				new java.net.URI(trimmed);
+				new URI(trimmed);
 				return true;
 			} catch (Exception e) {
 				return false;

@@ -22,7 +22,9 @@ export default class ConfigurationView {
 			<div class="configuration-container">
 				<div class="card config-card">
 					<div class="card-header">
-						<h3>${I18n.t('configuration.globalSettings')}</h3>
+						<div class="card-header-title-group">
+							<h3>${I18n.t('configuration.globalSettings')}</h3>
+						</div>
 						<div class="config-metadata" id="config-metadata">
 							<span class="badge" id="config-version-badge">${I18n.t('configuration.version')}: -</span>
 							<span class="badge secondary" id="config-updated-by-badge">${I18n.t('configuration.updatedBy')}: -</span>
@@ -38,6 +40,15 @@ export default class ConfigurationView {
 
 						<div class="form-group">
 							<label for="config-company-logo">${I18n.t('configuration.companyLogo')}:</label>
+							<div class="logo-upload-controls">
+								<input type="file" id="config-logo-file" accept="image/png,image/jpeg,image/jpg,image/svg+xml,image/gif,image/webp" style="display: none;">
+								<button type="button" id="config-logo-upload-btn" class="secondary-btn">
+									${I18n.t('configuration.uploadLogo')}
+								</button>
+								<button type="button" id="config-logo-remove-btn" class="secondary-btn btn-danger-outline" style="display: none;">
+									${I18n.t('configuration.removeLogo')}
+								</button>
+							</div>
 							<input type="text" id="config-company-logo" placeholder="https://example.com/logo.png or data:image/png;base64,...">
 							<small class="form-hint">${I18n.t('configuration.companyLogoHint')}</small>
 							<div class="config-logo-preview" id="config-logo-preview-box" style="display: none;">
@@ -91,6 +102,9 @@ export default class ConfigurationView {
 		this.form = container.querySelector('#configuration-form');
 		this.companyNameInput = container.querySelector('#config-company-name');
 		this.companyLogoInput = container.querySelector('#config-company-logo');
+		this.logoFileInput = container.querySelector('#config-logo-file');
+		this.logoUploadBtn = container.querySelector('#config-logo-upload-btn');
+		this.logoRemoveBtn = container.querySelector('#config-logo-remove-btn');
 		this.defaultLanguageSelect = container.querySelector('#config-default-language');
 		this.logoPreview = container.querySelector('#config-logo-preview');
 		this.logoPreviewBox = container.querySelector('#config-logo-preview-box');
@@ -104,6 +118,10 @@ export default class ConfigurationView {
 		this.reloadBtn = container.querySelector('#reload-config-btn');
 
 		this.companyLogoInput.addEventListener('input', () => this.updateLogoPreview());
+		this.logoUploadBtn.addEventListener('click', () => this.logoFileInput.click());
+		this.logoFileInput.addEventListener('change', (e) => this.handleFileSelection(e));
+		this.logoRemoveBtn.addEventListener('click', () => this.handleRemoveLogo());
+
 		this.weeklyTargetInput.addEventListener('input', () => this.updateHints());
 		this.dayMinutesInput.addEventListener('input', () => this.updateHints());
 
@@ -114,17 +132,65 @@ export default class ConfigurationView {
 		return container;
 	}
 
+	handleFileSelection(e) {
+		const file = e.target.files && e.target.files[0];
+		if (!file) return;
+
+		// Size check: max 5MB
+		if (file.size > 5 * 1024 * 1024) {
+			NotificationDialog.error(I18n.t('configuration.logoFileTooLarge'));
+			this.logoFileInput.value = '';
+			return;
+		}
+
+		// MIME type check
+		const validTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/svg+xml', 'image/gif', 'image/webp'];
+		if (!validTypes.includes(file.type.toLowerCase())) {
+			NotificationDialog.error(I18n.t('configuration.invalidLogoFormat'));
+			this.logoFileInput.value = '';
+			return;
+		}
+
+		const reader = new FileReader();
+		reader.onload = (event) => {
+			const dataUrl = event.target.result;
+			this.companyLogoInput.value = dataUrl;
+			this.updateLogoPreview();
+		};
+		reader.onerror = () => {
+			NotificationDialog.error(I18n.t('configuration.invalidLogoFormat'));
+		};
+		reader.readAsDataURL(file);
+	}
+
+	handleRemoveLogo() {
+		this.companyLogoInput.value = '';
+		if (this.logoFileInput) {
+			this.logoFileInput.value = '';
+		}
+		this.updateLogoPreview();
+	}
+
 	updateLogoPreview() {
 		const url = this.companyLogoInput.value.trim();
 		if (url) {
 			this.logoPreview.src = url;
-			this.logoPreviewBox.style.display = 'inline-block';
+			this.logoPreviewBox.style.display = 'inline-flex';
+			if (this.logoRemoveBtn) {
+				this.logoRemoveBtn.style.display = 'inline-block';
+			}
 			this.logoPreview.onerror = () => {
 				this.logoPreviewBox.style.display = 'none';
 			};
 		} else {
 			this.logoPreviewBox.style.display = 'none';
 			this.logoPreview.removeAttribute('src');
+			if (this.logoRemoveBtn) {
+				this.logoRemoveBtn.style.display = 'none';
+			}
+			if (this.logoFileInput) {
+				this.logoFileInput.value = '';
+			}
 		}
 	}
 

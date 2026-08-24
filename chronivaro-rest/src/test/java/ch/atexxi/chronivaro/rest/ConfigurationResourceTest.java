@@ -180,4 +180,78 @@ public class ConfigurationResourceTest extends AbstractChronivaroRestfulTest {
 			assertEquals(Response.Status.UNAUTHORIZED.getStatusCode(), response.getStatus());
 		}
 	}
+
+	@Test
+	public void shouldUploadRetrieveAndDeleteLogo() {
+		String authToken = authenticate();
+
+		String validPngDataUri = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==";
+
+		// 1. Upload logo via POST /admin/configuration/logo with JSON payload
+		String uploadPayload = "{\"companyLogo\": \"" + validPngDataUri + "\"}";
+		try (Response response = target()
+				.path("chronivaro/v1/admin/configuration/logo")
+				.request(MediaType.APPLICATION_JSON)
+				.header("Authorization", authToken)
+				.post(Entity.json(uploadPayload))) {
+			assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+			ConfigurationDto updated = ChronivaroRestHelper.createGson().fromJson(response.readEntity(String.class), ConfigurationDto.class);
+			assertEquals(validPngDataUri, updated.companyLogo());
+		}
+
+		// 2. Retrieve logo via GET /admin/configuration/logo
+		try (Response response = target()
+				.path("chronivaro/v1/admin/configuration/logo")
+				.request("image/png")
+				.header("Authorization", authToken)
+				.get()) {
+			assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+			assertTrue("Must be image/png media type", response.getMediaType().isCompatible(MediaType.valueOf("image/png")));
+			byte[] bytes = response.readEntity(byte[].class);
+			assertTrue("Returned image bytes must not be empty", bytes.length > 0);
+		}
+
+		// 3. Retrieve public branding logo via GET /system/branding/logo (unauthenticated)
+		try (Response response = target()
+				.path("chronivaro/v1/system/branding/logo")
+				.request("image/png")
+				.get()) {
+			assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+			assertTrue("Must be image/png media type", response.getMediaType().isCompatible(MediaType.valueOf("image/png")));
+			byte[] bytes = response.readEntity(byte[].class);
+			assertTrue("Returned image bytes must not be empty", bytes.length > 0);
+		}
+
+		// 4. Upload raw PNG bytes directly
+		byte[] rawPng = java.util.Base64.getDecoder().decode("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==");
+		try (Response response = target()
+				.path("chronivaro/v1/admin/configuration/logo")
+				.request(MediaType.APPLICATION_JSON)
+				.header("Authorization", authToken)
+				.post(Entity.entity(rawPng, "image/png"))) {
+			assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+			ConfigurationDto updated = ChronivaroRestHelper.createGson().fromJson(response.readEntity(String.class), ConfigurationDto.class);
+			assertTrue("Logo must be data URI format", updated.companyLogo().startsWith("data:image/png;base64,"));
+		}
+
+		// 5. Delete logo via DELETE /admin/configuration/logo
+		try (Response response = target()
+				.path("chronivaro/v1/admin/configuration/logo")
+				.request(MediaType.APPLICATION_JSON)
+				.header("Authorization", authToken)
+				.delete()) {
+			assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+			ConfigurationDto updated = ChronivaroRestHelper.createGson().fromJson(response.readEntity(String.class), ConfigurationDto.class);
+			assertEquals("", updated.companyLogo());
+		}
+
+		// 6. Verify GET /admin/configuration/logo returns 404 NOT_FOUND after deletion
+		try (Response response = target()
+				.path("chronivaro/v1/admin/configuration/logo")
+				.request("image/png")
+				.header("Authorization", authToken)
+				.get()) {
+			assertEquals(Response.Status.NOT_FOUND.getStatusCode(), response.getStatus());
+		}
+	}
 }

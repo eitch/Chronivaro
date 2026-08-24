@@ -96,5 +96,45 @@ public class ConfigurationServiceTest {
 		invalidLogo.companyLogo = "invalid-uri-scheme:::";
 		ServiceResult result6 = serviceHandler.doService(adminCert, new UpdateConfigurationService(), invalidLogo);
 		assertTrue("Invalid company logo format should fail", result6.isNok());
+
+		UpdateConfigurationService.UpdateConfigurationArgument invalidMime = new UpdateConfigurationService.UpdateConfigurationArgument();
+		invalidMime.companyLogo = "data:text/plain;base64,SGVsbG8=";
+		ServiceResult result7 = serviceHandler.doService(adminCert, new UpdateConfigurationService(), invalidMime);
+		assertTrue("Unsupported logo MIME type should fail", result7.isNok());
+
+		UpdateConfigurationService.UpdateConfigurationArgument invalidBase64 = new UpdateConfigurationService.UpdateConfigurationArgument();
+		invalidBase64.companyLogo = "data:image/png;base64,not-valid-base-64-!!";
+		ServiceResult result8 = serviceHandler.doService(adminCert, new UpdateConfigurationService(), invalidBase64);
+		assertTrue("Corrupt base64 payload should fail", result8.isNok());
+	}
+
+	@Test
+	public void shouldAcceptValidDataUriLogoAndClearLogo() {
+		ServiceHandler serviceHandler = runtimeMock.getServiceHandler();
+
+		// 1. Set valid base64 PNG data URI
+		String validPngDataUri = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==";
+		UpdateConfigurationService.UpdateConfigurationArgument pngArg = new UpdateConfigurationService.UpdateConfigurationArgument();
+		pngArg.companyLogo = validPngDataUri;
+
+		ServiceResult result1 = serviceHandler.doService(adminCert, new UpdateConfigurationService(), pngArg);
+		assertTrue(result1.getMessage(), result1.isOk());
+
+		try (StrolchTransaction tx = runtimeMock.openUserTx(adminCert, true)) {
+			Resource config = tx.getResourceBy(TYPE_GLOBAL_CONFIGURATION, "configuration", true);
+			assertEquals(validPngDataUri, config.getString(ch.atexxi.chronivaro.core.model.ChronivaroConstants.PARAM_COMPANY_LOGO));
+		}
+
+		// 2. Clear logo
+		UpdateConfigurationService.UpdateConfigurationArgument clearArg = new UpdateConfigurationService.UpdateConfigurationArgument();
+		clearArg.companyLogo = "";
+
+		ServiceResult result2 = serviceHandler.doService(adminCert, new UpdateConfigurationService(), clearArg);
+		assertTrue(result2.getMessage(), result2.isOk());
+
+		try (StrolchTransaction tx = runtimeMock.openUserTx(adminCert, true)) {
+			Resource config = tx.getResourceBy(TYPE_GLOBAL_CONFIGURATION, "configuration", true);
+			assertEquals("", config.getString(ch.atexxi.chronivaro.core.model.ChronivaroConstants.PARAM_COMPANY_LOGO));
+		}
 	}
 }
