@@ -141,22 +141,12 @@ The following foundational areas are verified as fully implemented in the reposi
 - **Non-Destructive User Deletion and Employee Deactivation (Sections 6.1, 6.1.1, 9.8, 10.5, 13.2, 20 #15):** Non-destructive user deletion service (`RemoveUserService`), REST API (`DELETE /admin/users/{id}`), UI deletion action with confirmation dialogs in `UsersView.js`; deleting a user linked to an employee sets `Employee.active = false` without deleting any historical bookings (`WorkDay`, `WorkEntry`, `Absence`, `VacationAccountEntry`, `TimePeriod`, `EmploymentSchedule`); physical deletion of employees with historical bookings is blocked in `RemoveEmployeeService`; all user deletions and employee deactivations are recorded in the immutable audit log.
 - **Employee Reactivation Workflow (Sections 6.1, 6.1.1, 9.9, 13.2):** Employee reactivation service (`ReactivateEmployeeService`), REST API (`POST /admin/employees/{id}/reactivate`), UI reactivation action with confirmation dialogs in `EmployeesView.js`; reactivates inactive employees (`active = true`), re-creates/restores associated Strolch user accounts with appropriate role assignments, allows initiating password setup challenges (`Usage.SET_PASSWORD`), and records reactivation in the audit log.
 - **Navigation & Header Logout Integration (Section 12.1 #0):** Standalone logout button removed from the main header action bar and integrated into the user dropdown info menu with icon and dedicated styling; automatically closes open dropdown menus on logout and triggers clean session termination.
+- **Reports & CSV Export – Hierarchical Employee Selection and Month Date Picker (Sections 11.4, 12.1 #7):** Hierarchical team-first employee selection (team dropdown filters employee dropdown with full employee names and personal numbers) for authorized roles (Supervisor, HR, Admin), HTML5 date/month picker controls for Day, Month, Vacation, Team, and Absence reports, team selection dropdown for Team Monthly Overview, and complete Swiss German and English translations with 100% key parity.
 - **Localization & Branding (Sections 4.2, 6.11, 12.3, 16, 18, 18.5):** Global company branding (name/logo), default language configuration, client-side i18n engine with German (Swiss German) and English translations across all views, and automated key parity verification.
 
 ---
 
 ## Prioritized Implementation Backlog
-
-### Task 2: Reports & CSV Export – Hierarchical Employee Selection and Month Date Picker
-
-- **Goal:** Replace manual text inputs in reports and CSV export with intuitive selection controls (team-first employee selection and date pickers).
-- **Scope:**
-  - Update `ReportsView.js` / report filter components to allow authorized roles (Supervisor, HR, Admin) to filter employees hierarchically: first select a team from a dropdown, then select an employee within that team from a dropdown (instead of manually entering an employee ID).
-  - Add date/month picker controls for the Month Report (replacing manual text field input of date/period).
-  - Retain existing query parameter bindings and CSV/PDF export API compatibility.
-  - Update relevant frontend tests.
-
----
 
 ### Task 3: Vacation Overview – Vacation Initialization on Reactivation, Display Info, and Booking Type Localization
 
