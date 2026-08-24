@@ -151,31 +151,13 @@ The following foundational areas are verified as fully implemented in the reposi
 - **Team Monthly Overview – Role-Based Visibility, Team Dropdown, and Date Picker (Sections 11.4, 12.1 #7):** Team Monthly Overview visibility restricted to authorized supervisory and administrative roles (Supervisor, HR, Admin) and hidden from employee-only users; team selection via dropdown and report period selection via date/month picker; client and server-side authorization checks and comprehensive UI test coverage.
 - **System Configuration – Company Logo Image Upload and Settings Layout (Sections 6.11, 12.1 #8):** Image file upload (PNG/JPEG/SVG/GIF/WebP data URI validation, Base64 size limits, and dedicated upload/delete/serve endpoints), image preview and removal controls in `ConfigurationView.js`, centered settings container layout (`.configuration-container`), description texts formatted directly below section titles, and full test coverage across core, rest, and web modules.
 - **HR and Supervisor Employee Work Entry Management (Sections 3.2, 3.3, 6.4, 9.3, 12.1 #2, 13.2, 20):** Core services (`AddWorkEntryService`, `CorrectWorkEntryService`, `RemoveWorkEntryService`) extended to allow supervisors acting on assigned team members (`assertCanManageEmployee`) and HR/Admins organization-wide; REST endpoints (`GET /employees/{id}/work-entries`, `POST /employees/{id}/work-entries`, `PUT /admin/work-entries/{id}`, `DELETE /admin/work-entries/{id}`) with role-based scoping; Web UI (`MyTimesView.js` and `WorkEntryApi.js`) with team/employee dropdowns for managers, add/edit/delete modals, and complete Swiss German and English translations with 100% key parity.
+- **Work Entry Employee Modifications, Highlighting of Modified/Manual Entries, and Creator Attribution (Sections 3.1–3.3, 4.1 #5, 6.4, 9.3, 11, 12.1 #2, 13.2, 20 #3):** Enabled full work entry editing for employees in open periods via `CorrectWorkEntryService` and `PUT /me/work-entries/{id}` with same-day and non-overlap validations; exposed `source`, `createdBy`, and `modified` in `WorkEntryDto`, `WorkEntryRangeDto`, and `WorkEntryRange`; visual badges/highlighting for manual and modified entries across `MyTimesView.js`, `ApprovalsView.js`, and `ReportsView.js`; creator attribution (`createdBy`) displayed whenever entries are created on behalf of the employee; complete Swiss German and English translations with 100% key parity and comprehensive unit/REST/UI tests.
 
 ---
 
 ## Prioritized Implementation Backlog
 
-### Task 7: Work Entry Employee Modifications, Highlighting of Modified/Manual Entries, and Creator Attribution
-
-- **Requirement Reference:** Sections 3.1–3.3, 4.1 #5, 6.4, 9.3, 11.1, 11.2, 11.4, 11.6.2, 12.1 #2, 13.2, 20 #3
-- **Goal:** Enable employees to fully edit their own work entries (start time, end time, location, comment) in open periods, visually highlight all modified and manually created entries across the Web UI and reports/exports, and display creator attribution (`createdBy`) whenever an entry was not created by the employee.
-- **Proposed Scope:**
-  1. `chronivaro-core` / `chronivaro-rest`:
-     - Update `CorrectWorkEntryService` / `ChronivaroResource` (`PUT /me/work-entries/{id}`) so employees can adjust start time, end time, location, and comment within open periods without being limited to shorten-only operations (retaining validation for same-day start/end and non-overlap).
-     - Ensure `WorkEntryDto` and report data structures expose `source`, `createdBy`, and modification status.
-  2. `chronivaro-web`:
-     - Update `MyTimesView.js` to allow employees to edit start time, end time, location, and comments for their own entries in open periods.
-     - Add visual highlighting (e.g. badges / tags / visual cues) for all manually created (`source = MANUAL`) and modified entries in Day, Week, and Month views, as well as Approvals inspection modal and Reports view.
-     - Display creator information (`createdBy`) on work entries whenever `createdBy` does not match the employee's username.
-  3. Reports & PDF Export:
-     - Update table renderers and OpenPDF report generator (`MonthReportPdfGenerator`, `ReportsView.js`) to visually indicate manual/modified entries and render creator details for entries created on behalf of the employee.
-  4. Localization:
-     - Add Swiss German (`de.json`) and English (`en.json`) translation keys for manual/modified badges and creator label with 100% key parity and no `ß` characters.
-  5. Automated Verification:
-     - Core unit/integration tests for employee work entry editing and validation.
-     - REST integration tests for `PUT /me/work-entries/{id}` and DTO fields.
-     - Web UI and PDF tests for visual badges, creator attribution, and i18n parity.
+None. All prioritized MVP implementation backlog tasks have been implemented and verified.
 
 ---
 
