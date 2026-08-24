@@ -149,30 +149,13 @@ The following foundational areas are verified as fully implemented in the reposi
 - **Vacation Overview – Vacation Initialization on Reactivation, Display Info, and Booking Type Localization (Sections 6.7, 9.9, 11.3, 12.1 #4):** Verified and automated annual vacation entitlement initialization upon employee reactivation (`ReactivateEmployeeService`); user-friendly employee identification display (username and personnel number) across vacation DTOs and web views; booking type formatting and defensive localization fallback preventing `enums.vacationEntryType.undefined` across vacation overview tables and reports.
 - **Team Monthly Overview – Role-Based Visibility, Team Dropdown, and Date Picker (Sections 11.4, 12.1 #7):** Team Monthly Overview visibility restricted to authorized supervisory and administrative roles (Supervisor, HR, Admin) and hidden from employee-only users; team selection via dropdown and report period selection via date/month picker; client and server-side authorization checks and comprehensive UI test coverage.
 - **System Configuration – Company Logo Image Upload and Settings Layout (Sections 6.11, 12.1 #8):** Image file upload (PNG/JPEG/SVG/GIF/WebP data URI validation, Base64 size limits, and dedicated upload/delete/serve endpoints), image preview and removal controls in `ConfigurationView.js`, centered settings container layout (`.configuration-container`), description texts formatted directly below section titles, and full test coverage across core, rest, and web modules.
+- **HR and Supervisor Employee Work Entry Management (Sections 3.2, 3.3, 6.4, 9.3, 12.1 #2, 13.2, 20):** Core services (`AddWorkEntryService`, `CorrectWorkEntryService`, `RemoveWorkEntryService`) extended to allow supervisors acting on assigned team members (`assertCanManageEmployee`) and HR/Admins organization-wide; REST endpoints (`GET /employees/{id}/work-entries`, `POST /employees/{id}/work-entries`, `PUT /admin/work-entries/{id}`, `DELETE /admin/work-entries/{id}`) with role-based scoping; Web UI (`MyTimesView.js` and `WorkEntryApi.js`) with team/employee dropdowns for managers, add/edit/delete modals, and complete Swiss German and English translations with 100% key parity.
 
 ---
 
 ## Prioritized Implementation Backlog
 
-The following prioritized backlog task addresses the missing functionality for HR and supervisors modifying employee work entries:
-
-### Task 6: HR and Supervisor Employee Work Entry Management – Core Services, REST Endpoints, and Web UI (Sections 3.2, 3.3, 6.4, 9.3, 12.1 #2, 13.2, 20)
-- **Goal:** Enable HR personnel and supervisors to view, create, edit, and delete work entries for employees within their authorized scope.
-- **Scope:**
-  - **Core Domain & Authorization (`chronivaro-core`):**
-    - Update `RemoveWorkEntryService` and `AddWorkEntryService` to allow supervisors acting on assigned team employees (`ChronivaroModelHelper.assertCanManageEmployee(tx, employeeId)`) in addition to HR and Admin roles.
-    - Ensure all work entry creations, updates, and deletions by supervisors/HR are properly audited with before/after state and acting username via `ChronivaroAuditHelper`.
-  - **REST API (`chronivaro-rest`):**
-    - Expose REST endpoints for managing employee work entries:
-      - `GET /rest/chronivaro/v1/employees/{id}/work-entries?from={from}&to={to}` with supervisor/HR authorization scoping.
-      - `POST /rest/chronivaro/v1/employees/{id}/work-entries` to create manual work entries on behalf of an employee.
-      - Verify and support `PUT /admin/work-entries/{id}` and `DELETE /admin/work-entries/{id}` for supervisors on their team employees.
-  - **Web UI (`chronivaro-web`):**
-    - Update or extend `WorkEntryApi.js` with client methods for employee work entry retrieval, creation, modification, and deletion.
-    - In `MyTimesView.js` (or a dedicated Timesheet / Employee Time Management view accessible to Supervisors/HR): provide employee selection (hierarchical team/employee dropdown for supervisors and HR), display the selected employee's work entries and daily/monthly summaries, and provide action buttons/modals for adding new work entries, editing existing work entries (start/end time, working location, comment), and deleting work entries.
-    - Add Swiss German and English translation keys for all dialog labels, buttons, confirmation prompts, and error notifications.
-  - **Automated Verification:**
-    - Add unit and integration tests in `chronivaro-core`, `chronivaro-rest`, and `chronivaro-web` verifying supervisor scoping, HR permissions, validation errors (period locked, overlapping entries, end before start), audit generation, and UI interactions.
+All prioritized MVP backlog tasks identified during specification and repository audits are now fully implemented and verified with automated test suites across all modules.
 
 ---
 
