@@ -266,6 +266,8 @@ class ChronivaroApp {
 
         if (titleEl && branding.companyName) {
             titleEl.textContent = branding.companyName;
+        }
+        if (branding.companyName) {
             document.title = branding.companyName;
         }
 
@@ -278,8 +280,10 @@ class ChronivaroApp {
                     logoEl.style.display = 'none';
                 };
             } else {
-                logoEl.style.display = 'none';
-                logoEl.removeAttribute('src');
+                logoEl.src = 'assets/icons/chronivaro-logo-light.svg';
+                logoEl.alt = branding.companyName || 'Chronivaro';
+                logoEl.style.display = 'block';
+                logoEl.onerror = null;
             }
         }
     }

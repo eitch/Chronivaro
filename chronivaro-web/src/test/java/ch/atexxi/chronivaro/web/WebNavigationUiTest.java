@@ -73,6 +73,11 @@ public class WebNavigationUiTest {
 
 		assertTrue("header branding must be an anchor link to #dashboard",
 				html.contains("<a href=\"#dashboard\" class=\"header-branding\" id=\"header-branding\">"));
+		assertTrue("header branding must contain chronivaro-logo-light.svg",
+				html.contains("src=\"assets/icons/chronivaro-logo-light.svg\""));
+
+		File logoFile = new File(getWebappDir(), "assets/icons/chronivaro-logo-light.svg");
+		assertTrue("chronivaro-logo-light.svg must exist", logoFile.exists());
 
 		File cssFile = new File(getWebappDir(), "assets/css/style.css");
 		assertTrue("style.css must exist", cssFile.exists());

@@ -65,7 +65,7 @@ public class WebConfigurationUiTest extends AbstractChronivaroRestfulTest {
 				indexContent.contains("data-roles=\"Administrator\"") && indexContent.contains("href=\"#configuration\""));
 		assertTrue("index.html must contain header-branding", indexContent.contains("id=\"header-branding\""));
 		assertTrue("index.html must contain header-logo", indexContent.contains("id=\"header-logo\""));
-		assertTrue("index.html must contain header-title", indexContent.contains("id=\"header-title\""));
+		assertTrue("index.html must contain chronivaro-logo-light.svg", indexContent.contains("src=\"assets/icons/chronivaro-logo-light.svg\""));
 
 		// 4. Verify app.js routing and branding management
 		File appFile = new File(webappDir, "js/app.js");
