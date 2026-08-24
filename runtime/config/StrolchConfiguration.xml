@@ -22,7 +22,7 @@
             <api>li.strolch.persistence.api.PersistenceHandler</api>
             <impl>li.strolch.persistence.xml.XmlPersistenceHandler</impl>
             <Properties>
-                <dbStorePath>Chronivaro</dbStorePath>
+                <dbStorePath>dbStore</dbStorePath>
                 <allowDataInitOnEmptyDb>true</allowDataInitOnEmptyDb>
             </Properties>
         </Component>
