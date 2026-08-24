@@ -2,6 +2,7 @@ package ch.atexxi.chronivaro.core.service;
 
 import ch.atexxi.chronivaro.core.model.ChronivaroAuditHelper;
 import ch.atexxi.chronivaro.core.model.ChronivaroModelHelper;
+import ch.atexxi.chronivaro.core.model.VacationHelper;
 import li.strolch.model.Resource;
 import li.strolch.persistence.api.StrolchTransaction;
 import li.strolch.privilege.base.PrivilegeConstants;
@@ -13,6 +14,8 @@ import li.strolch.service.api.AbstractService;
 import li.strolch.service.api.ServiceResult;
 import li.strolch.utils.dbc.DBC;
 
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -77,7 +80,20 @@ public class ReactivateEmployeeService extends AbstractService<StringArgument, S
 
 			employee.setString(PARAM_USER_ID, userRep.getUserId());
 			employee.setString(PARAM_USERNAME, userRep.getUsername());
+
+			ZoneId zoneId = ChronivaroModelHelper.getEmployeeTimezone(employee);
+			LocalDate now = LocalDate.now(zoneId);
+			if (employee.hasParameter(PARAM_EXIT_DATE)) {
+				LocalDate exitDate = ChronivaroModelHelper.getExitDate(employee).orElse(null);
+				if (exitDate != null && exitDate.isBefore(now)) {
+					employee.removeParameter(PARAM_EXIT_DATE);
+				}
+			}
+
 			tx.update(employee);
+
+			// Initialize or verify vacation account entitlement for the current year
+			VacationHelper.creditOrRecalculateEntitlement(tx, employee.getId(), now.getYear(), false);
 
 			ChronivaroAuditHelper.audit(tx, TYPE_EMPLOYEE, employee.getId(), AUDIT_ACTION_REACTIVATE,
 					"Reactivated employee " + employee.getName());

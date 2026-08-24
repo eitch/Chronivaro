@@ -1,5 +1,7 @@
 package ch.atexxi.chronivaro.core;
 
+import ch.atexxi.chronivaro.core.model.VacationAccountSummary;
+import ch.atexxi.chronivaro.core.model.VacationHelper;
 import ch.atexxi.chronivaro.core.service.CreateEmployeeService;
 import ch.atexxi.chronivaro.core.service.InitiateEmployeeRegistrationService;
 import ch.atexxi.chronivaro.core.service.ReactivateEmployeeService;
@@ -265,7 +267,7 @@ public class EmployeeServiceTest {
 				new StringArgument(employeeId));
 		assertTrue(reactivateResult.getMessage(), reactivateResult.isOk());
 
-		// Verify employee is active and user account is recreated
+		// Verify employee is active, user account is recreated, and vacation entitlement is initialized
 		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
 			Resource employee = tx.getResourceBy(TYPE_EMPLOYEE, employeeId, true);
 			assertTrue(employee.getBoolean(PARAM_ACTIVE));
@@ -276,6 +278,11 @@ public class EmployeeServiceTest {
 			assertEquals("Reactivate", user.getLastname());
 			assertEquals("reactivate@example.com", user.getEmail());
 			assertTrue(user.getRoles().contains(ROLE_EMPLOYEE));
+
+			VacationAccountSummary summary = VacationHelper.getVacationAccountSummary(tx, employeeId, LocalDate.now().getYear());
+			assertNotNull(summary);
+			assertTrue("Vacation entitlement must be initialized on reactivation", summary.entitlementMinutes() > 0);
+			assertTrue("Remaining vacation balance must be positive", summary.remainingMinutes() > 0);
 		}
 
 		// Verify registration challenge can be initiated on the reactivated employee

@@ -25,7 +25,10 @@ export default class MyAbsencesView {
             <!-- Vacation Account Summary Section -->
             <section class="vacation-summary-section card">
                 <div class="section-title-bar">
-                    <h3>${I18n.t('absences.vacationAccount')}</h3>
+                    <div>
+                        <h3>${I18n.t('absences.vacationAccount')}</h3>
+                        <span class="text-muted" id="vacation-employee-info" style="font-size: 0.85rem; display: none;"></span>
+                    </div>
                     <div class="year-picker">
                         <label for="vacation-year-select">${I18n.t('common.year')}:</label>
                         <select id="vacation-year-select"></select>
@@ -268,13 +271,36 @@ export default class MyAbsencesView {
                 const summary = (response && response.summary) ? response.summary : (response || {});
                 const entries = response.entries || [];
 
-                cardEntitlement.textContent = Format.durationDays(summary.entitlementMinutes);
-                cardCarryOver.textContent = Format.durationDays(summary.carryOverMinutes);
-                cardCorrections.textContent = Format.durationDays(summary.correctionsMinutes);
-                cardUsage.textContent = Format.durationDays(summary.usageMinutes);
-                cardRemaining.textContent = Format.durationDays(summary.remainingMinutes);
+                const empInfoEl = document.getElementById('vacation-employee-info');
+                if (empInfoEl) {
+                    const empName = summary.employeeName;
+                    const username = summary.username;
+                    const persNr = summary.personalNumber;
+                    let display = '';
+                    if (username && persNr && username !== persNr) {
+                        display = `${username} (${persNr})`;
+                    } else if (username) {
+                        display = username;
+                    } else if (persNr) {
+                        display = persNr;
+                    } else if (empName) {
+                        display = empName;
+                    }
+                    if (display) {
+                        empInfoEl.textContent = display;
+                        empInfoEl.style.display = 'inline';
+                    } else {
+                        empInfoEl.style.display = 'none';
+                    }
+                }
 
-                if (summary.remainingMinutes < 0) {
+                cardEntitlement.textContent = Format.durationDays(summary.entitlementMinutes ?? 0);
+                cardCarryOver.textContent = Format.durationDays(summary.carryOverMinutes ?? 0);
+                cardCorrections.textContent = Format.durationDays(summary.correctionsMinutes ?? 0);
+                cardUsage.textContent = Format.durationDays(summary.usageMinutes ?? 0);
+                cardRemaining.textContent = Format.durationDays(summary.remainingMinutes ?? 0);
+
+                if ((summary.remainingMinutes ?? 0) < 0) {
                     cardRemainingContainer.className = 'summary-card danger';
                 } else {
                     cardRemainingContainer.className = 'summary-card highlight';
@@ -287,13 +313,14 @@ export default class MyAbsencesView {
                 } else {
                     entries.forEach(entry => {
                         const row = document.createElement('tr');
-                        const entryValue = entry.value !== undefined ? entry.value : entry.amountMinutes;
+                        const entryValue = entry.value !== undefined ? entry.value : (entry.amountMinutes !== undefined ? entry.amountMinutes : 0);
                         const isPositive = entryValue >= 0;
                         const sign = isPositive ? '+' : '';
                         const formattedAmount = `${sign}${Format.durationDays(entryValue)}`;
                         const amountClass = isPositive ? 'text-success' : 'text-danger';
-                        const entryType = entry.vacationType || entry.entryType || entry.type || entry.bookingType;
-                        const typeLabel = I18n.t(`enums.vacationEntryType.${entryType}`, {}, entryType);
+                        const rawEntryType = entry.vacationType || entry.entryType || entry.type || entry.bookingType;
+                        const entryType = rawEntryType ? String(rawEntryType).toUpperCase() : null;
+                        const typeLabel = entryType ? I18n.t(`enums.vacationEntryType.${entryType}`, {}, entryType) : '--';
 
                         row.innerHTML = `
                             <td>${Format.date(entry.date || entry.effectiveDate)}</td>

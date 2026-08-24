@@ -91,6 +91,8 @@ public class WebPersonalAbsenceUiTest extends AbstractChronivaroRestfulTest {
 					vacationRes.readEntity(String.class), VacationAccountSummaryDto.class);
 			assertNotNull("Vacation account summary must not be null", vacationDto);
 			assertEquals(2025, vacationDto.year());
+			assertEquals("admin", vacationDto.username());
+			assertNotNull("Employee name should be populated", vacationDto.employeeName());
 		}
 
 		// 2. Fetch Absence Types

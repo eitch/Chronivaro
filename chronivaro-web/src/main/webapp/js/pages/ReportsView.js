@@ -58,6 +58,9 @@ export default class ReportsView {
 		if (params && params.type) {
 			this.activeReportType = params.type;
 		}
+		if (this.activeReportType === 'team' && !this.canViewTeamReport()) {
+			this.activeReportType = 'day';
+		}
 
 		const container = document.createElement('div');
 		container.id = 'reports-view';
@@ -78,9 +81,11 @@ export default class ReportsView {
 					<button id="report-type-vacation-btn" class="tab-btn ${this.activeReportType === 'vacation' ? 'active' : ''}">
 						${I18n.t('reports.vacationReport')}
 					</button>
+					${this.canViewTeamReport() ? `
 					<button id="report-type-team-btn" class="tab-btn ${this.activeReportType === 'team' ? 'active' : ''}">
 						${I18n.t('reports.teamReport')}
 					</button>
+					` : ''}
 					<button id="report-type-absences-btn" class="tab-btn ${this.activeReportType === 'absences' ? 'active' : ''}">
 						${I18n.t('reports.absencesReport')}
 					</button>
@@ -180,7 +185,7 @@ export default class ReportsView {
 				if (this.activeReportType === 'absences') {
 					this.populateAbsenceTypeSelect();
 				}
-				if (this.activeReportType === 'team') {
+				if (this.activeReportType === 'team' && this.canViewTeamReport()) {
 					this.populateTeamSelect('team');
 				}
 				if (this.canSelectEmployee()) {
@@ -278,6 +283,10 @@ export default class ReportsView {
 	}
 
 	canSelectEmployee() {
+		return AuthApi.hasRole('Supervisor') || AuthApi.hasRole('HR') || AuthApi.hasRole('Administrator') || AuthApi.hasRole('StrolchAdmin');
+	}
+
+	canViewTeamReport() {
 		return AuthApi.hasRole('Supervisor') || AuthApi.hasRole('HR') || AuthApi.hasRole('Administrator') || AuthApi.hasRole('StrolchAdmin');
 	}
 
@@ -408,6 +417,10 @@ export default class ReportsView {
 			}
 
 		} else if (this.activeReportType === 'team') {
+			if (!this.canViewTeamReport()) {
+				this.filterBar.innerHTML = `<div class="empty-state">${I18n.t('errors.forbidden')}</div>`;
+				return;
+			}
 			this.filterBar.innerHTML = `
 				<div class="filter-group">
 					<label for="filter-team-ym">${I18n.t('common.month')} (YYYY-MM) *:</label>
@@ -550,6 +563,10 @@ export default class ReportsView {
 				this.renderVacationReport(data);
 
 			} else if (this.activeReportType === 'team') {
+				if (!this.canViewTeamReport()) {
+					this.resultsContainer.innerHTML = `<div class="error-msg">${I18n.t('errors.forbidden')}</div>`;
+					return;
+				}
 				const teamId = this.filters.team.teamId;
 				const ym = this.filters.team.yearMonth;
 				if (!teamId || !ym) {
@@ -591,6 +608,10 @@ export default class ReportsView {
 				await ReportApi.downloadVacationReportCsv(this.filters.vacation.year, this.filters.vacation.employeeId);
 
 			} else if (this.activeReportType === 'team') {
+				if (!this.canViewTeamReport()) {
+					NotificationDialog.error(I18n.t('errors.forbidden'));
+					return;
+				}
 				const teamId = this.filters.team.teamId;
 				const ym = this.filters.team.yearMonth;
 				if (!teamId || !ym) {
@@ -872,16 +893,19 @@ export default class ReportsView {
 			entriesHtml = `<tr><td colspan="7" class="empty-cell">${I18n.t('absences.noJournalEntries')}</td></tr>`;
 		} else {
 			entriesHtml = data.entries.map(entry => {
-				const bTypeLabel = I18n.t(`enums.vacationEntryType.${entry.bookingType}`, {}, entry.bookingType);
+				const rawEntryType = entry.vacationType || entry.bookingType || entry.entryType || entry.type;
+				const entryType = rawEntryType ? String(rawEntryType).toUpperCase() : null;
+				const bTypeLabel = entryType ? I18n.t(`enums.vacationEntryType.${entryType}`, {}, entryType) : '-';
+				const amountVal = entry.valueMinutes !== undefined ? entry.valueMinutes : (entry.value !== undefined ? entry.value : (entry.amountMinutes !== undefined ? entry.amountMinutes : 0));
 				return `
 					<tr>
 						<td>${Format.date(entry.date)}</td>
 						<td><span class="status-badge">${bTypeLabel}</span></td>
-						<td><strong>${Format.durationDays(entry.valueMinutes)}</strong></td>
+						<td><strong>${Format.durationDays(amountVal)}</strong></td>
 						<td>${entry.targetPeriod || '-'}</td>
 						<td>${entry.comment || '-'}</td>
 						<td>${entry.createdBy || '-'}</td>
-						<td>${Format.dateTime(entry.createdAt)}</td>
+						<td>${Format.dateTime(entry.createdAt || entry.date)}</td>
 					</tr>
 				`;
 			}).join('');

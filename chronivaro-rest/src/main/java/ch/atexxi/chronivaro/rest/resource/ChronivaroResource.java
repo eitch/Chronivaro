@@ -258,8 +258,10 @@ public class ChronivaroResource {
 		GetVacationAccountSummaryService.GetVacationAccountSummaryResult result =
 				serviceHandler.doService(cert, new GetVacationAccountSummaryService(), arg);
 		if (result.isOk()) {
-			VacationAccountSummaryDto dto = ChronivaroMapper.vacationSummaryToDto(result.summary, result.entries);
-			return Response.ok(ChronivaroRestHelper.createGson().toJson(dto), MediaType.APPLICATION_JSON).build();
+			try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
+				VacationAccountSummaryDto dto = ChronivaroMapper.vacationSummaryToDto(tx, result.summary, result.entries);
+				return Response.ok(ChronivaroRestHelper.createGson().toJson(dto), MediaType.APPLICATION_JSON).build();
+			}
 		}
 		return ChronivaroRestHelper.toResponse(result);
 	}

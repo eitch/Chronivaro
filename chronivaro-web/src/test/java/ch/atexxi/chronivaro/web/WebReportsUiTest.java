@@ -69,5 +69,15 @@ public class WebReportsUiTest {
 		// Verify vacation report displays username / personal number instead of raw internal employeeId
 		assertTrue("ReportsView must format employee display with username/personal number in vacation report",
 				viewJs.contains("username") && viewJs.contains("personalNumber") && viewJs.contains("empDisplay"));
+
+		// Verify role-based visibility gating for team monthly overview
+		assertTrue("ReportsView must define canViewTeamReport method", viewJs.contains("canViewTeamReport()"));
+		assertTrue("ReportsView canViewTeamReport must check Supervisor role", viewJs.contains("AuthApi.hasRole('Supervisor')"));
+		assertTrue("ReportsView canViewTeamReport must check HR role", viewJs.contains("AuthApi.hasRole('HR')"));
+		assertTrue("ReportsView canViewTeamReport must check Administrator role", viewJs.contains("AuthApi.hasRole('Administrator')"));
+		assertTrue("ReportsView must conditionally render team report tab based on canViewTeamReport",
+				viewJs.contains("${this.canViewTeamReport() ? `") && viewJs.contains("id=\"report-type-team-btn\""));
+		assertTrue("ReportsView must redirect unauthorized team report access in render",
+				viewJs.contains("this.activeReportType === 'team' && !this.canViewTeamReport()"));
 	}
 }

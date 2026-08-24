@@ -306,8 +306,10 @@ public class EmployeeResource {
 				serviceHandler.doService(cert, new GetVacationAccountSummaryService(), arg);
 		if (result.isOk()) {
 			if (Boolean.TRUE.equals(summary)) {
-				VacationAccountSummaryDto dto = ChronivaroMapper.vacationSummaryToDto(result.summary, result.entries);
-				return Response.ok(ChronivaroRestHelper.createGson().toJson(dto), MediaType.APPLICATION_JSON).build();
+				try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
+					VacationAccountSummaryDto dto = ChronivaroMapper.vacationSummaryToDto(tx, result.summary, result.entries);
+					return Response.ok(ChronivaroRestHelper.createGson().toJson(dto), MediaType.APPLICATION_JSON).build();
+				}
 			}
 			return PaginationHelper.toPagedOrListResponse(result.entries, offset, limit, ChronivaroMapper::vacationEntryToDto);
 		}
