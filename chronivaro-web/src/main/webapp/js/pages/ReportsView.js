@@ -667,17 +667,31 @@ export default class ReportsView {
 
 		let entriesHtml = '';
 		if (!data.workEntries || data.workEntries.length === 0) {
-			entriesHtml = `<tr><td colspan="5" class="empty-cell">${I18n.t('times.noEntries')}</td></tr>`;
+			entriesHtml = `<tr><td colspan="7" class="empty-cell">${I18n.t('times.noEntries')}</td></tr>`;
 		} else {
-			entriesHtml = data.workEntries.map(entry => `
-				<tr>
-					<td>${Format.dateTime(entry.start)}</td>
-					<td>${entry.end ? Format.dateTime(entry.end) : `<span class="status-badge state-open">${I18n.t('reports.inProgress')}</span>`}</td>
-					<td><strong>${Format.duration(entry.durationMinutes)}</strong></td>
-					<td>${entry.durationMinutes} min</td>
-					<td>${entry.id}</td>
-				</tr>
-			`).join('');
+			entriesHtml = data.workEntries.map(entry => {
+				const sourceBadge = entry.source === 'MANUAL'
+						? `<span class="badge badge-manual" style="background: #fef3c7; color: #92400e; padding: 2px 6px; border-radius: 4px; font-size: 0.8rem; font-weight: 500;">${I18n.t('times.manualBadge')}</span>`
+						: `<span class="badge badge-timer" style="background: #e0e7ff; color: #3730a3; padding: 2px 6px; border-radius: 4px; font-size: 0.8rem; font-weight: 500;">${I18n.t('times.timerBadge')}</span>`;
+				const modifiedBadge = entry.modified
+						? `<span class="badge badge-modified" style="background: #fed7aa; color: #9a3412; padding: 2px 6px; border-radius: 4px; font-size: 0.8rem; font-weight: 500;">${I18n.t('times.modifiedBadge')}</span>`
+						: '-';
+				const creatorAttr = entry.createdBy
+						? `<span style="font-size: 0.75rem; color: #6b7280;">${entry.createdBy}</span>`
+						: '-';
+
+				return `
+					<tr>
+						<td>${Format.dateTime(entry.start)}</td>
+						<td>${entry.end ? Format.dateTime(entry.end) : `<span class="status-badge state-open">${I18n.t('reports.inProgress')}</span>`}</td>
+						<td><strong>${Format.duration(entry.durationMinutes)}</strong></td>
+						<td>${sourceBadge}</td>
+						<td>${modifiedBadge}</td>
+						<td>${creatorAttr}</td>
+						<td>${entry.id}</td>
+					</tr>
+				`;
+			}).join('');
 		}
 
 		let breaksHtml = '';
@@ -739,7 +753,9 @@ export default class ReportsView {
 								<th>${I18n.t('times.startTime')}</th>
 								<th>${I18n.t('times.endTime')}</th>
 								<th>${I18n.t('common.duration')}</th>
-								<th>${I18n.t('common.minutes')}</th>
+								<th>${I18n.t('times.source')}</th>
+								<th>${I18n.t('times.modified')}</th>
+								<th>${I18n.t('common.creator')}</th>
 								<th>ID</th>
 							</tr>
 						</thead>

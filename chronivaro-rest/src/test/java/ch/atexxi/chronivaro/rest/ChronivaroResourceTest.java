@@ -47,12 +47,41 @@ public class ChronivaroResourceTest extends AbstractChronivaroRestfulTest {
 				  "workingLocation": "OFFICE"
 				}
 				""";
+		String entryId;
 		try (Response response = target()
 				.path("chronivaro/v1/me/work-entries")
 				.request(MediaType.APPLICATION_JSON)
 				.header("Authorization", authToken)
 				.post(Entity.json(json))) {
 			assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+			com.google.gson.JsonObject obj = ChronivaroRestHelper.createGson().fromJson(response.readEntity(String.class), com.google.gson.JsonObject.class);
+			entryId = obj.get("id").getAsString();
+			assertEquals("MANUAL", obj.get("source").getAsString());
+			assertEquals("admin", obj.get("createdBy").getAsString());
+			org.junit.Assert.assertFalse(obj.get("modified").getAsBoolean());
+		}
+
+		// Employee updates work entry (start time, end time, comment, workingLocation)
+		String updateJson = """
+				{
+				  "start": "2025-01-01T08:30:00+01:00",
+				  "end": "2025-01-01T12:30:00+01:00",
+				  "comment": "Updated by employee",
+				  "workingLocation": "OFFICE"
+				}
+				""";
+		try (Response response = target()
+				.path("chronivaro/v1/me/work-entries/" + entryId)
+				.request(MediaType.APPLICATION_JSON)
+				.header("Authorization", authToken)
+				.put(Entity.json(updateJson))) {
+			assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+			com.google.gson.JsonObject obj = ChronivaroRestHelper.createGson().fromJson(response.readEntity(String.class), com.google.gson.JsonObject.class);
+			assertEquals(entryId, obj.get("id").getAsString());
+			assertEquals("MANUAL", obj.get("source").getAsString());
+			assertEquals("admin", obj.get("createdBy").getAsString());
+			org.junit.Assert.assertTrue(obj.get("modified").getAsBoolean());
+			assertEquals("Updated by employee", obj.get("comment").getAsString());
 		}
 
 		// Zero duration
@@ -76,8 +105,8 @@ public class ChronivaroResourceTest extends AbstractChronivaroRestfulTest {
 		// Conflicting morning location
 		String morningConflictJson = """
 				{
-				  "start": "2025-01-01T12:00:00+01:00",
-				  "end": "2025-01-01T12:30:00+01:00",
+				  "start": "2025-01-01T07:00:00+01:00",
+				  "end": "2025-01-01T08:00:00+01:00",
 				  "comment": "Conflicting morning location",
 				  "workingLocation": "HOME_OFFICE"
 				}

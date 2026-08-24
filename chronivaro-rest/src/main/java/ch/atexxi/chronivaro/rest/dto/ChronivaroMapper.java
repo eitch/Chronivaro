@@ -13,6 +13,7 @@ import java.time.ZonedDateTime;
 import java.util.List;
 
 import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
+import static ch.atexxi.chronivaro.core.model.ChronivaroVersionHelper.getVersion;
 
 public class ChronivaroMapper {
 
@@ -35,10 +36,13 @@ public class ChronivaroMapper {
 			durationMinutes = (int) Duration.between(start, end).toMinutes();
 		}
 
+		boolean modified = getVersion(workEntry) > 0;
+
 		return new WorkEntryDto(workEntry.getId(), workEntry.getRelationId(PARAM_EMPLOYEE), start, end, durationMinutes,
 				workEntry.getString(PARAM_SOURCE), workEntry.getString(PARAM_COMMENT),
 				workEntry.getString(PARAM_CREATED_BY),
-				WorkingLocation.fromValue(workEntry.getString(PARAM_WORKING_LOCATION)));
+				WorkingLocation.fromValue(workEntry.getString(PARAM_WORKING_LOCATION)),
+				modified);
 	}
 
 	public static AbsenceDto toDto(StrolchTransaction tx, Resource absence, Resource type) {
@@ -96,7 +100,7 @@ public class ChronivaroMapper {
 				summary.getBalance(), summary.workingLocation(), summary
 				.workEntries()
 				.stream()
-				.map(e -> new WorkEntryRangeDto(e.id(), e.start(), e.end(), e.durationMinutes()))
+				.map(e -> new WorkEntryRangeDto(e.id(), e.start(), e.end(), e.durationMinutes(), e.source(), e.createdBy(), e.modified()))
 				.toList(), summary
 				.breaks()
 				.stream()

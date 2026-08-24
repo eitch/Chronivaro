@@ -676,7 +676,19 @@ export default class ApprovalsView {
 
 				let entriesSummary = '-';
 				if (day.workEntries && day.workEntries.length > 0) {
-					entriesSummary = day.workEntries.map(e => `${e.start}-${e.end} (${Format.duration(e.durationMinutes)})`).join(', ');
+					entriesSummary = day.workEntries.map(e => {
+						let tag = `${e.start}-${e.end} (${Format.duration(e.durationMinutes)})`;
+						const badges = [];
+						if (e.source === 'MANUAL') badges.push(I18n.t('times.manualBadge'));
+						if (e.modified) badges.push(I18n.t('times.modifiedBadge'));
+						if (badges.length > 0) {
+							tag += ` [${badges.join(', ')}]`;
+						}
+						if (e.createdBy && period && e.createdBy !== period.employeeId && e.createdBy !== period.username && e.createdBy !== (period.employeeName || '')) {
+							tag += ` (${I18n.t('times.createdBy', { user: e.createdBy })})`;
+						}
+						return tag;
+					}).join(', ');
 				}
 
 				return `

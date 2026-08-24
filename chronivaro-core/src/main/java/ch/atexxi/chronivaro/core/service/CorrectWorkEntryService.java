@@ -48,6 +48,10 @@ public class CorrectWorkEntryService
 				throw new IllegalArgumentException("Work entry end time must be after start time!");
 			}
 
+			if (!arg.start.toLocalDate().equals(arg.end.toLocalDate())) {
+				throw new IllegalArgumentException("Work entry must start and end on the same day!");
+			}
+
 			boolean isAdminOrHr = tx.getPrivilegeContext().hasRole(ROLE_HR)
 					|| tx.getPrivilegeContext().hasRole(ROLE_ADMIN)
 					|| tx.getPrivilegeContext().hasRole(ROLE_ADMINISTRATOR);
@@ -57,15 +61,6 @@ public class CorrectWorkEntryService
 				boolean isSelf = callerEmployee.isPresent() && callerEmployee.get().getId().equals(employeeId);
 
 				if (isSelf) {
-					// Regular employee self-service restrictions:
-					// 1. Cannot change start time
-					if (!arg.start.isEqual(oldStart)) {
-						throw new StrolchModelException("Employees are only permitted to shorten work entries and cannot modify the start time.");
-					}
-					// 2. Cannot extend end time
-					if (oldEnd != null && arg.end.isAfter(oldEnd)) {
-						throw new StrolchModelException("Employees can only shorten work entries to an earlier time of day, not extend them.");
-					}
 					if (oldEnd == null) {
 						ZonedDateTime now = ZonedDateTime.now(ChronivaroModelHelper.getEmployeeTimezone(callerEmployee.get()));
 						if (arg.end.isAfter(now)) {
@@ -98,7 +93,9 @@ public class CorrectWorkEntryService
 			workEntry.setDate(PARAM_START, arg.start);
 			workEntry.setDate(PARAM_END, arg.end);
 			workEntry.setString(PARAM_COMMENT, arg.comment != null ? arg.comment.trim() : "");
-			workEntry.setString(PARAM_SOURCE, SOURCE_MANUAL);
+			if (!workEntry.hasParameter(PARAM_SOURCE) || workEntry.getString(PARAM_SOURCE).isBlank()) {
+				workEntry.setString(PARAM_SOURCE, SOURCE_MANUAL);
+			}
 			workEntry.setString(PARAM_WORKING_LOCATION, arg.workingLocation == null ? "" : arg.workingLocation.name());
 
 			Resource scheduleVersion = ScheduleHelper.findScheduleVersion(tx, employeeId, arg.start.toLocalDate())
@@ -109,7 +106,7 @@ public class CorrectWorkEntryService
 			bumpVersion(workEntry, tx);
 			tx.update(workEntry);
 
-			String auditComment = arg.comment != null && !arg.comment.isBlank() ? arg.comment : "Work entry corrected/shortened";
+			String auditComment = arg.comment != null && !arg.comment.isBlank() ? arg.comment : "Work entry corrected";
 			ChronivaroAuditHelper.audit(tx, TYPE_WORK_ENTRY, workEntry.getId(), AUDIT_ACTION_CORRECT, auditComment,
 					"Corrected work entry " + workEntry.getId() + " for employee " + employeeId + " (start: " + oldStart
 							+ " -> " + arg.start + ", end: " + oldEnd + " -> " + arg.end + ")");

@@ -99,6 +99,7 @@
     "amount": "Menge",
     "effectiveDate": "Gültigkeitsdatum",
     "createdBy": "Erstellt von",
+    "creator": "Ersteller",
     "reason": "Begründung",
     "rejectionReason": "Ablehnungsgrund",
     "error": "Fehler",
@@ -227,7 +228,13 @@
     "shortenOnlyError": "Als Mitarbeiter können Sie Buchungen nur verkürzen und Startzeiten nicht verändern.",
     "shortenTime": "Verkürzte Endzeit",
     "totalDuration": "Gesamtdauer",
-    "entriesCount": "Erfasste Einträge"
+    "entriesCount": "Erfasste Einträge",
+    "manualBadge": "Manuell",
+    "modifiedBadge": "Bearbeitet",
+    "timerBadge": "Timer",
+    "createdBy": "Erstellt von {user}",
+    "source": "Quelle",
+    "modified": "Bearbeitet"
   },
   "absences": {
     "title": "Abwesenheiten & Ferien",

@@ -55,14 +55,17 @@ public class CsvExportHelper {
 
 		// Work Entries Section
 		sb.append("WorkEntries:\n");
-		sb.append("WorkEntryId,StartTime,EndTime,DurationMinutes,FormattedDuration\n");
+		sb.append("WorkEntryId,StartTime,EndTime,DurationMinutes,FormattedDuration,Source,CreatedBy,Modified\n");
 		if (summary.workEntries() != null) {
 			for (WorkEntryRange entry : summary.workEntries()) {
 				sb.append(escapeCsv(entry.id())).append(",");
 				sb.append(escapeCsv(entry.start())).append(",");
 				sb.append(escapeCsv(entry.end())).append(",");
 				sb.append(entry.durationMinutes()).append(",");
-				sb.append(escapeCsv(formatDuration(entry.durationMinutes()))).append("\n");
+				sb.append(escapeCsv(formatDuration(entry.durationMinutes()))).append(",");
+				sb.append(escapeCsv(entry.source() != null ? entry.source() : "")).append(",");
+				sb.append(escapeCsv(entry.createdBy() != null ? entry.createdBy() : "")).append(",");
+				sb.append(entry.modified()).append("\n");
 			}
 		}
 		sb.append("\n");

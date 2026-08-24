@@ -16,6 +16,7 @@ import li.strolch.utils.dbc.DBC;
 import java.time.ZonedDateTime;
 
 import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
+import static ch.atexxi.chronivaro.core.model.ChronivaroVersionHelper.initVersion;
 
 public class StartTimerService extends AbstractService<StartTimerService.Argument, ServiceResult> {
 
@@ -51,6 +52,8 @@ public class StartTimerService extends AbstractService<StartTimerService.Argumen
 			Resource scheduleVersion = tx.getResourceBy(TYPE_EMPLOYMENT_SCHEDULE, workDay.getRelationId(PARAM_SCHEDULE),
 					true);
 			workEntry.setRelation(PARAM_SCHEDULE, scheduleVersion);
+
+			initVersion(workEntry, tx);
 
 			WorkEntryHelper.validateNoOverlap(tx, employee.getId(), now, null, null);
 			WorkEntryHelper.validateWorkingLocation(tx, employee.getId(), now, null,

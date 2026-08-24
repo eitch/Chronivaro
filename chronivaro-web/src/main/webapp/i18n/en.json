@@ -99,6 +99,7 @@
     "amount": "Amount",
     "effectiveDate": "Effective Date",
     "createdBy": "Created By",
+    "creator": "Creator",
     "reason": "Reason",
     "rejectionReason": "Rejection Reason",
     "error": "Error",
@@ -227,7 +228,13 @@
     "shortenOnlyError": "As an employee you can only shorten entries and cannot modify start times.",
     "shortenTime": "Shortened End Time",
     "totalDuration": "Total Duration",
-    "entriesCount": "Recorded Entries"
+    "entriesCount": "Recorded Entries",
+    "manualBadge": "Manual",
+    "modifiedBadge": "Modified",
+    "timerBadge": "Timer",
+    "createdBy": "Created by {user}",
+    "source": "Source",
+    "modified": "Modified"
   },
   "absences": {
     "title": "Absences & Vacation",

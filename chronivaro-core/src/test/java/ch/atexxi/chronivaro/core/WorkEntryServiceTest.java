@@ -1,10 +1,15 @@
 package ch.atexxi.chronivaro.core;
 
 import ch.atexxi.chronivaro.core.model.ChronivaroModelHelper;
+import ch.atexxi.chronivaro.core.model.ChronivaroVersionHelper;
+import ch.atexxi.chronivaro.core.model.DaySummary;
 import ch.atexxi.chronivaro.core.model.WorkEntryHelper;
+import ch.atexxi.chronivaro.core.model.WorkEntryRange;
 import ch.atexxi.chronivaro.core.model.WorkingLocation;
 import ch.atexxi.chronivaro.core.service.AddWorkEntryService;
 import ch.atexxi.chronivaro.core.service.CorrectWorkEntryService;
+import ch.atexxi.chronivaro.core.service.DaySummaryService;
+import ch.atexxi.chronivaro.core.service.MonthSummaryService;
 import ch.atexxi.chronivaro.core.service.RemoveWorkEntryService;
 import ch.atexxi.chronivaro.core.service.StartTimerService;
 import ch.atexxi.chronivaro.core.service.StopTimerService;
@@ -181,8 +186,8 @@ public class WorkEntryServiceTest {
 	}
 
 	@Test
-	public void shouldRejectEmployeeExtendingWorkEntry() {
-		String employeeId = "emp-extend-reject";
+	public void shouldAllowEmployeeToExtendWorkEntryInOpenPeriod() {
+		String employeeId = "emp-extend-test";
 		String username = "emp_extend_user";
 
 		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
@@ -220,22 +225,28 @@ public class WorkEntryServiceTest {
 			workEntryId = we.getId();
 		}
 
-		// Employee attempts to extend to 17:00
+		// Employee extends to 17:00
 		ZonedDateTime extendedEnd = ZonedDateTime.parse("2026-03-11T17:00:00+01:00[Europe/Zurich]");
 		CorrectWorkEntryService.CorrectWorkEntryArgument correctArg = new CorrectWorkEntryService.CorrectWorkEntryArgument();
 		correctArg.workEntryId = workEntryId;
 		correctArg.start = start;
 		correctArg.end = extendedEnd;
-		correctArg.comment = "Attempting to extend";
+		correctArg.comment = "Extended work hours";
 
 		ServiceResult correctRes = serviceHandler.doService(empCert, new CorrectWorkEntryService(), correctArg);
-		assertFalse(correctRes.isOk());
-		assertTrue(correctRes.getMessage().contains("Employees can only shorten work entries"));
+		assertTrue(correctRes.getMessage(), correctRes.isOk());
+
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
+			Resource we = tx.getResourceBy(TYPE_WORK_ENTRY, workEntryId, true);
+			assertTrue(we.getDate(PARAM_END).isEqual(extendedEnd));
+			assertEquals("Extended work hours", we.getString(PARAM_COMMENT));
+			assertTrue(ChronivaroVersionHelper.getVersion(we) > 0);
+		}
 	}
 
 	@Test
-	public void shouldRejectEmployeeModifyingStartTime() {
-		String employeeId = "emp-start-reject";
+	public void shouldAllowEmployeeToModifyStartTimeInOpenPeriod() {
+		String employeeId = "emp-start-mod";
 		String username = "emp_start_user";
 
 		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
@@ -273,17 +284,25 @@ public class WorkEntryServiceTest {
 			workEntryId = we.getId();
 		}
 
-		// Employee attempts to change start time to 08:00
+		// Employee changes start time to 08:00
 		ZonedDateTime earlierStart = ZonedDateTime.parse("2026-03-12T08:00:00+01:00[Europe/Zurich]");
 		CorrectWorkEntryService.CorrectWorkEntryArgument correctArg = new CorrectWorkEntryService.CorrectWorkEntryArgument();
 		correctArg.workEntryId = workEntryId;
 		correctArg.start = earlierStart;
 		correctArg.end = end;
-		correctArg.comment = "Attempting earlier start";
+		correctArg.comment = "Arrived earlier";
+		correctArg.workingLocation = WorkingLocation.HOME_OFFICE;
 
 		ServiceResult correctRes = serviceHandler.doService(empCert, new CorrectWorkEntryService(), correctArg);
-		assertFalse(correctRes.isOk());
-		assertTrue(correctRes.getMessage().contains("Employees are only permitted to shorten work entries and cannot modify the start time"));
+		assertTrue(correctRes.getMessage(), correctRes.isOk());
+
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
+			Resource we = tx.getResourceBy(TYPE_WORK_ENTRY, workEntryId, true);
+			assertTrue(we.getDate(PARAM_START).isEqual(earlierStart));
+			assertEquals(WorkingLocation.HOME_OFFICE.name(), we.getString(PARAM_WORKING_LOCATION));
+			assertEquals("Arrived earlier", we.getString(PARAM_COMMENT));
+			assertTrue(ChronivaroVersionHelper.getVersion(we) > 0);
+		}
 	}
 
 	@Test
@@ -491,5 +510,134 @@ public class WorkEntryServiceTest {
 				new StartTimerService.Argument(employeeId, WorkingLocation.OFFICE));
 		assertFalse(result2.isOk());
 		assertTrue(result2.getMessage().contains("An active work entry already exists"));
+	}
+
+	@Test
+	public void shouldRejectCorrectionWithInvalidTimesOrAcrossDays() {
+		String employeeId = "emp-invalid-corr";
+		String username = "emp_inv_user";
+
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
+			Resource employee = createEmployee(tx, employeeId, "Invalid Corr Employee");
+			UserRep userRep = new UserRep(null, username, "Inv", "Employee", UserState.ENABLED, emptySet(),
+					Set.of(ROLE_EMPLOYEE, ROLE_MODEL_ACCESSOR), Locale.of("de", "CH"), emptyMap(), null);
+			UserRep addedUser = runtimeMock.getPrivilegeHandler().getPrivilegeHandler().addUser(certificate, userRep, username.toCharArray());
+
+			employee.setString(PARAM_USERNAME, addedUser.getUsername());
+			employee.setString(PARAM_USER_ID, addedUser.getUserId());
+			tx.update(employee);
+			tx.commitOnClose();
+		}
+
+		Certificate empCert = runtimeMock.login(username, username);
+		ServiceHandler serviceHandler = runtimeMock.getServiceHandler();
+
+		ZonedDateTime start = ZonedDateTime.parse("2026-03-14T08:00:00+01:00[Europe/Zurich]");
+		ZonedDateTime end = ZonedDateTime.parse("2026-03-14T16:00:00+01:00[Europe/Zurich]");
+
+		AddWorkEntryService.AddWorkEntryArgument addArg = new AddWorkEntryService.AddWorkEntryArgument();
+		addArg.employeeId = employeeId;
+		addArg.start = start;
+		addArg.end = end;
+		addArg.workingLocation = WorkingLocation.OFFICE;
+		ServiceResult addRes = serviceHandler.doService(certificate, new AddWorkEntryService(), addArg);
+		assertTrue(addRes.getMessage(), addRes.isOk());
+
+		String workEntryId;
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
+			Resource we = tx.streamResources(TYPE_WORK_ENTRY)
+					.filter(e -> e.getRelationId(PARAM_EMPLOYEE).equals(employeeId))
+					.findFirst().orElseThrow();
+			workEntryId = we.getId();
+		}
+
+		// 1. End before/equal to start
+		CorrectWorkEntryService.CorrectWorkEntryArgument corrArg1 = new CorrectWorkEntryService.CorrectWorkEntryArgument();
+		corrArg1.workEntryId = workEntryId;
+		corrArg1.start = start;
+		corrArg1.end = start;
+		ServiceResult res1 = serviceHandler.doService(empCert, new CorrectWorkEntryService(), corrArg1);
+		assertFalse(res1.isOk());
+		assertTrue(res1.getMessage().contains("must be after start time"));
+
+		// 2. Cross-day start and end
+		CorrectWorkEntryService.CorrectWorkEntryArgument corrArg2 = new CorrectWorkEntryService.CorrectWorkEntryArgument();
+		corrArg2.workEntryId = workEntryId;
+		corrArg2.start = start;
+		corrArg2.end = ZonedDateTime.parse("2026-03-15T09:00:00+01:00[Europe/Zurich]");
+		ServiceResult res2 = serviceHandler.doService(empCert, new CorrectWorkEntryService(), corrArg2);
+		assertFalse(res2.isOk());
+		assertTrue(res2.getMessage().contains("must start and end on the same day"));
+	}
+
+	@Test
+	public void shouldExposeModifiedAndCreatorInDaySummaryAndMonthSummary() {
+		String employeeId = "emp-summary-meta";
+		String username = "emp_summary_user";
+
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
+			Resource employee = createEmployee(tx, employeeId, "Summary Meta Employee");
+			UserRep userRep = new UserRep(null, username, "Summary", "Meta", UserState.ENABLED, emptySet(),
+					Set.of(ROLE_EMPLOYEE, ROLE_MODEL_ACCESSOR), Locale.of("de", "CH"), emptyMap(), null);
+			UserRep addedUser = runtimeMock.getPrivilegeHandler().getPrivilegeHandler().addUser(certificate, userRep, username.toCharArray());
+
+			employee.setString(PARAM_USERNAME, addedUser.getUsername());
+			employee.setString(PARAM_USER_ID, addedUser.getUserId());
+			tx.update(employee);
+			tx.commitOnClose();
+		}
+
+		ServiceHandler serviceHandler = runtimeMock.getServiceHandler();
+
+		// Created by admin on behalf of employee
+		ZonedDateTime start = ZonedDateTime.parse("2026-03-15T08:00:00+01:00[Europe/Zurich]");
+		ZonedDateTime end = ZonedDateTime.parse("2026-03-15T16:00:00+01:00[Europe/Zurich]");
+
+		AddWorkEntryService.AddWorkEntryArgument addArg = new AddWorkEntryService.AddWorkEntryArgument();
+		addArg.employeeId = employeeId;
+		addArg.start = start;
+		addArg.end = end;
+		addArg.workingLocation = WorkingLocation.OFFICE;
+		ServiceResult addRes = serviceHandler.doService(certificate, new AddWorkEntryService(), addArg);
+		assertTrue(addRes.getMessage(), addRes.isOk());
+
+		// Day summary before correction: source = MANUAL, createdBy = admin, modified = false
+		DaySummaryService.DaySummaryArgument dayArg = new DaySummaryService.DaySummaryArgument();
+		dayArg.employeeId = employeeId;
+		dayArg.date = start.toLocalDate();
+		DaySummaryService.DaySummaryResult dayRes = serviceHandler.doService(certificate, new DaySummaryService(), dayArg);
+		assertTrue(dayRes.getMessage(), dayRes.isOk());
+		assertEquals(1, dayRes.daySummary.workEntries().size());
+		WorkEntryRange rangeBefore = dayRes.daySummary.workEntries().get(0);
+		assertEquals(SOURCE_MANUAL, rangeBefore.source());
+		assertEquals("admin", rangeBefore.createdBy());
+		assertFalse(rangeBefore.modified());
+
+		// Now correct the work entry
+		CorrectWorkEntryService.CorrectWorkEntryArgument corrArg = new CorrectWorkEntryService.CorrectWorkEntryArgument();
+		corrArg.workEntryId = rangeBefore.id();
+		corrArg.start = ZonedDateTime.parse("2026-03-15T08:30:00+01:00[Europe/Zurich]");
+		corrArg.end = ZonedDateTime.parse("2026-03-15T16:30:00+01:00[Europe/Zurich]");
+		ServiceResult corrRes = serviceHandler.doService(certificate, new CorrectWorkEntryService(), corrArg);
+		assertTrue(corrRes.getMessage(), corrRes.isOk());
+
+		// Day summary after correction: modified = true
+		DaySummaryService.DaySummaryResult dayResAfter = serviceHandler.doService(certificate, new DaySummaryService(), dayArg);
+		assertTrue(dayResAfter.getMessage(), dayResAfter.isOk());
+		WorkEntryRange rangeAfter = dayResAfter.daySummary.workEntries().get(0);
+		assertTrue(rangeAfter.modified());
+		assertEquals("admin", rangeAfter.createdBy());
+
+		// Month summary
+		MonthSummaryService.MonthSummaryArgument monthArg = new MonthSummaryService.MonthSummaryArgument();
+		monthArg.employeeId = employeeId;
+		monthArg.yearMonth = java.time.YearMonth.from(start);
+		MonthSummaryService.MonthSummaryResult monthRes = serviceHandler.doService(certificate, new MonthSummaryService(), monthArg);
+		assertTrue(monthRes.getMessage(), monthRes.isOk());
+		DaySummary dayInMonth = monthRes.monthSummary.daySummaries().stream()
+				.filter(ds -> ds.date().equals(start.toLocalDate()))
+				.findFirst().orElseThrow();
+		assertEquals(1, dayInMonth.workEntries().size());
+		assertTrue(dayInMonth.workEntries().get(0).modified());
 	}
 }

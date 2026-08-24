@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static ch.atexxi.chronivaro.core.model.ChronivaroConstants.*;
+import static ch.atexxi.chronivaro.core.model.ChronivaroVersionHelper.getVersion;
 
 public class DaySummaryService
 		extends AbstractService<DaySummaryService.DaySummaryArgument, DaySummaryService.DaySummaryResult> {
@@ -82,8 +83,12 @@ public class DaySummaryService
 				int duration = (int) Duration.between(effectiveStart, effectiveEnd).toMinutes();
 				actualMinutes += duration;
 
+				String source = entry.hasParameter(PARAM_SOURCE) ? entry.getString(PARAM_SOURCE) : null;
+				String createdBy = entry.hasParameter(PARAM_CREATED_BY) ? entry.getString(PARAM_CREATED_BY) : null;
+				boolean modified = getVersion(entry) > 0;
+
 				ranges.add(new WorkEntryRange(entry.getId(), effectiveStart.format(timeFormatter),
-						isActive ? "..." : effectiveEnd.format(timeFormatter), duration));
+						isActive ? "..." : effectiveEnd.format(timeFormatter), duration, source, createdBy, modified));
 
 				if (lastEnd != null && start.isAfter(lastEnd)) {
 					int breakDuration = (int) Duration.between(lastEnd, start).toMinutes();

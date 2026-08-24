@@ -132,6 +132,11 @@ public class PeriodHelper {
 						weObj.addProperty("start", we.start());
 						weObj.addProperty("end", we.end());
 						weObj.addProperty("durationMinutes", we.durationMinutes());
+						if (we.source() != null)
+							weObj.addProperty("source", we.source());
+						if (we.createdBy() != null)
+							weObj.addProperty("createdBy", we.createdBy());
+						weObj.addProperty("modified", we.modified());
 						weArray.add(weObj);
 					}
 					dayJson.add("workEntries", weArray);
@@ -194,7 +199,10 @@ public class PeriodHelper {
 										weObj.has("id") ? weObj.get("id").getAsString() : "",
 										weObj.has("start") ? weObj.get("start").getAsString() : "",
 										weObj.has("end") ? weObj.get("end").getAsString() : "",
-										weObj.has("durationMinutes") ? weObj.get("durationMinutes").getAsInt() : 0
+										weObj.has("durationMinutes") ? weObj.get("durationMinutes").getAsInt() : 0,
+										weObj.has("source") ? weObj.get("source").getAsString() : null,
+										weObj.has("createdBy") ? weObj.get("createdBy").getAsString() : null,
+										weObj.has("modified") && weObj.get("modified").getAsBoolean()
 								));
 							}
 						}

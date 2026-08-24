@@ -93,12 +93,13 @@ export default class MyTimesView {
 							<th>${I18n.t('times.endTime')}</th>
 							<th>${I18n.t('common.duration')}</th>
 							<th>${I18n.t('times.workingLocation')}</th>
+							<th>${I18n.t('times.source')}</th>
 							<th>${I18n.t('common.comment')}</th>
 							<th style="text-align: right;">${I18n.t('common.actions')}</th>
 						</tr>
 					</thead>
 					<tbody id="work-entries-tbody">
-						<tr><td colspan="6" style="text-align: center; padding: 2rem;">${I18n.t('common.loading')}</td></tr>
+						<tr><td colspan="7" style="text-align: center; padding: 2rem;">${I18n.t('common.loading')}</td></tr>
 					</tbody>
 				</table>
 			</div>
@@ -303,7 +304,7 @@ export default class MyTimesView {
 				statTotalDuration.textContent = Format.duration(totalMinutes);
 
 				if (this.workEntries.length === 0) {
-					tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 2rem;">${I18n.t('times.noEntries')}</td></tr>`;
+					tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 2rem;">${I18n.t('times.noEntries')}</td></tr>`;
 					return;
 				}
 
@@ -316,6 +317,19 @@ export default class MyTimesView {
 							? Format.dateTime(entry.end)
 							: `<span class="badge badge-working">${I18n.t('common.running')}</span>`;
 
+					const sourceBadge = entry.source === 'MANUAL'
+							? `<span class="badge badge-manual" style="background: #fef3c7; color: #92400e; padding: 2px 6px; border-radius: 4px; font-size: 0.8rem; font-weight: 500; margin-right: 4px;">${I18n.t('times.manualBadge')}</span>`
+							: `<span class="badge badge-timer" style="background: #e0e7ff; color: #3730a3; padding: 2px 6px; border-radius: 4px; font-size: 0.8rem; font-weight: 500; margin-right: 4px;">${I18n.t('times.timerBadge')}</span>`;
+					const modifiedBadge = entry.modified
+							? `<span class="badge badge-modified" style="background: #fed7aa; color: #9a3412; padding: 2px 6px; border-radius: 4px; font-size: 0.8rem; font-weight: 500; margin-right: 4px;">${I18n.t('times.modifiedBadge')}</span>`
+							: '';
+
+					const targetEmp = this.employees.find(e => e.id === (this.selectedEmployeeId || entry.employeeId));
+					const targetUsername = targetEmp ? targetEmp.username : AuthApi.getUsername();
+					const creatorAttr = (entry.createdBy && entry.createdBy !== targetUsername)
+							? `<div style="font-size: 0.75rem; color: #6b7280; margin-top: 2px;">${I18n.t('times.createdBy', { user: entry.createdBy })}</div>`
+							: '';
+
 					const canFullManage = this.canManage;
 
 					row.innerHTML = `
@@ -323,9 +337,13 @@ export default class MyTimesView {
 						<td>${endText}</td>
 						<td>${Format.duration(entry.durationMinutes)}</td>
 						<td>${locationText}</td>
+						<td>
+							<div>${sourceBadge}${modifiedBadge}</div>
+							${creatorAttr}
+						</td>
 						<td>${entry.comment || ''}</td>
 						<td style="text-align: right; white-space: nowrap;">
-							<button class="secondary-btn edit-entry-btn" style="margin-right: 0.5rem;" title="${canFullManage ? I18n.t('times.editEntry') : I18n.t('times.shortenEntry')}">${I18n.t('common.edit')}</button>
+							<button class="secondary-btn edit-entry-btn" style="margin-right: 0.5rem;" title="${I18n.t('times.editEntry')}">${I18n.t('common.edit')}</button>
 							${canFullManage ? `
 							<button class="danger-btn delete-entry-btn" title="${I18n.t('times.deleteEntry')}">${I18n.t('common.delete')}</button>
 							` : ''}
@@ -336,36 +354,20 @@ export default class MyTimesView {
 					if (editBtn) {
 						editBtn.addEventListener('click', () => {
 							this.currentEditingEntry = entry;
-							const isManagerEdit = this.canManage;
 
-							editModalTitle.textContent = isManagerEdit ? I18n.t('times.editDialogTitle') : I18n.t('times.shortenDialogTitle');
-							editHelpText.textContent = isManagerEdit ? I18n.t('times.editHelpText') : I18n.t('times.shortenHelpText');
-							editEndLabel.textContent = isManagerEdit ? `${I18n.t('times.endTime')} *:` : `${I18n.t('times.shortenTime')}:`;
+							editModalTitle.textContent = I18n.t('times.editDialogTitle');
+							editHelpText.textContent = I18n.t('times.editHelpText');
+							editEndLabel.textContent = `${I18n.t('times.endTime')} *:`;
 
 							editStartInput.value = toLocalDateTimeInputString(entry.start);
-							if (isManagerEdit) {
-								editStartInput.removeAttribute('readonly');
-								editStartInput.removeAttribute('disabled');
-								editStartInput.style.background = '';
-							} else {
-								editStartInput.setAttribute('readonly', 'true');
-								editStartInput.setAttribute('disabled', 'true');
-								editStartInput.style.background = '#f0f0f0';
-							}
+							editStartInput.removeAttribute('readonly');
+							editStartInput.removeAttribute('disabled');
+							editStartInput.style.background = '';
 
 							const endIso = entry.end || new Date().toISOString();
 							editEndInput.value = toLocalDateTimeInputString(endIso);
-							if (!isManagerEdit) {
-								editEndInput.min = toLocalDateTimeInputString(entry.start);
-								if (entry.end) {
-									editEndInput.max = toLocalDateTimeInputString(entry.end);
-								} else {
-									editEndInput.max = toLocalDateTimeInputString(new Date().toISOString());
-								}
-							} else {
-								editEndInput.removeAttribute('min');
-								editEndInput.removeAttribute('max');
-							}
+							editEndInput.removeAttribute('min');
+							editEndInput.removeAttribute('max');
 
 							editLocationSelect.value = entry.workingLocation || '';
 							editCommentInput.value = entry.comment || '';
@@ -479,14 +481,6 @@ export default class MyTimesView {
 					}
 
 					const isManagerEdit = this.canManage;
-
-					if (!isManagerEdit && this.currentEditingEntry.end) {
-						const originalEndDate = new Date(this.currentEditingEntry.end);
-						if (endDate > originalEndDate) {
-							NotificationDialog.error(I18n.t('times.shortenOnlyError'));
-							return;
-						}
-					}
 
 					const payload = {
 						id: this.currentEditingEntry.id,

@@ -82,8 +82,25 @@ public class ChronivaroResource {
 			employeeId = employee.get().getId();
 		}
 
-		ZonedDateTime from = ZonedDateTime.parse(fromStr);
-		ZonedDateTime to = ZonedDateTime.parse(toStr);
+		ZonedDateTime from = null;
+		if (isNotEmpty(fromStr)) {
+			try {
+				from = fromStr.contains("T") ? ZonedDateTime.parse(fromStr) : LocalDate.parse(fromStr).atStartOfDay(ZoneId.of("UTC"));
+			} catch (Exception e) {
+				return ChronivaroRestHelper.toErrorResponse(Response.Status.BAD_REQUEST, "INVALID_PARAMETER",
+						"Invalid 'from' date format: " + fromStr);
+			}
+		}
+
+		ZonedDateTime to = null;
+		if (isNotEmpty(toStr)) {
+			try {
+				to = toStr.contains("T") ? ZonedDateTime.parse(toStr) : LocalDate.parse(toStr).atTime(23, 59, 59, 999999999).atZone(ZoneId.of("UTC"));
+			} catch (Exception e) {
+				return ChronivaroRestHelper.toErrorResponse(Response.Status.BAD_REQUEST, "INVALID_PARAMETER",
+						"Invalid 'to' date format: " + toStr);
+			}
+		}
 
 		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
 			List<Resource> entries = WorkEntryHelper.findWorkEntries(tx, employeeId, from, to);
