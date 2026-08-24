@@ -189,6 +189,23 @@ Build, tag, and push to the remote registry (`repo.strolch.li`):
 ./build-and-push-docker.sh
 ```
 
+### Packaging Runtime Distribution Archive (`runtime.tar.gz`)
+
+To package a clean, ready-to-use runtime environment tarball for deployment:
+
+```bash
+# Using the shell script
+./build-runtime-tarball.sh -o runtime.tar.gz
+
+# Or using the Java class directly
+java -cp "chronivaro-app/target/*" ch.atexxi.chronivaro.app.RuntimeArchiveGenerator -s runtime -o runtime.tar.gz
+```
+
+The packaging process automatically:
+- Copies all necessary configuration and model files from `runtime/`.
+- Excludes temporary/session files (`runtime/temp/`) and dbStore directories (`runtime/data/dbStore/`).
+- Sanitizes `PrivilegeUsers.xml` to remove personal user accounts while preserving system accounts (`State=SYSTEM`) and the `admin` user.
+
 ### Production Deployment with Docker Compose
 
 1. Prepare directory structure on host:

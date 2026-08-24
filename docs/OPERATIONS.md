@@ -129,14 +129,20 @@ chronivaro/
 
 Before running `docker compose up -d`, prepare the runtime directory on the host:
 
-1. **Create the Host Directory Hierarchy**:
+1. **Option A: Unpack Prebuilt Runtime Archive (`runtime.tar.gz`)**:
+   If you have generated or obtained `runtime.tar.gz`, simply extract it:
+   ```bash
+   mkdir -p chronivaro && cd chronivaro
+   tar -xzvf /path/to/runtime.tar.gz
+   ```
+   This creates a clean `runtime/` directory containing all configuration and data files with filtered user accounts (`admin` and `SYSTEM` users only).
+
+2. **Option B: Manual Runtime Directory Setup**:
    ```bash
    mkdir -p chronivaro/runtime/{config,data,temp}
    cd chronivaro
    ```
-
-2. **Populate Initial Configuration and Model Files**:
-   Copy the seed configuration and data files from the Chronivaro release package or repository (`Chronivaro/runtime/`) into `./runtime/`:
+   Copy the seed configuration and data files from the Chronivaro repository (`Chronivaro/runtime/`) into `./runtime/`:
    - Copy `runtime/config/*` to `./runtime/config/`
    - Copy `runtime/data/*` to `./runtime/data/`
 
