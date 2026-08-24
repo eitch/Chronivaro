@@ -122,8 +122,9 @@ Do not continue with the next numbered task automatically.
 ### G. Employee Inactivation vs Physical Deletion (Sections 6.1, 9.8, 10.5, 13.2)
 - **Clarification:** In accordance with Section 6.1 and 9.8, `Employee` records must never be physically deleted once created in order to maintain historical audit trails, time records, and vacation balances. User deletion for linked employees performs a soft deactivation (`active = false`), and `DELETE /employees/{id}` is treated as soft deactivation. Full reactivation is handled via `POST /employees/{id}/reactivate`.
 
-### H. Supervisor and HR Employee Work Entry Modifications (Sections 3.2, 3.3, 6.4, 9.3, 12.1 #2, 13.2, 20)
-- **Clarification:** While regular employees may only shorten their own unsubmitted/open work entries and edit comments, supervisors (for assigned team members) and HR / Administrators (organization-wide) must be able to view, manually create (`POST`), fully edit (`PUT` start, end, location, comment), and delete (`DELETE`) work entries for employees within open/unlocked periods. All supervisor/HR modifications generate structured, immutable audit log events recording old/new values, reasons, and the acting user.
+### H. Work Entry Modifications, Highlighting, and Creator Attribution (Sections 3.1–3.3, 6.4, 9.3, 11, 12.1 #2, 13.2, 20)
+- **Clarification:** Employees can modify their own work entries (start time, end time, working location, comment) within open/unlocked periods. Supervisors (for assigned team members) and HR / Administrators (organization-wide) must be able to view, manually create (`POST`), fully edit (`PUT` start, end, location, comment), and delete (`DELETE`) work entries for employees within open/unlocked periods. All supervisor/HR and employee modifications generate structured, immutable audit log events recording old/new values, reasons, and the acting user.
+- **Highlighting & Creator Attribution:** All modified (subsequently edited) and manually created work entries (`source = MANUAL` or modified status) must be visually highlighted in the UI (e.g. badges or distinct styling in Day, Week, and Month views, as well as Approvals inspection and Reports). If an entry was not created by the employee (e.g. manually added by a supervisor or HR/Administrator), the UI and reports must explicitly display by whom (`createdBy`) it was created.
 
 ---
 
@@ -155,7 +156,26 @@ The following foundational areas are verified as fully implemented in the reposi
 
 ## Prioritized Implementation Backlog
 
-All prioritized MVP backlog tasks identified during specification and repository audits are now fully implemented and verified with automated test suites across all modules.
+### Task 7: Work Entry Employee Modifications, Highlighting of Modified/Manual Entries, and Creator Attribution
+
+- **Requirement Reference:** Sections 3.1–3.3, 4.1 #5, 6.4, 9.3, 11.1, 11.2, 11.4, 11.6.2, 12.1 #2, 13.2, 20 #3
+- **Goal:** Enable employees to fully edit their own work entries (start time, end time, location, comment) in open periods, visually highlight all modified and manually created entries across the Web UI and reports/exports, and display creator attribution (`createdBy`) whenever an entry was not created by the employee.
+- **Proposed Scope:**
+  1. `chronivaro-core` / `chronivaro-rest`:
+     - Update `CorrectWorkEntryService` / `ChronivaroResource` (`PUT /me/work-entries/{id}`) so employees can adjust start time, end time, location, and comment within open periods without being limited to shorten-only operations (retaining validation for same-day start/end and non-overlap).
+     - Ensure `WorkEntryDto` and report data structures expose `source`, `createdBy`, and modification status.
+  2. `chronivaro-web`:
+     - Update `MyTimesView.js` to allow employees to edit start time, end time, location, and comments for their own entries in open periods.
+     - Add visual highlighting (e.g. badges / tags / visual cues) for all manually created (`source = MANUAL`) and modified entries in Day, Week, and Month views, as well as Approvals inspection modal and Reports view.
+     - Display creator information (`createdBy`) on work entries whenever `createdBy` does not match the employee's username.
+  3. Reports & PDF Export:
+     - Update table renderers and OpenPDF report generator (`MonthReportPdfGenerator`, `ReportsView.js`) to visually indicate manual/modified entries and render creator details for entries created on behalf of the employee.
+  4. Localization:
+     - Add Swiss German (`de.json`) and English (`en.json`) translation keys for manual/modified badges and creator label with 100% key parity and no `ß` characters.
+  5. Automated Verification:
+     - Core unit/integration tests for employee work entry editing and validation.
+     - REST integration tests for `PUT /me/work-entries/{id}` and DTO fields.
+     - Web UI and PDF tests for visual badges, creator attribution, and i18n parity.
 
 ---
 

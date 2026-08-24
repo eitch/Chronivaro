@@ -30,7 +30,7 @@ Audit date: 2026-08-24. `IMPLEMENTATION_SPECIFICATION.md` is authoritative; the 
 
 ## Incomplete Requirements / Active Backlog Tasks
 
-All prioritized MVP backlog tasks identified during specification and repository audits are now fully implemented and verified with automated test suites across all modules.
+- **Task 7: Work Entry Employee Modifications, Highlighting of Modified/Manual Entries, and Creator Attribution (Sections 3.1–3.3, 4.1 #5, 6.4, 9.3, 11, 12.1 #2, 13.2, 20 #3):** Enable full work entry editing for employees in open periods; add visual highlighting for all modified and manually created entries in Web UI and reports/exports; display creator attribution (`createdBy`) when entries were created on behalf of the employee.
 
 ---
 
@@ -43,7 +43,7 @@ All prioritized MVP backlog tasks identified during specification and repository
 5. **Vacation Granting Timing (Section 6.7.1):** Full entitlement is granted upfront per January 1st (or pro-rated per `entryDate`) as `ENTITLEMENT` journal records; schedule changes post `CORRECTION` adjustments.
 6. **REST Administrative Endpoints URI Structure (Sections 13.1 & 13.2):** Administrative endpoints are grouped under `/rest/chronivaro/v1/admin/*`.
 7. **Employee Inactivation vs Physical Deletion (Sections 6.1, 9.8, 10.5, 13.2):** Employee records are never physically deleted; user deletion performs soft employee deactivation.
-8. **Supervisor and HR Employee Work Entry Modifications (Sections 3.2, 3.3, 6.4, 9.3, 12.1 #2, 13.2, 20):** While employees may only shorten their own entries, supervisors (for team members) and HR/Administrators (organization-wide) can view, create, edit (start/end/location/comment), and delete work entries in open periods with full audit logging.
+8. **Work Entry Modifications, Highlighting, and Creator Attribution (Sections 3.1–3.3, 6.4, 9.3, 11, 12.1 #2, 13.2, 20):** Employees can modify their own work entries (start time, end time, location, comment) and supervisors/HR/Administrators can view, create, edit, and delete entries within open periods with full audit logging. All modified and manually created entries must be highlighted, and entries created by someone other than the employee must display by whom it was created.
 
 ---
 
