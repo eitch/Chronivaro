@@ -143,32 +143,12 @@ The following foundational areas are verified as fully implemented in the reposi
 - **Navigation & Header Logout Integration (Section 12.1 #0):** Standalone logout button removed from the main header action bar and integrated into the user dropdown info menu with icon and dedicated styling; automatically closes open dropdown menus on logout and triggers clean session termination.
 - **Reports & CSV Export – Hierarchical Employee Selection and Month Date Picker (Sections 11.4, 12.1 #7):** Hierarchical team-first employee selection (team dropdown filters employee dropdown with full employee names and personal numbers) for authorized roles (Supervisor, HR, Admin), HTML5 date/month picker controls for Day, Month, Vacation, Team, and Absence reports, team selection dropdown for Team Monthly Overview, and complete Swiss German and English translations with 100% key parity.
 - **Localization & Branding (Sections 4.2, 6.11, 12.3, 16, 18, 18.5):** Global company branding (name/logo), default language configuration, client-side i18n engine with German (Swiss German) and English translations across all views, and automated key parity verification.
+- **Vacation Overview – Vacation Initialization on Reactivation, Display Info, and Booking Type Localization (Sections 6.7, 9.9, 11.3, 12.1 #4):** Verified and automated annual vacation entitlement initialization upon employee reactivation (`ReactivateEmployeeService`); user-friendly employee identification display (username and personnel number) across vacation DTOs and web views; booking type formatting and defensive localization fallback preventing `enums.vacationEntryType.undefined` across vacation overview tables and reports.
+- **Team Monthly Overview – Role-Based Visibility, Team Dropdown, and Date Picker (Sections 11.4, 12.1 #7):** Team Monthly Overview visibility restricted to authorized supervisory and administrative roles (Supervisor, HR, Admin) and hidden from employee-only users; team selection via dropdown and report period selection via date/month picker; client and server-side authorization checks and comprehensive UI test coverage.
 
 ---
 
 ## Prioritized Implementation Backlog
-
-### Task 3: Vacation Overview – Vacation Initialization on Reactivation, Display Info, and Booking Type Localization
-
-- **Goal:** Resolve missing/undefined vacation account values, display user-friendly identification, and fix booking type rendering in the Vacation Overview.
-- **Scope:**
-  - **Vacation Account Initialization:** Ensure `ReactivateEmployeeService` (and any related employee initialization paths in `chronivaro-core`) verifies and initializes the vacation account / entitlement entries for the active year upon reactivation so that reactivated employees do not have undefined/empty balances.
-  - **Employee Identification:** Update the vacation overview page (`VacationView.js`) and DTOs to display employee username and/or personnel number rather than raw internal UUID/ID.
-  - **Booking Type Formatting & Localization:** Fix the booking type display in the vacation account journal table so it renders properly localized labels (e.g. `Entitlement`, `Carry Over`, `Usage`, `Correction`, `Expiry`) instead of falling back to missing keys like `enums.vacationEntryType.undefined`. Ensure defensive handling for null/undefined entry types in both web frontend and i18n bundles (`de.json`, `en.json`).
-  - Add/update unit and integration tests in `chronivaro-core` and `chronivaro-web`.
-
----
-
-### Task 4: Team Monthly Overview – Role-Based Visibility, Team Dropdown, and Date Picker
-
-- **Goal:** Restrict Team Monthly Overview to authorized roles and replace manual ID/date text inputs with dropdown and date picker controls.
-- **Scope:**
-  - **Access Restriction:** Ensure the Team Monthly Overview section/view is only visible and accessible to roles with appropriate supervisory/administrative permissions (Supervisor, HR, Admin), and hidden for users holding only the `Employee` role.
-  - **Team Selection Dropdown:** Replace the manual team ID text input with a searchable/selectable dropdown of available teams.
-  - **Date Picker:** Replace the text input for the report date/month with a date/month picker.
-  - Update authorization checks in REST / UI and add tests verifying role visibility and selection behavior.
-
----
 
 ### Task 5: System Configuration – Company Logo Image Upload and Settings Layout
 

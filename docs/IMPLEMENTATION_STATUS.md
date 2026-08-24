@@ -21,15 +21,15 @@ Audit date: 2026-08-23. `IMPLEMENTATION_SPECIFICATION.md` is authoritative; the 
 - **Navigation & Header Logout Integration (Section 12.1 #0):** Standalone logout button removed from the main header action bar and integrated into the user dropdown info menu with icon and dedicated styling; automatically closes open dropdown menus on logout and triggers clean session termination.
 - **Reports & CSV Export – Hierarchical Employee Selection and Month Date Picker (Sections 11.4, 12.1 #7):** Hierarchical team-first employee selection (team dropdown filters employee dropdown with full employee names and personal numbers) for authorized roles (Supervisor, HR, Admin), HTML5 date/month picker controls for Day, Month, Vacation, Team, and Absence reports, team selection dropdown for Team Monthly Overview, and complete Swiss German and English translations with 100% key parity.
 - **Localization & Branding (Sections 4.2, 6.11, 12.3, 16, 18, 18.5):** Global company branding (name/logo), default language configuration, client-side i18n engine with German (Swiss German) and English translations across all views, and automated key parity verification.
+- **Vacation Overview – Vacation Initialization on Reactivation, Display Info, and Booking Type Localization (Sections 6.7, 9.9, 11.3, 12.1 #4):** Verified and automated annual vacation entitlement initialization upon employee reactivation (`ReactivateEmployeeService`); user-friendly employee identification display (username and personnel number) across vacation DTOs and web views; booking type formatting and defensive localization fallback preventing `enums.vacationEntryType.undefined` across vacation overview tables and reports.
+- **Team Monthly Overview – Role-Based Visibility, Team Dropdown, and Date Picker (Sections 11.4, 12.1 #7):** Team Monthly Overview visibility restricted to authorized supervisory and administrative roles (Supervisor, HR, Admin) and hidden from employee-only users; team selection via dropdown and report period selection via date/month picker; client and server-side authorization checks and comprehensive UI test coverage.
 
 ---
 
 ## Incomplete Requirements / Active Backlog Tasks
 
-The following prioritized backlog tasks (Tasks 3 through 5) address recently identified usability issues, UI layout improvements, and vacation workflow bug fixes:
+The following prioritized backlog task (Task 5) addresses recently identified usability issues and UI layout improvements:
 
-- **Task 3: Vacation Overview – Vacation Initialization on Reactivation, Display Info, and Booking Type Localization (Sections 6.7, 9.9, 11.3, 12.1 #4):** Ensure vacation entitlement is verified and initialized upon employee reactivation; display username/personnel number instead of raw internal ID; fix booking type rendering to show localized type labels without `undefined` strings.
-- **Task 4: Team Monthly Overview – Role-Based Visibility, Team Dropdown, and Date Picker (Sections 11.4, 12.1 #7):** Restrict overview visibility to supervisor/HR/admin roles (hidden for employee-only roles); replace manual team ID text input with team dropdown and manual date text input with date picker.
 - **Task 5: System Configuration – Company Logo Image Upload and Settings Layout (Sections 6.11, 12.1 #8):** Support image file upload (storage and serving) for company logo; center the settings container layout and position descriptions below titles.
 
 ---
