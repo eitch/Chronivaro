@@ -35,6 +35,7 @@ Historische Auswertungen müssen auch dann reproduzierbar bleiben, wenn sich Arb
 ### 3.2 Vorgesetzter
 
 - Daten der zugeordneten Mitarbeitenden und Teams einsehen
+- Arbeitszeitbuchungen (`WorkEntry`) für zugeordnete Mitarbeitende und Teams einsehen, manuell erfassen, vollständig bearbeiten (Start, Ende, Arbeitsort, Kommentar) und löschen (innerhalb offener Perioden)
 - Abwesenheiten genehmigen oder ablehnen
 - Monatsperioden prüfen und genehmigen
 - fehlende oder fehlerhafte Einträge erkennen
@@ -43,6 +44,7 @@ Historische Auswertungen müssen auch dann reproduzierbar bleiben, wenn sich Arb
 ### 3.3 Personaladministration
 
 - Mitarbeiterstammdaten verwalten
+- Arbeitszeitbuchungen (`WorkEntry`) aller Mitarbeitenden einsehen, manuell erfassen, vollständig bearbeiten (Start, Ende, Arbeitsort, Kommentar) und löschen (innerhalb offener Perioden bzw. nach Wiedereröffnung)
 - Arbeitsmodelle und Ferienansprüche verwalten
 - Abwesenheiten und Saldi korrigieren
 - Perioden wieder öffnen
@@ -74,7 +76,7 @@ Der erste produktiv nutzbare Umfang enthält:
 2. versionierte Arbeitsmodelle mit individuellen Sollzeiten
 3. Feiertagskalender
 4. Arbeitszeiterfassung mit mehreren Arbeitsblöcken pro Tag und Kommentarfunktion
-5. Nachträgliches Verkürzen von Zeitbuchungen durch Mitarbeitende (z. B. bei vergessenem Timer-Stopp) sowie administrative Zeitkorrekturen
+5. Nachträgliches Verkürzen von Zeitbuchungen durch Mitarbeitende (z. B. bei vergessenem Timer-Stopp) sowie administrative und supervisorische Zeitkorrekturen (Erfassen, Bearbeiten und Löschen von Arbeitszeitbuchungen durch Vorgesetzte für zugeordnete Mitarbeitende und durch HR/Administratoren für alle Mitarbeitenden)
 6. konfigurierbare und vordefinierte Abwesenheitsarten
 7. halb- und ganztägige sowie stundenweise Abwesenheiten
 8. Ferienkonten mit nachvollziehbaren Kontobuchungen
@@ -217,7 +219,7 @@ Regeln:
 - Direkte Tageszeiteingaben werden intern als separate manuelle Tagesbuchung oder als klar gekennzeichnete Dauerbuchung abgebildet; beide Erfassungsarten dürfen nicht zu einer Doppelzählung führen.
 - **Kommentare:** Mitarbeitende können zu jedem `WorkEntry` einen optionalen Kommentar erfassen und bearbeiten (z. B. beim Stoppen des Timers oder bei einer nachträglichen Korrektur).
 - **Einschränkung für reguläre Mitarbeitende bei Zeitkorrekturen:** Mitarbeitende dürfen ihre eigenen, noch nicht eingereichten oder gesperrten `WorkEntry`-Buchungen ausschliesslich **verkürzen** (d. h. die Enduhrzeit auf einen früheren Zeitpunkt des Tages vorverlegen, beispielsweise wenn vergessen wurde, den Timer rechtzeitig zu stoppen) und den Kommentar anpassen. Ein Vorverlegen der Startzeit oder ein Hinausschieben der Endzeit über den erfassten Zeitstempel hinaus ist für reguläre Mitarbeitende nicht zulässig.
-- **Administrative Korrekturen:** Vollständige Korrekturen, Vorverlegungen der Startzeit, Verlängerungen oder Löschungen von Zeitbuchungen bleiben der Personaladministration und Administratoren vorbehalten und werden im Audit-Log revisionssicher protokolliert.
+- **Administrative und supervisorische Korrekturen:** Während reguläre Mitarbeitende ihre eigenen Buchungen ausschliesslich verkürzen dürfen, können Vorgesetzte (für ihre zugeordneten Mitarbeitenden/Teams) sowie die Personaladministration und Administratoren (unternehmensweit) Arbeitszeitbuchungen von Mitarbeitenden vollständig anpassen (Start- und Endzeit ändern, Arbeitsort ändern, Kommentar anpassen), neue Zeitbuchungen für beliebige Tage manuell erfassen und fehlerhafte Zeitbuchungen löschen. Änderungen sind ausschliesslich in offenen (noch nicht genehmigten/gesperrten) Perioden zulässig; bei gesperrten Perioden muss die Periode zuerst wiedereröffnet werden. Jede manuelle Erfassung, Anpassung oder Löschung wird revisionssicher mit Vorher-/Nachher-Zustand, Begründung und ausführendem Benutzer im Audit-Log protokolliert.
 - Jeder `WorkEntry` muss einen Arbeitsort haben. Der Arbeitsort beschreibt den Ort des jeweiligen Zeitblocks und ist nicht zwingend für den ganzen Arbeitstag gleich.
 - Ein Arbeitstag darf höchstens einen Arbeitsort am Vormittag und einen Arbeitsort am Nachmittag haben. Ein Wechsel des Arbeitsorts erzeugt daher separate, nicht überlappende `WorkEntry`-Zeitblöcke.
 - Für die Erfassung im Dashboard werden die Dauerbereiche `HALF_DAY` und `FULL_DAY` unterstützt. Ein halber Tag bezieht sich auf `MORNING` oder `AFTERNOON`; ein ganzer Tag gilt für beide Tageshälften.
@@ -518,9 +520,9 @@ Um eine konsistente Behandlung von vergessenen Timern zu gewährleisten, gilt fo
 
 ### 9.3 Manuelle Zeitkorrektur
 
-1. Benutzer öffnet einen Tag.
+1. Benutzer öffnet einen Tag oder die Zeiterfassungsansicht eines Mitarbeiters.
 2. Reguläre Mitarbeitende können bestehende eigene Zeitbuchungen **verkürzen** (d. h. den Endzeitpunkt vorverlegen) und den Kommentar anpassen (beispielsweise zur Korrektur eines zu spät gestoppten Timers).
-3. Personaladministration und Administratoren können mit entsprechender Berechtigung Zeitbuchungen vollständig bearbeiten (Start- und Endzeiten anpassen, neue Buchungen manuell hinzufügen oder Buchungen löschen).
+3. Vorgesetzte (für zugeordnete Mitarbeitende und Teams) sowie Personaladministration und Administratoren (unternehmensweit für alle Mitarbeitenden) können mit entsprechender Berechtigung Zeitbuchungen von Mitarbeitenden vollständig bearbeiten (Start- und Endzeiten anpassen, Arbeitsort und Kommentar ändern), neue Buchungen manuell hinzufügen oder bestehende Buchungen löschen.
 4. Das System validiert Reihenfolge, Überlappungen und den Periodenstatus (nur in offenen Perioden möglich).
 5. Bei einer bereits genehmigten oder gesperrten Periode ist jede Änderung nur nach vorheriger Wiederöffnung durch berechtigte Rollen möglich.
 6. Jede Änderung wird im Audit-Log revisionssicher mit Vorher-/Nachher-Werten protokolliert.
@@ -582,7 +584,7 @@ Für Personen, die das System administrieren, überwachen oder leiten, ohne selb
 
 1. Ein Administrator öffnet einen inaktiven Mitarbeiter in der Mitarbeiterverwaltung und wählt die Aktion "Reaktivieren".
 2. Der Aktivstatus des Mitarbeiters wird wieder auf `active = true` gesetzt.
-3. Das System prüft und initialisiert das Ferienkonto und den Ferienanspruch für das laufende Anspruchsjahr (pro-rata ab Reaktivierungsdatum bzw. gemäß gültigem Arbeitsplan), sofern für den Zeitraum noch keine gültige Anspruchsbuchung existiert.
+3. Das System prüft und initialisiert das Ferienkonto und den Ferienanspruch für das laufende Anspruchsjahr (pro-rata ab Reaktivierungsdatum bzw. gemäss gültigem Arbeitsplan), sofern für den Zeitraum noch keine gültige Anspruchsbuchung existiert.
 4. Das System erstellt automatisch einen neuen Strolch-Benutzer mit dem konfigurierten Benutzernamen und den erforderlichen Rollen.
 5. Der Administrator löst anschliessend die Registrierung / Passwort-Challenge (`Usage.SET_PASSWORD`) aus, damit der Mitarbeiter sein Passwort festlegen und sich wieder anmelden kann.
 6. Der Vorgang wird im Audit-Log revisionssicher protokolliert.
@@ -747,9 +749,10 @@ Die UI wird mit HTML, CSS und Vanilla JavaScript umgesetzt. Es wird kein Fronten
    - Start/Stoppen (mit optionalem Kommentar)
    - aktueller Zeit- und Feriensaldo
    - offene Warnungen
-2. **Meine Zeiten**
+2. **Meine Zeiten & Mitarbeiter-Zeiterfassung**
    - Tages-, Wochen- und Monatsansicht
-   - Zeitblöcke einsehen, kommentieren und verkürzen (für reguläre Mitarbeitende) bzw. administrativ korrigieren
+   - Zeitblöcke einsehen, kommentieren und verkürzen (für reguläre Mitarbeitende)
+   - für Vorgesetzte (teambezogen) und HR/Administratoren (unternehmensweit): Mitarbeiter-/Team-Auswahl zur Einsicht der Arbeitszeiten von Mitarbeitenden, manuelles Hinzufügen neuer Arbeitszeitbuchungen, vollständiges Bearbeiten (Start, Ende, Arbeitsort, Kommentar) und Löschen von Arbeitszeitbuchungen mit Validierungsprüfungen und Bestätigungsdialogen
    - Tagessummen und Saldi
 3. **Abwesenheiten**
    - Antrag erfassen (als Entwurf speichern oder direkt einreichen)
@@ -925,13 +928,17 @@ Beispiel einer Fehlerantwort:
 
 ### 13.2 Vorgesehene Ressourcen
 
-#### Eigene Arbeitszeit
+#### Arbeitszeiten und Buchungen
 
 ```text
 GET    /me/work-entries?from={date}&to={date}
 POST   /me/work-entries
 PUT    /me/work-entries/{id}
 DELETE /me/work-entries/{id}
+GET    /employees/{id}/work-entries?from={date}&to={date}
+POST   /employees/{id}/work-entries
+PUT    /admin/work-entries/{id}
+DELETE /admin/work-entries/{id}
 POST   /me/timer/start
 POST   /me/timer/stop
 GET    /me/day-summary/{date}
@@ -939,6 +946,10 @@ GET    /me/month-summary/{yearMonth}
 ```
 
 - `PUT /me/work-entries/{id}`: Aktualisieren einer offenen/nicht eingereichten Buchung durch den Mitarbeiter (auf das Verkürzen der Endzeit und Anpassen des Kommentars beschränkt).
+- `GET /employees/{id}/work-entries?from={date}&to={date}`: Abrufen aller Arbeitszeitbuchungen eines Mitarbeiters im angegebenen Zeitraum (zulässig für den Mitarbeiter selbst, den zuständigen Vorgesetzten sowie HR/Admin).
+- `POST /employees/{id}/work-entries`: Manuelles Erfassen einer Arbeitszeitbuchung für einen Mitarbeiter durch zuständige Vorgesetzte oder HR/Admin.
+- `PUT /admin/work-entries/{id}`: Vollständige administrative und supervisorische Korrektur einer Zeitbuchung (Start, Ende, Arbeitsort, Kommentar) durch zuständige Vorgesetzte oder HR/Admin.
+- `DELETE /admin/work-entries/{id}`: Löschen einer Zeitbuchung durch zuständige Vorgesetzte oder HR/Admin.
 
 #### Abwesenheiten
 
@@ -1489,7 +1500,7 @@ Das MVP gilt als fachlich abnahmebereit, wenn:
 
 1. ein Administrator Mitarbeiter, Benutzer (auch reine Systembenutzer), Teams, Standorte, Feiertagskalender und Arbeitspläne verwalten sowie Benutzer löschen kann (wobei verknüpfte Mitarbeiter nicht gelöscht, sondern deaktiviert werden und bei Reaktivierung der Benutzer neu erstellt wird);
 2. ein Mitarbeiter mehrere Arbeitsblöcke pro Tag erfassen und kommentieren kann, wobei Unterbrüche aus den zeitlichen Lücken abgeleitet werden;
-3. Mitarbeiter ihre offenen Zeitbuchungen bei Bedarf verkürzen (Endzeit vorverlegen) und kommentieren können, während unzulässige Verlängerungen verhindert werden;
+3. Mitarbeiter ihre offenen Zeitbuchungen bei Bedarf verkürzen (Endzeit vorverlegen) und kommentieren können, während unzulässige Verlängerungen verhindert werden, und Vorgesetzte (für zugeordnete Mitarbeitende) sowie HR/Administratoren (unternehmensweit) Arbeitszeitbuchungen von Mitarbeitenden in offenen Perioden manuell erfassen, vollständig korrigieren und löschen können;
 4. die Anwendung Überlappungen und mehrere laufende Buchungen verhindert;
 5. Soll- und Istzeit für Tag und Monat (inklusive Eintritten/Austritten unter dem Monat) korrekt berechnet werden;
 6. Pensumsänderungen alte Monatsauswertungen nicht verfälschen;

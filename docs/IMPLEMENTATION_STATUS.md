@@ -29,7 +29,9 @@ Audit date: 2026-08-24. `IMPLEMENTATION_SPECIFICATION.md` is authoritative; the 
 
 ## Incomplete Requirements / Active Backlog Tasks
 
-All active backlog tasks have been implemented and verified. No incomplete backlog items remain.
+The following prioritized backlog task (Task 6) addresses the missing functionality for HR and supervisors modifying employee work entries:
+
+- **Task 6: HR and Supervisor Employee Work Entry Management – Core Services, REST Endpoints, and Web UI (Sections 3.2, 3.3, 6.4, 9.3, 12.1 #2, 13.2, 20):** Enable HR personnel and supervisors to view, create, edit, and delete work entries for employees within their authorized scope across core services, REST API endpoints, and web UI.
 
 ---
 
@@ -42,6 +44,7 @@ All active backlog tasks have been implemented and verified. No incomplete backl
 5. **Vacation Granting Timing (Section 6.7.1):** Full entitlement is granted upfront per January 1st (or pro-rated per `entryDate`) as `ENTITLEMENT` journal records; schedule changes post `CORRECTION` adjustments.
 6. **REST Administrative Endpoints URI Structure (Sections 13.1 & 13.2):** Administrative endpoints are grouped under `/rest/chronivaro/v1/admin/*`.
 7. **Employee Inactivation vs Physical Deletion (Sections 6.1, 9.8, 10.5, 13.2):** Employee records are never physically deleted; user deletion performs soft employee deactivation.
+8. **Supervisor and HR Employee Work Entry Modifications (Sections 3.2, 3.3, 6.4, 9.3, 12.1 #2, 13.2, 20):** While employees may only shorten their own entries, supervisors (for team members) and HR/Administrators (organization-wide) can view, create, edit (start/end/location/comment), and delete work entries in open periods with full audit logging.
 
 ---
 

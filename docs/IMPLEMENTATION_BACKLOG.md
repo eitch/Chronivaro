@@ -122,6 +122,9 @@ Do not continue with the next numbered task automatically.
 ### G. Employee Inactivation vs Physical Deletion (Sections 6.1, 9.8, 10.5, 13.2)
 - **Clarification:** In accordance with Section 6.1 and 9.8, `Employee` records must never be physically deleted once created in order to maintain historical audit trails, time records, and vacation balances. User deletion for linked employees performs a soft deactivation (`active = false`), and `DELETE /employees/{id}` is treated as soft deactivation. Full reactivation is handled via `POST /employees/{id}/reactivate`.
 
+### H. Supervisor and HR Employee Work Entry Modifications (Sections 3.2, 3.3, 6.4, 9.3, 12.1 #2, 13.2, 20)
+- **Clarification:** While regular employees may only shorten their own unsubmitted/open work entries and edit comments, supervisors (for assigned team members) and HR / Administrators (organization-wide) must be able to view, manually create (`POST`), fully edit (`PUT` start, end, location, comment), and delete (`DELETE`) work entries for employees within open/unlocked periods. All supervisor/HR modifications generate structured, immutable audit log events recording old/new values, reasons, and the acting user.
+
 ---
 
 ## Verified Implementation Baseline
@@ -151,7 +154,25 @@ The following foundational areas are verified as fully implemented in the reposi
 
 ## Prioritized Implementation Backlog
 
-All prioritized backlog tasks (Tasks 1 through 5) have been completed, verified against `IMPLEMENTATION_SPECIFICATION.md`, and validated with automated unit, integration, and UI test suites.
+The following prioritized backlog task addresses the missing functionality for HR and supervisors modifying employee work entries:
+
+### Task 6: HR and Supervisor Employee Work Entry Management – Core Services, REST Endpoints, and Web UI (Sections 3.2, 3.3, 6.4, 9.3, 12.1 #2, 13.2, 20)
+- **Goal:** Enable HR personnel and supervisors to view, create, edit, and delete work entries for employees within their authorized scope.
+- **Scope:**
+  - **Core Domain & Authorization (`chronivaro-core`):**
+    - Update `RemoveWorkEntryService` and `AddWorkEntryService` to allow supervisors acting on assigned team employees (`ChronivaroModelHelper.assertCanManageEmployee(tx, employeeId)`) in addition to HR and Admin roles.
+    - Ensure all work entry creations, updates, and deletions by supervisors/HR are properly audited with before/after state and acting username via `ChronivaroAuditHelper`.
+  - **REST API (`chronivaro-rest`):**
+    - Expose REST endpoints for managing employee work entries:
+      - `GET /rest/chronivaro/v1/employees/{id}/work-entries?from={from}&to={to}` with supervisor/HR authorization scoping.
+      - `POST /rest/chronivaro/v1/employees/{id}/work-entries` to create manual work entries on behalf of an employee.
+      - Verify and support `PUT /admin/work-entries/{id}` and `DELETE /admin/work-entries/{id}` for supervisors on their team employees.
+  - **Web UI (`chronivaro-web`):**
+    - Update or extend `WorkEntryApi.js` with client methods for employee work entry retrieval, creation, modification, and deletion.
+    - In `MyTimesView.js` (or a dedicated Timesheet / Employee Time Management view accessible to Supervisors/HR): provide employee selection (hierarchical team/employee dropdown for supervisors and HR), display the selected employee's work entries and daily/monthly summaries, and provide action buttons/modals for adding new work entries, editing existing work entries (start/end time, working location, comment), and deleting work entries.
+    - Add Swiss German and English translation keys for all dialog labels, buttons, confirmation prompts, and error notifications.
+  - **Automated Verification:**
+    - Add unit and integration tests in `chronivaro-core`, `chronivaro-rest`, and `chronivaro-web` verifying supervisor scoping, HR permissions, validation errors (period locked, overlapping entries, end before start), audit generation, and UI interactions.
 
 ---
 
