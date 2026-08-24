@@ -339,11 +339,39 @@ public class ChronivaroMapper {
 
 	public static VacationAccountSummaryDto vacationSummaryToDto(
 			ch.atexxi.chronivaro.core.model.VacationAccountSummary summary, java.util.List<Resource> entries) {
+		return vacationSummaryToDto((Resource) null, summary, entries);
+	}
+
+	public static VacationAccountSummaryDto vacationSummaryToDto(Resource employee,
+			ch.atexxi.chronivaro.core.model.VacationAccountSummary summary, java.util.List<Resource> entries) {
+		String employeeName = null;
+		String username = null;
+		String personalNumber = null;
+		if (employee != null) {
+			String firstName = employee.hasParameter(PARAM_FIRSTNAME) ? employee.getString(PARAM_FIRSTNAME) : "";
+			String lastName = employee.hasParameter(PARAM_LASTNAME) ? employee.getString(PARAM_LASTNAME) : "";
+			employeeName = (firstName + " " + lastName).trim();
+			if (employeeName.isEmpty())
+				employeeName = employee.getName();
+			if (employee.hasParameter(PARAM_USERNAME))
+				username = employee.getString(PARAM_USERNAME);
+			if (employee.hasParameter(PARAM_PERSONAL_NUMBER))
+				personalNumber = employee.getString(PARAM_PERSONAL_NUMBER);
+		}
 		java.util.List<VacationAccountEntryDto> entryDtos = entries != null ?
 				entries.stream().map(ChronivaroMapper::vacationEntryToDto).toList() : java.util.List.of();
-		return new VacationAccountSummaryDto(summary.employeeId(), summary.year(), summary.carryOverMinutes(),
-				summary.entitlementMinutes(), summary.correctionsMinutes(), summary.usageMinutes(),
-				summary.remainingMinutes(), entryDtos);
+		return new VacationAccountSummaryDto(summary.employeeId(), employeeName, username, personalNumber,
+				summary.year(), summary.carryOverMinutes(), summary.entitlementMinutes(),
+				summary.correctionsMinutes(), summary.usageMinutes(), summary.remainingMinutes(), entryDtos);
+	}
+
+	public static VacationAccountSummaryDto vacationSummaryToDto(StrolchTransaction tx,
+			ch.atexxi.chronivaro.core.model.VacationAccountSummary summary, java.util.List<Resource> entries) {
+		Resource employee = null;
+		if (tx != null && summary != null && summary.employeeId() != null) {
+			employee = tx.getResourceBy(TYPE_EMPLOYEE, summary.employeeId(), false);
+		}
+		return vacationSummaryToDto(employee, summary, entries);
 	}
 
 	public static TeamReportDto teamReportToDto(ch.atexxi.chronivaro.core.report.TeamReport report) {

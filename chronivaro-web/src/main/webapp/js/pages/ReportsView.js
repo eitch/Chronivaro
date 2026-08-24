@@ -887,10 +887,28 @@ export default class ReportsView {
 			}).join('');
 		}
 
+		const emp = (this.employees || []).find(e => e.id === data.employeeId);
+		const username = data.username || (emp ? emp.username : null) || (data.employeeId === AuthApi.getUserId() ? AuthApi.getUsername() : null);
+		const personalNumber = data.personalNumber || (emp ? emp.personalNumber : null);
+		const employeeName = data.employeeName || (emp ? `${emp.firstname || ''} ${emp.lastname || ''}`.trim() : null);
+
+		let empDisplay = '';
+		if (username && personalNumber && username !== personalNumber) {
+			empDisplay = `${username} (${personalNumber})`;
+		} else if (username) {
+			empDisplay = username;
+		} else if (personalNumber) {
+			empDisplay = personalNumber;
+		} else if (employeeName) {
+			empDisplay = employeeName;
+		} else {
+			empDisplay = data.employeeId || '-';
+		}
+
 		this.resultsContainer.innerHTML = `
 			<div class="report-result-header">
 				<h3>${I18n.t('reports.vacationReport')}: ${I18n.t('common.year')} ${data.year}</h3>
-				<span class="report-emp-tag">${I18n.t('common.employee')}: ${data.employeeId}</span>
+				<span class="report-emp-tag">${I18n.t('common.employee')}: ${empDisplay}</span>
 			</div>
 
 			<!-- Summary Grid -->

@@ -330,6 +330,7 @@ public class ReportsResourceTest extends AbstractChronivaroRestfulTest {
 			String jsonStr = resJson.readEntity(String.class);
 			JsonObject vacObj = JsonParser.parseString(jsonStr).getAsJsonObject();
 			assertEquals("employee_emp", vacObj.get("employeeId").getAsString());
+			assertEquals("employee", vacObj.get("username").getAsString());
 			assertEquals(2026, vacObj.get("year").getAsInt());
 			assertEquals(12000, vacObj.get("entitlementMinutes").getAsInt());
 			assertTrue(vacObj.get("entries").getAsJsonArray().size() > 0);

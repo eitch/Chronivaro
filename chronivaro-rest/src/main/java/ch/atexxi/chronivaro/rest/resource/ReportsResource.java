@@ -248,7 +248,7 @@ public class ReportsResource {
 					.build();
 		}
 
-		return Response.ok(ChronivaroRestHelper.createGson().toJson(ChronivaroMapper.vacationSummaryToDto(result.summary, entries)), MediaType.APPLICATION_JSON).build();
+		return Response.ok(ChronivaroRestHelper.createGson().toJson(ChronivaroMapper.vacationSummaryToDto(employeeResource, result.summary, entries)), MediaType.APPLICATION_JSON).build();
 	}
 
 	@GET

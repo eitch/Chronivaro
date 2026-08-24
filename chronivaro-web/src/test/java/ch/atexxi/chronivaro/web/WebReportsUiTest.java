@@ -65,5 +65,9 @@ public class WebReportsUiTest {
 		// Verify async loading of reference data including employees
 		assertTrue("ReportsView must load employees via EmployeeApi.getAll()",
 				viewJs.contains("EmployeeApi.getAll()"));
+
+		// Verify vacation report displays username / personal number instead of raw internal employeeId
+		assertTrue("ReportsView must format employee display with username/personal number in vacation report",
+				viewJs.contains("username") && viewJs.contains("personalNumber") && viewJs.contains("empDisplay"));
 	}
 }
