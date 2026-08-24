@@ -16,6 +16,7 @@
   <a href="#-architecture--module-structure">Architecture</a> •
   <a href="#-quick-start--installation">Quick Start</a> •
   <a href="#-running-with-docker">Docker</a> •
+  <a href="#-email-delivery--user-challenge-configuration-mailhandler">Mail Config</a> •
   <a href="docs/OPERATIONS.md">Operations</a> •
   <a href="docs/openapi.yaml">REST API</a>
 </p>
@@ -197,12 +198,53 @@ Build, tag, and push to the remote registry (`repo.strolch.li`):
    ```
 2. Copy configuration files from `runtime/` into `runtime/` (`config/`, `data/`, `temp/`).
 3. Set secure values for `secretKey` and `secretSalt` in `runtime/config/PrivilegeConfig.xml`.
-4. Copy `docker-compose.yml` to the directory.
-5. Launch the container:
+4. Configure mail delivery in `runtime/config/StrolchConfiguration.xml` (see [Email Delivery & MailHandler Configuration](#-email-delivery--user-challenge-configuration-mailhandler) below).
+5. Copy `docker-compose.yml` to the directory.
+6. Launch the container:
    ```bash
    docker compose up -d
    docker compose logs -f
    ```
+
+---
+
+## ✉️ Email Delivery & User Challenge Configuration (MailHandler)
+
+Chronivaro uses Strolch's `li.strolch.privilege.handler.MailUserChallengeHandler` in `runtime/config/PrivilegeConfig.xml` to deliver user registration challenges and password reset tokens.
+
+Challenge delivery is handled by the `MailHandler` component configured in `runtime/config/StrolchConfiguration.xml`:
+
+- **Development (`SimulatedMailHandler`)**: By default in local/dev environments, `SimulatedMailHandler` intercepts outgoing emails and logs challenge links to the standard log output, allowing local testing without an SMTP server.
+- **Production (`SmtpMailHandler`)**: For production deployments, switch the implementation to `SmtpMailHandler` and configure your SMTP server connection parameters. **No modifications to `PrivilegeConfig.xml` are needed.**
+
+```xml
+<Component>
+    <name>MailHandler</name>
+    <api>li.strolch.handler.mail.MailHandler</api>
+    <!-- For production SMTP: -->
+    <!-- <impl>li.strolch.handler.mail.SmtpMailHandler</impl> -->
+    <!-- For local development / simulation: -->
+    <impl>li.strolch.handler.mail.SimulatedMailHandler</impl>
+    <Properties>
+        <fromAddr>Chronivaro &lt;sender@example.ch&gt;</fromAddr>
+        <username>sender@example.ch</username>
+        <password>XXX</password>
+        <auth>true</auth>
+        <startTls>true</startTls>
+        <host>smtp.gmail.com</host>
+        <port>587</port>
+        <sign>false</sign>
+        <!-- Optional PGP signing key in runtime/config/ -->
+        <signingKey>sender@example.ch.key</signingKey>
+        <signingKeyPassword>myKeyPassword</signingKeyPassword>
+        <encrypt>false</encrypt>
+        <!-- Optional comma-separated list of recipient PGP public keys in runtime/config/ -->
+        <recipientPublicKeys>eitch@eitchnet.ch.asc</recipientPublicKeys>
+    </Properties>
+</Component>
+```
+
+See [docs/OPERATIONS.md](docs/OPERATIONS.md) for detailed descriptions of all `MailHandler` configuration properties.
 
 ---
 

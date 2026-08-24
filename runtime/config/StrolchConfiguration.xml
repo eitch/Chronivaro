@@ -9,6 +9,30 @@
         </Runtime>
 
         <Component>
+            <name>MailHandler</name>
+            <api>li.strolch.handler.mail.MailHandler</api>
+            <!--            <impl>li.strolch.handler.mail.SmtpMailHandler</impl>-->
+            <impl>li.strolch.handler.mail.SimulatedMailHandler</impl>
+            <Properties>
+                <fromAddr>Chronivaro &lt;sender@example.ch&gt;</fromAddr>
+                <username>sender@example.ch</username>
+                <password>XXX</password>
+                <auth>true</auth>
+                <startTls>true</startTls>
+                <host>smtp.gmail.com</host>
+                <port>587</port>
+                <sign>false</sign>
+                <!-- file must exist in config/ -->
+                <signingKey>sender@example.ch.key</signingKey>
+                <signingKeyPassword>myKeyPassword</signingKeyPassword>
+                <encrypt>false</encrypt>
+                <!-- comma separated list of files in config/ -->
+                <recipientPublicKeys>eitch@eitchnet.ch.asc
+                </recipientPublicKeys>
+            </Properties>
+        </Component>
+
+        <Component>
             <name>PrivilegeHandler</name>
             <api>li.strolch.runtime.privilege.PrivilegeHandler</api>
             <impl>li.strolch.runtime.privilege.DefaultStrolchPrivilegeHandler</impl>

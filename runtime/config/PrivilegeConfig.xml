@@ -17,7 +17,7 @@
             </Parameters>
         </EncryptionHandler>
         <PersistenceHandler class="li.strolch.privilege.handler.XmlPersistenceHandler"/>
-        <UserChallengeHandler class="li.strolch.privilege.handler.ConsoleUserChallengeHandler"/>
+        <UserChallengeHandler class="li.strolch.privilege.handler.MailUserChallengeHandler"/>
     </Container>
     <Policies>
         <Policy name="DefaultPrivilege" class="li.strolch.privilege.policy.DefaultPrivilege"/>

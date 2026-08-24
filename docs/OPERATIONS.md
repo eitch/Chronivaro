@@ -140,14 +140,68 @@ Before running `docker compose up -d`, prepare the runtime directory on the host
    - Copy `runtime/config/*` to `./runtime/config/`
    - Copy `runtime/data/*` to `./runtime/data/`
 
-3. **Configure Authentication Secrets**:
+3. **Configure Authentication Secrets & User Challenge Handler**:
    Edit `./runtime/config/PrivilegeConfig.xml` to generate and assign unique cryptographic keys:
    ```xml
    <Parameter name="secretKey" value="<GENERATE_RANDOM_SECRET_KEY>"/>
    <Parameter name="secretSalt" value="<GENERATE_RANDOM_SECRET_SALT>"/>
    ```
+   By default, Chronivaro is configured to use Strolch's `MailUserChallengeHandler` for delivering user registration challenges and password reset codes:
+   ```xml
+   <UserChallengeHandler class="li.strolch.privilege.handler.MailUserChallengeHandler"/>
+   ```
 
-4. **Adjust Directory Ownership & Permissions**:
+4. **Configure Mail Delivery (Strolch MailHandler)**:
+   Chronivaro's `MailUserChallengeHandler` delegates email dispatching to the `MailHandler` component defined in `runtime/config/StrolchConfiguration.xml`.
+   
+   - **Development & Testing (`SimulatedMailHandler`)**:
+     In the development environment profile (`dev`), Chronivaro uses `SimulatedMailHandler`. Outgoing emails (such as registration and password reset challenge links) are printed directly to the system logs, allowing quick local testing without an external mail server.
+   
+   - **Production Deployment (`SmtpMailHandler`)**:
+     For production environments, configure real SMTP delivery by switching the implementation class to `SmtpMailHandler` and updating the mail server credentials in `runtime/config/StrolchConfiguration.xml`. **No changes are required in `PrivilegeConfig.xml`**.
+
+   ```xml
+   <Component>
+       <name>MailHandler</name>
+       <api>li.strolch.handler.mail.MailHandler</api>
+       <!-- For production SMTP: -->
+       <!-- <impl>li.strolch.handler.mail.SmtpMailHandler</impl> -->
+       <!-- For local development / simulation: -->
+       <impl>li.strolch.handler.mail.SimulatedMailHandler</impl>
+       <Properties>
+           <fromAddr>Chronivaro &lt;sender@example.ch&gt;</fromAddr>
+           <username>sender@example.ch</username>
+           <password>XXX</password>
+           <auth>true</auth>
+           <startTls>true</startTls>
+           <host>smtp.gmail.com</host>
+           <port>587</port>
+           <sign>false</sign>
+           <!-- Optional PGP signing key (must exist in runtime/config/ if sign=true) -->
+           <signingKey>sender@example.ch.key</signingKey>
+           <signingKeyPassword>myKeyPassword</signingKeyPassword>
+           <encrypt>false</encrypt>
+           <!-- Optional comma-separated list of recipient PGP public keys in runtime/config/ if encrypt=true -->
+           <recipientPublicKeys>eitch@eitchnet.ch.asc</recipientPublicKeys>
+       </Properties>
+   </Component>
+   ```
+
+   **MailHandler Configuration Parameters**:
+   - `fromAddr`: The sender address displayed on outgoing emails (e.g., `Chronivaro <sender@example.ch>`).
+   - `username`: The SMTP username / email address used for server authentication.
+   - `password`: The SMTP password or application token.
+   - `auth`: `true` to authenticate with `username` and `password`; `false` if the SMTP server allows unauthenticated relaying.
+   - `startTls`: `true` to enable TLS via STARTTLS (standard on port 587).
+   - `host`: The SMTP server hostname or IP (e.g., `smtp.gmail.com`, `mail.company.ch`).
+   - `port`: The SMTP server port (typically `587` for STARTTLS or `465` for SMTPS).
+   - `sign`: `true` to cryptographically sign outgoing emails using PGP.
+   - `signingKey`: The file name of the PGP private key in `runtime/config/` (required if `sign` is `true`).
+   - `signingKeyPassword`: The passphrase for the PGP private key.
+   - `encrypt`: `true` to encrypt outgoing emails using recipient PGP public keys.
+   - `recipientPublicKeys`: Comma-separated list of PGP public key files stored in `runtime/config/`.
+
+5. **Adjust Directory Ownership & Permissions**:
    The Docker container runs as a non-root user (`UID 1000` / `GID 1000` by default). Ensure the runtime directory is readable and writable by this user:
    ```bash
    chmod -R 775 runtime/
