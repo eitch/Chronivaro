@@ -15,6 +15,7 @@
     "dashboard": "Dashboard",
     "presence": "Anwesenheit",
     "myTimes": "Meine Zeiten",
+    "employeeTimes": "Mitarbeiter Zeiten",
     "myAbsences": "Abwesenheiten & Ferien",
     "myPeriods": "Monatsabschluss",
     "approvals": "Genehmigungen",
@@ -192,6 +193,7 @@
   },
   "times": {
     "title": "Meine erfassten Zeiten",
+    "employeeTimesTitle": "Mitarbeiter-Arbeitszeiten",
     "date": "Datum",
     "startTime": "Startzeit",
     "endTime": "Endzeit",
@@ -215,10 +217,17 @@
     "noEntries": "Keine Zeitbuchungen für diesen Zeitraum vorhanden.",
     "shortenEntry": "Zeitbuchung verkürzen / bearbeiten",
     "shortenDialogTitle": "Zeitbuchung anpassen",
+    "editDialogTitle": "Zeitbuchung bearbeiten",
+    "addDialogTitle": "Arbeitszeit erfassen",
     "shortenHelpText": "Sie können die Endzeit vorverlegen (verkürzen) und den Kommentar anpassen.",
+    "editHelpText": "Passen Sie Startzeit, Endzeit, Arbeitsort oder Kommentar für diese Buchung an.",
     "entryUpdated": "Zeitbuchung erfolgreich aktualisiert.",
+    "entryCreated": "Zeitbuchung erfolgreich erstellt.",
+    "entryDeleted": "Zeitbuchung erfolgreich gelöscht.",
     "shortenOnlyError": "Als Mitarbeiter können Sie Buchungen nur verkürzen und Startzeiten nicht verändern.",
-    "shortenTime": "Verkürzte Endzeit"
+    "shortenTime": "Verkürzte Endzeit",
+    "totalDuration": "Gesamtdauer",
+    "entriesCount": "Erfasste Einträge"
   },
   "absences": {
     "title": "Abwesenheiten & Ferien",

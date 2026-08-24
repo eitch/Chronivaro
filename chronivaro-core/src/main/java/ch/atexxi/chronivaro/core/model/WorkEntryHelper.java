@@ -38,9 +38,12 @@ public class WorkEntryHelper {
 	public static List<Resource> findWorkEntries(StrolchTransaction tx, String employeeId, ZonedDateTime from,
 			ZonedDateTime to) {
 
+		ZonedDateTime effectiveFrom = from != null ? from : ZonedDateTime.of(1970, 1, 1, 0, 0, 0, 0, java.time.ZoneOffset.UTC);
+		ZonedDateTime effectiveTo = to != null ? to : ZonedDateTime.of(2099, 12, 31, 23, 59, 59, 0, java.time.ZoneOffset.UTC);
+
 		// We need to look at WorkDays in the range [from - 1 day, to]
-		LocalDate fromDate = from.toLocalDate().minusDays(1);
-		LocalDate toDate = to.toLocalDate();
+		LocalDate fromDate = effectiveFrom.toLocalDate().minusDays(1);
+		LocalDate toDate = effectiveTo.toLocalDate();
 
 		List<Resource> workDays = tx
 				.streamResources(TYPE_WORK_DAY)
@@ -60,7 +63,7 @@ public class WorkEntryHelper {
 					if (end.getYear() == 1970)
 						end = ZonedDateTime.now(start.getZone());
 
-					return !start.isAfter(to) && !end.isBefore(from);
+					return !start.isAfter(effectiveTo) && !end.isBefore(effectiveFrom);
 				}))
 				.distinct()
 				.sorted(comparing(we -> we.getDate(PARAM_START)))

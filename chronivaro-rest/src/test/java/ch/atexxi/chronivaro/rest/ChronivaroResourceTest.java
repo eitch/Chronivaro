@@ -302,4 +302,86 @@ public class ChronivaroResourceTest extends AbstractChronivaroRestfulTest {
 			assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
 		}
 	}
+
+	@Test
+	public void shouldManageEmployeeWorkEntriesViaRest() {
+		String adminAuth = authenticate();
+		String employeeId = "employee_emp";
+
+		// 1. POST /employees/{id}/work-entries
+		String createWorkEntryJson = """
+				{
+				  "start": "2026-07-01T08:00:00+02:00",
+				  "end": "2026-07-01T17:00:00+02:00",
+				  "workingLocation": "OFFICE",
+				  "comment": "Rest manual entry"
+				}
+				""";
+		String createdEntryId;
+		try (Response response = target()
+				.path("chronivaro/v1/employees/" + employeeId + "/work-entries")
+				.request(MediaType.APPLICATION_JSON)
+				.header("Authorization", adminAuth)
+				.post(Entity.json(createWorkEntryJson))) {
+			assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+			com.google.gson.JsonObject obj = ChronivaroRestHelper.createGson().fromJson(response.readEntity(String.class), com.google.gson.JsonObject.class);
+			createdEntryId = obj.get("id").getAsString();
+			assertEquals("Rest manual entry", obj.get("comment").getAsString());
+		}
+
+		// 2. GET /employees/{id}/work-entries
+		try (Response response = target()
+				.path("chronivaro/v1/employees/" + employeeId + "/work-entries")
+				.queryParam("from", "2026-07-01T00:00:00+02:00")
+				.queryParam("to", "2026-07-01T23:59:59+02:00")
+				.request(MediaType.APPLICATION_JSON)
+				.header("Authorization", adminAuth)
+				.get()) {
+			assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+			com.google.gson.JsonArray arr = ChronivaroRestHelper.createGson().fromJson(response.readEntity(String.class), com.google.gson.JsonArray.class);
+			assertEquals(1, arr.size());
+			assertEquals(createdEntryId, arr.get(0).getAsJsonObject().get("id").getAsString());
+		}
+
+		// 3. PUT /admin/work-entries/{id}
+		String updateJson = """
+				{
+				  "start": "2026-07-01T08:30:00+02:00",
+				  "end": "2026-07-01T17:30:00+02:00",
+				  "workingLocation": "HOME",
+				  "comment": "Admin updated shift"
+				}
+				""";
+		try (Response response = target()
+				.path("chronivaro/v1/admin/work-entries/" + createdEntryId)
+				.request(MediaType.APPLICATION_JSON)
+				.header("Authorization", adminAuth)
+				.put(Entity.json(updateJson))) {
+			assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+			com.google.gson.JsonObject obj = ChronivaroRestHelper.createGson().fromJson(response.readEntity(String.class), com.google.gson.JsonObject.class);
+			assertEquals("Admin updated shift", obj.get("comment").getAsString());
+		}
+
+		// 4. DELETE /admin/work-entries/{id}
+		try (Response response = target()
+				.path("chronivaro/v1/admin/work-entries/" + createdEntryId)
+				.request(MediaType.APPLICATION_JSON)
+				.header("Authorization", adminAuth)
+				.delete()) {
+			assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+		}
+
+		// Verify empty afterwards
+		try (Response response = target()
+				.path("chronivaro/v1/employees/" + employeeId + "/work-entries")
+				.queryParam("from", "2026-07-01T00:00:00+02:00")
+				.queryParam("to", "2026-07-01T23:59:59+02:00")
+				.request(MediaType.APPLICATION_JSON)
+				.header("Authorization", adminAuth)
+				.get()) {
+			assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+			com.google.gson.JsonArray arr = ChronivaroRestHelper.createGson().fromJson(response.readEntity(String.class), com.google.gson.JsonArray.class);
+			assertEquals(0, arr.size());
+		}
+	}
 }

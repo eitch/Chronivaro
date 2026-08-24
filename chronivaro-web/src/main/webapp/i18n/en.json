@@ -15,6 +15,7 @@
     "dashboard": "Dashboard",
     "presence": "Presence",
     "myTimes": "My Times",
+    "employeeTimes": "Employee Times",
     "myAbsences": "Absences & Vacation",
     "myPeriods": "Monthly Closing",
     "approvals": "Approvals",
@@ -192,6 +193,7 @@
   },
   "times": {
     "title": "My Recorded Times",
+    "employeeTimesTitle": "Employee Work Entries",
     "date": "Date",
     "startTime": "Start Time",
     "endTime": "End Time",
@@ -215,10 +217,17 @@
     "noEntries": "No time entries recorded for this period.",
     "shortenEntry": "Shorten / Edit Work Entry",
     "shortenDialogTitle": "Adjust Work Entry",
+    "editDialogTitle": "Edit Work Entry",
+    "addDialogTitle": "Add Work Entry",
     "shortenHelpText": "You can shorten the end time and update the comment.",
+    "editHelpText": "Modify the start time, end time, working location, or comment for this work entry.",
     "entryUpdated": "Work entry updated successfully.",
+    "entryCreated": "Work entry created successfully.",
+    "entryDeleted": "Work entry deleted successfully.",
     "shortenOnlyError": "As an employee you can only shorten entries and cannot modify start times.",
-    "shortenTime": "Shortened End Time"
+    "shortenTime": "Shortened End Time",
+    "totalDuration": "Total Duration",
+    "entriesCount": "Recorded Entries"
   },
   "absences": {
     "title": "Absences & Vacation",

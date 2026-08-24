@@ -345,6 +345,136 @@ public class WorkEntryServiceTest {
 	}
 
 	@Test
+	public void shouldAllowSupervisorAndHRToManageEmployeeWorkEntries() {
+		String teamAlphaId = "team-alpha";
+		String teamBetaId = "team-beta";
+		String supUsername = "supervisor-alpha";
+		String hrUsername = "hr-user";
+		String empAId = "emp-team-a";
+		String empBId = "emp-team-b";
+
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
+			// Create supervisor user
+			UserRep supUser = new UserRep(null, supUsername, "Sup", "Alpha", UserState.ENABLED, emptySet(),
+					Set.of(ROLE_SUPERVISOR, ROLE_MODEL_ACCESSOR), Locale.of("de", "CH"), emptyMap(), null);
+			UserRep addedSup = runtimeMock.getPrivilegeHandler().getPrivilegeHandler().addUser(certificate, supUser, supUsername.toCharArray());
+
+			// Create supervisor employee resource
+			Resource supEmp = createEmployee(tx, "sup-emp-id", "Supervisor Alpha");
+			supEmp.setString(PARAM_USERNAME, addedSup.getUsername());
+			supEmp.setString(PARAM_USER_ID, addedSup.getUserId());
+			tx.update(supEmp);
+
+			// Create HR user
+			UserRep hrUser = new UserRep(null, hrUsername, "HR", "User", UserState.ENABLED, emptySet(),
+					Set.of(ROLE_HR, ROLE_MODEL_ACCESSOR), Locale.of("de", "CH"), emptyMap(), null);
+			runtimeMock.getPrivilegeHandler().getPrivilegeHandler().addUser(certificate, hrUser, hrUsername.toCharArray());
+
+			// Create Team Alpha with supervisor
+			Resource teamAlpha = tx.getResourceTemplate(TYPE_TEAM, true);
+			teamAlpha.setId(teamAlphaId);
+			teamAlpha.setName("Team Alpha");
+			teamAlpha.setRelation(PARAM_LEADER, supEmp);
+			tx.add(teamAlpha);
+
+			// Create Team Beta without supervisor
+			Resource teamBeta = tx.getResourceTemplate(TYPE_TEAM, true);
+			teamBeta.setId(teamBetaId);
+			teamBeta.setName("Team Beta");
+			tx.add(teamBeta);
+
+			// Create employees in teams
+			Resource empA = createEmployee(tx, empAId, "Employee A");
+			empA.setRelation(PARAM_PRIMARY_TEAM, teamAlpha);
+			tx.update(empA);
+
+			Resource empB = createEmployee(tx, empBId, "Employee B");
+			empB.setRelation(PARAM_PRIMARY_TEAM, teamBeta);
+			tx.update(empB);
+
+			tx.commitOnClose();
+		}
+
+		Certificate supCert = runtimeMock.login(supUsername, supUsername);
+		Certificate hrCert = runtimeMock.login(hrUsername, hrUsername);
+		ServiceHandler serviceHandler = runtimeMock.getServiceHandler();
+
+		ZonedDateTime startA = ZonedDateTime.parse("2026-06-01T08:00:00+02:00[Europe/Zurich]");
+		ZonedDateTime endA = ZonedDateTime.parse("2026-06-01T16:00:00+02:00[Europe/Zurich]");
+
+		// 1. Supervisor adds work entry for supervised employee in Team Alpha -> Success
+		AddWorkEntryService.AddWorkEntryArgument addArgA = new AddWorkEntryService.AddWorkEntryArgument();
+		addArgA.employeeId = empAId;
+		addArgA.start = startA;
+		addArgA.end = endA;
+		addArgA.workingLocation = WorkingLocation.OFFICE;
+		addArgA.comment = "Supervisor manual add";
+		ServiceResult addResA = serviceHandler.doService(supCert, new AddWorkEntryService(), addArgA);
+		assertTrue(addResA.getMessage(), addResA.isOk());
+
+		String workEntryAId;
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
+			Resource we = tx.streamResources(TYPE_WORK_ENTRY)
+					.filter(e -> empAId.equals(e.getRelationId(PARAM_EMPLOYEE)))
+					.findFirst().orElseThrow();
+			workEntryAId = we.getId();
+		}
+
+		// 2. Supervisor attempts to add work entry for employee in Team Beta -> Fails
+		AddWorkEntryService.AddWorkEntryArgument addArgB = new AddWorkEntryService.AddWorkEntryArgument();
+		addArgB.employeeId = empBId;
+		addArgB.start = startA;
+		addArgB.end = endA;
+		ServiceResult addResB = serviceHandler.doService(supCert, new AddWorkEntryService(), addArgB);
+		assertFalse(addResB.isOk());
+
+		// 3. Supervisor modifies work entry for supervised employee (full adjustment) -> Success
+		ZonedDateTime modStartA = ZonedDateTime.parse("2026-06-01T07:30:00+02:00[Europe/Zurich]");
+		ZonedDateTime modEndA = ZonedDateTime.parse("2026-06-01T16:30:00+02:00[Europe/Zurich]");
+		CorrectWorkEntryService.CorrectWorkEntryArgument corrArgA = new CorrectWorkEntryService.CorrectWorkEntryArgument();
+		corrArgA.workEntryId = workEntryAId;
+		corrArgA.start = modStartA;
+		corrArgA.end = modEndA;
+		corrArgA.workingLocation = WorkingLocation.HOME_OFFICE;
+		corrArgA.comment = "Supervisor modified";
+		ServiceResult corrResA = serviceHandler.doService(supCert, new CorrectWorkEntryService(), corrArgA);
+		assertTrue(corrResA.getMessage(), corrResA.isOk());
+
+		// 4. Supervisor deletes work entry for supervised employee -> Success
+		ServiceResult delResA = serviceHandler.doService(supCert, new RemoveWorkEntryService(), new StringArgument(workEntryAId));
+		assertTrue(delResA.getMessage(), delResA.isOk());
+
+		// 5. HR adds work entry for employee in Team Beta -> Success
+		AddWorkEntryService.AddWorkEntryArgument hrAddArg = new AddWorkEntryService.AddWorkEntryArgument();
+		hrAddArg.employeeId = empBId;
+		hrAddArg.start = startA;
+		hrAddArg.end = endA;
+		hrAddArg.workingLocation = WorkingLocation.OFFICE;
+		ServiceResult hrAddRes = serviceHandler.doService(hrCert, new AddWorkEntryService(), hrAddArg);
+		assertTrue(hrAddRes.getMessage(), hrAddRes.isOk());
+
+		String workEntryBId;
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
+			Resource we = tx.streamResources(TYPE_WORK_ENTRY)
+					.filter(e -> empBId.equals(e.getRelationId(PARAM_EMPLOYEE)))
+					.findFirst().orElseThrow();
+			workEntryBId = we.getId();
+		}
+
+		// 6. HR deletes work entry for employee in Team Beta -> Success
+		ServiceResult hrDelRes = serviceHandler.doService(hrCert, new RemoveWorkEntryService(), new StringArgument(workEntryBId));
+		assertTrue(hrDelRes.getMessage(), hrDelRes.isOk());
+
+		// 7. Verify audit log entries
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
+			List<Resource> auditEvents = tx.streamResources(TYPE_AUDIT_EVENT)
+					.filter(ae -> TYPE_WORK_ENTRY.equals(ae.getString(PARAM_ELEMENT_TYPE)))
+					.toList();
+			assertTrue("Audit events must exist for work entry actions", auditEvents.size() >= 4);
+		}
+	}
+
+	@Test
 	public void shouldNotStartTimerTwice() {
 		String employeeId = "emp1";
 		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {

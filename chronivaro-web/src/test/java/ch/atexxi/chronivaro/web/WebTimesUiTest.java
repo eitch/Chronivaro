@@ -31,6 +31,25 @@ public class WebTimesUiTest {
 		assertTrue("MyTimesView must have modal-end-time datetime-local input",
 				viewJs.contains("input type=\"datetime-local\" id=\"modal-end-time\""));
 
+		// Verify manager team and employee selection filters
+		assertTrue("MyTimesView must have team filter for managers", viewJs.contains("id=\"times-team-filter\""));
+		assertTrue("MyTimesView must have employee filter for managers", viewJs.contains("id=\"times-employee-filter\""));
+
+		// Verify add work entry modal elements
+		assertTrue("MyTimesView must have add work entry button", viewJs.contains("id=\"btn-add-work-entry\""));
+		assertTrue("MyTimesView must have add work entry modal", viewJs.contains("id=\"add-work-entry-modal\""));
+		assertTrue("MyTimesView must have add-start-time input", viewJs.contains("id=\"add-start-time\""));
+		assertTrue("MyTimesView must have add-end-time input", viewJs.contains("id=\"add-end-time\""));
+
+		// Verify WorkEntryApi extensions
+		File apiFile = new File(getWebappDir(), "js/api/WorkEntryApi.js");
+		assertTrue("WorkEntryApi.js must exist", apiFile.exists());
+		String apiJs = Files.readString(apiFile.toPath());
+		assertTrue("WorkEntryApi must have getEmployeeWorkEntries", apiJs.contains("getEmployeeWorkEntries"));
+		assertTrue("WorkEntryApi must have createEmployeeWorkEntry", apiJs.contains("createEmployeeWorkEntry"));
+		assertTrue("WorkEntryApi must have adminUpdateWorkEntry", apiJs.contains("adminUpdateWorkEntry"));
+		assertTrue("WorkEntryApi must have adminDeleteWorkEntry", apiJs.contains("adminDeleteWorkEntry"));
+
 		File cssFile = new File(getWebappDir(), "assets/css/style.css");
 		assertTrue("style.css must exist", cssFile.exists());
 		String css = Files.readString(cssFile.toPath());

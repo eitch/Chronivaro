@@ -450,6 +450,7 @@ class ChronivaroApp {
                 view = new PresenceView(this);
                 break;
             case 'my-times':
+            case 'employee-times':
                 view = new MyTimesView(this);
                 break;
             case 'my-absences':

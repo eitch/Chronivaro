@@ -38,4 +38,18 @@ export default class WorkEntryApi {
         const toStr = encodeURIComponent(to.toISOString());
         return await Rest.get(`rest/chronivaro/v1/me/work-entries?from=${fromStr}&to=${toStr}`);
     }
+
+    static async getEmployeeWorkEntries(employeeId, from, to) {
+        const fromStr = from ? encodeURIComponent(from.toISOString()) : '';
+        const toStr = to ? encodeURIComponent(to.toISOString()) : '';
+        const query = [];
+        if (fromStr) query.push(`from=${fromStr}`);
+        if (toStr) query.push(`to=${toStr}`);
+        const queryString = query.length > 0 ? `?${query.join('&')}` : '';
+        return await Rest.get(`rest/chronivaro/v1/employees/${employeeId}/work-entries${queryString}`);
+    }
+
+    static async createEmployeeWorkEntry(employeeId, data) {
+        return await Rest.post(`rest/chronivaro/v1/employees/${employeeId}/work-entries`, data);
+    }
 }

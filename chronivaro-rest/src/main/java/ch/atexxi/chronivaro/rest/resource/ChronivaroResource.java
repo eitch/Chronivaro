@@ -20,6 +20,7 @@ import jakarta.ws.rs.core.Response;
 import li.strolch.agent.api.StrolchAgent;
 import li.strolch.model.Resource;
 import li.strolch.persistence.api.StrolchTransaction;
+import li.strolch.privilege.base.AccessDeniedException;
 import li.strolch.privilege.model.Certificate;
 import li.strolch.rest.RestfulStrolchComponent;
 import li.strolch.service.StringArgument;
@@ -31,6 +32,7 @@ import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.DayOfWeek;
 import java.time.ZonedDateTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
 
@@ -153,6 +155,12 @@ public class ChronivaroResource {
 		arg.workingLocation = dto.workingLocation();
 
 		ServiceResult result = serviceHandler.doService(cert, new AddWorkEntryService(), arg);
+		if (result.isOk() && result instanceof StringResult stringResult) {
+			try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
+				Resource workEntry = tx.getResourceBy(TYPE_WORK_ENTRY, stringResult.getValue(), true);
+				return ConcurrencyHelper.toResponseWithETag(workEntry, ChronivaroMapper.toDto(workEntry));
+			}
+		}
 		return ChronivaroRestHelper.toResponse(result);
 	}
 
@@ -236,6 +244,96 @@ public class ChronivaroResource {
 		ServiceHandler serviceHandler = ChronivaroRestHelper.getServiceHandler();
 		ServiceResult result = serviceHandler.doService(cert, new RemoveWorkEntryService(), new StringArgument(id));
 		return ChronivaroRestHelper.toResponse(result);
+	}
+
+	@GET
+	@Path("employees/{id}/work-entries")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response getEmployeeWorkEntries(@Context HttpServletRequest request, @PathParam("id") String employeeId,
+			@QueryParam("from") String fromStr, @QueryParam("to") String toStr,
+			@QueryParam("offset") Integer offset, @QueryParam("limit") Integer limit) {
+
+		Certificate cert = (Certificate) request.getAttribute(STROLCH_CERTIFICATE);
+
+		ZonedDateTime from = null;
+		if (isNotEmpty(fromStr)) {
+			try {
+				from = fromStr.contains("T") ? ZonedDateTime.parse(fromStr) : LocalDate.parse(fromStr).atStartOfDay(ZoneId.of("UTC"));
+			} catch (Exception e) {
+				return ChronivaroRestHelper.toErrorResponse(Response.Status.BAD_REQUEST, "INVALID_PARAMETER",
+						"Invalid 'from' date format: " + fromStr);
+			}
+		}
+
+		ZonedDateTime to = null;
+		if (isNotEmpty(toStr)) {
+			try {
+				to = toStr.contains("T") ? ZonedDateTime.parse(toStr) : LocalDate.parse(toStr).atTime(23, 59, 59, 999999999).atZone(ZoneId.of("UTC"));
+			} catch (Exception e) {
+				return ChronivaroRestHelper.toErrorResponse(Response.Status.BAD_REQUEST, "INVALID_PARAMETER",
+						"Invalid 'to' date format: " + toStr);
+			}
+		}
+
+		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
+			assertCanAccessEmployeeWorkEntries(tx, cert, employeeId);
+			List<Resource> entries = WorkEntryHelper.findWorkEntries(tx, employeeId, from, to);
+			return PaginationHelper.toPagedOrListResponse(entries, offset, limit, ChronivaroMapper::toDto);
+		}
+	}
+
+	@POST
+	@Path("employees/{id}/work-entries")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response createEmployeeWorkEntry(@Context HttpServletRequest request, @PathParam("id") String employeeId,
+			String data) {
+		Certificate cert = (Certificate) request.getAttribute(STROLCH_CERTIFICATE);
+		ServiceHandler serviceHandler = ChronivaroRestHelper.getServiceHandler();
+		WorkEntryDto dto = ChronivaroRestHelper.createGson().fromJson(data, WorkEntryDto.class);
+
+		if (dto.start() != null && dto.end() != null && (dto.end().isBefore(dto.start()) || dto.end().isEqual(dto.start()))) {
+			return ChronivaroRestHelper.toErrorResponse(Response.Status.BAD_REQUEST, "INVALID_ENTRY_DURATION",
+					"Work entry end time must be strictly after start time");
+		}
+
+		AddWorkEntryService.AddWorkEntryArgument arg = new AddWorkEntryService.AddWorkEntryArgument();
+		arg.employeeId = employeeId;
+		arg.start = dto.start();
+		arg.end = dto.end();
+		arg.comment = dto.comment();
+		arg.workingLocation = dto.workingLocation();
+
+		ServiceResult result = serviceHandler.doService(cert, new AddWorkEntryService(), arg);
+		if (result.isOk() && result instanceof StringResult stringResult) {
+			try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
+				Resource workEntry = tx.getResourceBy(TYPE_WORK_ENTRY, stringResult.getValue(), true);
+				return ConcurrencyHelper.toResponseWithETag(workEntry, ChronivaroMapper.toDto(workEntry));
+			}
+		}
+		return ChronivaroRestHelper.toResponse(result);
+	}
+
+	private void assertCanAccessEmployeeWorkEntries(StrolchTransaction tx, Certificate cert, String employeeId) {
+		if (tx.getPrivilegeContext().hasRole(ROLE_HR)
+				|| tx.getPrivilegeContext().hasRole(ROLE_ADMIN)
+				|| tx.getPrivilegeContext().hasRole(ROLE_ADMINISTRATOR)) {
+			return;
+		}
+
+		Optional<Resource> callerEmp = ChronivaroModelHelper.findEmployeeByUser(tx, cert.getUserId());
+		if (callerEmp.isPresent() && callerEmp.get().getId().equals(employeeId)) {
+			return;
+		}
+
+		if (tx.getPrivilegeContext().hasRole(ROLE_SUPERVISOR)) {
+			List<String> supervised = ChronivaroModelHelper.getSupervisedEmployeeIds(tx, cert);
+			if (supervised.contains(employeeId)) {
+				return;
+			}
+		}
+
+		throw new AccessDeniedException("You do not have permission to access work entries for employee " + employeeId);
 	}
 
 	@GET
