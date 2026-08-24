@@ -4351,6 +4351,9 @@ components:
           type: string
           enum: [OFFICE, REMOTE, CLIENT, TRANSIT]
           example: 'OFFICE'
+        modified:
+          type: boolean
+          example: false
 
     WorkEntryCreateDto:
       type: object
@@ -4404,21 +4407,28 @@ components:
     WorkEntryRangeDto:
       type: object
       properties:
+        id:
+          type: string
+          example: 'we-20260818-01'
         start:
           type: string
-          format: date-time
-          example: '2026-08-18T08:00:00+02:00'
+          example: '08:00'
         end:
           type: string
-          format: date-time
-          example: '2026-08-18T12:00:00+02:00'
+          example: '12:00'
         durationMinutes:
           type: integer
           example: 240
-        workingLocation:
+        source:
           type: string
-          enum: [OFFICE, REMOTE, CLIENT, TRANSIT]
-          example: 'OFFICE'
+          enum: [TIMER, MANUAL, API]
+          example: 'TIMER'
+        createdBy:
+          type: string
+          example: 'admin'
+        modified:
+          type: boolean
+          example: false
 
     BreakRangeDto:
       type: object
