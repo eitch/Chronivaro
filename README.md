@@ -126,6 +126,16 @@ To build, tag, and push the image to the remote registry (`repo.strolch.li`):
    docker compose logs -f
    ```
 
+### Initial Administrator Login & First Employee Setup
+
+1. **Initial Login**: Open `http://localhost:8080` and log in with default username `admin` and password `admin`.
+2. **Mandatory Password Change**: Immediately change the default admin password via the user profile dropdown in the header.
+3. **Prerequisites for First Employee Time Tracking**:
+   - Verify/configure Locations, Teams, and Employment Schedule Templates under Administration.
+   - Create the Employee profile in **Administration -> Employees**, assigning their Team, Location, and Schedule Template. Saving the employee automatically provisions the linked user account (without password).
+   - Initiate user registration by selecting **Actions -> Register** on the employee row.
+   - The employee completes the registration form (via challenge code) to set their password, logs in at `http://localhost:8080`, and can start tracking time immediately.
+
 ---
 
 ## System Probes & Telemetry Endpoints

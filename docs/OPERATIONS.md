@@ -96,37 +96,67 @@ Users and operators can pull the prebuilt image from the registry:
 docker pull repo.strolch.li/docker/chronivaro:latest
 ```
 
-#### 2.2.3 Preparing the Strolch Runtime Directory
+#### 2.2.3 Strolch Runtime Requirement & Architecture
 
-Chronivaro requires an external Strolch runtime directory containing configuration and data. Prepare the host directory structure before launching the container:
+The Chronivaro Docker image (`repo.strolch.li/docker/chronivaro:latest`) packages only the application binaries and the embedded runtime (`chronivaro.jar`). It does not bundle environment-specific configurations or initial tenant model state.
 
-1. **Create the directory tree**:
+When Docker launches the container, it mounts `./runtime` from the host to `/chronivaro-runtime` inside the container. If `./runtime` is empty or uninitialized, the Strolch agent cannot locate `StrolchConfiguration.xml` during bootstrapping and the application container will fail immediately on startup.
+
+##### Why Chronivaro Requires an External Runtime:
+1. **Separation of Binary and Configuration**: The container image remains generic, immutable, and stateless across all deployments while environment configurations (e.g., logging levels, realm providers, thread pools) are configured per deployment.
+2. **Security & Secret Isolation**: Cryptographic parameters (`secretKey` and `secretSalt` in `PrivilegeConfig.xml`) and administrative credentials in `PrivilegeUsers.xml` are not baked into public image layers.
+3. **Data Persistence Across Container Restarts**: In file-based persistence mode, Strolch loads and commits domain elements into `runtime/data/Model.xml`. Mounting the runtime directory ensures all work entries, employee profiles, vacation accounts, and session tokens (`runtime/temp/sessions.dat`) persist across container updates and restarts.
+
+##### Required Strolch Runtime Directory Layout:
+
+```text
+chronivaro/
+├── docker-compose.yml (or compose.yaml)
+└── runtime/
+    ├── config/
+    │   ├── PrivilegeConfig.xml        # Secret key/salt and hashing parameters
+    │   ├── PrivilegeRoles.xml         # Role-to-privilege mappings
+    │   ├── PrivilegeUsers.xml         # User accounts and credentials
+    │   ├── StrolchConfiguration.xml   # Core agent & realm configuration
+    │   └── StrolchPolicies.xml        # Policy definitions (break & holiday policies)
+    ├── data/
+    │   ├── templates.xml              # Resource and Order element schema definitions
+    │   └── Model.xml                  # Initial tenant master data and domain entities
+    └── temp/                          # Runtime temporary cache and session tokens
+```
+
+#### 2.2.4 Step-by-Step Runtime Preparation Guide
+
+Before running `docker compose up -d`, prepare the runtime directory on the host:
+
+1. **Create the Host Directory Hierarchy**:
    ```bash
    mkdir -p chronivaro/runtime/{config,data,temp}
    cd chronivaro
    ```
 
-2. **Copy initial configuration and model data**:
-   Copy the contents from the `runtime` directory of the release / repository into the newly created `runtime/` folder:
-   - `runtime/config/`: `StrolchConfiguration.xml`, `PrivilegeConfig.xml`, `PrivilegeRoles.xml`, `PrivilegeUsers.xml`
-   - `runtime/data/`: `templates.xml`, `Model.xml`
+2. **Populate Initial Configuration and Model Files**:
+   Copy the seed configuration and data files from the Chronivaro release package or repository (`Chronivaro/runtime/`) into `./runtime/`:
+   - Copy `runtime/config/*` to `./runtime/config/`
+   - Copy `runtime/data/*` to `./runtime/data/`
 
 3. **Configure Authentication Secrets**:
-   Generate secure random keys for `secretKey` and `secretSalt` in `runtime/config/PrivilegeConfig.xml`:
+   Edit `./runtime/config/PrivilegeConfig.xml` to generate and assign unique cryptographic keys:
    ```xml
    <Parameter name="secretKey" value="<GENERATE_RANDOM_SECRET_KEY>"/>
    <Parameter name="secretSalt" value="<GENERATE_RANDOM_SECRET_SALT>"/>
    ```
 
-4. **Verify File Permissions**:
-   Ensure the directory is readable and writable by the container user (`UID 1000` / `GID 1000` by default):
+4. **Adjust Directory Ownership & Permissions**:
+   The Docker container runs as a non-root user (`UID 1000` / `GID 1000` by default). Ensure the runtime directory is readable and writable by this user:
    ```bash
    chmod -R 775 runtime/
+   chown -R 1000:1000 runtime/
    ```
 
-#### 2.2.4 Starting Chronivaro with Docker Compose
+#### 2.2.5 Starting Chronivaro with Docker Compose
 
-Place the `docker-compose.yml` file in your `chronivaro` directory:
+Place the `docker-compose.yml` (or `compose.yaml`) file in your `chronivaro` directory:
 
 ```yaml
 services:
@@ -158,7 +188,7 @@ Follow the startup logs:
 docker compose logs -f
 ```
 
-The application will be available at `http://localhost:8080` (or the configured host port).
+The application will bootstrap the Strolch agent from `/chronivaro-runtime` and be available at `http://localhost:8080` (or the configured host port).
 
 To stop the container:
 
@@ -173,7 +203,7 @@ docker compose pull
 docker compose up -d
 ```
 
-#### 2.2.5 Local Development with Docker Compose
+#### 2.2.6 Local Development with Docker Compose
 
 For developers building the image from local source:
 
@@ -187,11 +217,68 @@ docker compose -f docker-compose-dev.yml up --build
 
 ---
 
-## 3. Health Checks & Monitoring
+## 3. Initial System Access & Tenant Onboarding
+
+After starting Chronivaro for the first time, perform initial administrator setup and prepare the tenant before onboarding employees.
+
+### 3.1 First Administrator Login & Password Security
+
+1. **Access the Web Interface**:
+   Open a web browser and navigate to `http://localhost:8080` (or your configured host and port).
+2. **Login with Default Administrator Credentials**:
+   - **Username**: `admin`
+   - **Password**: `admin`
+3. **Immediately Change the Administrator Password**:
+   - For security, never leave default credentials active in any environment.
+   - Click on the user profile dropdown in the header and select **Change Password** (or manage credentials via User Administration).
+   - Enter the current password (`admin`) and set a strong, unique administrative password.
+
+### 3.2 Prerequisites Checklist Before First Employee Login
+
+Before a new employee can log in and start tracking time, the administrator or HR manager must ensure foundational master data and the employee profile are configured:
+
+1. **Verify Global Configuration & Absence Types**:
+   - Verify global tenant parameters under Administration (e.g., standard weekly target hours, default annual vacation entitlement, and tenant language).
+   - Ensure standard absence types (`VACATION`, `ILLNESS`, `ACCIDENT`, `MILITARY_CIVIL_DEFENSE`, etc.) are active.
+2. **Configure Locations & Holiday Calendars**:
+   - Create or verify company locations (e.g., Zurich HQ).
+   - Ensure the associated holiday calendar is configured so public holidays are credited against daily target hours.
+3. **Configure Teams**:
+   - Create organizational teams (e.g., Engineering, Marketing, Administration).
+   - Assign designated supervisors or team leads responsible for approving time entries, period closures, and absence requests.
+4. **Define Employment Schedule Templates**:
+   - Create or select an employment schedule template (e.g., *Standard Monday–Friday 8h / 40h week*, or part-time models like 80% / 50%).
+   - These templates define daily target minutes (Monday through Sunday) and work pensum.
+5. **Create the Employee Profile & Link User Account**:
+   - Navigate to **Administration -> Employees** and create the employee record.
+   - Enter personal details (Firstname, Lastname, Email, Join Date, and desired Username).
+   - Assign the employee to their **Primary Team**, **Location**, and **Employment Schedule Template**.
+   - Saving the employee automatically creates the linked Strolch user account (with `Employee` and `ModelAccessor` roles, without a pre-set password), initializes their employment schedule version, and calculates their initial pro-rated vacation entitlement for the calendar year.
+6. **Initiate Employee Registration**:
+   - In **Administration -> Employees**, click on **Actions -> Register** for the newly created employee.
+   - This triggers the registration process (`POST /rest/chronivaro/v1/employees/{id}/register`) and issues a registration challenge code for the user account.
+
+### 3.3 Employee Registration Completion & First Login
+
+Once registration is initiated:
+1. **Complete Registration**:
+   - The employee accesses the registration form (via the registration link or navigation to the complete registration view: `http://localhost:8080/#complete-registration?username=<username>&challenge=<challenge>`).
+   - The employee enters their username, challenge code, and sets their personal secure password.
+2. **Login & Start Time Tracking**:
+   - The employee logs in at `http://localhost:8080` with their username and newly created password.
+   - The employee can immediately:
+     - Start and stop the real-time timer on the dashboard.
+     - Record and edit manual work blocks and break intervals.
+     - View live daily and monthly target vs. actual time balances.
+     - Submit absence requests (e.g., vacation days) for supervisor approval.
+
+---
+
+## 4. Health Checks & Monitoring
 
 Chronivaro exposes standard unauthenticated system probes:
 
-### 3.1 Liveness Probe (`GET /rest/chronivaro/v1/system/health`)
+### 4.1 Liveness Probe (`GET /rest/chronivaro/v1/system/health`)
 
 Verifies that the HTTP server and Strolch agent are active:
 
@@ -204,7 +291,7 @@ Verifies that the HTTP server and Strolch agent are active:
 }
 ```
 
-### 3.2 Readiness Probe (`GET /rest/chronivaro/v1/system/readiness`)
+### 4.2 Readiness Probe (`GET /rest/chronivaro/v1/system/readiness`)
 
 Verifies that domain realms are loaded and ready to serve user requests:
 
@@ -218,7 +305,7 @@ Verifies that domain realms are loaded and ready to serve user requests:
 ```
 *HTTP Status 200 is returned when ready; 503 SERVICE_UNAVAILABLE is returned when starting up or shutting down.*
 
-### 3.3 System Metrics (`GET /rest/chronivaro/v1/system/metrics`)
+### 4.3 System Metrics (`GET /rest/chronivaro/v1/system/metrics`)
 
 Returns runtime memory, thread pool, and CPU telemetry:
 
@@ -240,7 +327,7 @@ Returns runtime memory, thread pool, and CPU telemetry:
 
 ---
 
-## 4. Structured Logging & Distributed Tracing
+## 5. Structured Logging & Distributed Tracing
 
 Chronivaro attaches a correlation ID to every request through `CorrelationIdFilter` and Logback MDC:
 
@@ -267,7 +354,7 @@ All REST error responses return standardized JSON error objects:
 
 ---
 
-## 5. Performance Benchmarks & SLAs
+## 6. Performance Benchmarks & SLAs
 
 Chronivaro is engineered for low latency:
 
@@ -283,24 +370,24 @@ Server-side pagination (`offset` and `limit`) prevents unbounded memory allocati
 
 ---
 
-## 6. Data Privacy, Retention & Compliance
+## 7. Data Privacy, Retention & Compliance
 
-### 6.1 Role-Based Access Scoping
+### 7.1 Role-Based Access Scoping
 
 - **Medical & Sickness Privacy**: Sickness absence reasons and doctor's certificates are masked from team peers and visible exclusively to HR and direct supervisors.
 - **Presence Abstract Status**: Unprivileged users querying `/presence` see binary working/absent states rather than sensitive absence categories.
 
-### 6.2 Period Freezing & Tamper Prevention
+### 7.2 Period Freezing & Tamper Prevention
 
 - Once a monthly period is approved and locked by HR/Administrator (`STATE_LOCKED`), work entries and absences falling into that month cannot be added, edited, or deleted without formal supervisor reopening with mandatory audit justification.
 
-### 6.3 Audit Log Immutability
+### 7.3 Audit Log Immutability
 
 - Every lifecycle change (timer start/stop, work entry edit, absence approval/rejection, period submission, config update) produces an append-only audit trail accessible under `/rest/chronivaro/v1/admin/audit-logs`.
 
 ---
 
-## 7. Backup & Disaster Recovery
+## 8. Backup & Disaster Recovery
 
 1. **Strolch Runtime State**:
    - For file-based persistence: Regularly back up the `runtime/data/` directory.
