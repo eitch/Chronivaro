@@ -1,6 +1,6 @@
 # Chronivaro Implementation Status
 
-Audit date: 2026-08-23. `IMPLEMENTATION_SPECIFICATION.md` is authoritative; the repository is authoritative for current implementation state.
+Audit date: 2026-08-24. `IMPLEMENTATION_SPECIFICATION.md` is authoritative; the repository is authoritative for current implementation state.
 
 ---
 
@@ -23,14 +23,13 @@ Audit date: 2026-08-23. `IMPLEMENTATION_SPECIFICATION.md` is authoritative; the 
 - **Localization & Branding (Sections 4.2, 6.11, 12.3, 16, 18, 18.5):** Global company branding (name/logo), default language configuration, client-side i18n engine with German (Swiss German) and English translations across all views, and automated key parity verification.
 - **Vacation Overview – Vacation Initialization on Reactivation, Display Info, and Booking Type Localization (Sections 6.7, 9.9, 11.3, 12.1 #4):** Verified and automated annual vacation entitlement initialization upon employee reactivation (`ReactivateEmployeeService`); user-friendly employee identification display (username and personnel number) across vacation DTOs and web views; booking type formatting and defensive localization fallback preventing `enums.vacationEntryType.undefined` across vacation overview tables and reports.
 - **Team Monthly Overview – Role-Based Visibility, Team Dropdown, and Date Picker (Sections 11.4, 12.1 #7):** Team Monthly Overview visibility restricted to authorized supervisory and administrative roles (Supervisor, HR, Admin) and hidden from employee-only users; team selection via dropdown and report period selection via date/month picker; client and server-side authorization checks and comprehensive UI test coverage.
+- **System Configuration – Company Logo Image Upload and Settings Layout (Sections 6.11, 12.1 #8):** Image file upload (PNG/JPEG/SVG/GIF/WebP data URI validation, Base64 size limits, and dedicated upload/delete/serve endpoints), image preview and removal controls in `ConfigurationView.js`, centered settings container layout (`.configuration-container`), description texts formatted directly below section titles, and full test coverage across core, rest, and web modules.
 
 ---
 
 ## Incomplete Requirements / Active Backlog Tasks
 
-The following prioritized backlog task (Task 5) addresses recently identified usability issues and UI layout improvements:
-
-- **Task 5: System Configuration – Company Logo Image Upload and Settings Layout (Sections 6.11, 12.1 #8):** Support image file upload (storage and serving) for company logo; center the settings container layout and position descriptions below titles.
+All active backlog tasks have been implemented and verified. No incomplete backlog items remain.
 
 ---
 

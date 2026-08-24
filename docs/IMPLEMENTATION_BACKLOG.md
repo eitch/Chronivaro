@@ -145,22 +145,13 @@ The following foundational areas are verified as fully implemented in the reposi
 - **Localization & Branding (Sections 4.2, 6.11, 12.3, 16, 18, 18.5):** Global company branding (name/logo), default language configuration, client-side i18n engine with German (Swiss German) and English translations across all views, and automated key parity verification.
 - **Vacation Overview – Vacation Initialization on Reactivation, Display Info, and Booking Type Localization (Sections 6.7, 9.9, 11.3, 12.1 #4):** Verified and automated annual vacation entitlement initialization upon employee reactivation (`ReactivateEmployeeService`); user-friendly employee identification display (username and personnel number) across vacation DTOs and web views; booking type formatting and defensive localization fallback preventing `enums.vacationEntryType.undefined` across vacation overview tables and reports.
 - **Team Monthly Overview – Role-Based Visibility, Team Dropdown, and Date Picker (Sections 11.4, 12.1 #7):** Team Monthly Overview visibility restricted to authorized supervisory and administrative roles (Supervisor, HR, Admin) and hidden from employee-only users; team selection via dropdown and report period selection via date/month picker; client and server-side authorization checks and comprehensive UI test coverage.
+- **System Configuration – Company Logo Image Upload and Settings Layout (Sections 6.11, 12.1 #8):** Image file upload (PNG/JPEG/SVG/GIF/WebP data URI validation, Base64 size limits, and dedicated upload/delete/serve endpoints), image preview and removal controls in `ConfigurationView.js`, centered settings container layout (`.configuration-container`), description texts formatted directly below section titles, and full test coverage across core, rest, and web modules.
 
 ---
 
 ## Prioritized Implementation Backlog
 
-### Task 5: System Configuration – Company Logo Image Upload and Settings Layout
-
-- **Goal:** Enable image file upload for the company logo in system administration and improve the settings view layout.
-- **Scope:**
-  - **Logo Image Upload:**
-    - Extend configuration management in `chronivaro-core` and `chronivaro-rest` (`ConfigurationResource.java`, `UpdateConfigurationService.java` or dedicated logo upload endpoint) to accept image file uploads (e.g., PNG/JPEG/SVG or Base64 data URI), validate file size and MIME type, and store/serve the company logo.
-    - Update `ConfigurationView.js` in `chronivaro-web` to provide an image file upload input with preview and remove options.
-  - **Settings Layout Alignment:**
-    - Center the settings container (`div`) on the page for a balanced, focused appearance.
-    - Position section description texts directly below section titles rather than misaligned side-by-side or unformatted positions.
-  - Add backend and frontend tests for logo upload, validation, and configuration retrieval.
+All prioritized backlog tasks (Tasks 1 through 5) have been completed, verified against `IMPLEMENTATION_SPECIFICATION.md`, and validated with automated unit, integration, and UI test suites.
 
 ---
 
