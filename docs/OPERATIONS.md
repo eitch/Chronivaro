@@ -56,20 +56,133 @@ sudo systemctl start chronivaro
 sudo systemctl status chronivaro
 ```
 
-### 2.2 Containerization & Dockerfile
+### 2.2 Docker Container Distribution & Deployment
 
-Example Docker configuration:
+Chronivaro is distributed as a lightweight, non-root Docker container image (`repo.strolch.li/docker/chronivaro:latest`) packaging the standalone application with Eclipse Temurin OpenJDK JRE 25.
 
-```dockerfile
-FROM eclipse-temurin:25-jre-alpine
-WORKDIR /app
-COPY chronivaro-app/target/chronivaro.jar /app/chronivaro.jar
-COPY runtime /app/runtime
-EXPOSE 8080
-ENV PORT=8080
-ENV STROLCH_PATH=/app/runtime
-ENV STROLCH_ENV=prod
-ENTRYPOINT ["java", "-Xms512m", "-Xmx2048m", "-jar", "/app/chronivaro.jar"]
+#### 2.2.1 Building and Pushing the Docker Image (Maintainers)
+
+To build and tag the Docker image locally:
+
+```bash
+# Build the project JAR first
+mvn clean package -DskipTests
+
+# Build the local docker image
+./build-docker-image.sh
+```
+
+To build and push the image to the remote registry (`repo.strolch.li`):
+
+```bash
+./build-and-push-docker.sh
+```
+
+Or manually using custom options:
+
+```bash
+./build-docker-image.sh -p -c -r repo.strolch.li
+```
+
+- `-p`: Push to Docker image registry
+- `-c`: Clean up local tags after successful push
+- `-r <registry>`: Target registry host (default: `repo.strolch.li`)
+
+#### 2.2.2 Pulling the Docker Image
+
+Users and operators can pull the prebuilt image from the registry:
+
+```bash
+docker pull repo.strolch.li/docker/chronivaro:latest
+```
+
+#### 2.2.3 Preparing the Strolch Runtime Directory
+
+Chronivaro requires an external Strolch runtime directory containing configuration and data. Prepare the host directory structure before launching the container:
+
+1. **Create the directory tree**:
+   ```bash
+   mkdir -p chronivaro/runtime/{config,data,temp}
+   cd chronivaro
+   ```
+
+2. **Copy initial configuration and model data**:
+   Copy the contents from the `runtime` directory of the release / repository into the newly created `runtime/` folder:
+   - `runtime/config/`: `StrolchConfiguration.xml`, `PrivilegeConfig.xml`, `PrivilegeRoles.xml`, `PrivilegeUsers.xml`
+   - `runtime/data/`: `templates.xml`, `Model.xml`
+
+3. **Configure Authentication Secrets**:
+   Generate secure random keys for `secretKey` and `secretSalt` in `runtime/config/PrivilegeConfig.xml`:
+   ```xml
+   <Parameter name="secretKey" value="<GENERATE_RANDOM_SECRET_KEY>"/>
+   <Parameter name="secretSalt" value="<GENERATE_RANDOM_SECRET_SALT>"/>
+   ```
+
+4. **Verify File Permissions**:
+   Ensure the directory is readable and writable by the container user (`UID 1000` / `GID 1000` by default):
+   ```bash
+   chmod -R 775 runtime/
+   ```
+
+#### 2.2.4 Starting Chronivaro with Docker Compose
+
+Place the `docker-compose.yml` file in your `chronivaro` directory:
+
+```yaml
+services:
+  app:
+    image: repo.strolch.li/docker/chronivaro:latest
+    container_name: chronivaro
+    hostname: app
+    ports:
+      - 127.0.0.1:8080:8080
+    user: "${UID:-1000}:${GID:-1000}"
+    environment:
+      - TZ=Europe/Zurich
+      - STROLCH_ENVIRONMENT=dev
+      - PORT=8080
+    volumes:
+      - ./runtime:/chronivaro-runtime
+    restart: unless-stopped
+```
+
+Start the application daemon:
+
+```bash
+docker compose up -d
+```
+
+Follow the startup logs:
+
+```bash
+docker compose logs -f
+```
+
+The application will be available at `http://localhost:8080` (or the configured host port).
+
+To stop the container:
+
+```bash
+docker compose down
+```
+
+To update to a newer image version:
+
+```bash
+docker compose pull
+docker compose up -d
+```
+
+#### 2.2.5 Local Development with Docker Compose
+
+For developers building the image from local source:
+
+```bash
+# Build the application JAR
+mvn clean package -DskipTests
+
+# Start the local development container
+docker compose -f docker-compose-dev.yml up --build
 ```
 
 ---

@@ -1,0 +1,18 @@
+services:
+  chronivaro:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        UID: ${UID:-1000}
+        GID: ${GID:-1000}
+    ports:
+      - "8080:8080"
+    user: "${UID:-1000}:${GID:-1000}"
+    volumes:
+      - ./runtime:/chronivaro-runtime
+    environment:
+      - TZ=Europe/Zurich
+      - STROLCH_ENVIRONMENT=dev
+      - STROLCH_PATH=/chronivaro-runtime
+      - PORT=8080

@@ -45,13 +45,16 @@ public record ChronivaroAppConfig(
 	}
 
 	public static ChronivaroAppConfig fromArgsAndEnv(String[] args) {
-		boolean httpEnabled = getBooleanPropOrEnv("chronivaro.http.enabled", "CHRONIVARO_HTTP_ENABLED", DEFAULT_HTTP_ENABLED);
-		String bindAddress = getStringPropOrEnv("chronivaro.bind.address", "CHRONIVARO_BIND_ADDRESS", DEFAULT_BIND_ADDRESS);
-		int port = getIntPropOrEnv("chronivaro.port", "CHRONIVARO_PORT", DEFAULT_PORT);
-		String contextPath = getStringPropOrEnv("chronivaro.context.path", "CHRONIVARO_CONTEXT_PATH", DEFAULT_CONTEXT_PATH);
-		String webResourcePath = getStringPropOrEnv("chronivaro.web.resource.path", "CHRONIVARO_WEB_RESOURCE_PATH", null);
-		String strolchPath = getStringPropOrEnv("strolch.path", "STROLCH_PATH", resolveDefaultStrolchPath());
-		String strolchEnvironment = getStringPropOrEnv("strolch.environment", "STROLCH_ENVIRONMENT", DEFAULT_STROLCH_ENVIRONMENT);
+		boolean httpEnabled = getBooleanPropOrEnv("chronivaro.http.enabled", "CHRONIVARO_HTTP_ENABLED", null, DEFAULT_HTTP_ENABLED);
+		if (httpEnabled && getBooleanPropOrEnv("no.http", "NO_HTTP", "CHRONIVARO_NO_HTTP", false)) {
+			httpEnabled = false;
+		}
+		String bindAddress = getStringPropOrEnv("chronivaro.bind.address", "CHRONIVARO_BIND_ADDRESS", "BIND_ADDRESS", DEFAULT_BIND_ADDRESS);
+		int port = getIntPropOrEnv("chronivaro.port", "CHRONIVARO_PORT", "PORT", DEFAULT_PORT);
+		String contextPath = getStringPropOrEnv("chronivaro.context.path", "CHRONIVARO_CONTEXT_PATH", "CONTEXT_PATH", DEFAULT_CONTEXT_PATH);
+		String webResourcePath = getStringPropOrEnv("chronivaro.web.resource.path", "CHRONIVARO_WEB_RESOURCE_PATH", "WEB_RESOURCES_PATH", null);
+		String strolchPath = getStringPropOrEnv("strolch.path", "STROLCH_PATH", null, resolveDefaultStrolchPath());
+		String strolchEnvironment = getStringPropOrEnv("strolch.environment", "STROLCH_ENVIRONMENT", "STROLCH_ENV", DEFAULT_STROLCH_ENVIRONMENT);
 
 		if (args != null) {
 			for (int i = 0; i < args.length; i++) {
@@ -89,7 +92,7 @@ public record ChronivaroAppConfig(
 		return DEFAULT_STROLCH_PATH;
 	}
 
-	private static String getStringPropOrEnv(String propKey, String envKey, String defaultValue) {
+	private static String getStringPropOrEnv(String propKey, String envKey, String fallbackEnvKey, String defaultValue) {
 		String val = System.getProperty(propKey);
 		if (val != null && !val.isBlank()) {
 			return val;
@@ -98,10 +101,16 @@ public record ChronivaroAppConfig(
 		if (val != null && !val.isBlank()) {
 			return val;
 		}
+		if (fallbackEnvKey != null) {
+			val = System.getenv(fallbackEnvKey);
+			if (val != null && !val.isBlank()) {
+				return val;
+			}
+		}
 		return defaultValue;
 	}
 
-	private static int getIntPropOrEnv(String propKey, String envKey, int defaultValue) {
+	private static int getIntPropOrEnv(String propKey, String envKey, String fallbackEnvKey, int defaultValue) {
 		String val = System.getProperty(propKey);
 		if (val != null && !val.isBlank()) {
 			return Integer.parseInt(val.trim());
@@ -110,10 +119,16 @@ public record ChronivaroAppConfig(
 		if (val != null && !val.isBlank()) {
 			return Integer.parseInt(val.trim());
 		}
+		if (fallbackEnvKey != null) {
+			val = System.getenv(fallbackEnvKey);
+			if (val != null && !val.isBlank()) {
+				return Integer.parseInt(val.trim());
+			}
+		}
 		return defaultValue;
 	}
 
-	private static boolean getBooleanPropOrEnv(String propKey, String envKey, boolean defaultValue) {
+	private static boolean getBooleanPropOrEnv(String propKey, String envKey, String fallbackEnvKey, boolean defaultValue) {
 		String val = System.getProperty(propKey);
 		if (val != null && !val.isBlank()) {
 			return Boolean.parseBoolean(val.trim());
@@ -121,6 +136,12 @@ public record ChronivaroAppConfig(
 		val = System.getenv(envKey);
 		if (val != null && !val.isBlank()) {
 			return Boolean.parseBoolean(val.trim());
+		}
+		if (fallbackEnvKey != null) {
+			val = System.getenv(fallbackEnvKey);
+			if (val != null && !val.isBlank()) {
+				return Boolean.parseBoolean(val.trim());
+			}
 		}
 		return defaultValue;
 	}

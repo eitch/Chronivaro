@@ -78,8 +78,53 @@ java -jar chronivaro-app/target/chronivaro.jar --port 8080 --runtime ./runtime -
 | `--context-path <path>` | `CONTEXT_PATH` | `/` | Base HTTP context path for Web UI and REST endpoints |
 | `--no-http` | `NO_HTTP` | `false` | Disable HTTP server and run Strolch core runtime only |
 | `--runtime <path>` | `STROLCH_PATH` | `./runtime` | Path to Strolch runtime directory containing `config/` and `data/` |
-| `--env <name>` | `STROLCH_ENV` | `dev` | Environment configuration profile (e.g. `dev`, `prod`, `test`) |
+| `--env <name>` | `STROLCH_ENV` / `STROLCH_ENVIRONMENT` | `dev` | Environment configuration profile (e.g. `dev`, `prod`, `test`) |
 | `--web-resources <path>`| `WEB_RESOURCES_PATH` | `null` (auto) | Custom filesystem path to override static frontend assets |
+
+---
+
+## 🐳 Running with Docker
+
+### Running for Development (Local Build)
+
+1. Build the project from the root:
+   ```bash
+   mvn clean package -DskipTests
+   ```
+2. Start the application using Docker Compose:
+   ```bash
+   docker compose -f docker-compose-dev.yml up --build
+   ```
+3. The application will be available at `http://localhost:8080`.
+
+### Building and Pushing to Docker Repository
+
+To build and tag the Docker image locally:
+```bash
+./build-docker-image.sh
+```
+
+To build, tag, and push the image to the remote registry (`repo.strolch.li`):
+```bash
+./build-and-push-docker.sh
+```
+
+### Running with Docker in Production
+
+1. Create directory structure on host:
+   ```bash
+   mkdir chronivaro
+   cd chronivaro
+   mkdir -p runtime/{config,data,temp}
+   ```
+2. Copy configuration files from the `runtime` directory into `runtime/` (`config/`, `data/`, `temp/`).
+3. Generate random values for `secretKey` and `secretSalt` in `runtime/config/PrivilegeConfig.xml`.
+4. Copy `docker-compose.yml` to the directory.
+5. Start the application:
+   ```bash
+   docker compose up -d
+   docker compose logs -f
+   ```
 
 ---
 
