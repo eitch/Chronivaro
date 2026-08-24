@@ -1,9 +1,11 @@
 import ReportApi from '../api/ReportApi.js';
 import AbsenceTypeApi from '../api/AbsenceTypeApi.js';
 import TeamApi from '../api/TeamApi.js';
+import EmployeeApi from '../api/EmployeeApi.js';
 import AuthApi from '../api/AuthApi.js';
 import NotificationDialog from '../utils/NotificationDialog.js';
 import Format from '../utils/Format.js';
+import MonthPicker from '../utils/MonthPicker.js';
 import I18n from '../i18n/I18n.js';
 
 export default class ReportsView {
@@ -20,14 +22,17 @@ export default class ReportsView {
 		this.filters = {
 			day: {
 				date: `${year}-${month}-${day}`,
+				teamId: '',
 				employeeId: ''
 			},
 			month: {
 				yearMonth: `${year}-${month}`,
+				teamId: '',
 				employeeId: ''
 			},
 			vacation: {
 				year: year,
+				teamId: '',
 				employeeId: ''
 			},
 			team: {
@@ -37,6 +42,7 @@ export default class ReportsView {
 			absences: {
 				from: `${year}-${month}-01`,
 				to: `${year}-${month}-${day}`,
+				teamId: '',
 				employeeId: '',
 				type: '',
 				state: ''
@@ -45,6 +51,7 @@ export default class ReportsView {
 
 		this.absenceTypes = [];
 		this.teams = [];
+		this.employees = [];
 	}
 
 	async render(params) {
@@ -110,15 +117,16 @@ export default class ReportsView {
 		this.exportPdfBtn = container.querySelector('#btn-export-pdf');
 
 		this.setupTabs(container);
+
+		// Load reference data first so dropdowns are populated properly
+		await this.loadReferenceData();
+
 		this.renderFilterFields();
 
 		this.runBtn.addEventListener('click', () => this.generateReport());
 		this.exportBtn.addEventListener('click', () => this.exportCsv());
 		this.exportPdfBtn.addEventListener('click', () => this.exportPdf());
 		this.updateActionButtons();
-
-		// Load background data for selects
-		this.loadReferenceData();
 
 		// Only users with an employee profile can use the implicit self-report.
 		// Administrative users must select an employee explicitly.
@@ -130,10 +138,10 @@ export default class ReportsView {
 	}
 
 	updateActionButtons() {
-		const isAdmin = AuthApi.hasRole('Administrator');
+		const isAdmin = AuthApi.hasRole('Administrator') || AuthApi.hasRole('StrolchAdmin');
 		const employeeId = this.filters[this.activeReportType]?.employeeId?.trim();
 		const teamId = this.filters.team.teamId?.trim();
-		const hasExplicitTarget = Boolean(employeeId || (this.activeReportType === 'team' && teamId));
+		const hasExplicitTarget = Boolean(employeeId || (this.activeReportType === 'team' && teamId) || this.activeReportType === 'absences');
 		const disabled = isAdmin && !hasExplicitTarget;
 
 		[this.runBtn, this.exportBtn, this.exportPdfBtn].forEach(button => {
@@ -159,30 +167,37 @@ export default class ReportsView {
 
 	async loadReferenceData() {
 		try {
-			const types = await AbsenceTypeApi.getAll();
+			const [types, teams, employees] = await Promise.all([
+				AbsenceTypeApi.getAll().catch(e => { console.warn('Could not load absence types', e); return []; }),
+				TeamApi.getAll().catch(e => { console.warn('Could not load teams', e); return []; }),
+				EmployeeApi.getAll().catch(e => { console.warn('Could not load employees', e); return []; })
+			]);
 			this.absenceTypes = types || [];
-			if (this.activeReportType === 'absences') {
-				this.populateAbsenceTypeSelect();
-			}
-		} catch (e) {
-			console.warn('Could not load absence types', e);
-		}
-
-		try {
-			const teams = await TeamApi.getAll();
 			this.teams = teams || [];
-			if (this.activeReportType === 'team') {
-				this.populateTeamSelect();
+			this.employees = employees || [];
+
+			if (this.filterBar) {
+				if (this.activeReportType === 'absences') {
+					this.populateAbsenceTypeSelect();
+				}
+				if (this.activeReportType === 'team') {
+					this.populateTeamSelect('team');
+				}
+				if (this.canSelectEmployee()) {
+					this.populateTeamSelect(this.activeReportType);
+					this.populateEmployeeSelect(this.activeReportType);
+				}
+				this.updateActionButtons();
 			}
 		} catch (e) {
-			console.warn('Could not load teams', e);
+			console.warn('Could not load reference data for reports', e);
 		}
 	}
 
 	populateAbsenceTypeSelect() {
-		const select = this.container.querySelector('#filter-absence-type');
+		const select = this.filterBar ? this.filterBar.querySelector('#filter-absence-type') : null;
 		if (!select) return;
-		const currentVal = select.value;
+		const currentVal = this.filters.absences.type;
 		select.innerHTML = `<option value="">${I18n.t('common.allTypes')}</option>`;
 		this.absenceTypes.forEach(t => {
 			const opt = document.createElement('option');
@@ -193,18 +208,73 @@ export default class ReportsView {
 		if (currentVal) select.value = currentVal;
 	}
 
-	populateTeamSelect() {
-		const select = this.container.querySelector('#filter-team-id-select');
+	populateTeamSelect(type) {
+		const select = type === 'team'
+			? (this.filterBar ? this.filterBar.querySelector('#filter-team-id-select') : null)
+			: (this.filterBar ? this.filterBar.querySelector(`#filter-${type}-team`) : null);
 		if (!select) return;
-		const currentVal = this.filters.team.teamId;
-		select.innerHTML = `<option value="">${I18n.t('reports.selectTeamPrompt')}</option>`;
-		this.teams.forEach(t => {
+
+		const currentVal = this.filters[type]?.teamId || '';
+		select.innerHTML = `<option value="">${type === 'team' ? I18n.t('reports.selectTeamPrompt') : I18n.t('common.allTeams')}</option>`;
+
+		const sortedTeams = [...(this.teams || [])].sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+		sortedTeams.forEach(t => {
 			const opt = document.createElement('option');
 			opt.value = t.id;
-			opt.textContent = `${t.name} (${t.id})`;
+			opt.textContent = `${t.name}`;
 			select.appendChild(opt);
 		});
+
 		if (currentVal) select.value = currentVal;
+	}
+
+	populateEmployeeSelect(type) {
+		const select = this.filterBar ? this.filterBar.querySelector(`#filter-${type}-emp`) : null;
+		if (!select) return;
+
+		const selectedTeamId = this.filters[type]?.teamId;
+		const currentVal = this.filters[type]?.employeeId || '';
+
+		const isAdmin = AuthApi.hasRole('Administrator') || AuthApi.hasRole('StrolchAdmin');
+		let defaultPrompt;
+		if (type === 'absences') {
+			defaultPrompt = I18n.t('common.allEmployees');
+		} else if (isAdmin) {
+			defaultPrompt = I18n.t('reports.selectEmployeePrompt');
+		} else {
+			defaultPrompt = I18n.t('reports.defaultCurrentUser');
+		}
+
+		select.innerHTML = `<option value="">${defaultPrompt}</option>`;
+
+		let filteredEmployees = this.employees || [];
+		if (selectedTeamId) {
+			filteredEmployees = filteredEmployees.filter(e => e.teamId === selectedTeamId);
+		}
+
+		filteredEmployees = [...filteredEmployees].sort((a, b) => {
+			const nameA = `${a.lastname || ''} ${a.firstname || ''}`.toLowerCase();
+			const nameB = `${b.lastname || ''} ${b.firstname || ''}`.toLowerCase();
+			return nameA.localeCompare(nameB);
+		});
+
+		filteredEmployees.forEach(emp => {
+			const opt = document.createElement('option');
+			opt.value = emp.id;
+			const name = `${emp.firstname || ''} ${emp.lastname || ''}`.trim() || emp.username || emp.id;
+			const persNr = emp.personalNumber ? ` (${emp.personalNumber})` : '';
+			opt.textContent = `${name}${persNr}`;
+			select.appendChild(opt);
+		});
+
+		if (currentVal && filteredEmployees.some(e => e.id === currentVal)) {
+			select.value = currentVal;
+		} else {
+			select.value = '';
+			if (this.filters[type]) {
+				this.filters[type].employeeId = '';
+			}
+		}
 	}
 
 	canSelectEmployee() {
@@ -222,16 +292,37 @@ export default class ReportsView {
 				</div>
 				${canSelectEmp ? `
 				<div class="filter-group">
-					<label for="filter-day-emp">${I18n.t('common.employee')} ID (${I18n.t('common.optional')}):</label>
-					<input type="text" id="filter-day-emp" placeholder="${I18n.t('reports.defaultCurrentUser')}" value="${this.filters.day.employeeId}">
+					<label for="filter-day-team">${I18n.t('common.team')}:</label>
+					<select id="filter-day-team">
+						<option value="">${I18n.t('common.allTeams')}</option>
+					</select>
+				</div>
+				<div class="filter-group">
+					<label for="filter-day-emp">${I18n.t('common.employee')}:</label>
+					<select id="filter-day-emp">
+						<option value="">${I18n.t('reports.defaultCurrentUser')}</option>
+					</select>
 				</div>
 				` : ''}
 			`;
 			const dateInput = this.filterBar.querySelector('#filter-day-date');
-			const empInput = this.filterBar.querySelector('#filter-day-emp');
 			dateInput.addEventListener('change', () => { this.filters.day.date = dateInput.value; });
-			if (empInput) {
-				empInput.addEventListener('input', () => { this.filters.day.employeeId = empInput.value; });
+
+			if (canSelectEmp) {
+				const teamSelect = this.filterBar.querySelector('#filter-day-team');
+				const empSelect = this.filterBar.querySelector('#filter-day-emp');
+				this.populateTeamSelect('day');
+				this.populateEmployeeSelect('day');
+
+				teamSelect.addEventListener('change', () => {
+					this.filters.day.teamId = teamSelect.value;
+					this.populateEmployeeSelect('day');
+					this.updateActionButtons();
+				});
+				empSelect.addEventListener('change', () => {
+					this.filters.day.employeeId = empSelect.value;
+					this.updateActionButtons();
+				});
 			}
 
 		} else if (this.activeReportType === 'month') {
@@ -242,16 +333,37 @@ export default class ReportsView {
 				</div>
 				${canSelectEmp ? `
 				<div class="filter-group">
-					<label for="filter-month-emp">${I18n.t('common.employee')} ID (${I18n.t('common.optional')}):</label>
-					<input type="text" id="filter-month-emp" placeholder="${I18n.t('reports.defaultCurrentUser')}" value="${this.filters.month.employeeId}">
+					<label for="filter-month-team">${I18n.t('common.team')}:</label>
+					<select id="filter-month-team">
+						<option value="">${I18n.t('common.allTeams')}</option>
+					</select>
+				</div>
+				<div class="filter-group">
+					<label for="filter-month-emp">${I18n.t('common.employee')}:</label>
+					<select id="filter-month-emp">
+						<option value="">${I18n.t('reports.defaultCurrentUser')}</option>
+					</select>
 				</div>
 				` : ''}
 			`;
 			const ymInput = this.filterBar.querySelector('#filter-month-ym');
-			const empInput = this.filterBar.querySelector('#filter-month-emp');
 			ymInput.addEventListener('change', () => { this.filters.month.yearMonth = ymInput.value; });
-			if (empInput) {
-				empInput.addEventListener('input', () => { this.filters.month.employeeId = empInput.value; });
+
+			if (canSelectEmp) {
+				const teamSelect = this.filterBar.querySelector('#filter-month-team');
+				const empSelect = this.filterBar.querySelector('#filter-month-emp');
+				this.populateTeamSelect('month');
+				this.populateEmployeeSelect('month');
+
+				teamSelect.addEventListener('change', () => {
+					this.filters.month.teamId = teamSelect.value;
+					this.populateEmployeeSelect('month');
+					this.updateActionButtons();
+				});
+				empSelect.addEventListener('change', () => {
+					this.filters.month.employeeId = empSelect.value;
+					this.updateActionButtons();
+				});
 			}
 
 		} else if (this.activeReportType === 'vacation') {
@@ -262,33 +374,64 @@ export default class ReportsView {
 				</div>
 				${canSelectEmp ? `
 				<div class="filter-group">
-					<label for="filter-vacation-emp">${I18n.t('common.employee')} ID (${I18n.t('common.optional')}):</label>
-					<input type="text" id="filter-vacation-emp" placeholder="${I18n.t('reports.defaultCurrentUser')}" value="${this.filters.vacation.employeeId}">
+					<label for="filter-vacation-team">${I18n.t('common.team')}:</label>
+					<select id="filter-vacation-team">
+						<option value="">${I18n.t('common.allTeams')}</option>
+					</select>
+				</div>
+				<div class="filter-group">
+					<label for="filter-vacation-emp">${I18n.t('common.employee')}:</label>
+					<select id="filter-vacation-emp">
+						<option value="">${I18n.t('reports.defaultCurrentUser')}</option>
+					</select>
 				</div>
 				` : ''}
 			`;
 			const yearInput = this.filterBar.querySelector('#filter-vacation-year');
-			const empInput = this.filterBar.querySelector('#filter-vacation-emp');
 			yearInput.addEventListener('change', () => { this.filters.vacation.year = yearInput.value; });
-			if (empInput) {
-				empInput.addEventListener('input', () => { this.filters.vacation.employeeId = empInput.value; });
+
+			if (canSelectEmp) {
+				const teamSelect = this.filterBar.querySelector('#filter-vacation-team');
+				const empSelect = this.filterBar.querySelector('#filter-vacation-emp');
+				this.populateTeamSelect('vacation');
+				this.populateEmployeeSelect('vacation');
+
+				teamSelect.addEventListener('change', () => {
+					this.filters.vacation.teamId = teamSelect.value;
+					this.populateEmployeeSelect('vacation');
+					this.updateActionButtons();
+				});
+				empSelect.addEventListener('change', () => {
+					this.filters.vacation.employeeId = empSelect.value;
+					this.updateActionButtons();
+				});
 			}
 
 		} else if (this.activeReportType === 'team') {
 			this.filterBar.innerHTML = `
 				<div class="filter-group">
-					<label for="filter-team-id">${I18n.t('common.team')} ID *:</label>
-					<input type="text" id="filter-team-id" placeholder="e.g. team-1" value="${this.filters.team.teamId}" required>
-				</div>
-				<div class="filter-group">
 					<label for="filter-team-ym">${I18n.t('common.month')} (YYYY-MM) *:</label>
 					<input type="month" id="filter-team-ym" value="${this.filters.team.yearMonth}" required>
 				</div>
+				<div class="filter-group">
+					<label for="filter-team-id-select">${I18n.t('common.team')} *:</label>
+					<select id="filter-team-id-select" required>
+						<option value="">${I18n.t('reports.selectTeamPrompt')}</option>
+					</select>
+				</div>
 			`;
-			const teamInput = this.filterBar.querySelector('#filter-team-id');
 			const ymInput = this.filterBar.querySelector('#filter-team-ym');
-			teamInput.addEventListener('input', () => { this.filters.team.teamId = teamInput.value; });
-			ymInput.addEventListener('change', () => { this.filters.team.yearMonth = ymInput.value; });
+			const teamSelect = this.filterBar.querySelector('#filter-team-id-select');
+			this.populateTeamSelect('team');
+
+			ymInput.addEventListener('change', () => {
+				this.filters.team.yearMonth = ymInput.value;
+				this.updateActionButtons();
+			});
+			teamSelect.addEventListener('change', () => {
+				this.filters.team.teamId = teamSelect.value;
+				this.updateActionButtons();
+			});
 
 		} else if (this.activeReportType === 'absences') {
 			this.filterBar.innerHTML = `
@@ -302,8 +445,16 @@ export default class ReportsView {
 				</div>
 				${canSelectEmp ? `
 				<div class="filter-group">
-					<label for="filter-absences-emp">${I18n.t('common.employee')} ID:</label>
-					<input type="text" id="filter-absences-emp" placeholder="${I18n.t('common.all')} / ${I18n.t('common.optional')}" value="${this.filters.absences.employeeId}">
+					<label for="filter-absences-team">${I18n.t('common.team')}:</label>
+					<select id="filter-absences-team">
+						<option value="">${I18n.t('common.allTeams')}</option>
+					</select>
+				</div>
+				<div class="filter-group">
+					<label for="filter-absences-emp">${I18n.t('common.employee')}:</label>
+					<select id="filter-absences-emp">
+						<option value="">${I18n.t('common.allEmployees')}</option>
+					</select>
 				</div>
 				` : ''}
 				<div class="filter-group">
@@ -325,34 +476,48 @@ export default class ReportsView {
 			`;
 			const fromInput = this.filterBar.querySelector('#filter-absences-from');
 			const toInput = this.filterBar.querySelector('#filter-absences-to');
-			const empInput = this.filterBar.querySelector('#filter-absences-emp');
 			const typeSelect = this.filterBar.querySelector('#filter-absence-type');
 			const stateSelect = this.filterBar.querySelector('#filter-absence-state');
 
 			fromInput.addEventListener('change', () => { this.filters.absences.from = fromInput.value; });
 			toInput.addEventListener('change', () => { this.filters.absences.to = toInput.value; });
-			if (empInput) {
-				empInput.addEventListener('input', () => { this.filters.absences.employeeId = empInput.value; });
-			}
 			typeSelect.addEventListener('change', () => { this.filters.absences.type = typeSelect.value; });
 			stateSelect.addEventListener('change', () => { this.filters.absences.state = stateSelect.value; });
 
 			if (this.filters.absences.type) typeSelect.value = this.filters.absences.type;
 			if (this.filters.absences.state) stateSelect.value = this.filters.absences.state;
 			this.populateAbsenceTypeSelect();
+
+			if (canSelectEmp) {
+				const teamSelect = this.filterBar.querySelector('#filter-absences-team');
+				const empSelect = this.filterBar.querySelector('#filter-absences-emp');
+				this.populateTeamSelect('absences');
+				this.populateEmployeeSelect('absences');
+
+				teamSelect.addEventListener('change', () => {
+					this.filters.absences.teamId = teamSelect.value;
+					this.populateEmployeeSelect('absences');
+					this.updateActionButtons();
+				});
+				empSelect.addEventListener('change', () => {
+					this.filters.absences.employeeId = empSelect.value;
+					this.updateActionButtons();
+				});
+			}
 		}
 
 		this.filterBar.querySelectorAll('input, select').forEach(input => {
 			input.addEventListener('input', () => this.updateActionButtons());
 			input.addEventListener('change', () => this.updateActionButtons());
 		});
+		MonthPicker.init(this.filterBar);
 		this.updateActionButtons();
 	}
 
 	async generateReport() {
 		const employeeId = this.filters[this.activeReportType]?.employeeId?.trim();
-		const teamId = this.filters.team.teamId?.trim();
-		const hasExplicitTarget = Boolean(employeeId || (this.activeReportType === 'team' && teamId));
+		const teamId = this.filters.team?.teamId?.trim();
+		const hasExplicitTarget = Boolean(employeeId || (this.activeReportType === 'team' && teamId) || this.activeReportType === 'absences');
 		if (AuthApi.hasRole('Administrator') && !hasExplicitTarget) {
 			this.resultsContainer.innerHTML = '';
 			return;

@@ -20,6 +20,7 @@ import AuditLogView from './pages/AuditLogView.js';
 import ConfigurationApi from './api/ConfigurationApi.js';
 import CompleteRegistrationView from './pages/CompleteRegistrationView.js';
 import NotificationDialog from './utils/NotificationDialog.js';
+import MonthPicker from './utils/MonthPicker.js';
 import I18n from './i18n/I18n.js';
 
 class ChronivaroApp {
@@ -207,6 +208,7 @@ class ChronivaroApp {
     async start() {
         await this.initI18n();
         this.loadBranding();
+        MonthPicker.initAll();
         this.route();
     }
 

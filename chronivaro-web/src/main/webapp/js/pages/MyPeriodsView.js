@@ -2,6 +2,7 @@ import PeriodApi from '../api/PeriodApi.js';
 import ReportApi from '../api/ReportApi.js';
 import NotificationDialog from '../utils/NotificationDialog.js';
 import Format from '../utils/Format.js';
+import MonthPicker from '../utils/MonthPicker.js';
 import I18n from '../i18n/I18n.js';
 
 export default class MyPeriodsView {
@@ -186,6 +187,8 @@ export default class MyPeriodsView {
 		if (downloadPdfBtn) {
 			downloadPdfBtn.addEventListener('click', () => this.downloadPdf());
 		}
+
+		MonthPicker.init(container);
 	}
 
 	async downloadPdf() {
