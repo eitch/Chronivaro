@@ -47,7 +47,7 @@ done
 
 # GitHub configuration (can be provided via env or CLI)
 GITHUB_TOKEN="${GITHUB_TOKEN:-${GH_TOKEN:-}}"
-GITHUB_REPO=""
+GITHUB_REPO="https://github.com/eitch/Chronivaro"
 
 # Mastodon configuration (can be provided via env or CLI)
 MASTODON_INSTANCE="${MASTODON_INSTANCE:-${MASTODON_SERVER:-}}"
@@ -299,19 +299,15 @@ RELEASE_NOTES_FILE="${RELEASE_DIR}/RELEASE_NOTES.md"
 info "Staging release artifacts in ${RELEASE_DIR}..."
 cp -f "${JAR_SOURCE}" "${RELEASE_JAR}"
 
-# Also copy standard named chronivaro.jar for convenience
-cp -f "${JAR_SOURCE}" "${RELEASE_DIR}/chronivaro.jar"
-
 # Build runtime tarball
 info "Packaging sanitized runtime tarball..."
 ./build-runtime-tarball.sh -s runtime -o "${RELEASE_TARBALL}" >/dev/null || fail "Failed to generate runtime tarball!"
-cp -f "${RELEASE_TARBALL}" "${RELEASE_DIR}/runtime.tar.gz"
 
 # Compute SHA-256 Checksums
 info "Computing SHA-256 checksums..."
 (
   cd "${RELEASE_DIR}"
-  sha256sum "chronivaro-${VERSION}.jar" "chronivaro.jar" "runtime-${VERSION}.tar.gz" "runtime.tar.gz" > "SHA256SUMS.txt"
+  sha256sum "chronivaro-${VERSION}.jar" "runtime-${VERSION}.tar.gz" > "SHA256SUMS.txt"
 )
 
 # ------------------------------------------------------------------------------
@@ -376,8 +372,8 @@ Chronivaro is packaged as a standalone fat-JAR with an embedded Eclipse Jetty 12
   - Structured logging with correlation ID tracing (`X-Correlation-Id`).
 
 - 🚀 **Deployment & Distribution**
-  - Standalone executable fat-JAR (`chronivaro.jar`) with embedded Jetty 12.
-  - Clean, sanitized runtime environment tarball (`runtime.tar.gz`).
+  - Standalone executable fat-JAR with embedded Jetty 12.
+  - Clean, sanitized runtime environment distribution tarball.
   - Docker container image and `docker-compose` orchestration support.
   - Multilingual UI support with full German (Swiss German) and English translations.
 
@@ -387,18 +383,18 @@ Chronivaro is packaged as a standalone fat-JAR with an embedded Eclipse Jetty 12
 
 | File | Description |
 |---|---|
-| `chronivaro-0.1.0.jar` / `chronivaro.jar` | Standalone executable fat-JAR with embedded Jetty 12 |
-| `runtime-0.1.0.tar.gz` / `runtime.tar.gz` | Sanitized Strolch runtime directory structure and default templates |
+| `chronivaro-0.1.0.jar` | Standalone executable fat-JAR with embedded Jetty 12 |
+| `runtime-0.1.0.tar.gz` | Sanitized Strolch runtime directory structure and default templates |
 | `SHA256SUMS.txt` | SHA-256 verification checksums for all release binaries |
 
 ### ⚡ Quick Start
 
 ```bash
 # Extract runtime environment
-tar -xzf runtime.tar.gz
+tar -xzf runtime-0.1.0.tar.gz
 
 # Run standalone application
-java -jar chronivaro.jar --port 8080 --runtime ./runtime --env dev
+java -jar chronivaro-0.1.0.jar --port 8080 --runtime ./runtime --env dev
 ```
 
 Open `http://localhost:8080` in your browser and log in with `admin` / `admin`.
@@ -418,8 +414,8 @@ $(git log "${PREV_TAG}..HEAD" --pretty=format:"* %s (%h)" --no-merges)
 
 | File | Description |
 |---|---|
-| \`chronivaro-${VERSION}.jar\` / \`chronivaro.jar\` | Standalone executable fat-JAR |
-| \`runtime-${VERSION}.tar.gz\` / \`runtime.tar.gz\` | Sanitized Strolch runtime distribution archive |
+| \`chronivaro-${VERSION}.jar\` | Standalone executable fat-JAR |
+| \`runtime-${VERSION}.tar.gz\` | Sanitized Strolch runtime distribution archive |
 | \`SHA256SUMS.txt\` | SHA-256 verification checksums |
 EOF
   fi
@@ -465,7 +461,7 @@ if [[ "${SIMULATE}" == "true" ]]; then
   echo "--------------------------------------------------------------------------------"
   (
     cd "${RELEASE_DIR}"
-    ls -lh "chronivaro-${VERSION}.jar" "chronivaro.jar" "runtime-${VERSION}.tar.gz" "runtime.tar.gz" "SHA256SUMS.txt"
+    ls -lh "chronivaro-${VERSION}.jar" "runtime-${VERSION}.tar.gz" "SHA256SUMS.txt"
   )
   echo
   echo "Checksums (SHA-256):"
