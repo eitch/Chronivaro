@@ -5,6 +5,9 @@ info:
     REST API specification for Chronivaro, a Resource-Order-Activity time tracking and absence management system built on Strolch.
     Provides endpoints for time tracking, timers, presence overview, absence requests, period closing, reports, and administrative management.
   version: 0.1.0-SNAPSHOT
+  license:
+    name: GNU Affero General Public License v3.0
+    url: https://www.gnu.org/licenses/agpl-3.0.html
   contact:
     name: Chronivaro
     url: https://github.com/eitch/Chronivaro

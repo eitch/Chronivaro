@@ -18,7 +18,8 @@
   <a href="#-running-with-docker">Docker</a> •
   <a href="#-email-delivery--user-challenge-configuration-mailhandler">Mail Config</a> •
   <a href="docs/OPERATIONS.md">Operations</a> •
-  <a href="docs/openapi.yaml">REST API</a>
+  <a href="docs/openapi.yaml">REST API</a> •
+  <a href="LICENSE">License</a>
 </p>
 
 <p align="center">
@@ -27,7 +28,7 @@
   <img src="https://img.shields.io/badge/Server-Eclipse%20Jetty%2012-green.svg" alt="Eclipse Jetty 12">
   <img src="https://img.shields.io/badge/API-Jakarta%20REST%20%2F%20Jersey-red.svg" alt="Jakarta REST">
   <img src="https://img.shields.io/badge/Frontend-Web%20Components-purple.svg" alt="Web Components">
-  <img src="https://img.shields.io/badge/License-Apache%202.0-lightgrey.svg" alt="License">
+  <img src="https://img.shields.io/badge/License-AGPL%203.0-blue.svg" alt="License">
 </p>
 
 ---
@@ -323,3 +324,9 @@ Clients can supply custom correlation IDs via the `X-Correlation-Id` request hea
 - 📡 **[OpenAPI Specification](docs/openapi.yaml)**: Comprehensive REST API contract with request/response schemas and examples.
 - 📋 **[Implementation Backlog](docs/IMPLEMENTATION_BACKLOG.md)**: Granular task breakdown and implementation history.
 - 📊 **[Implementation Status](docs/IMPLEMENTATION_STATUS.md)**: Architectural decisions, delivered milestones, and verification summary.
+
+---
+
+## 📄 License
+
+Chronivaro is free software licensed under the [GNU Affero General Public License v3.0](LICENSE) (AGPL-3.0).
