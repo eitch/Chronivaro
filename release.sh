@@ -396,7 +396,6 @@ fi
 # Build Artifacts & Prepare Release
 # ------------------------------------------------------------------------------
 RELEASE_DIR="${SCRIPT_DIR}/target/release"
-mkdir -p "${RELEASE_DIR}"
 
 if [[ "${SIMULATE}" != "true" ]]; then
   # Check working directory cleanliness
@@ -430,6 +429,8 @@ RELEASE_JAR="${RELEASE_DIR}/chronivaro-${VERSION}.jar"
 RELEASE_TARBALL="${RELEASE_DIR}/runtime-${VERSION}.tar.gz"
 RELEASE_CHECKSUMS="${RELEASE_DIR}/SHA256SUMS.txt"
 RELEASE_NOTES_FILE="${RELEASE_DIR}/RELEASE_NOTES.md"
+
+mkdir -p "${RELEASE_DIR}"
 
 info "Staging release artifacts in ${RELEASE_DIR}..."
 cp -f "${JAR_SOURCE}" "${RELEASE_JAR}"
