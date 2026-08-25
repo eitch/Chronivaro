@@ -7,9 +7,10 @@
 # 2. Builds fat-JAR and packages sanitized runtime tarball
 # 3. Generates release notes / changelog (with MVP feature list for 0.1.0)
 # 4. Computes SHA-256 checksums
-# 5. Pushes git tags and creates GitHub Release with assets
-# 6. Posts announcement toot to Mastodon via REST API hook
-# 7. Supports dry-run / simulation mode (-s / --simulate)
+# 5. Signs release assets with GPG (.asc detached signatures)
+# 6. Pushes signed annotated git tags and creates GitHub Release with assets
+# 7. Posts announcement toot to Mastodon via REST API hook
+# 8. Supports dry-run / simulation mode (-s / --simulate)
 # ==============================================================================
 
 set -eo pipefail
@@ -47,7 +48,10 @@ fi
 
 # GitHub configuration (can be provided via env or CLI)
 GITHUB_TOKEN="${GITHUB_TOKEN:-${GH_TOKEN:-}}"
-GITHUB_REPO="https://github.com/eitch/Chronivaro"
+GITHUB_REPO="${GITHUB_REPO:-}"
+
+# GPG configuration (can be provided via env or CLI)
+GPG_KEY="${GPG_KEY:-${GPG_KEY_ID:-${SIGNING_KEY:-}}}"
 
 # Mastodon configuration (can be provided via env or CLI)
 MASTODON_INSTANCE="${MASTODON_INSTANCE:-${MASTODON_SERVER:-}}"
@@ -55,12 +59,14 @@ MASTODON_TOKEN="${MASTODON_ACCESS_TOKEN:-${MASTODON_TOKEN:-}}"
 MASTODON_VISIBILITY="${MASTODON_VISIBILITY:-public}"
 
 # ------------------------------------------------------------------------------
-# Logging Helpers
+# Logging Helpers & Rollback Handlers
 # ------------------------------------------------------------------------------
-function fail() {
-  echo 1>&2 -e "\033[1;31m[ERROR]\033[0m $*"
-  exit 1
-}
+TAG_EXISTS_LOCALLY=false
+TAG_CREATED_LOCALLY=false
+TAG_PUSHED_REMOTELY=false
+RELEASE_CREATED_ID=""
+GH_RELEASE_CREATED=false
+ROLLING_BACK=false
 
 function warn() {
   echo 1>&2 -e "\033[1;33m[WARN]\033[0m $*"
@@ -73,6 +79,57 @@ function info() {
 function success() {
   echo -e "\033[1;32m[SUCCESS]\033[0m $*"
 }
+
+function rollback() {
+  if [[ "${ROLLING_BACK}" == "true" ]]; then
+    return
+  fi
+  ROLLING_BACK=true
+
+  if [[ "${TAG_CREATED_LOCALLY}" == "true" || "${TAG_PUSHED_REMOTELY}" == "true" || -n "${RELEASE_CREATED_ID}" || "${GH_RELEASE_CREATED}" == "true" ]]; then
+    echo
+    warn "Reverting previous release actions due to failure..."
+
+    # 1. Delete GitHub release if created via REST API
+    if [[ -n "${RELEASE_CREATED_ID}" && -n "${GITHUB_TOKEN}" && -n "${GITHUB_REPO}" ]]; then
+      info "Rolling back GitHub release ID ${RELEASE_CREATED_ID}..."
+      curl -s -X DELETE \
+        -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+        -H "Accept: application/vnd.github+json" \
+        -H "X-GitHub-Api-Version: 2022-11-28" \
+        -H "User-Agent: Chronivaro-Release" \
+        "https://api.github.com/repos/${GITHUB_REPO}/releases/${RELEASE_CREATED_ID}" >/dev/null 2>&1 || warn "Could not delete GitHub release ID ${RELEASE_CREATED_ID}."
+    fi
+
+    # 2. Delete GitHub release if created via gh CLI
+    if [[ "${GH_RELEASE_CREATED}" == "true" ]] && which gh >/dev/null 2>&1; then
+      info "Rolling back GitHub release '${TAG}' via gh CLI..."
+      gh release delete "${TAG}" --repo "${GITHUB_REPO}" --yes --cleanup-tag=false >/dev/null 2>&1 || warn "Could not delete GitHub release '${TAG}' via gh CLI."
+    fi
+
+    # 3. Delete remote git tag if pushed by this script
+    if [[ "${TAG_PUSHED_REMOTELY}" == "true" ]]; then
+      info "Deleting remote git tag '${TAG}' from origin..."
+      git push --delete origin "${TAG}" 2>/dev/null || git push origin ":refs/tags/${TAG}" 2>/dev/null || warn "Could not delete remote git tag '${TAG}' from origin."
+    fi
+
+    # 4. Delete local git tag if created by this script
+    if [[ "${TAG_CREATED_LOCALLY}" == "true" ]]; then
+      info "Deleting local git tag '${TAG}'..."
+      git tag -d "${TAG}" 2>/dev/null || warn "Could not delete local git tag '${TAG}'."
+    fi
+
+    info "Rollback complete."
+  fi
+}
+
+function fail() {
+  echo 1>&2 -e "\033[1;31m[ERROR]\033[0m $*"
+  rollback
+  exit 1
+}
+
+trap 'rollback' ERR
 
 # ------------------------------------------------------------------------------
 # Usage / Help
@@ -98,11 +155,13 @@ Options:
    --mastodon-token <token>    Mastodon API access token
    --github-token <token>      GitHub API token (fallback if 'gh' CLI is not authenticated)
    --github-repo <owner/repo>  GitHub repository (default: parsed from git origin remote)
+   --gpg-key <key-id>          GPG key ID or email used for signing tags and assets (default: default GPG key)
    --draft                     Create GitHub release as a draft
    --prerelease                Create GitHub release as a prerelease
 
 Environment Variables:
    GITHUB_TOKEN / GH_TOKEN     GitHub Personal Access Token
+   GPG_KEY / GPG_KEY_ID        GPG key ID or email used for signing (default: default GPG key)
    MASTODON_INSTANCE           Mastodon instance hostname/URL (e.g. mastodon.social)
    MASTODON_ACCESS_TOKEN       Mastodon API bearer token
    MASTODON_VISIBILITY         Post visibility: public (default), unlisted, private
@@ -191,6 +250,10 @@ while [[ $# -gt 0 ]]; do
       GITHUB_REPO="$2"
       shift 2
       ;;
+    --gpg-key)
+      GPG_KEY="$2"
+      shift 2
+      ;;
     --draft)
       DRAFT=true
       shift
@@ -255,16 +318,24 @@ fi
 RELEASE_TITLE="Chronivaro ${VERSION}"
 
 # ------------------------------------------------------------------------------
-# Detect GitHub Repository
+# Detect & Normalize GitHub Repository
 # ------------------------------------------------------------------------------
+if [[ -n "${GITHUB_REPO}" ]]; then
+  GITHUB_REPO="${GITHUB_REPO#https://github.com/}"
+  GITHUB_REPO="${GITHUB_REPO#http://github.com/}"
+  GITHUB_REPO="${GITHUB_REPO#git@github.com:}"
+  GITHUB_REPO="${GITHUB_REPO%.git}"
+fi
+
 if [[ -z "${GITHUB_REPO}" ]]; then
   if git remote get-url origin >/dev/null 2>&1; then
     ORIGIN_URL="$(git remote get-url origin)"
     # Match git@github.com:owner/repo.git or https://github.com/owner/repo.git
-    GITHUB_REPO="$(echo "${ORIGIN_URL}" | sed -E 's#(git@|https://)([^:/]+)[:/]([^/]+)/([^/.]+)(\.git)?#\3/\4#')"
+    GITHUB_REPO="$(echo "${ORIGIN_URL}" | sed -E 's#(git@|https?://)([^:/]+)[:/]([^/]+)/([^/.]+)(\.git)?#\3/\4#')"
   fi
 fi
-if [[ -z "${GITHUB_REPO}" || "${GITHUB_REPO}" == *"@"* ]]; then
+
+if [[ -z "${GITHUB_REPO}" || "${GITHUB_REPO}" == *"@"* || "${GITHUB_REPO}" != *"/"* ]]; then
   GITHUB_REPO="eitch/Chronivaro"
 fi
 
@@ -314,6 +385,21 @@ info "Computing SHA-256 checksums..."
   cd "${RELEASE_DIR}"
   sha256sum "chronivaro-${VERSION}.jar" "runtime-${VERSION}.tar.gz" > "SHA256SUMS.txt"
 )
+
+# GPG Sign Release Assets
+info "Signing release assets with GPG..."
+if ! which gpg >/dev/null 2>&1; then
+  fail "GPG is required to sign release assets and git tags but was not found!"
+fi
+
+GPG_SIGN_CMD=(gpg --batch --yes --armor --detach-sign)
+if [[ -n "${GPG_KEY}" ]]; then
+  GPG_SIGN_CMD+=(-u "${GPG_KEY}")
+fi
+
+"${GPG_SIGN_CMD[@]}" "${RELEASE_JAR}" || fail "Failed to GPG-sign ${RELEASE_JAR}"
+"${GPG_SIGN_CMD[@]}" "${RELEASE_TARBALL}" || fail "Failed to GPG-sign ${RELEASE_TARBALL}"
+"${GPG_SIGN_CMD[@]}" "${RELEASE_CHECKSUMS}" || fail "Failed to GPG-sign ${RELEASE_CHECKSUMS}"
 
 # ------------------------------------------------------------------------------
 # Changelog / Release Notes Generation
@@ -389,8 +475,11 @@ Chronivaro is packaged as a standalone fat-JAR with an embedded Eclipse Jetty 12
 | File | Description |
 |---|---|
 | `chronivaro-0.1.0.jar` | Standalone executable fat-JAR with embedded Jetty 12 |
+| `chronivaro-0.1.0.jar.asc` | GPG ASCII-armored detached signature |
 | `runtime-0.1.0.tar.gz` | Sanitized Strolch runtime directory structure and default templates |
+| `runtime-0.1.0.tar.gz.asc` | GPG ASCII-armored detached signature |
 | `SHA256SUMS.txt` | SHA-256 verification checksums for all release binaries |
+| `SHA256SUMS.txt.asc` | GPG ASCII-armored detached signature |
 
 ### ⚡ Quick Start
 
@@ -420,8 +509,11 @@ $(git log "${PREV_TAG}..HEAD" --pretty=format:"* %s (%h)" --no-merges)
 | File | Description |
 |---|---|
 | \`chronivaro-${VERSION}.jar\` | Standalone executable fat-JAR |
+| \`chronivaro-${VERSION}.jar.asc\` | GPG ASCII-armored detached signature |
 | \`runtime-${VERSION}.tar.gz\` | Sanitized Strolch runtime distribution archive |
+| \`runtime-${VERSION}.tar.gz.asc\` | GPG ASCII-armored detached signature |
 | \`SHA256SUMS.txt\` | SHA-256 verification checksums |
+| \`SHA256SUMS.txt.asc\` | GPG ASCII-armored detached signature |
 EOF
   fi
 fi
@@ -431,21 +523,40 @@ fi
 # ------------------------------------------------------------------------------
 RELEASE_URL="https://github.com/${GITHUB_REPO}/releases/tag/${TAG}"
 
-MASTODON_STATUS="🚀 Chronivaro ${VERSION} has been released!
+if [[ -z "${MASTODON_STATUS:-}" ]]; then
+  if [[ "${VERSION}" == "0.1.0" ]]; then
+    MASTODON_STATUS="🚀 Chronivaro ${VERSION} has been released!
 
-Chronivaro is a modern open-source working time, absence management, and monthly period closing system built on the Strolch framework.
+Chronivaro is an open-source working time & absence tracking system built on Strolch.
 
-Key highlights:
-• Live timer & multi-interval daily time recording
-• Absence management & immutable vacation journal
-• Supervisor approval workflows & period closing
-• RFC 4180 CSV & PDF report exports
-• Standalone fat-JAR & Docker distribution
+Highlights:
+• Live timer & daily time recording
+• Absence management & vacation journal
+• Approvals & period closing
+• CSV & PDF report exports
+• Standalone fat-JAR & Docker
+
+📦 Downloads & Release Notes:
+${RELEASE_URL}
+
+#Chronivaro #Strolch #Java #OpenSource #TimeTracking"
+  else
+    MASTODON_STATUS="🚀 Chronivaro ${VERSION} has been released!
+
+Chronivaro is an open-source working time, absence tracking, and monthly period closing system.
 
 📦 Release notes & downloads:
 ${RELEASE_URL}
 
-#Chronivaro #Strolch #Java #OpenSource #TimeTracking #SelfHosted"
+#Chronivaro #Strolch #Java #OpenSource #TimeTracking"
+  fi
+fi
+
+# Ensure status length stays within Mastodon's standard 500 character limit
+if [[ "${#MASTODON_STATUS}" -gt 500 ]]; then
+  warn "Mastodon status length (${#MASTODON_STATUS} chars) exceeds 500 characters limit. It will be truncated."
+  MASTODON_STATUS="${MASTODON_STATUS:0:497}..."
+fi
 
 # ------------------------------------------------------------------------------
 # Simulation Mode (Dry-Run)
@@ -466,7 +577,7 @@ if [[ "${SIMULATE}" == "true" ]]; then
   echo "--------------------------------------------------------------------------------"
   (
     cd "${RELEASE_DIR}"
-    ls -lh "chronivaro-${VERSION}.jar" "runtime-${VERSION}.tar.gz" "SHA256SUMS.txt"
+    ls -lh "chronivaro-${VERSION}.jar" "chronivaro-${VERSION}.jar.asc" "runtime-${VERSION}.tar.gz" "runtime-${VERSION}.tar.gz.asc" "SHA256SUMS.txt" "SHA256SUMS.txt.asc"
   )
   echo
   echo "Checksums (SHA-256):"
@@ -486,11 +597,11 @@ if [[ "${SIMULATE}" == "true" ]]; then
     echo "      --repo \"${GITHUB_REPO}\" \\"
     echo "      --title \"${RELEASE_TITLE}\" \\"
     echo "      --notes-file \"${RELEASE_NOTES_FILE}\" \\"
-    echo "      \"${RELEASE_JAR}\" \"${RELEASE_TARBALL}\" \"${RELEASE_CHECKSUMS}\""
+    echo "      \"${RELEASE_JAR}\" \"${RELEASE_JAR}.asc\" \"${RELEASE_TARBALL}\" \"${RELEASE_TARBALL}.asc\" \"${RELEASE_CHECKSUMS}\" \"${RELEASE_CHECKSUMS}.asc\""
   else
     info "GitHub REST API would be called via curl using GITHUB_TOKEN:"
     echo "   POST https://api.github.com/repos/${GITHUB_REPO}/releases"
-    echo "   Upload assets: chronivaro-${VERSION}.jar, runtime-${VERSION}.tar.gz, SHA256SUMS.txt"
+    echo "   Upload assets: chronivaro-${VERSION}.jar, chronivaro-${VERSION}.jar.asc, runtime-${VERSION}.tar.gz, runtime-${VERSION}.tar.gz.asc, SHA256SUMS.txt, SHA256SUMS.txt.asc"
   fi
   echo
   echo "--------------------------------------------------------------------------------"
@@ -506,7 +617,7 @@ if [[ "${SIMULATE}" == "true" ]]; then
       warn "Mastodon is enabled (-m), but no server/token configured (set MASTODON_INSTANCE & MASTODON_TOKEN or use --mastodon-instance / --mastodon-token)"
     fi
     echo
-    echo "Mastodon Status Text:"
+    echo "Mastodon Status Text (${#MASTODON_STATUS} / 500 characters):"
     echo "---"
     echo "${MASTODON_STATUS}"
     echo "---"
@@ -517,7 +628,11 @@ if [[ "${SIMULATE}" == "true" ]]; then
   echo "--------------------------------------------------------------------------------"
   echo "🏷️ GIT TAGGING ACTIONS (Simulated)"
   echo "--------------------------------------------------------------------------------"
-  echo "   git tag -a \"${TAG}\" -m \"Release ${TAG}\""
+  if [[ -n "${GPG_KEY}" ]]; then
+    echo "   git tag -u \"${GPG_KEY}\" -s \"${TAG}\" -m \"${VERSION}\""
+  else
+    echo "   git tag -s \"${TAG}\" -m \"${VERSION}\""
+  fi
   echo "   git push origin \"${TAG}\""
   echo
   echo "================================================================================"
@@ -534,19 +649,45 @@ info "Starting release process for ${APP_NAME} ${VERSION}..."
 # 1. Create and Push Git Tag
 if git rev-parse "${TAG}" >/dev/null 2>&1; then
   warn "Git tag '${TAG}' already exists locally."
+  TAG_EXISTS_LOCALLY=true
+  TAG_CREATED_LOCALLY=false
 else
-  info "Creating git tag '${TAG}'..."
-  git tag -a "${TAG}" -m "Release ${TAG}" || fail "Failed to create git tag '${TAG}'"
+  info "Creating signed git tag '${TAG}' annotated with version '${VERSION}'..."
+  GIT_TAG_CMD=(git tag -s)
+  if [[ -n "${GPG_KEY}" ]]; then
+    GIT_TAG_CMD+=(-u "${GPG_KEY}")
+  fi
+  GIT_TAG_CMD+=("${TAG}" -m "${VERSION}")
+
+  if ! "${GIT_TAG_CMD[@]}"; then
+    fail "Failed to create signed git tag '${TAG}'"
+  fi
+  TAG_CREATED_LOCALLY=true
 fi
 
-info "Pushing git tag '${TAG}' to origin..."
-git push origin "${TAG}" || warn "Could not push tag '${TAG}' to remote (it might already exist or remote access requires authentication)."
+if git ls-remote --tags origin "refs/tags/${TAG}" 2>/dev/null | grep -q "${TAG}"; then
+  TAG_EXISTS_REMOTELY=true
+  TAG_PUSHED_REMOTELY=false
+  info "Git tag '${TAG}' already exists on remote origin."
+else
+  TAG_EXISTS_REMOTELY=false
+  info "Pushing git tag '${TAG}' to origin..."
+  if git push origin "${TAG}"; then
+    TAG_PUSHED_REMOTELY=true
+  else
+    TAG_PUSHED_REMOTELY=false
+    warn "Could not push tag '${TAG}' to remote (it might already exist or remote access requires authentication)."
+  fi
+fi
 
 # 2. Publish to GitHub Releases
 ASSET_FILES=(
   "${RELEASE_JAR}"
+  "${RELEASE_JAR}.asc"
   "${RELEASE_TARBALL}"
+  "${RELEASE_TARBALL}.asc"
   "${RELEASE_CHECKSUMS}"
+  "${RELEASE_CHECKSUMS}.asc"
 )
 
 RELEASE_CREATED=false
@@ -557,11 +698,14 @@ if which gh >/dev/null 2>&1 && gh auth status >/dev/null 2>&1; then
   if [[ "${DRAFT}" == "true" ]]; then GH_FLAGS+=("--draft"); fi
   if [[ "${PRERELEASE}" == "true" ]]; then GH_FLAGS+=("--prerelease"); fi
 
-  gh release create "${TAG}" "${ASSET_FILES[@]}" \
+  if ! gh release create "${TAG}" "${ASSET_FILES[@]}" \
     --repo "${GITHUB_REPO}" \
     --title "${RELEASE_TITLE}" \
     --notes-file "${RELEASE_NOTES_FILE}" \
-    "${GH_FLAGS[@]}" || fail "Failed to create GitHub release with gh CLI"
+    "${GH_FLAGS[@]}"; then
+    fail "Failed to create GitHub release with gh CLI"
+  fi
+  GH_RELEASE_CREATED=true
   RELEASE_CREATED=true
 elif [[ -n "${GITHUB_TOKEN}" ]]; then
   info "Creating release on GitHub using REST API..."
@@ -580,24 +724,100 @@ payload = {
 print(json.dumps(payload))
 ")"
 
-  CREATE_RESP="$(curl -s -f -X POST \
-    -H "Authorization: token ${GITHUB_TOKEN}" \
-    -H "Accept: application/vnd.github+json" \
-    -H "Content-Type: application/json" \
-    "https://api.github.com/repos/${GITHUB_REPO}/releases" \
-    -d "${RELEASE_JSON_PAYLOAD}")" || fail "Failed to create release via GitHub API"
+  API_URL="https://api.github.com/repos/${GITHUB_REPO}/releases"
 
-  RELEASE_ID="$(echo "${CREATE_RESP}" | python3 -c "import json, sys; print(json.load(sys.stdin)['id'])")"
+  CREATE_RESP="$(curl -s -w "\n%{http_code}" -X POST \
+    -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+    -H "Accept: application/vnd.github+json" \
+    -H "X-GitHub-Api-Version: 2022-11-28" \
+    -H "Content-Type: application/json" \
+    -H "User-Agent: Chronivaro-Release" \
+    "${API_URL}" \
+    -d "${RELEASE_JSON_PAYLOAD}")" || fail "Network error while connecting to GitHub API (${API_URL})"
+
+  HTTP_CODE="$(echo "${CREATE_RESP}" | tail -n1)"
+  RESP_BODY="$(echo "${CREATE_RESP}" | sed '$d')"
+
+  if [[ "${HTTP_CODE}" != "200" && "${HTTP_CODE}" != "201" ]]; then
+    ERROR_MSG="$(echo "${RESP_BODY}" | python3 -c "
+import json, sys
+try:
+    data = json.load(sys.stdin)
+    msg = data.get('message', '')
+    errors = data.get('errors', [])
+    err_details = '; '.join([e.get('message', str(e)) if isinstance(e, dict) else str(e) for e in errors])
+    if err_details:
+        print(f'{msg} ({err_details})')
+    else:
+        print(msg)
+except Exception:
+    pass
+" 2>/dev/null || true)"
+
+    if [[ -z "${ERROR_MSG}" ]]; then
+      ERROR_MSG="${RESP_BODY}"
+    fi
+
+    echo
+    warn "GitHub API returned HTTP status ${HTTP_CODE} when creating release for repository '${GITHUB_REPO}'."
+    if [[ -n "${ERROR_MSG}" ]]; then
+      warn "GitHub API Error: ${ERROR_MSG}"
+    fi
+    if [[ "${HTTP_CODE}" == "401" ]]; then
+      warn "Tip: Check that GITHUB_TOKEN is valid and has not expired."
+    elif [[ "${HTTP_CODE}" == "404" ]]; then
+      warn "Tip: Repository '${GITHUB_REPO}' was not found or GITHUB_TOKEN lacks 'repo' scope."
+    elif [[ "${HTTP_CODE}" == "422" ]]; then
+      warn "Tip: Validation failed. Release/tag '${TAG}' might already exist on GitHub, or payload was rejected."
+    fi
+    echo
+    fail "Failed to create release via GitHub API (HTTP ${HTTP_CODE})"
+  fi
+
+  RELEASE_ID="$(echo "${RESP_BODY}" | python3 -c "import json, sys; print(json.load(sys.stdin)['id'])")"
+  RELEASE_CREATED_ID="${RELEASE_ID}"
   info "GitHub Release created with ID: ${RELEASE_ID}"
 
   for asset in "${ASSET_FILES[@]}"; do
     asset_name="$(basename "${asset}")"
     info "Uploading asset: ${asset_name}..."
-    curl -s -f -X POST \
-      -H "Authorization: token ${GITHUB_TOKEN}" \
+    UPLOAD_URL="https://uploads.github.com/repos/${GITHUB_REPO}/releases/${RELEASE_ID}/assets?name=${asset_name}"
+    
+    UPLOAD_RESP="$(curl -s -w "\n%{http_code}" -X POST \
+      -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+      -H "Accept: application/vnd.github+json" \
+      -H "X-GitHub-Api-Version: 2022-11-28" \
       -H "Content-Type: application/octet-stream" \
+      -H "User-Agent: Chronivaro-Release" \
       --data-binary @"${asset}" \
-      "https://uploads.github.com/repos/${GITHUB_REPO}/releases/${RELEASE_ID}/assets?name=${asset_name}" || warn "Failed to upload asset ${asset_name}"
+      "${UPLOAD_URL}")" || fail "Network error while uploading asset ${asset_name} to GitHub"
+
+    UPLOAD_HTTP_CODE="$(echo "${UPLOAD_RESP}" | tail -n1)"
+    UPLOAD_RESP_BODY="$(echo "${UPLOAD_RESP}" | sed '$d')"
+
+    if [[ "${UPLOAD_HTTP_CODE}" != "200" && "${UPLOAD_HTTP_CODE}" != "201" ]]; then
+      UPLOAD_ERROR_MSG="$(echo "${UPLOAD_RESP_BODY}" | python3 -c "
+import json, sys
+try:
+    data = json.load(sys.stdin)
+    msg = data.get('message', '')
+    errors = data.get('errors', [])
+    err_details = '; '.join([e.get('message', str(e)) if isinstance(e, dict) else str(e) for e in errors])
+    if err_details:
+        print(f'{msg} ({err_details})')
+    else:
+        print(msg)
+except Exception:
+    pass
+" 2>/dev/null || true)"
+      if [[ -z "${UPLOAD_ERROR_MSG}" ]]; then
+        UPLOAD_ERROR_MSG="${UPLOAD_RESP_BODY}"
+      fi
+      warn "Failed to upload asset ${asset_name} (HTTP ${UPLOAD_HTTP_CODE}): ${UPLOAD_ERROR_MSG}"
+      fail "Failed to upload release asset '${asset_name}' (HTTP ${UPLOAD_HTTP_CODE})"
+    else
+      success "Asset '${asset_name}' uploaded successfully."
+    fi
   done
   RELEASE_CREATED=true
 else
@@ -614,17 +834,21 @@ if [[ "${ENABLE_MASTODON}" == "true" ]]; then
     warn "Mastodon post skipped: MASTODON_INSTANCE and MASTODON_TOKEN must be set."
   else
     info "Posting release announcement to Mastodon (${MASTODON_HOST})..."
-    MASTODON_RESP="$(MASTODON_STATUS="${MASTODON_STATUS}" MASTODON_VISIBILITY="${MASTODON_VISIBILITY}" curl -s -w "\n%{http_code}" -X POST "${MASTODON_API_URL}" \
-      -H "Authorization: Bearer ${MASTODON_TOKEN}" \
-      -H "Content-Type: application/json" \
-      -d "$(python3 -c "
+    MASTODON_PAYLOAD="$(MASTODON_STATUS="${MASTODON_STATUS}" MASTODON_VISIBILITY="${MASTODON_VISIBILITY}" python3 -c "
 import json, os
 payload = {
     'status': os.environ.get('MASTODON_STATUS', ''),
     'visibility': os.environ.get('MASTODON_VISIBILITY', 'public')
 }
 print(json.dumps(payload))
-")")"
+")"
+
+    MASTODON_RESP="$(curl -s -w "\n%{http_code}" -X POST "${MASTODON_API_URL}" \
+      -H "Authorization: Bearer ${MASTODON_TOKEN}" \
+      -H "Accept: application/json" \
+      -H "Content-Type: application/json" \
+      -H "User-Agent: Chronivaro-Release" \
+      -d "${MASTODON_PAYLOAD}")"
 
     HTTP_CODE="$(echo "${MASTODON_RESP}" | tail -n1)"
     BODY="$(echo "${MASTODON_RESP}" | sed '$d')"

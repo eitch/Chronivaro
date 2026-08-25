@@ -209,7 +209,7 @@ The packaging process automatically:
 
 ### Creating and Publishing Releases (GitHub & Mastodon)
 
-Chronivaro includes an automated release script (`release.sh`) to tag versions, build artifacts (standalone fat-JAR, sanitized runtime tarball, SHA-256 checksums), generate release notes, publish GitHub Releases, and announce releases on Mastodon:
+Chronivaro includes an automated release script (`release.sh`) to sign and annotate git tags, build artifacts (standalone fat-JAR, sanitized runtime tarball, SHA-256 checksums), sign all release assets with GPG (`.asc` detached signatures), generate release notes, publish GitHub Releases, and announce releases on Mastodon:
 
 ```bash
 # Dry-run / Simulation mode (inspect release notes, assets, and Mastodon toot preview):

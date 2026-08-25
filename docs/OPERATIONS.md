@@ -284,6 +284,8 @@ Chronivaro provides a centralized release automation script (`release.sh`) in th
 #### 2.3.1 Capabilities
 - **Artifact Packaging**: Packages the executable standalone fat-JAR (`chronivaro-<version>.jar`) and generates a clean, sanitized runtime distribution tarball (`runtime-<version>.tar.gz`).
 - **Checksum Generation**: Automatically generates `SHA256SUMS.txt` for all release binaries.
+- **GPG Signing**: Signs all release artifacts (`.jar`, `.tar.gz`, and `SHA256SUMS.txt`) with GPG detached ASCII-armored signatures (`.asc`) using the default (or configured) GPG key.
+- **Signed Git Tagging**: Creates GPG-signed and annotated Git tags (`git tag -s -m <version>`) representing the exact release version.
 - **Changelog / Release Notes Generation**:
   - For version `0.1.0` (initial MVP release), automatically formats a comprehensive feature breakdown.
   - For subsequent releases, automatically extracts Git commit history since the previous release tag.
@@ -316,8 +318,10 @@ Chronivaro provides a centralized release automation script (`release.sh`) in th
 | `-t, --tag <tag>` | Git tag name | `v<version>` |
 | `-s, --simulate` | Dry-run simulation mode | `false` |
 | `-b, --build` | Trigger `mvn clean package -DskipTests` | `false` |
+| `--gpg-key <key-id>` | GPG key ID/email for signing tags and assets | Default GPG key |
 | `-m, --mastodon` | Enable Mastodon announcement | Auto if credentials provided |
 | `GITHUB_TOKEN` | GitHub Personal Access Token | Required if `gh` CLI not logged in |
+| `GPG_KEY` / `GPG_KEY_ID` | GPG key ID/email for signing tags and assets | Default GPG key |
 | `MASTODON_INSTANCE` | Mastodon instance host (e.g., `mastodon.social`) | — |
 | `MASTODON_ACCESS_TOKEN` | Mastodon API bearer token | — |
 | `MASTODON_VISIBILITY` | Toot visibility (`public`, `unlisted`, `private`) | `public` |
