@@ -3,14 +3,15 @@
 # Chronivaro Release & Publishing Script
 # ==============================================================================
 # Automates the release process for Chronivaro:
-# 1. Determines version and tag
-# 2. Builds fat-JAR and packages sanitized runtime tarball
-# 3. Generates release notes / changelog (with MVP feature list for 0.1.0)
+# 1. Determines release version, tag, and next development version
+# 2. Updates Maven POM version to release version (e.g. 0.1.0) & commits
+# 3. Builds fat-JAR and packages sanitized runtime tarball
 # 4. Computes SHA-256 checksums
 # 5. Signs release assets with GPG (.asc detached signatures)
 # 6. Pushes signed annotated git tags and creates GitHub Release with assets
 # 7. Posts announcement toot to Mastodon via REST API hook
-# 8. Supports dry-run / simulation mode (-s / --simulate)
+# 8. Increments POM version to next minor snapshot (e.g. 0.2.0-SNAPSHOT) & commits
+# 9. Supports dry-run / simulation mode (-s / --simulate)
 # ==============================================================================
 
 set -eo pipefail
@@ -35,6 +36,7 @@ PRERELEASE=false
 ENABLE_MASTODON=false
 CUSTOM_CHANGELOG=""
 SPECIFIED_VERSION=""
+SPECIFIED_NEXT_VERSION=""
 SPECIFIED_TAG=""
 PREV_TAG=""
 
@@ -61,9 +63,13 @@ MASTODON_VISIBILITY="${MASTODON_VISIBILITY:-public}"
 # ------------------------------------------------------------------------------
 # Logging Helpers & Rollback Handlers
 # ------------------------------------------------------------------------------
+INITIAL_COMMIT_SHA="$(git rev-parse HEAD 2>/dev/null || true)"
+CURRENT_BRANCH="$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "develop")"
 TAG_EXISTS_LOCALLY=false
 TAG_CREATED_LOCALLY=false
 TAG_PUSHED_REMOTELY=false
+COMMITTED_RELEASE_VERSION=false
+COMMITTED_NEXT_VERSION=false
 RELEASE_CREATED_ID=""
 GH_RELEASE_CREATED=false
 ROLLING_BACK=false
@@ -86,7 +92,7 @@ function rollback() {
   fi
   ROLLING_BACK=true
 
-  if [[ "${TAG_CREATED_LOCALLY}" == "true" || "${TAG_PUSHED_REMOTELY}" == "true" || -n "${RELEASE_CREATED_ID}" || "${GH_RELEASE_CREATED}" == "true" ]]; then
+  if [[ "${TAG_CREATED_LOCALLY}" == "true" || "${TAG_PUSHED_REMOTELY}" == "true" || -n "${RELEASE_CREATED_ID}" || "${GH_RELEASE_CREATED}" == "true" || "${COMMITTED_RELEASE_VERSION}" == "true" || "${COMMITTED_NEXT_VERSION}" == "true" ]]; then
     echo
     warn "Reverting previous release actions due to failure..."
 
@@ -119,6 +125,15 @@ function rollback() {
       git tag -d "${TAG}" 2>/dev/null || warn "Could not delete local git tag '${TAG}'."
     fi
 
+    # 5. Revert git commits made by this script
+    if [[ -n "${INITIAL_COMMIT_SHA}" && ( "${COMMITTED_RELEASE_VERSION}" == "true" || "${COMMITTED_NEXT_VERSION}" == "true" ) ]]; then
+      info "Resetting git working tree to initial commit (${INITIAL_COMMIT_SHA})..."
+      git reset --hard "${INITIAL_COMMIT_SHA}" >/dev/null 2>&1 || warn "Could not reset git HEAD to initial commit."
+    else
+      # Discard any unstaged/uncommitted POM changes
+      git checkout -- pom.xml */pom.xml >/dev/null 2>&1 || true
+    fi
+
     info "Rollback complete."
   fi
 }
@@ -142,11 +157,12 @@ Usage: $(basename "${0}") [options]
 Options:
    -h, --help                  Show this help message
    -v, --version <version>     Release version (default: extracted from pom.xml, e.g. 0.1.0)
+   -n, --next-version <ver>    Next development version (default: auto-incremented minor snapshot, e.g. 0.2.0-SNAPSHOT)
    -t, --tag <tag>             Git tag name (default: v<version>, e.g. v0.1.0)
    -p, --prev-tag <tag>        Previous git tag for changelog diff (default: auto-detected)
    -c, --changelog <file>      Path to custom release notes markdown file
    -s, -d, --simulate, --dry-run
-                               Simulate the release (prints GitHub notes, assets, and Mastodon toot without publishing)
+                               Simulate the release (prints GitHub notes, assets, version updates, and Mastodon toot without publishing)
    -b, --build                 Build project (mvn clean package -DskipTests) before releasing
    -B, --no-build              Do not build project even if JAR is missing
    -m, --mastodon              Enable posting announcement to Mastodon
@@ -198,6 +214,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     -v|--version)
       SPECIFIED_VERSION="$2"
+      shift 2
+      ;;
+    -n|--next-version)
+      SPECIFIED_NEXT_VERSION="$2"
       shift 2
       ;;
     -t|--tag)
@@ -276,13 +296,13 @@ fi
 # ------------------------------------------------------------------------------
 # Version & Tag Resolution
 # ------------------------------------------------------------------------------
-if [[ -z "${SPECIFIED_VERSION}" ]]; then
-  if [[ -f "pom.xml" ]]; then
-    if which xmlstarlet >/dev/null 2>&1; then
-      RAW_VERSION="$(xmlstarlet sel -t -m _:project -v _:version -n pom.xml 2>/dev/null || true)"
-    fi
-    if [[ -z "${RAW_VERSION}" && -x "$(command -v python3)" ]]; then
-      RAW_VERSION="$(python3 -c "
+RAW_VERSION=""
+if [[ -f "pom.xml" ]]; then
+  if which xmlstarlet >/dev/null 2>&1; then
+    RAW_VERSION="$(xmlstarlet sel -t -m _:project -v _:version -n pom.xml 2>/dev/null || true)"
+  fi
+  if [[ -z "${RAW_VERSION}" && -x "$(command -v python3)" ]]; then
+    RAW_VERSION="$(python3 -c "
 import xml.etree.ElementTree as ET
 try:
     tree = ET.parse('pom.xml')
@@ -293,10 +313,14 @@ try:
 except Exception:
     pass
 " 2>/dev/null || true)"
-    fi
-    if [[ -z "${RAW_VERSION}" ]]; then
-      RAW_VERSION="$(grep -m 1 "<version>" pom.xml | sed -e 's/.*<version>//' -e 's/<\/version>.*//' | tr -d ' ')"
-    fi
+  fi
+  if [[ -z "${RAW_VERSION}" ]]; then
+    RAW_VERSION="$(grep -m 1 "<version>" pom.xml | sed -e 's/.*<version>//' -e 's/<\/version>.*//' | tr -d ' ')"
+  fi
+fi
+
+if [[ -z "${SPECIFIED_VERSION}" ]]; then
+  if [[ -n "${RAW_VERSION}" ]]; then
     VERSION="${RAW_VERSION%-SNAPSHOT}"
   else
     fail "pom.xml not found and no version specified via -v/--version"
@@ -307,6 +331,24 @@ fi
 
 if [[ -z "${VERSION}" ]]; then
   fail "Could not determine release version!"
+fi
+
+if [[ -z "${SPECIFIED_NEXT_VERSION}" ]]; then
+  NEXT_VERSION="$(python3 -c "
+import sys
+v = sys.argv[1]
+parts = v.split('.')
+if len(parts) >= 2 and parts[0].isdigit() and parts[1].isdigit():
+    major, minor = int(parts[0]), int(parts[1])
+    print(f'{major}.{minor + 1}.0-SNAPSHOT')
+else:
+    print(f'{v}-SNAPSHOT')
+" "${VERSION}" 2>/dev/null || true)"
+  if [[ -z "${NEXT_VERSION}" ]]; then
+    NEXT_VERSION="${VERSION}-SNAPSHOT"
+  fi
+else
+  NEXT_VERSION="${SPECIFIED_NEXT_VERSION}"
 fi
 
 if [[ -z "${SPECIFIED_TAG}" ]]; then
@@ -351,10 +393,27 @@ else
 fi
 
 # ------------------------------------------------------------------------------
-# Build Artifacts
+# Build Artifacts & Prepare Release
 # ------------------------------------------------------------------------------
 RELEASE_DIR="${SCRIPT_DIR}/target/release"
 mkdir -p "${RELEASE_DIR}"
+
+if [[ "${SIMULATE}" != "true" ]]; then
+  # Check working directory cleanliness
+  if [[ -n "$(git status --porcelain pom.xml */pom.xml 2>/dev/null)" ]]; then
+    fail "Working directory contains uncommitted changes in POM files! Please commit or stash them before releasing."
+  fi
+
+  # 1. Update Maven POM to release version (e.g. 0.1.0) and commit
+  if [[ "${RAW_VERSION}" != "${VERSION}" ]]; then
+    info "Updating Maven POM versions from ${RAW_VERSION} to ${VERSION}..."
+    mvn versions:set -DnewVersion="${VERSION}" -DgenerateBackupPoms=false || fail "Failed to set Maven release version ${VERSION}"
+    git add pom.xml */pom.xml
+    git commit -m "[Project] Release ${VERSION}" || fail "Failed to commit release version ${VERSION}"
+    COMMITTED_RELEASE_VERSION=true
+    BUILD_PROJECT=true
+  fi
+fi
 
 if [[ "${SKIP_BUILD}" != "true" ]]; then
   if [[ "${BUILD_PROJECT}" == "true" || ! -f "${JAR_SOURCE}" ]]; then
@@ -568,6 +627,9 @@ if [[ "${SIMULATE}" == "true" ]]; then
   echo "================================================================================"
   echo
   info "Release Target: ${APP_NAME} ${VERSION} (Tag: ${TAG})"
+  info "Current POM Version: ${RAW_VERSION}"
+  info "Next Development Version: ${NEXT_VERSION}"
+  info "Target Branch: ${CURRENT_BRANCH}"
   info "GitHub Repository: ${GITHUB_REPO}"
   info "Release Title: ${RELEASE_TITLE}"
   info "Release URL: ${RELEASE_URL}"
@@ -587,6 +649,37 @@ if [[ "${SIMULATE}" == "true" ]]; then
   echo "📝 GITHUB RELEASE NOTES / CHANGELOG"
   echo "--------------------------------------------------------------------------------"
   cat "${RELEASE_NOTES_FILE}"
+  echo
+  echo "--------------------------------------------------------------------------------"
+  echo "🔧 MAVEN & GIT VERSIONING ACTIONS (Simulated)"
+  echo "--------------------------------------------------------------------------------"
+  if [[ "${RAW_VERSION}" != "${VERSION}" ]]; then
+    echo "1. Update POM version to release version:"
+    echo "   mvn versions:set -DnewVersion=${VERSION} -DgenerateBackupPoms=false"
+    echo "2. Commit release version:"
+    echo "   git add pom.xml */pom.xml"
+    echo "   git commit -m \"[Project] Release ${VERSION}\""
+  else
+    echo "1. POM version already matches release version ${VERSION} (no release commit needed)."
+  fi
+  echo "3. Create signed annotated git tag:"
+  if [[ -n "${GPG_KEY}" ]]; then
+    echo "   git tag -u \"${GPG_KEY}\" -s \"${TAG}\" -m \"${VERSION}\""
+  else
+    echo "   git tag -s \"${TAG}\" -m \"${VERSION}\""
+  fi
+  echo "4. Push release commit and tag to remote origin:"
+  if [[ "${RAW_VERSION}" != "${VERSION}" ]]; then
+    echo "   git push origin \"${CURRENT_BRANCH}\""
+  fi
+  echo "   git push origin \"${TAG}\""
+  echo "5. Update POM version to next development snapshot:"
+  echo "   mvn versions:set -DnewVersion=${NEXT_VERSION} -DgenerateBackupPoms=false"
+  echo "6. Commit next development snapshot:"
+  echo "   git add pom.xml */pom.xml"
+  echo "   git commit -m \"[Project] Next development version ${NEXT_VERSION}\""
+  echo "7. Push next development snapshot to remote origin:"
+  echo "   git push origin \"${CURRENT_BRANCH}\""
   echo
   echo "--------------------------------------------------------------------------------"
   echo "🐙 GITHUB PUBLISHING ACTIONS (Simulated)"
@@ -625,18 +718,8 @@ if [[ "${SIMULATE}" == "true" ]]; then
     info "Mastodon hook disabled. (Pass -m / --mastodon and credentials to enable)."
   fi
   echo
-  echo "--------------------------------------------------------------------------------"
-  echo "🏷️ GIT TAGGING ACTIONS (Simulated)"
-  echo "--------------------------------------------------------------------------------"
-  if [[ -n "${GPG_KEY}" ]]; then
-    echo "   git tag -u \"${GPG_KEY}\" -s \"${TAG}\" -m \"${VERSION}\""
-  else
-    echo "   git tag -s \"${TAG}\" -m \"${VERSION}\""
-  fi
-  echo "   git push origin \"${TAG}\""
-  echo
   echo "================================================================================"
-  success "Simulation complete! No changes were pushed to GitHub or Mastodon."
+  success "Simulation complete! No changes were made to pom.xml or pushed to GitHub / Mastodon."
   echo "================================================================================"
   exit 0
 fi
@@ -646,7 +729,7 @@ fi
 # ------------------------------------------------------------------------------
 info "Starting release process for ${APP_NAME} ${VERSION}..."
 
-# 1. Create and Push Git Tag
+# 1. Create and Push Git Tag & Release Commit
 if git rev-parse "${TAG}" >/dev/null 2>&1; then
   warn "Git tag '${TAG}' already exists locally."
   TAG_EXISTS_LOCALLY=true
@@ -663,6 +746,11 @@ else
     fail "Failed to create signed git tag '${TAG}'"
   fi
   TAG_CREATED_LOCALLY=true
+fi
+
+if [[ "${COMMITTED_RELEASE_VERSION}" == "true" ]]; then
+  info "Pushing release commit to origin (${CURRENT_BRANCH})..."
+  git push origin "${CURRENT_BRANCH}" || warn "Could not push release commit to origin (${CURRENT_BRANCH})"
 fi
 
 if git ls-remote --tags origin "refs/tags/${TAG}" 2>/dev/null | grep -q "${TAG}"; then
@@ -862,6 +950,17 @@ print(json.dumps(payload))
   fi
 fi
 
+# 4. Increment Maven POM to next development snapshot and commit
+info "Updating Maven POM versions to next development snapshot (${NEXT_VERSION})..."
+mvn versions:set -DnewVersion="${NEXT_VERSION}" -DgenerateBackupPoms=false || fail "Failed to set next development version ${NEXT_VERSION}"
+git add pom.xml */pom.xml
+git commit -m "[Project] Next development version ${NEXT_VERSION}" || fail "Failed to commit next development version ${NEXT_VERSION}"
+COMMITTED_NEXT_VERSION=true
+
+info "Pushing next development version to origin (${CURRENT_BRANCH})..."
+git push origin "${CURRENT_BRANCH}" || warn "Could not push next development version to origin (${CURRENT_BRANCH})"
+
 echo
 success "Release ${VERSION} completed successfully!"
+info "Current development version is now ${NEXT_VERSION}"
 exit 0

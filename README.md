@@ -209,14 +209,17 @@ The packaging process automatically:
 
 ### Creating and Publishing Releases (GitHub & Mastodon)
 
-Chronivaro includes an automated release script (`release.sh`) to sign and annotate git tags, build artifacts (standalone fat-JAR, sanitized runtime tarball, SHA-256 checksums), sign all release assets with GPG (`.asc` detached signatures), generate release notes, publish GitHub Releases, and announce releases on Mastodon:
+Chronivaro includes an automated release script (`release.sh`) to update Maven POM versions to the release version, sign and annotate git tags, build artifacts (standalone fat-JAR, sanitized runtime tarball, SHA-256 checksums), sign all release assets with GPG (`.asc` detached signatures), generate release notes, publish GitHub Releases, announce releases on Mastodon, and automatically increment the POM version to the next minor snapshot (e.g. `0.2.0-SNAPSHOT`):
 
 ```bash
-# Dry-run / Simulation mode (inspect release notes, assets, and Mastodon toot preview):
+# Dry-run / Simulation mode (inspect release notes, assets, and version updates preview):
 ./release.sh --simulate
 
 # Full release for version 0.1.0 with Maven build:
 ./release.sh -v 0.1.0 -b
+
+# Release with custom next development version:
+./release.sh -v 0.1.0 -n 0.2.0-SNAPSHOT -b
 
 # Release and announce on Mastodon:
 ./release.sh -v 0.1.0 -b -m --mastodon-instance mastodon.social --mastodon-token $MASTODON_TOKEN
