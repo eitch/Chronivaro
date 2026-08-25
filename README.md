@@ -207,6 +207,23 @@ The packaging process automatically:
 - Excludes temporary/session files (`runtime/temp/`) and dbStore directories (`runtime/data/dbStore/`).
 - Sanitizes `PrivilegeUsers.xml` to remove personal user accounts while preserving system accounts (`State=SYSTEM`) and the `admin` user.
 
+### Creating and Publishing Releases (GitHub & Mastodon)
+
+Chronivaro includes an automated release script (`release.sh`) to tag versions, build artifacts (standalone fat-JAR, sanitized runtime tarball, SHA-256 checksums), generate release notes, publish GitHub Releases, and announce releases on Mastodon:
+
+```bash
+# Dry-run / Simulation mode (inspect release notes, assets, and Mastodon toot preview):
+./release.sh --simulate
+
+# Full release for version 0.1.0 with Maven build:
+./release.sh -v 0.1.0 -b
+
+# Release and announce on Mastodon:
+./release.sh -v 0.1.0 -b -m --mastodon-instance mastodon.social --mastodon-token $MASTODON_TOKEN
+```
+
+Configuration can be provided via flags or environment variables (`GITHUB_TOKEN`, `MASTODON_INSTANCE`, `MASTODON_ACCESS_TOKEN`, `MASTODON_VISIBILITY`).
+
 ### Production Deployment with Docker Compose
 
 1. Prepare directory structure on host:

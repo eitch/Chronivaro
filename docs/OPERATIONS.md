@@ -277,6 +277,53 @@ docker compose -f docker-compose-dev.yml up --build
 
 ---
 
+### 2.3 Release & Publishing Management (GitHub & Mastodon)
+
+Chronivaro provides a centralized release automation script (`release.sh`) in the repository root. It streamlines version tagging, packaging, checksum verification, GitHub Releases publishing, and Mastodon announcements.
+
+#### 2.3.1 Capabilities
+- **Artifact Packaging**: Packages the executable standalone fat-JAR (`chronivaro.jar` / `chronivaro-<version>.jar`) and generates a clean, sanitized runtime distribution tarball (`runtime.tar.gz` / `runtime-<version>.tar.gz`).
+- **Checksum Generation**: Automatically generates `SHA256SUMS.txt` for all release binaries.
+- **Changelog / Release Notes Generation**:
+  - For version `0.1.0` (initial MVP release), automatically formats a comprehensive feature breakdown.
+  - For subsequent releases, automatically extracts Git commit history since the previous release tag.
+  - Supports passing a custom changelog markdown file via `-c / --changelog`.
+- **GitHub Release Integration**: Publishes the release and uploads binary assets using GitHub CLI (`gh`) or GitHub REST API (`GITHUB_TOKEN`).
+- **Mastodon Announcement Hook**: Automatically posts a formatted release announcement to a configured Mastodon instance.
+- **Simulation / Dry-Run Mode**: Allows previewing exact release notes, binary assets, checksums, GitHub API actions, and Mastodon toots without performing real network operations or Git tag creation.
+
+#### 2.3.2 Usage & Commands
+
+```bash
+# 1. Preview release in simulation mode (dry-run):
+./release.sh --simulate
+
+# 2. Preview simulation with Mastodon announcement hook:
+./release.sh --simulate --mastodon --mastodon-instance mastodon.social --mastodon-token $MASTODON_TOKEN
+
+# 3. Perform official release with Maven build:
+./release.sh -v 0.1.0 -b
+
+# 4. Perform official release and publish announcement to Mastodon:
+./release.sh -v 0.1.0 -b -m
+```
+
+#### 2.3.3 Configuration Parameters & Environment Variables
+
+| Variable / Flag | Description | Default |
+|---|---|---|
+| `-v, --version <version>` | Release version number | Extracted from `pom.xml` |
+| `-t, --tag <tag>` | Git tag name | `v<version>` |
+| `-s, --simulate` | Dry-run simulation mode | `false` |
+| `-b, --build` | Trigger `mvn clean package -DskipTests` | `false` |
+| `-m, --mastodon` | Enable Mastodon announcement | Auto if credentials provided |
+| `GITHUB_TOKEN` | GitHub Personal Access Token | Required if `gh` CLI not logged in |
+| `MASTODON_INSTANCE` | Mastodon instance host (e.g., `mastodon.social`) | — |
+| `MASTODON_ACCESS_TOKEN` | Mastodon API bearer token | — |
+| `MASTODON_VISIBILITY` | Toot visibility (`public`, `unlisted`, `private`) | `public` |
+
+---
+
 ## 3. Initial System Access & Tenant Onboarding
 
 After starting Chronivaro for the first time, perform initial administrator setup and prepare the tenant before onboarding employees.
