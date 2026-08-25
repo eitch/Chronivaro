@@ -282,7 +282,7 @@ docker compose -f docker-compose-dev.yml up --build
 Chronivaro provides a centralized release automation script (`release.sh`) in the repository root. It streamlines version tagging, packaging, checksum verification, GitHub Releases publishing, and Mastodon announcements.
 
 #### 2.3.1 Capabilities
-- **Artifact Packaging**: Packages the executable standalone fat-JAR (`chronivaro.jar` / `chronivaro-<version>.jar`) and generates a clean, sanitized runtime distribution tarball (`runtime.tar.gz` / `runtime-<version>.tar.gz`).
+- **Artifact Packaging**: Packages the executable standalone fat-JAR (`chronivaro-<version>.jar`) and generates a clean, sanitized runtime distribution tarball (`runtime-<version>.tar.gz`).
 - **Checksum Generation**: Automatically generates `SHA256SUMS.txt` for all release binaries.
 - **Changelog / Release Notes Generation**:
   - For version `0.1.0` (initial MVP release), automatically formats a comprehensive feature breakdown.
