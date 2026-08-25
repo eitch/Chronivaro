@@ -222,7 +222,7 @@ Chronivaro includes an automated release script (`release.sh`) to tag versions, 
 ./release.sh -v 0.1.0 -b -m --mastodon-instance mastodon.social --mastodon-token $MASTODON_TOKEN
 ```
 
-Configuration can be provided via flags or environment variables (`GITHUB_TOKEN`, `MASTODON_INSTANCE`, `MASTODON_ACCESS_TOKEN`, `MASTODON_VISIBILITY`).
+Configuration can be provided via flags, environment variables (`GITHUB_TOKEN`, `MASTODON_INSTANCE`, `MASTODON_ACCESS_TOKEN`, `MASTODON_VISIBILITY`), or loaded automatically from the release environment file `${HOME}/.config/chronivaro/release.env`.
 
 ### Production Deployment with Docker Compose
 

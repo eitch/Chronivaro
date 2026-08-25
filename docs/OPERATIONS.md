@@ -322,6 +322,20 @@ Chronivaro provides a centralized release automation script (`release.sh`) in th
 | `MASTODON_ACCESS_TOKEN` | Mastodon API bearer token | — |
 | `MASTODON_VISIBILITY` | Toot visibility (`public`, `unlisted`, `private`) | `public` |
 
+##### Environment Configuration File
+The release script automatically loads credentials and environment variables from the file `${HOME}/.config/chronivaro/release.env` if present. No other environment files are loaded.
+
+Example `${HOME}/.config/chronivaro/release.env`:
+```bash
+# GitHub Release Configuration
+GITHUB_TOKEN="ghp_xxxxxxxxxxxxxxxxxxxx"
+
+# Mastodon Announcement Hook Configuration
+MASTODON_INSTANCE="mastodon.social"
+MASTODON_ACCESS_TOKEN="xxxxxxxxxxxxxxxxxxxx"
+MASTODON_VISIBILITY="public"
+```
+
 ---
 
 ## 3. Initial System Access & Tenant Onboarding

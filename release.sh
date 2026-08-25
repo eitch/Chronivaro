@@ -38,12 +38,12 @@ SPECIFIED_TAG=""
 PREV_TAG=""
 
 # Load environment configuration if available
-for env_file in ".env" ".release.env" "${HOME}/.config/chronivaro/release.env" "${HOME}/.mastodon-env"; do
-  if [[ -f "${env_file}" ]]; then
-    # shellcheck disable=SC1090
-    source "${env_file}" 2>/dev/null || true
-  fi
-done
+ENV_FILE="${HOME}/.config/chronivaro/release.env"
+if [[ -f "${ENV_FILE}" ]]; then
+  echo "Loading environment file ${ENV_FILE}"
+  # shellcheck disable=SC1090
+  source "${ENV_FILE}" 2>/dev/null || true
+fi
 
 # GitHub configuration (can be provided via env or CLI)
 GITHUB_TOKEN="${GITHUB_TOKEN:-${GH_TOKEN:-}}"
@@ -106,6 +106,11 @@ Environment Variables:
    MASTODON_INSTANCE           Mastodon instance hostname/URL (e.g. mastodon.social)
    MASTODON_ACCESS_TOKEN       Mastodon API bearer token
    MASTODON_VISIBILITY         Post visibility: public (default), unlisted, private
+
+Environment File:
+   \${HOME}/.config/chronivaro/release.env
+                               Configuration file automatically loaded if present
+                               (can define any of the environment variables above)
 
 Examples:
    # Simulate 0.1.0 release (dry-run):
