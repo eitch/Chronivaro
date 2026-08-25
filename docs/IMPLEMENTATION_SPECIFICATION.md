@@ -1077,7 +1077,7 @@ chronivaro/
 Maven-Koordinaten:
 
 ```xml
-<groupId>ch.atexxi.chronivaro</groupId>
+<groupId>ch.eitchnet.chronivaro</groupId>
 <artifactId>chronivaro-parent</artifactId>
 <version>0.1.0-SNAPSHOT</version>
 <packaging>pom</packaging>

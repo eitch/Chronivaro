@@ -1,12 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!--
-  ~ Copyright (c) 2025 atexxi Systems AG <dev@atexxi.ch>. All rights reserved.
-  ~
-  ~ This source code is proprietary and confidential. Unauthorized copying, modification,
-  ~ distribution, or use of this code, via any medium, is strictly prohibited without prior
-  ~ written permission from atexxi Systems AG.
-  -->
-
 <Privilege>
     <Container>
         <Parameters>

@@ -198,7 +198,7 @@ To package a clean, ready-to-use runtime environment tarball for deployment:
 ./build-runtime-tarball.sh -o runtime.tar.gz
 
 # Or using the Java class directly
-java -cp "chronivaro-app/target/*" ch.atexxi.chronivaro.app.RuntimeArchiveGenerator -s runtime -o runtime.tar.gz
+java -cp "chronivaro-app/target/*" ch.eitchnet.chronivaro.app.RuntimeArchiveGenerator -s runtime -o runtime.tar.gz
 ```
 
 The packaging process automatically:
@@ -297,7 +297,7 @@ Chronivaro provides unauthenticated standard endpoints for container orchestrati
 Chronivaro uses SLF4J with Logback for structured logging. Every HTTP request carries an `X-Correlation-Id` header mapped to the logging MDC context:
 
 ```text
-2026-08-19 13:30:00.123 [qtp1234567-24] [corrId=e4a1b2c3-4d5e-6f7a-8b9c-0d1e2f3a4b5c] INFO  ch.atexxi.chronivaro.rest.resource.ChronivaroResource - Processed presence query
+2026-08-19 13:30:00.123 [qtp1234567-24] [corrId=e4a1b2c3-4d5e-6f7a-8b9c-0d1e2f3a4b5c] INFO  ch.eitchnet.chronivaro.rest.resource.ChronivaroResource - Processed presence query
 ```
 
 Clients can supply custom correlation IDs via the `X-Correlation-Id` request header; otherwise, the server automatically generates and returns a UUID correlation ID in the response headers.

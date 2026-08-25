@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>ch.atexxi.chronivaro</groupId>
+        <groupId>ch.eitchnet.chronivaro</groupId>
         <artifactId>chronivaro-parent</artifactId>
         <version>0.1.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
@@ -17,11 +17,11 @@
 
     <dependencies>
         <dependency>
-            <groupId>ch.atexxi.chronivaro</groupId>
+            <groupId>ch.eitchnet.chronivaro</groupId>
             <artifactId>chronivaro-core</artifactId>
         </dependency>
         <dependency>
-            <groupId>ch.atexxi.chronivaro</groupId>
+            <groupId>ch.eitchnet.chronivaro</groupId>
             <artifactId>chronivaro-rest</artifactId>
         </dependency>
 
@@ -146,7 +146,7 @@
                             </filters>
                             <transformers>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <mainClass>ch.atexxi.chronivaro.app.ChronivaroApp</mainClass>
+                                    <mainClass>ch.eitchnet.chronivaro.app.ChronivaroApp</mainClass>
                                 </transformer>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
                             </transformers>

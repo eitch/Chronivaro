@@ -6,8 +6,8 @@ info:
     Provides endpoints for time tracking, timers, presence overview, absence requests, period closing, reports, and administrative management.
   version: 0.1.0-SNAPSHOT
   contact:
-    name: atexxi Systems AG
-    url: https://atexxi.ch
+    name: Chronivaro
+    url: https://github.com/eitch/Chronivaro
 servers:
   - url: /
     description: Current server instance

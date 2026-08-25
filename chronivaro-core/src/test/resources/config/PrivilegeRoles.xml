@@ -12,7 +12,7 @@
         </Privilege>
         <Privilege name="li.strolch.service.api.Service" policy="DefaultPrivilege">
             <AllAllowed>true</AllAllowed>
-            <Allow>ch.atexxi.chronivaro.core.service.UpdateConfigurationService</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.service.UpdateConfigurationService</Allow>
         </Privilege>
         <Privilege name="AddResource" policy="DefaultPrivilege">
             <AllAllowed>true</AllAllowed>
@@ -61,7 +61,7 @@
         </Privilege>
         <Privilege name="li.strolch.service.api.Service" policy="DefaultPrivilege">
             <AllAllowed>true</AllAllowed>
-            <Allow>ch.atexxi.chronivaro.core.service.UpdateConfigurationService</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.service.UpdateConfigurationService</Allow>
         </Privilege>
         <Privilege name="AddResource" policy="DefaultPrivilege">
             <AllAllowed>true</AllAllowed>
@@ -140,25 +140,25 @@
     <Role name="Employee">
         <Privilege name="li.strolch.service.api.Service" policy="DefaultPrivilege">
             <Allow>li.strolch.service.privilege.users.PrivilegeSetUserPasswordService</Allow>
-            <Allow>ch.atexxi.chronivaro.core.service.DaySummaryService</Allow>
-            <Allow>ch.atexxi.chronivaro.core.service.MonthSummaryService</Allow>
-            <Allow>ch.atexxi.chronivaro.core.service.RequestAbsenceService</Allow>
-            <Allow>ch.atexxi.chronivaro.core.service.SubmitAbsenceService</Allow>
-            <Allow>ch.atexxi.chronivaro.core.service.UpdateAbsenceService</Allow>
-            <Allow>ch.atexxi.chronivaro.core.service.CancelAbsenceService</Allow>
-            <Allow>ch.atexxi.chronivaro.core.service.StartTimerService</Allow>
-            <Allow>ch.atexxi.chronivaro.core.service.StopTimerService</Allow>
-            <Allow>ch.atexxi.chronivaro.core.service.CorrectWorkEntryService</Allow>
-            <Allow>ch.atexxi.chronivaro.core.service.SubmitPeriodService</Allow>
-            <Allow>ch.atexxi.chronivaro.core.service.CalculateVacationEntitlementService</Allow>
-            <Allow>ch.atexxi.chronivaro.core.service.GetVacationAccountSummaryService</Allow>
-            <Allow>ch.atexxi.chronivaro.core.service.PresenceService</Allow>
-            <Allow>ch.atexxi.chronivaro.core.service.AbsenceReportService</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.service.DaySummaryService</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.service.MonthSummaryService</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.service.RequestAbsenceService</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.service.SubmitAbsenceService</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.service.UpdateAbsenceService</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.service.CancelAbsenceService</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.service.StartTimerService</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.service.StopTimerService</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.service.CorrectWorkEntryService</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.service.SubmitPeriodService</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.service.CalculateVacationEntitlementService</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.service.GetVacationAccountSummaryService</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.service.PresenceService</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.service.AbsenceReportService</Allow>
         </Privilege>
         <Privilege name="li.strolch.search.StrolchSearch" policy="DefaultPrivilege">
-            <Allow>ch.atexxi.chronivaro.core.search.AbsenceSearch</Allow>
-            <Allow>ch.atexxi.chronivaro.core.search.TimePeriodSearch</Allow>
-            <Allow>ch.atexxi.chronivaro.core.search.VacationAccountEntrySearch</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.search.AbsenceSearch</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.search.TimePeriodSearch</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.search.VacationAccountEntrySearch</Allow>
         </Privilege>
         <Privilege name="PrivilegeSetUserPassword" policy="DefaultPrivilege">
             <AllAllowed>true</AllAllowed>
@@ -168,31 +168,31 @@
     <Role name="Supervisor">
         <Privilege name="li.strolch.service.api.Service" policy="DefaultPrivilege">
             <Allow>li.strolch.service.privilege.users.PrivilegeSetUserPasswordService</Allow>
-            <Allow>ch.atexxi.chronivaro.core.service.AddWorkEntryService</Allow>
-            <Allow>ch.atexxi.chronivaro.core.service.CorrectWorkEntryService</Allow>
-            <Allow>ch.atexxi.chronivaro.core.service.RemoveWorkEntryService</Allow>
-            <Allow>ch.atexxi.chronivaro.core.service.RequestAbsenceService</Allow>
-            <Allow>ch.atexxi.chronivaro.core.service.SubmitAbsenceService</Allow>
-            <Allow>ch.atexxi.chronivaro.core.service.UpdateAbsenceService</Allow>
-            <Allow>ch.atexxi.chronivaro.core.service.CancelAbsenceService</Allow>
-            <Allow>ch.atexxi.chronivaro.core.service.ApproveAbsenceService</Allow>
-            <Allow>ch.atexxi.chronivaro.core.service.RejectAbsenceService</Allow>
-            <Allow>ch.atexxi.chronivaro.core.service.PresenceService</Allow>
-            <Allow>ch.atexxi.chronivaro.core.service.SubmitPeriodService</Allow>
-            <Allow>ch.atexxi.chronivaro.core.service.ApprovePeriodService</Allow>
-            <Allow>ch.atexxi.chronivaro.core.service.RejectPeriodService</Allow>
-            <Allow>ch.atexxi.chronivaro.core.service.ReopenPeriodService</Allow>
-            <Allow>ch.atexxi.chronivaro.core.service.CalculateVacationEntitlementService</Allow>
-            <Allow>ch.atexxi.chronivaro.core.service.GetVacationAccountSummaryService</Allow>
-            <Allow>ch.atexxi.chronivaro.core.service.DaySummaryService</Allow>
-            <Allow>ch.atexxi.chronivaro.core.service.MonthSummaryService</Allow>
-            <Allow>ch.atexxi.chronivaro.core.service.TeamReportService</Allow>
-            <Allow>ch.atexxi.chronivaro.core.service.AbsenceReportService</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.service.AddWorkEntryService</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.service.CorrectWorkEntryService</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.service.RemoveWorkEntryService</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.service.RequestAbsenceService</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.service.SubmitAbsenceService</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.service.UpdateAbsenceService</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.service.CancelAbsenceService</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.service.ApproveAbsenceService</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.service.RejectAbsenceService</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.service.PresenceService</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.service.SubmitPeriodService</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.service.ApprovePeriodService</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.service.RejectPeriodService</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.service.ReopenPeriodService</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.service.CalculateVacationEntitlementService</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.service.GetVacationAccountSummaryService</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.service.DaySummaryService</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.service.MonthSummaryService</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.service.TeamReportService</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.service.AbsenceReportService</Allow>
         </Privilege>
         <Privilege name="li.strolch.search.StrolchSearch" policy="DefaultPrivilege">
-            <Allow>ch.atexxi.chronivaro.core.search.AbsenceSearch</Allow>
-            <Allow>ch.atexxi.chronivaro.core.search.TimePeriodSearch</Allow>
-            <Allow>ch.atexxi.chronivaro.core.search.VacationAccountEntrySearch</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.search.AbsenceSearch</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.search.TimePeriodSearch</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.search.VacationAccountEntrySearch</Allow>
         </Privilege>
         <Privilege name="PrivilegeSetUserPassword" policy="DefaultPrivilege">
             <AllAllowed>true</AllAllowed>
@@ -202,36 +202,36 @@
     <Role name="HR">
         <Privilege name="li.strolch.service.api.Service" policy="DefaultPrivilege">
             <Allow>li.strolch.service.privilege.users.PrivilegeSetUserPasswordService</Allow>
-            <Allow>ch.atexxi.chronivaro.core.service.AddWorkEntryService</Allow>
-            <Allow>ch.atexxi.chronivaro.core.service.CorrectWorkEntryService</Allow>
-            <Allow>ch.atexxi.chronivaro.core.service.RemoveWorkEntryService</Allow>
-            <Allow>ch.atexxi.chronivaro.core.service.RequestAbsenceService</Allow>
-            <Allow>ch.atexxi.chronivaro.core.service.SubmitAbsenceService</Allow>
-            <Allow>ch.atexxi.chronivaro.core.service.UpdateAbsenceService</Allow>
-            <Allow>ch.atexxi.chronivaro.core.service.CancelAbsenceService</Allow>
-            <Allow>ch.atexxi.chronivaro.core.service.ApproveAbsenceService</Allow>
-            <Allow>ch.atexxi.chronivaro.core.service.RejectAbsenceService</Allow>
-            <Allow>ch.atexxi.chronivaro.core.service.PresenceService</Allow>
-            <Allow>ch.atexxi.chronivaro.core.service.CreateEmployeeService</Allow>
-            <Allow>ch.atexxi.chronivaro.core.service.UpdateEmployeeService</Allow>
-            <Allow>ch.atexxi.chronivaro.core.service.ReactivateEmployeeService</Allow>
-            <Allow>ch.atexxi.chronivaro.core.service.SubmitPeriodService</Allow>
-            <Allow>ch.atexxi.chronivaro.core.service.ApprovePeriodService</Allow>
-            <Allow>ch.atexxi.chronivaro.core.service.RejectPeriodService</Allow>
-            <Allow>ch.atexxi.chronivaro.core.service.ReopenPeriodService</Allow>
-            <Allow>ch.atexxi.chronivaro.core.service.LockPeriodService</Allow>
-            <Allow>ch.atexxi.chronivaro.core.service.CalculateVacationEntitlementService</Allow>
-            <Allow>ch.atexxi.chronivaro.core.service.CreditVacationEntitlementService</Allow>
-            <Allow>ch.atexxi.chronivaro.core.service.YearEndVacationCarryOverService</Allow>
-            <Allow>ch.atexxi.chronivaro.core.service.AddVacationCorrectionService</Allow>
-            <Allow>ch.atexxi.chronivaro.core.service.GetVacationAccountSummaryService</Allow>
-            <Allow>ch.atexxi.chronivaro.core.service.TeamReportService</Allow>
-            <Allow>ch.atexxi.chronivaro.core.service.AbsenceReportService</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.service.AddWorkEntryService</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.service.CorrectWorkEntryService</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.service.RemoveWorkEntryService</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.service.RequestAbsenceService</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.service.SubmitAbsenceService</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.service.UpdateAbsenceService</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.service.CancelAbsenceService</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.service.ApproveAbsenceService</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.service.RejectAbsenceService</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.service.PresenceService</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.service.CreateEmployeeService</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.service.UpdateEmployeeService</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.service.ReactivateEmployeeService</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.service.SubmitPeriodService</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.service.ApprovePeriodService</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.service.RejectPeriodService</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.service.ReopenPeriodService</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.service.LockPeriodService</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.service.CalculateVacationEntitlementService</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.service.CreditVacationEntitlementService</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.service.YearEndVacationCarryOverService</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.service.AddVacationCorrectionService</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.service.GetVacationAccountSummaryService</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.service.TeamReportService</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.service.AbsenceReportService</Allow>
         </Privilege>
         <Privilege name="li.strolch.search.StrolchSearch" policy="DefaultPrivilege">
-            <Allow>ch.atexxi.chronivaro.core.search.AbsenceSearch</Allow>
-            <Allow>ch.atexxi.chronivaro.core.search.TimePeriodSearch</Allow>
-            <Allow>ch.atexxi.chronivaro.core.search.VacationAccountEntrySearch</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.search.AbsenceSearch</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.search.TimePeriodSearch</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.search.VacationAccountEntrySearch</Allow>
         </Privilege>
         <Privilege name="PrivilegeSetUserPassword" policy="DefaultPrivilege">
             <AllAllowed>true</AllAllowed>

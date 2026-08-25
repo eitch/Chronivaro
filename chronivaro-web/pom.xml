@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>ch.atexxi.chronivaro</groupId>
+        <groupId>ch.eitchnet.chronivaro</groupId>
         <artifactId>chronivaro-parent</artifactId>
         <version>0.1.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
@@ -23,7 +23,7 @@
 
     <dependencies>
         <dependency>
-            <groupId>ch.atexxi.chronivaro</groupId>
+            <groupId>ch.eitchnet.chronivaro</groupId>
             <artifactId>chronivaro-rest</artifactId>
         </dependency>
 
