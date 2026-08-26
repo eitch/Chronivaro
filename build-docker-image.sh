@@ -7,6 +7,7 @@ APP_TAG="chronivaro"
 JAR_NAME="chronivaro.jar"
 APP_PATH="chronivaro-app"
 TARGET_PATH="${APP_PATH}/target/${JAR_NAME}"
+TARGET_LIB_PATH="${APP_PATH}/target/lib"
 
 REGISTRY="repo.strolch.li"
 PUSH_TO_REGISTRY=false
@@ -102,8 +103,8 @@ DOCKER_LATEST_TAG="${APP_TAG}:latest"
 
 info "Building ${APP_TAG} docker image with tag: ${DOCKER_TAG}, using registry ${REGISTRY}"
 
-if ! [[ -f "${TARGET_PATH}" ]]; then
-  err "Couldn't find ${TARGET_PATH}"
+if ! [[ -f "${TARGET_PATH}" ]] || ! [[ -d "${TARGET_LIB_PATH}" ]]; then
+  err "Couldn't find ${TARGET_PATH} or ${TARGET_LIB_PATH}"
   fail "First build project before creating docker image!"
 fi
 

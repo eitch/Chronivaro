@@ -37,7 +37,7 @@
 
 **Chronivaro** is a lightweight, high-performance working time and absence management platform built on the [Strolch](https://strolch.li) framework. It delivers precise multi-block daily time tracking with automatic break derivation, comprehensive vacation journal accounting, monthly period closing workflows with calculation snapshots, role-based supervisor approval queues, and tenant-wide administration.
 
-The system is packaged as a standalone fat-JAR with an embedded Eclipse Jetty 12 runtime, serving both modern Web Component frontend assets and REST API endpoints without requiring an external servlet container.
+The system is packaged as a standalone application distribution with an embedded Eclipse Jetty 12 runtime and a `lib/` directory containing all dependencies, serving both modern Web Component frontend assets and REST API endpoints without requiring an external servlet container.
 
 ---
 
@@ -81,7 +81,7 @@ Chronivaro offers a responsive single-page web interface tailored for employees,
 - 📊 **Reporting & RFC 4180 CSV Export**: Personal summaries, monthly balance histories, vacation account journals, team performance overviews, and filtered absence reports with UTF-8 BOM encoding for Excel.
 - 👥 **Tenant Administration & Self-Service**: Comprehensive master data management for employees, employment schedules, teams, locations, holiday calendars, absence types, global tenant parameters, and user self-service password management.
 - 🔒 **Security & Audit Logging**: Role-based access control (Employee, Supervisor, HR, Administrator), immutable append-only audit trail logging all state transitions, approvals, and configuration changes.
-- 🚀 **Standalone Embedded Jetty Execution**: Single self-contained fat-JAR (`chronivaro.jar`) delivering frontend assets and REST API endpoints out-of-the-box.
+- 🚀 **Standalone Embedded Jetty Execution**: Executable standalone JAR (`chronivaro.jar`) with manifest classpath loading from `lib/` (and packaged distribution archive `chronivaro.tar.gz`) delivering frontend assets and REST API endpoints out-of-the-box.
 
 ---
 
@@ -105,7 +105,7 @@ graph LR
 | `chronivaro-core` | Domain model, Strolch services, commands, searches, and calculation policies |
 | `chronivaro-rest` | Jakarta REST (Jersey) endpoints, DTO mappers, authentication filters, and error mappers |
 | `chronivaro-web` | Single Page Application (Web Components, JavaScript modules, CSS, icons) |
-| `chronivaro-app` | Standalone launcher with embedded Eclipse Jetty HTTP server and fat-JAR packaging |
+| `chronivaro-app` | Standalone launcher with embedded Eclipse Jetty HTTP server, `lib/` dependency staging, and distribution packaging |
 | `docs/` | Architecture specifications, REST API OpenAPI definition, screenshots gallery, and operations guides |
 | `runtime/` | Strolch runtime directory (configuration XMLs, templates, and model persistence) |
 
@@ -121,7 +121,7 @@ graph LR
 
 ### Build from Source
 
-To build all modules and package the executable fat-JAR:
+To build all modules and package the distribution archive:
 
 ```bash
 mvn clean install
@@ -133,9 +133,11 @@ To run unit and integration tests:
 mvn test
 ```
 
-The resulting executable fat-JAR is located at:
+The resulting executable JAR, dependency `lib/` folder, and distribution tarball are located at:
 ```text
 chronivaro-app/target/chronivaro.jar
+chronivaro-app/target/lib/
+chronivaro-app/target/chronivaro.tar.gz
 ```
 
 ---
@@ -209,7 +211,7 @@ The packaging process automatically:
 
 ### Creating and Publishing Releases (GitHub & Mastodon)
 
-Chronivaro includes an automated release script (`release.sh`) to update Maven POM versions to the release version, sign and annotate git tags, build artifacts (standalone fat-JAR, sanitized runtime tarball, SHA-256 checksums), sign all release assets with GPG (`.asc` detached signatures), generate release notes, publish GitHub Releases, announce releases on Mastodon, and automatically increment the POM version to the next minor snapshot (e.g. `0.2.0-SNAPSHOT`):
+Chronivaro includes an automated release script (`release.sh`) to update Maven POM versions to the release version, sign and annotate git tags, build artifacts (standalone application distribution tarball, sanitized runtime tarball, SHA-256 checksums), sign all release assets with GPG (`.asc` detached signatures), generate release notes, publish GitHub Releases, announce releases on Mastodon, and automatically increment the POM version to the next minor snapshot (e.g. `0.2.0-SNAPSHOT`):
 
 ```bash
 # Dry-run / Simulation mode (inspect release notes, assets, and version updates preview):

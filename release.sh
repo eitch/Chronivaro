@@ -5,7 +5,7 @@
 # Automates the release process for Chronivaro:
 # 1. Determines release version, tag, and next development version
 # 2. Updates Maven POM version to release version (e.g. 0.1.0) & commits
-# 3. Builds fat-JAR and packages sanitized runtime tarball
+# 3. Builds application tarball and packages sanitized runtime tarball
 # 4. Computes SHA-256 checksums
 # 5. Signs release assets with GPG (.asc detached signatures)
 # 6. Pushes signed annotated git tags and creates GitHub Release with assets
@@ -27,6 +27,7 @@ cd "${SCRIPT_DIR}" || exit
 # Default Settings
 # ------------------------------------------------------------------------------
 APP_NAME="Chronivaro"
+TARBALL_SOURCE="chronivaro-app/target/chronivaro.tar.gz"
 JAR_SOURCE="chronivaro-app/target/chronivaro.jar"
 BUILD_PROJECT=false
 SKIP_BUILD=false
@@ -415,35 +416,35 @@ if [[ "${SIMULATE}" != "true" ]]; then
 fi
 
 if [[ "${SKIP_BUILD}" != "true" ]]; then
-  if [[ "${BUILD_PROJECT}" == "true" || ! -f "${JAR_SOURCE}" ]]; then
+  if [[ "${BUILD_PROJECT}" == "true" || ! -f "${TARBALL_SOURCE}" ]]; then
     info "Building project with Maven (clean package -DskipTests)..."
     mvn clean package -DskipTests || fail "Maven build failed!"
   fi
 fi
 
-if [[ ! -f "${JAR_SOURCE}" ]]; then
-  fail "Fat-JAR not found at ${JAR_SOURCE}! Run with -b to build first."
+if [[ ! -f "${TARBALL_SOURCE}" ]]; then
+  fail "Distribution tarball not found at ${TARBALL_SOURCE}! Run with -b to build first."
 fi
 
-RELEASE_JAR="${RELEASE_DIR}/chronivaro-${VERSION}.jar"
-RELEASE_TARBALL="${RELEASE_DIR}/runtime-${VERSION}.tar.gz"
+RELEASE_APP_TARBALL="${RELEASE_DIR}/chronivaro-${VERSION}.tar.gz"
+RELEASE_RUNTIME_TARBALL="${RELEASE_DIR}/runtime-${VERSION}.tar.gz"
 RELEASE_CHECKSUMS="${RELEASE_DIR}/SHA256SUMS.txt"
 RELEASE_NOTES_FILE="${RELEASE_DIR}/RELEASE_NOTES.md"
 
 mkdir -p "${RELEASE_DIR}"
 
 info "Staging release artifacts in ${RELEASE_DIR}..."
-cp -f "${JAR_SOURCE}" "${RELEASE_JAR}"
+cp -f "${TARBALL_SOURCE}" "${RELEASE_APP_TARBALL}"
 
 # Build runtime tarball
 info "Packaging sanitized runtime tarball..."
-./build-runtime-tarball.sh -s runtime -o "${RELEASE_TARBALL}" >/dev/null || fail "Failed to generate runtime tarball!"
+./build-runtime-tarball.sh -s runtime -o "${RELEASE_RUNTIME_TARBALL}" >/dev/null || fail "Failed to generate runtime tarball!"
 
 # Compute SHA-256 Checksums
 info "Computing SHA-256 checksums..."
 (
   cd "${RELEASE_DIR}"
-  sha256sum "chronivaro-${VERSION}.jar" "runtime-${VERSION}.tar.gz" > "SHA256SUMS.txt"
+  sha256sum "chronivaro-${VERSION}.tar.gz" "runtime-${VERSION}.tar.gz" > "SHA256SUMS.txt"
 )
 
 # GPG Sign Release Assets
@@ -457,8 +458,8 @@ if [[ -n "${GPG_KEY}" ]]; then
   GPG_SIGN_CMD+=(-u "${GPG_KEY}")
 fi
 
-"${GPG_SIGN_CMD[@]}" "${RELEASE_JAR}" || fail "Failed to GPG-sign ${RELEASE_JAR}"
-"${GPG_SIGN_CMD[@]}" "${RELEASE_TARBALL}" || fail "Failed to GPG-sign ${RELEASE_TARBALL}"
+"${GPG_SIGN_CMD[@]}" "${RELEASE_APP_TARBALL}" || fail "Failed to GPG-sign ${RELEASE_APP_TARBALL}"
+"${GPG_SIGN_CMD[@]}" "${RELEASE_RUNTIME_TARBALL}" || fail "Failed to GPG-sign ${RELEASE_RUNTIME_TARBALL}"
 "${GPG_SIGN_CMD[@]}" "${RELEASE_CHECKSUMS}" || fail "Failed to GPG-sign ${RELEASE_CHECKSUMS}"
 
 # ------------------------------------------------------------------------------
@@ -480,7 +481,7 @@ else
 
 We are excited to announce the initial release (**0.1.0**) of **Chronivaro**, a lightweight, high-performance working time, absence management, and monthly period closing platform built on the [Strolch](https://strolch.li) framework.
 
-Chronivaro is packaged as a standalone fat-JAR with an embedded Eclipse Jetty 12 runtime, serving both modern Web Component frontend assets and REST API endpoints out-of-the-box.
+Chronivaro is packaged as a standalone application distribution with an embedded Eclipse Jetty 12 runtime and a `lib/` dependencies directory, serving both modern Web Component frontend assets and REST API endpoints out-of-the-box.
 
 ---
 
@@ -523,7 +524,7 @@ Chronivaro is packaged as a standalone fat-JAR with an embedded Eclipse Jetty 12
   - Structured logging with correlation ID tracing (`X-Correlation-Id`).
 
 - 🚀 **Deployment & Distribution**
-  - Standalone executable fat-JAR with embedded Jetty 12.
+  - Standalone executable application distribution tarball with embedded Jetty 12 and `lib/` dependencies.
   - Clean, sanitized runtime environment distribution tarball.
   - Docker container image and `docker-compose` orchestration support.
   - Multilingual UI support with full German (Swiss German) and English translations.
@@ -534,8 +535,8 @@ Chronivaro is packaged as a standalone fat-JAR with an embedded Eclipse Jetty 12
 
 | File | Description |
 |---|---|
-| `chronivaro-0.1.0.jar` | Standalone executable fat-JAR with embedded Jetty 12 |
-| `chronivaro-0.1.0.jar.asc` | GPG ASCII-armored detached signature |
+| `chronivaro-0.1.0.tar.gz` | Standalone application distribution archive (executable Chronivaro JAR and `lib/` dependencies) |
+| `chronivaro-0.1.0.tar.gz.asc` | GPG ASCII-armored detached signature |
 | `runtime-0.1.0.tar.gz` | Sanitized Strolch runtime directory structure and default templates |
 | `runtime-0.1.0.tar.gz.asc` | GPG ASCII-armored detached signature |
 | `SHA256SUMS.txt` | SHA-256 verification checksums for all release binaries |
@@ -544,11 +545,14 @@ Chronivaro is packaged as a standalone fat-JAR with an embedded Eclipse Jetty 12
 ### ⚡ Quick Start
 
 ```bash
+# Extract application binaries
+tar -xzf chronivaro-0.1.0.tar.gz
+
 # Extract runtime environment
 tar -xzf runtime-0.1.0.tar.gz
 
 # Run standalone application
-java -jar chronivaro-0.1.0.jar --port 8080 --runtime ./runtime --env dev
+java -jar chronivaro.jar --port 8080 --runtime ./runtime --env dev
 ```
 
 Open `http://localhost:8080` in your browser and log in with `admin` / `admin`.
@@ -568,8 +572,8 @@ $(git log "${PREV_TAG}..HEAD" --pretty=format:"* %s (%h)" --no-merges)
 
 | File | Description |
 |---|---|
-| \`chronivaro-${VERSION}.jar\` | Standalone executable fat-JAR |
-| \`chronivaro-${VERSION}.jar.asc\` | GPG ASCII-armored detached signature |
+| \`chronivaro-${VERSION}.tar.gz\` | Standalone application distribution archive (executable Chronivaro JAR and \`lib/\` dependencies) |
+| \`chronivaro-${VERSION}.tar.gz.asc\` | GPG ASCII-armored detached signature |
 | \`runtime-${VERSION}.tar.gz\` | Sanitized Strolch runtime distribution archive |
 | \`runtime-${VERSION}.tar.gz.asc\` | GPG ASCII-armored detached signature |
 | \`SHA256SUMS.txt\` | SHA-256 verification checksums |
@@ -594,7 +598,7 @@ Highlights:
 • Absence management & vacation journal
 • Approvals & period closing
 • CSV & PDF report exports
-• Standalone fat-JAR & Docker
+• Standalone application archive & Docker
 
 📦 Downloads & Release Notes:
 ${RELEASE_URL}
@@ -640,7 +644,7 @@ if [[ "${SIMULATE}" == "true" ]]; then
   echo "--------------------------------------------------------------------------------"
   (
     cd "${RELEASE_DIR}"
-    ls -lh "chronivaro-${VERSION}.jar" "chronivaro-${VERSION}.jar.asc" "runtime-${VERSION}.tar.gz" "runtime-${VERSION}.tar.gz.asc" "SHA256SUMS.txt" "SHA256SUMS.txt.asc"
+    ls -lh "chronivaro-${VERSION}.tar.gz" "chronivaro-${VERSION}.tar.gz.asc" "runtime-${VERSION}.tar.gz" "runtime-${VERSION}.tar.gz.asc" "SHA256SUMS.txt" "SHA256SUMS.txt.asc"
   )
   echo
   echo "Checksums (SHA-256):"
@@ -691,11 +695,11 @@ if [[ "${SIMULATE}" == "true" ]]; then
     echo "      --repo \"${GITHUB_REPO}\" \\"
     echo "      --title \"${RELEASE_TITLE}\" \\"
     echo "      --notes-file \"${RELEASE_NOTES_FILE}\" \\"
-    echo "      \"${RELEASE_JAR}\" \"${RELEASE_JAR}.asc\" \"${RELEASE_TARBALL}\" \"${RELEASE_TARBALL}.asc\" \"${RELEASE_CHECKSUMS}\" \"${RELEASE_CHECKSUMS}.asc\""
+    echo "      \"${RELEASE_APP_TARBALL}\" \"${RELEASE_APP_TARBALL}.asc\" \"${RELEASE_RUNTIME_TARBALL}\" \"${RELEASE_RUNTIME_TARBALL}.asc\" \"${RELEASE_CHECKSUMS}\" \"${RELEASE_CHECKSUMS}.asc\""
   else
     info "GitHub REST API would be called via curl using GITHUB_TOKEN:"
     echo "   POST https://api.github.com/repos/${GITHUB_REPO}/releases"
-    echo "   Upload assets: chronivaro-${VERSION}.jar, chronivaro-${VERSION}.jar.asc, runtime-${VERSION}.tar.gz, runtime-${VERSION}.tar.gz.asc, SHA256SUMS.txt, SHA256SUMS.txt.asc"
+    echo "   Upload assets: chronivaro-${VERSION}.tar.gz, chronivaro-${VERSION}.tar.gz.asc, runtime-${VERSION}.tar.gz, runtime-${VERSION}.tar.gz.asc, SHA256SUMS.txt, SHA256SUMS.txt.asc"
   fi
   echo
   echo "--------------------------------------------------------------------------------"
@@ -771,10 +775,10 @@ fi
 
 # 2. Publish to GitHub Releases
 ASSET_FILES=(
-  "${RELEASE_JAR}"
-  "${RELEASE_JAR}.asc"
-  "${RELEASE_TARBALL}"
-  "${RELEASE_TARBALL}.asc"
+  "${RELEASE_APP_TARBALL}"
+  "${RELEASE_APP_TARBALL}.asc"
+  "${RELEASE_RUNTIME_TARBALL}"
+  "${RELEASE_RUNTIME_TARBALL}.asc"
   "${RELEASE_CHECKSUMS}"
   "${RELEASE_CHECKSUMS}.asc"
 )

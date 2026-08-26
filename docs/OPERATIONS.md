@@ -285,7 +285,7 @@ Chronivaro provides a centralized release automation script (`release.sh`) in th
 - **Automated Version Management**:
   - Automatically updates `pom.xml` across all reactor modules to the release version (e.g. `0.1.0`) and commits prior to packaging.
   - After publishing the release, automatically increments the minor version in `pom.xml` to the next development snapshot (e.g. `0.2.0-SNAPSHOT`), commits, and pushes the new development version to the git branch.
-- **Artifact Packaging**: Packages the executable standalone fat-JAR (`chronivaro-<version>.jar`) and generates a clean, sanitized runtime distribution tarball (`runtime-<version>.tar.gz`).
+- **Artifact Packaging**: Packages the standalone application distribution archive (`chronivaro-<version>.tar.gz` containing `chronivaro.jar` and `lib/`) and generates a clean, sanitized runtime distribution tarball (`runtime-<version>.tar.gz`).
 - **Checksum Generation**: Automatically generates `SHA256SUMS.txt` for all release binaries.
 - **GPG Signing**: Signs all release artifacts (`.jar`, `.tar.gz`, and `SHA256SUMS.txt`) with GPG detached ASCII-armored signatures (`.asc`) using the default (or configured) GPG key.
 - **Signed Git Tagging**: Creates GPG-signed and annotated Git tags (`git tag -s -m <version>`) representing the exact release version.

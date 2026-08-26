@@ -12,9 +12,10 @@ RUN mkdir -p /app /chronivaro-runtime && chown -R $UID:$GID /app /chronivaro-run
 WORKDIR /app
 
 COPY chronivaro-app/target/chronivaro.jar /app/chronivaro.jar
+COPY chronivaro-app/target/lib /app/lib
 
-# Ensure the jar file is owned by chronivaro
-RUN chown -R $UID:$GID /app/chronivaro.jar
+# Ensure the application files are owned by chronivaro
+RUN chown -R $UID:$GID /app
 
 USER $UID
 
