@@ -15,6 +15,10 @@
     <packaging>jar</packaging>
     <name>chronivaro-app</name>
 
+    <properties>
+        <strolch.env>app</strolch.env>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>ch.eitchnet.chronivaro</groupId>
