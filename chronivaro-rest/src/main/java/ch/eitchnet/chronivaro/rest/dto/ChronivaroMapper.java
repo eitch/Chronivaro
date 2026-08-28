@@ -429,6 +429,8 @@ public class ChronivaroMapper {
 						DEFAULT_COMPANY_NAME,
 				config != null && config.hasParameter(PARAM_COMPANY_LOGO) ? config.getString(PARAM_COMPANY_LOGO) : "",
 				config != null && config.hasParameter(PARAM_DEFAULT_LANGUAGE) ?
-						config.getString(PARAM_DEFAULT_LANGUAGE) : DEFAULT_LANGUAGE);
+						config.getString(PARAM_DEFAULT_LANGUAGE) : DEFAULT_LANGUAGE,
+				config != null && config.hasParameter(PARAM_WEEKLY_TARGET_MINUTES) ?
+						config.getInteger(PARAM_WEEKLY_TARGET_MINUTES) : DEFAULT_WEEKLY_TARGET_MINUTES);
 	}
 }

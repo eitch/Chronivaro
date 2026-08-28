@@ -29,6 +29,7 @@
     "users": "Benutzer",
     "auditLog": "Audit-Log",
     "configuration": "Konfiguration",
+    "profile": "Mein Profil",
     "logout": "Abmelden"
   },
   "common": {
@@ -751,6 +752,22 @@
     "confirmPassword": "Passwort bestätigen",
     "passwordMismatch": "Passwörter stimmen nicht überein.",
     "passwordChangeSuccess": "Passwort erfolgreich geändert."
+  },
+  "profile": {
+    "title": "Mein Profil",
+    "subtitle": "Einsicht in Ihre Benutzer- und Mitarbeiterstammdaten, Arbeitspläne und Einstellungen.",
+    "userAccount": "Benutzerkonto & Rollen",
+    "masterData": "Mitarbeiterdaten",
+    "employmentSchedule": "Arbeitsplan & Pensum",
+    "weeklyWorkload": "Wöchentliche Sollarbeitszeit",
+    "employmentRate": "Beschäftigungsgrad / Pensum",
+    "currentSchedule": "Aktueller Arbeitsplan",
+    "scheduleHistory": "Arbeitsplan-Historie",
+    "validRange": "Gültigkeit",
+    "dailyHours": "Tagesarbeitszeiten",
+    "noScheduleFound": "Kein gültiger Arbeitsplan hinterlegt.",
+    "noEmployeeProfile": "Kein Mitarbeiterprofil verknüpft (reiner Systembenutzer).",
+    "noEmployeeProfileDesc": "Für reine Systembenutzer ohne Zeiterfassungsprofil existieren keine Beschäftigungs- oder Arbeitsplandaten."
   },
   "errors": {
     "unauthorized": "Sie müssen angemeldet sein, um diese Aktion auszuführen.",

@@ -162,4 +162,23 @@ public class WebNavigationUiTest {
 		assertTrue("app.js must close nav groups on logout",
 				appJs.contains("this.closeNavGroups();") && appJs.contains("AuthApi.logout();"));
 	}
+
+	@Test
+	public void shouldVerifyProfileButtonInUserDropdown() throws IOException {
+		File htmlFile = new File(getWebappDir(), "index.html");
+		assertTrue("index.html must exist", htmlFile.exists());
+		String html = Files.readString(htmlFile.toPath());
+
+		assertTrue("index.html must contain profile-btn inside user dropdown",
+				html.contains("id=\"profile-btn\"") && html.contains("data-i18n=\"nav.profile\""));
+
+		File appJsFile = new File(getWebappDir(), "js/app.js");
+		assertTrue("app.js must exist", appJsFile.exists());
+		String appJs = Files.readString(appJsFile.toPath());
+
+		assertTrue("app.js must import ProfileView", appJs.contains("import ProfileView from './pages/ProfileView.js'"));
+		assertTrue("app.js must handle profile-btn click", appJs.contains("document.getElementById('profile-btn')"));
+		assertTrue("app.js must navigate to profile", appJs.contains("this.navigate('profile')"));
+		assertTrue("app.js must have profile route", appJs.contains("case 'profile':"));
+	}
 }

@@ -51,6 +51,8 @@ public class ConfigurationResourceTest extends AbstractChronivaroRestfulTest {
 			assertNotNull(dto);
 			assertNotNull(dto.companyName());
 			assertNotNull(dto.defaultLanguage());
+			assertNotNull(dto.weeklyTargetMinutes());
+			org.junit.Assert.assertTrue(dto.weeklyTargetMinutes() > 0);
 		}
 	}
 

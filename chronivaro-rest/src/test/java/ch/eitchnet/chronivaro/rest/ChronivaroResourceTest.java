@@ -413,4 +413,33 @@ public class ChronivaroResourceTest extends AbstractChronivaroRestfulTest {
 			assertEquals(0, arr.size());
 		}
 	}
+
+	@Test
+	public void shouldGetMyProfile() {
+		String authToken = authenticate("employee", "admin");
+		try (Response response = target()
+				.path("chronivaro/v1/me/profile")
+				.request(MediaType.APPLICATION_JSON)
+				.header("Authorization", authToken)
+				.get()) {
+			assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+			com.google.gson.JsonObject obj = ChronivaroRestHelper.createGson().fromJson(response.readEntity(String.class), com.google.gson.JsonObject.class);
+			org.junit.Assert.assertNotNull(obj.get("id"));
+			org.junit.Assert.assertEquals("employee", obj.get("username").getAsString());
+		}
+	}
+
+	@Test
+	public void shouldGetMySchedules() {
+		String authToken = authenticate("employee", "admin");
+		try (Response response = target()
+				.path("chronivaro/v1/me/schedules")
+				.request(MediaType.APPLICATION_JSON)
+				.header("Authorization", authToken)
+				.get()) {
+			assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+			com.google.gson.JsonArray arr = ChronivaroRestHelper.createGson().fromJson(response.readEntity(String.class), com.google.gson.JsonArray.class);
+			org.junit.Assert.assertNotNull(arr);
+		}
+	}
 }

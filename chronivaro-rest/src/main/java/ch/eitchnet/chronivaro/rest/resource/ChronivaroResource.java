@@ -66,6 +66,43 @@ public class ChronivaroResource {
 	}
 
 	@GET
+	@Path("me/profile")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response getMyProfile(@Context HttpServletRequest request) {
+		Certificate cert = (Certificate) request.getAttribute(STROLCH_CERTIFICATE);
+		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
+			Optional<Resource> employee = ChronivaroModelHelper.findEmployeeByUser(tx, cert.getUserId());
+			if (employee.isEmpty()) {
+				return ChronivaroRestHelper.toErrorResponse(Response.Status.NOT_FOUND, "NOT_FOUND",
+						"Employee profile not found for current user");
+			}
+			Resource empRes = employee.get();
+			return ConcurrencyHelper.toResponseWithETag(empRes, ChronivaroMapper.employeeToDto(tx, empRes));
+		}
+	}
+
+	@GET
+	@Path("me/schedules")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response getMySchedules(@Context HttpServletRequest request, @QueryParam("offset") Integer offset,
+			@QueryParam("limit") Integer limit) {
+		Certificate cert = (Certificate) request.getAttribute(STROLCH_CERTIFICATE);
+		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
+			Optional<Resource> employee = ChronivaroModelHelper.findEmployeeByUser(tx, cert.getUserId());
+			if (employee.isEmpty()) {
+				return ChronivaroRestHelper.toErrorResponse(Response.Status.NOT_FOUND, "NOT_FOUND",
+						"Employee profile not found for current user");
+			}
+			String employeeId = employee.get().getId();
+			List<Resource> schedules = tx
+					.streamResources(TYPE_EMPLOYMENT_SCHEDULE)
+					.filter(s -> s.getRelationId(PARAM_EMPLOYEE).equals(employeeId))
+					.toList();
+			return PaginationHelper.toPagedOrListResponse(schedules, offset, limit, ChronivaroMapper::scheduleToDto);
+		}
+	}
+
+	@GET
 	@Path("me/work-entries")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getMyWorkEntries(@Context HttpServletRequest request, @QueryParam("from") String fromStr,

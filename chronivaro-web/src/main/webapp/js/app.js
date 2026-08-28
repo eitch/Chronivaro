@@ -17,6 +17,7 @@ import ScheduleTemplatesView from './pages/ScheduleTemplatesView.js';
 import ConfigurationView from './pages/ConfigurationView.js';
 import UsersView from './pages/UsersView.js';
 import AuditLogView from './pages/AuditLogView.js';
+import ProfileView from './pages/ProfileView.js';
 import ConfigurationApi from './api/ConfigurationApi.js';
 import CompleteRegistrationView from './pages/CompleteRegistrationView.js';
 import NotificationDialog from './utils/NotificationDialog.js';
@@ -38,6 +39,15 @@ class ChronivaroApp {
         window.addEventListener('hashchange', () => {
             this.route();
         });
+
+        const profileBtn = document.getElementById('profile-btn');
+        if (profileBtn) {
+            profileBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.closeNavGroups();
+                this.navigate('profile');
+            });
+        }
 
         const logoutBtn = document.getElementById('logout-btn') || document.getElementById('logout-link');
         if (logoutBtn) {
@@ -261,6 +271,7 @@ class ChronivaroApp {
 
     updateBranding(branding) {
         if (!branding) return;
+        this.branding = branding;
         const titleEl = document.getElementById('header-title');
         const logoEl = document.getElementById('header-logo');
 
@@ -491,6 +502,9 @@ class ChronivaroApp {
                 break;
             case 'audit-log':
                 view = new AuditLogView(this);
+                break;
+            case 'profile':
+                view = new ProfileView(this);
                 break;
             case 'schedules':
                 view = new SchedulesView(this);

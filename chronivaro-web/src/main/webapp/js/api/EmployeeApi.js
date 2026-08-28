@@ -28,4 +28,12 @@ export default class EmployeeApi {
     static async register(id) {
         return await Rest.post(`rest/chronivaro/v1/admin/employees/${id}/register`);
     }
+
+    static async getMyProfile() {
+        return await Rest.get('rest/chronivaro/v1/me/profile');
+    }
+
+    static async getMySchedules() {
+        return await Rest.get('rest/chronivaro/v1/me/schedules');
+    }
 }

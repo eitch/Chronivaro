@@ -150,7 +150,7 @@ public class SystemResource {
 			} catch (Exception ignored) {
 			}
 		}
-		BrandingDto fallback = new BrandingDto(DEFAULT_COMPANY_NAME, "", DEFAULT_LANGUAGE);
+		BrandingDto fallback = new BrandingDto(DEFAULT_COMPANY_NAME, "", DEFAULT_LANGUAGE, DEFAULT_WEEKLY_TARGET_MINUTES);
 		return Response.ok(ChronivaroRestHelper.createGson().toJson(fallback), MediaType.APPLICATION_JSON).build();
 	}
 

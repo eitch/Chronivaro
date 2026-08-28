@@ -29,6 +29,7 @@
     "users": "Users",
     "auditLog": "Audit Log",
     "configuration": "Configuration",
+    "profile": "My Profile",
     "logout": "Logout"
   },
   "common": {
@@ -751,6 +752,22 @@
     "confirmPassword": "Confirm Password",
     "passwordMismatch": "Passwords do not match.",
     "passwordChangeSuccess": "Password changed successfully."
+  },
+  "profile": {
+    "title": "My Profile",
+    "subtitle": "View your user and employee master data, employment schedules, and settings.",
+    "userAccount": "User Account & Roles",
+    "masterData": "Employee Master Data",
+    "employmentSchedule": "Employment Schedule & Workload",
+    "weeklyWorkload": "Weekly Target Hours",
+    "employmentRate": "Employment Rate",
+    "currentSchedule": "Current Employment Schedule",
+    "scheduleHistory": "Schedule History",
+    "validRange": "Validity",
+    "dailyHours": "Daily Target Hours",
+    "noScheduleFound": "No employment schedule assigned.",
+    "noEmployeeProfile": "No employee profile linked (system user only).",
+    "noEmployeeProfileDesc": "Pure system users without a time tracking profile do not have employment or schedule records."
   },
   "errors": {
     "unauthorized": "You must be logged in to perform this action.",
