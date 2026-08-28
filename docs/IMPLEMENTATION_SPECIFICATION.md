@@ -28,6 +28,7 @@ Historische Auswertungen müssen auch dann reproduzierbar bleiben, wenn sich Arb
 
 - eigene Arbeitszeiten erfassen und bearbeiten (Start- und Endzeit, Arbeitsort und Kommentar in offenen Perioden anpassen)
 - eigene Abwesenheiten erfassen und einreichen
+- eigene Mitarbeiterinformationen einsehen (z. B. Personalnummer, Eintrittsdatum, Beschäftigungsgrad, Arbeitsplan, Team, Standort)
 - eigene Saldi und Reports einsehen
 - eigene Ferienübersicht einsehen
 - eigenen laufenden Arbeitstag starten und stoppen
@@ -36,6 +37,7 @@ Historische Auswertungen müssen auch dann reproduzierbar bleiben, wenn sich Arb
 
 - Daten der zugeordneten Mitarbeitenden und Teams einsehen
 - Arbeitszeitbuchungen (`WorkEntry`) für zugeordnete Mitarbeitende und Teams einsehen, manuell erfassen, vollständig bearbeiten (Start, Ende, Arbeitsort, Kommentar) und löschen (innerhalb offener Perioden)
+- Abwesenheiten für zugeordnete Mitarbeitende und Teams im Namen der Mitarbeitenden erfassen
 - Abwesenheiten genehmigen oder ablehnen
 - Monatsperioden prüfen und genehmigen
 - fehlende oder fehlerhafte Einträge erkennen
@@ -45,6 +47,7 @@ Historische Auswertungen müssen auch dann reproduzierbar bleiben, wenn sich Arb
 
 - Mitarbeiterstammdaten verwalten
 - Arbeitszeitbuchungen (`WorkEntry`) aller Mitarbeitenden einsehen, manuell erfassen, vollständig bearbeiten (Start, Ende, Arbeitsort, Kommentar) und löschen (innerhalb offener Perioden bzw. nach Wiedereröffnung)
+- Abwesenheiten für alle Mitarbeitenden im Namen der Mitarbeitenden erfassen und anpassen
 - Arbeitsmodelle und Ferienansprüche verwalten
 - Abwesenheiten und Saldi korrigieren
 - Perioden wieder öffnen
@@ -77,7 +80,7 @@ Der erste produktiv nutzbare Umfang enthält:
 3. Feiertagskalender
 4. Arbeitszeiterfassung mit mehreren Arbeitsblöcken pro Tag und Kommentarfunktion
 5. Arbeitszeitanpassungen durch Mitarbeitende (Start- und Endzeit, Arbeitsort, Kommentar in offenen Perioden) sowie administrative und supervisorische Zeitkorrekturen (Erfassen, Bearbeiten und Löschen von Arbeitszeitbuchungen durch Vorgesetzte für zugeordnete Mitarbeitende und durch HR/Administratoren für alle Mitarbeitenden), inklusive visueller Hervorhebung aller modifizierten und manuell erstellten Buchungen sowie transparenter Ausweisung des Erstellers bei Fremderfassung
-6. konfigurierbare und vordefinierte Abwesenheitsarten
+6. konfigurierbare und vordefinierte Abwesenheitsarten sowie Erfassung von Abwesenheiten durch Mitarbeitende und im Namen von Mitarbeitenden durch Vorgesetzte und Personaladministration
 7. halb- und ganztägige sowie stundenweise Abwesenheiten
 8. Ferienkonten mit nachvollziehbaren Kontobuchungen
 9. Anwesenheitsstatus
@@ -140,6 +143,7 @@ Regeln:
 - Eine `Employee`-Ressource wird bei Benutzerlöschungen niemals physisch aus dem System gelöscht, um historische Buchungen, Saldi und Berichte konsistent und reproduzierbar zu halten.
 - Wird der mit dem Mitarbeiter verknüpfte Strolch-Benutzer gelöscht, wird der `Employee` automatisch auf inaktiv gesetzt (`active = false`).
 - Ein inaktiver Mitarbeiter kann später wieder aktiviert werden (`active = true`). Bei der Reaktivierung wird der zugehörige Strolch-Benutzer im System neu angelegt und für die Registrierung/Passwortvergabe freigegeben.
+- Mitarbeitende können ihre eigenen Mitarbeiter- und Profilinformationen (u. a. Personalnummer, Eintrittsdatum, Austrittsdatum, Anzeigename, zugeordnetes Team, Standort, Zeitzone sowie aktueller Arbeitsplan und Beschäftigungsgrad) in der Benutzeroberfläche einsehen.
 
 ### 6.1.1 User – Strolch-Benutzer (auch für Nicht-Mitarbeiter)
 
@@ -301,6 +305,7 @@ Lokalisierungsregel:
 | `minutes` | bei stundenweiser Erfassung |
 | `comment` | optional beziehungsweise gemäss Typ erforderlich |
 | `status` | `DRAFT`, `SUBMITTED`, `APPROVED`, `REJECTED`, `CANCELLED` |
+| `createdBy` | Ersteller (Mitarbeiter selbst oder bei Fremderfassung Vorgesetzter / HR / Administrator) |
 | `decisionBy` | Genehmiger |
 | `decisionAt` | Zeitpunkt der Entscheidung |
 | `decisionComment` | Begründung bei Ablehnung oder Korrektur |
@@ -316,6 +321,7 @@ Regeln:
 - Entwurfsstatus (`DRAFT`): Abwesenheiten können als Entwurf gespeichert werden. Ein Entwurf kann durch den Mitarbeiter vor dem Einreichen beliebig bearbeitet (Attribute wie Datum, Dauer, Kommentar anpassen) oder verworfen/storniert werden (`DRAFT` -> `CANCELLED`).
 - Das Stornieren eines Entwurfs erzeugt keine Ferienkontobuchung (weder Bezug noch Rückvergütung), da Entwürfe noch keine Ferienminuten abgezogen haben.
 - Durch das Einreichen (`DRAFT` -> `SUBMITTED`) wird der Antrag finalisiert und für Vorgesetzte zur Genehmigung freigegeben.
+- **Erfassung im Namen von Mitarbeitenden (Fremderfassung):** Vorgesetzte (für ihre zugeordneten Mitarbeitenden) sowie Personaladministration und Administratoren (unternehmensweit für alle Mitarbeitenden) können Abwesenheiten direkt im Namen von Mitarbeitenden erfassen. Solche Abwesenheiten können wahlweise direkt als genehmigt (`APPROVED`) angelegt werden oder den regulären Genehmigungsworkflow durchlaufen. Der Ersteller (`createdBy`) wird transparent gespeichert und ausgewiesen. Bei direkt genehmigten Ferienabwesenheiten wird sofort die entsprechende Buchung im Ferienkonto ausgelöst.
 
 ### 6.7 VacationAccountEntry – Ferienkontobuchung
 
@@ -540,6 +546,7 @@ Um eine konsistente Behandlung von vergessenen Timern zu gewährleisten, gilt fo
 5. Vorgesetzter genehmigt oder lehnt mit Kommentar ab.
 6. Bei Ferien wird nach Genehmigung eine Ferienkontobuchung erstellt.
 7. Stornierung oder Änderung einer genehmigten Abwesenheit erzeugt eine entsprechende Gegenbuchung; bestehende Kontobuchungen werden nicht still überschrieben.
+8. **Erfassung durch Vorgesetzte und HR:** Vorgesetzte (für zugeordnete Mitarbeitende) sowie Personaladministration und Administratoren (unternehmensweit) können Abwesenheiten im Namen von Mitarbeitenden direkt erfassen. Diese können je nach Berechtigung und Anwendungsfall direkt im Status `APPROVED` oder als `SUBMITTED` erstellt werden. Der ausführende Benutzer wird als Ersteller (`createdBy`) transparent protokolliert. Bei genehmigten Ferienabwesenheiten wird direkt die entsprechende Abbuchung auf dem Ferienkonto des Mitarbeiters ausgelöst.
 
 ### 9.5 Monatsabschluss
 
@@ -749,9 +756,9 @@ Die UI wird mit HTML, CSS und Vanilla JavaScript umgesetzt. Es wird kein Fronten
 
 ### 12.1 Seiten
 
-0. **Header & Navigation / Benutzer-Menü**
+0. **Header & Navigation / Benutzer-Menü & Mein Profil**
    - Anzeige des angemeldeten Benutzers und seiner Rolle
-   - Dropdown-Menü für Benutzerinformationen (Benutzername, Personalnummer/Rolle, Spracheinstellungen)
+   - Dropdown-Menü und Profilansicht für Benutzer- und Mitarbeiterinformationen: Einsicht in die eigenen Stammdaten wie Anzeigename, Benutzername, Personalnummer, Eintrittsdatum, Beschäftigungsgrad, Arbeitsplan/Sollzeiten, Team, Standort, Zeitzone sowie Spracheinstellungen
    - Platzierung des Abmelde-Buttons ("Logout") innerhalb des Benutzer-Dropdown-Menüs (nicht als freistehender Button in der Hauptnavigation)
 
 1. **Dashboard**
@@ -769,7 +776,8 @@ Die UI wird mit HTML, CSS und Vanilla JavaScript umgesetzt. Es wird kein Fronten
    - Tagessummen und Saldi
 3. **Abwesenheiten**
    - Antrag erfassen (als Entwurf speichern oder direkt einreichen)
-   - eigene Anträge und Status-Historie
+   - für Vorgesetzte (für zugeordnete Mitarbeitende/Teams) und HR/Administration (unternehmensweit): Mitarbeiter-Auswahl zur Erfassung von Abwesenheiten im Namen von Mitarbeitenden
+   - eigene Anträge und Status-Historie (inklusive transparenter Ausweisung des Erstellers bei Fremderfassung)
    - Aktionen für Entwürfe: Einreichen (`Submit`), Bearbeiten im Modal (`Edit`) und Verwerfen/Stornieren (`Cancel`)
    - hohe visuelle Kontraste für alle Aktionsschaltflächen gemäss Barrierefreiheitsanforderungen (WCAG AA), sodass Text- und Hintergrundfarben klar unterscheidbar sind
    - Kalenderdarstellung
@@ -956,8 +964,10 @@ POST   /me/timer/start
 POST   /me/timer/stop
 GET    /me/day-summary/{date}
 GET    /me/month-summary/{yearMonth}
+GET    /me/profile
 ```
 
+- `GET /me/profile`: Abrufen der eigenen Benutzer- und Mitarbeiterstammdaten (Anzeigename, Benutzername, Personalnummer, Eintrittsdatum, Beschäftigungsgrad, Arbeitsplan, Team, Standort, Zeitzone).
 - `PUT /me/work-entries/{id}`: Aktualisieren einer offenen/nicht eingereichten Buchung durch den Mitarbeiter (Bearbeiten von Start- und Endzeit, Arbeitsort und Kommentar in offenen Perioden).
 - `GET /me/work-entries?from={date}&to={date}`: Abrufen der eigenen Arbeitszeitbuchungen (inklusive `source`, `createdBy` und Modifikationsinformationen zur visuellen Hervorhebung und Erstelleranzeige).
 - `GET /employees/{id}/work-entries?from={date}&to={date}`: Abrufen aller Arbeitszeitbuchungen eines Mitarbeiters im angegebenen Zeitraum (zulässig für den Mitarbeiter selbst, den zuständigen Vorgesetzten sowie HR/Admin; inklusive `source`, `createdBy` und Modifikationsinformationen).
@@ -973,6 +983,8 @@ POST   /me/absences
 PUT    /me/absences/{id}
 POST   /me/absences/{id}/submit
 POST   /me/absences/{id}/cancel
+GET    /employees/{id}/absences
+POST   /employees/{id}/absences
 GET    /absence-types
 GET    /approvals/absences
 POST   /approvals/absences/{id}/approve
@@ -982,6 +994,8 @@ POST   /approvals/absences/{id}/reject
 - `PUT /me/absences/{id}`: Aktualisieren eines Abwesenheitsentwurfs (`DRAFT`) vor der Einreichung (z. B. Korrektur von Datumsbereich, Dauer oder Kommentar).
 - `POST /me/absences/{id}/submit`: Einreichen eines Abwesenheitsentwurfs (`DRAFT` -> `SUBMITTED`).
 - `POST /me/absences/{id}/cancel`: Stornieren einer Abwesenheit (`DRAFT`, `SUBMITTED` oder `APPROVED` -> `CANCELLED`). Bei Stornierung eines Entwurfs (`DRAFT`) werden keine Gegenbuchungen auf dem Ferienkonto vorgenommen.
+- `GET /employees/{id}/absences`: Abrufen der Abwesenheiten eines Mitarbeiters (zulässig für den Mitarbeiter selbst, zuständige Vorgesetzte sowie HR/Admin).
+- `POST /employees/{id}/absences`: Erfassen einer Abwesenheit für einen Mitarbeiter durch zuständige Vorgesetzte oder HR/Admin (im Namen des Mitarbeiters).
 
 #### Ferien
 
@@ -1364,7 +1378,10 @@ Chronivaro verwendet die in der Zielumgebung etablierte Authentifizierung. Die R
 Mindestens folgende Berechtigungen werden getrennt geprüft:
 
 - eigene Zeiten lesen und bearbeiten / kommentieren
+- eigene Mitarbeiter- und Profilinformationen einsehen
+- eigene Abwesenheiten erfassen, einreichen und stornieren
 - fremde Zeiten lesen und administrativ korrigieren / erfassen / löschen
+- Abwesenheiten im Namen von Mitarbeitenden erfassen (Vorgesetzte für zugeordnete Mitarbeitende, HR/Admin unternehmensweit)
 - Benutzer und Rollen administrieren (auch für reine Systembenutzer, inklusive Benutzerlöschung und Mitarbeiterreaktivierung)
 - Abwesenheiten genehmigen
 - Perioden genehmigen und wieder öffnen
@@ -1513,25 +1530,26 @@ Mindestens folgende Fälle:
 Das MVP gilt als fachlich abnahmebereit, wenn:
 
 1. ein Administrator Mitarbeiter, Benutzer (auch reine Systembenutzer), Teams, Standorte, Feiertagskalender und Arbeitspläne verwalten sowie Benutzer löschen kann (wobei verknüpfte Mitarbeiter nicht gelöscht, sondern deaktiviert werden und bei Reaktivierung der Benutzer neu erstellt wird);
-2. ein Mitarbeiter mehrere Arbeitsblöcke pro Tag erfassen und kommentieren kann, wobei Unterbrüche aus den zeitlichen Lücken abgeleitet werden;
-3. Mitarbeiter ihre offenen Zeitbuchungen bei Bedarf bearbeiten (Start- und Endzeit, Arbeitsort, Kommentar) können, Vorgesetzte (für zugeordnete Mitarbeitende) sowie HR/Administratoren (unternehmensweit) Arbeitszeitbuchungen von Mitarbeitenden in offenen Perioden manuell erfassen, vollständig korrigieren und löschen können, alle modifizierten und manuell erstellten Einträge visuell hervorgehoben werden und bei Fremderstellung der jeweilige Ersteller ausgewiesen wird;
-4. die Anwendung Überlappungen und mehrere laufende Buchungen verhindert;
-5. Soll- und Istzeit für Tag und Monat (inklusive Eintritten/Austritten unter dem Monat) korrekt berechnet werden;
-6. Pensumsänderungen alte Monatsauswertungen nicht verfälschen;
-7. die vorkonfigurierten Standard-Abwesenheitsarten verfügbar sind und weitere Abwesenheitsarten erfasst werden können;
-8. Halb- und Ganztage anhand des individuellen Arbeitsplans berechnet werden;
-9. ein Vorgesetzter Abwesenheiten genehmigen und ablehnen kann;
-10. Ferienbezüge nachvollziehbare Kontobuchungen erzeugen und der Ferienanspruch automatisiert gebucht wird;
-11. die Statusseite binär und aktuell anzeigt, ob ein Mitarbeiter arbeitet oder nicht arbeitet;
-12. nicht berechtigte Benutzer keine sensiblen Abwesenheitsgründe sehen;
-13. Monatsperioden eingereicht, vom Vorgesetzten über eine detaillierte Inspektionsansicht geprüft, genehmigt, abgelehnt, gesperrt und begründet wieder geöffnet werden können;
-14. ein Monatsreport Sollzeit, Istzeit, Abwesenheiten und Saldo zeigt;
-15. der Monatsreport als CSV exportiert werden kann;
-16. alle fachlich relevanten Änderungen im Audit-Log nachvollziehbar sind und über eine dedizierte UI-Ansicht filterbar eingesehen werden können;
-17. die definierten Kernberechnungen automatisiert getestet sind;
-18. Chronivaro ohne externen Servlet-Container als eigenständige Java-Anwendung gestartet werden kann;
-19. Embedded Jetty sowohl das Frontend als auch die bestehende REST API bereitstellt;
-20. Start, HTTP-Betrieb und kontrollierter Shutdown der Embedded-Jetty-Laufzeit automatisiert getestet sind.
+2. ein Mitarbeiter seine eigenen Mitarbeiter- und Profilinformationen (u. a. Personalnummer, Eintrittsdatum, Pensum, Team, Standort) einsehen kann;
+3. ein Mitarbeiter mehrere Arbeitsblöcke pro Tag erfassen und kommentieren kann, wobei Unterbrüche aus den zeitlichen Lücken abgeleitet werden;
+4. Mitarbeiter ihre offenen Zeitbuchungen bei Bedarf bearbeiten (Start- und Endzeit, Arbeitsort, Kommentar) können, Vorgesetzte (für zugeordnete Mitarbeitende) sowie HR/Administratoren (unternehmensweit) Arbeitszeitbuchungen von Mitarbeitenden in offenen Perioden manuell erfassen, vollständig korrigieren und löschen können, alle modifizierten und manuell erstellten Einträge visuell hervorgehoben werden und bei Fremderstellung der jeweilige Ersteller ausgewiesen wird;
+5. die Anwendung Überlappungen und mehrere laufende Buchungen verhindert;
+6. Soll- und Istzeit für Tag und Monat (inklusive Eintritten/Austritten unter dem Monat) korrekt berechnet werden;
+7. Pensumsänderungen alte Monatsauswertungen nicht verfälschen;
+8. die vorkonfigurierten Standard-Abwesenheitsarten verfügbar sind und weitere Abwesenheitsarten erfasst werden können;
+9. Halb- und Ganztage anhand des individuellen Arbeitsplans berechnet werden;
+10. ein Vorgesetzter Abwesenheiten genehmigen und ablehnen kann sowie Vorgesetzte (für zugeordnete Mitarbeitende) und HR/Administration (unternehmensweit) Abwesenheiten im Namen von Mitarbeitenden erfassen können;
+11. Ferienbezüge nachvollziehbare Kontobuchungen erzeugen und der Ferienanspruch automatisiert gebucht wird;
+12. die Statusseite binär und aktuell anzeigt, ob ein Mitarbeiter arbeitet oder nicht arbeitet;
+13. nicht berechtigte Benutzer keine sensiblen Abwesenheitsgründe sehen;
+14. Monatsperioden eingereicht, vom Vorgesetzten über eine detaillierte Inspektionsansicht geprüft, genehmigt, abgelehnt, gesperrt und begründet wieder geöffnet werden können;
+15. ein Monatsreport Sollzeit, Istzeit, Abwesenheiten und Saldo zeigt;
+16. der Monatsreport als CSV exportiert werden kann;
+17. alle fachlich relevanten Änderungen im Audit-Log nachvollziehbar sind und über eine dedizierte UI-Ansicht filterbar eingesehen werden können;
+18. die definierten Kernberechnungen automatisiert getestet sind;
+19. Chronivaro ohne externen Servlet-Container als eigenständige Java-Anwendung gestartet werden kann;
+20. Embedded Jetty sowohl das Frontend als auch die bestehende REST API bereitstellt;
+21. Start, HTTP-Betrieb und kontrollierter Shutdown der Embedded-Jetty-Laufzeit automatisiert getestet sind.
 
 ### 20.1 Akzeptanzkriterien für die aktuellen Erweiterungen
 
