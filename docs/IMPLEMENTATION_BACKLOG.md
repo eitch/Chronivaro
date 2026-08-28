@@ -240,6 +240,146 @@ The following foundational areas are verified as fully implemented in the reposi
 
 ---
 
+### Task 4: [Fix] Fix Undefined Values in Vacation Report for New Employees
+
+- **Specification Reference**:
+  - Section 11.3 (Ferienübersicht: `definierte Werte (keine undefined-Werte oder fehlende Berechnungsdaten bei neuen, bestehenden oder reaktivierten Mitarbeitern)`)
+  - Section 6.7 & 6.7.1 (VacationAccountEntry & Automatisierte Ferienanspruchsregelung)
+- **Current Implementation Location**:
+  - `chronivaro-core/src/main/java/ch/eitchnet/chronivaro/core/service/VacationReportService.java`
+  - `chronivaro-web/src/main/webapp/js/pages/VacationOverviewView.js` / `VacationReportView.js`
+- **Missing / Deficient Behaviour**:
+  - When opening the vacation report for newly created employees who have no historical bookings or carry-overs, `undefined` values appear in report metrics or journal tables instead of initialized, formatted numeric values (0 days / 0:00 h).
+- **Proposed Implementation Plan**:
+  - Guard against null or missing balance fields in `VacationReportService` and DTO mapping.
+  - Ensure frontend formatting utils and views default uninitialized metrics to `0` instead of displaying `undefined`.
+- **Dependencies**:
+  - `VacationReportService`
+  - `VacationReportView.js` / `VacationOverviewView.js`
+- **Acceptance Criteria**:
+  1. Opening the vacation report for any newly created employee displays 0 / formatted values for all summary metrics without any `undefined` text.
+  2. CSV and PDF exports for newly created employees render cleanly with numeric zero values.
+
+---
+
+### Task 5: [New] Enhanced Onboarding Registration Email with Direct URL and Configurable Server Base URL
+
+- **Specification Reference**:
+  - Section 6.11 (Globale Anwendungskonfiguration: `serverBaseUrl`)
+  - Section 9.6 (Mitarbeiter-Registrierung: Onboarding-E-Mail mit direktem Registrierungslink)
+  - Section 12.1 #8 (Administration: Globale Einstellungen)
+- **Current Implementation Location**:
+  - `chronivaro-core/src/main/java/ch/eitchnet/chronivaro/core/service/InitiateUserRegistrationService.java`
+  - `chronivaro-web/src/main/webapp/js/pages/ConfigurationView.js`
+  - `chronivaro-web/src/main/webapp/js/pages/CompleteRegistrationView.js`
+- **Missing Behaviour**:
+  - Registration email is currently a minimal challenge text rather than a welcoming onboarding experience.
+  - Direct registration URL containing the token is missing in the email body.
+  - Global configuration for `serverBaseUrl` is not yet defined/configurable to construct absolute URLs.
+- **Proposed Implementation Plan**:
+  - Add `serverBaseUrl` to global configuration parameters and provide configuration UI in `ConfigurationView.js`.
+  - Design a structured, friendly onboarding email template for `Usage.SET_PASSWORD` challenges that includes a direct registration URL (`${serverBaseUrl}/#complete-registration?user=${username}&token=${token}`).
+  - Ensure the web client handles token deep linking in `CompleteRegistrationView.js`.
+- **Dependencies**:
+  - `InitiateUserRegistrationService`
+  - `ConfigurationView.js`
+  - `CompleteRegistrationView.js`
+- **Acceptance Criteria**:
+  1. Triggering employee/user registration sends an onboarding email containing a clickable direct URL with the prefilled registration token.
+  2. Server base URL is configurable via global settings (`serverBaseUrl`).
+  3. Opening the link opens `CompleteRegistrationView` with the token populated for password setup.
+
+---
+
+### Task 6: [Refactor] UI: Horizontal Single-Row Layout for Report Summaries Across All Report Types
+
+- **Specification Reference**:
+  - Section 11 (Reports: 11.1–11.5)
+  - Section 12.1 #7 (Reports & Export: Zusammenfassungen/Kennzahlen in einer Zeile)
+- **Current Implementation Location**:
+  - `chronivaro-web/src/main/webapp/js/pages/AbsenceReportView.js`
+  - `chronivaro-web/src/main/webapp/js/pages/DayReportView.js`
+  - `chronivaro-web/src/main/webapp/js/pages/MonthReportView.js`
+  - `chronivaro-web/src/main/webapp/js/pages/VacationReportView.js`
+  - `chronivaro-web/src/main/webapp/js/pages/TeamReportView.js`
+  - `chronivaro-web/src/main/webapp/assets/css/`
+- **Missing / Deficient Behaviour**:
+  - Summary metrics in reports (e.g. Absences Report: Total Absences, Total Duration, Paid Absence Time, Unpaid Absence Time) are stacked vertically in columns below each other rather than in a horizontal row.
+- **Proposed Implementation Plan**:
+  - Update report views and CSS to lay out summary metric cards in a single flex/grid row (`flex-direction: row; flex-wrap: wrap; gap: 1rem;`) across all report types (Absences, Day, Month, Vacation, Team).
+- **Dependencies**:
+  - Report view components and shared report styles.
+- **Acceptance Criteria**:
+  1. In the Absences Report, summary items (Total Absences, Total Duration, Paid Absence Time, Unpaid Absence Time) appear in a horizontal row.
+  2. All other report types (Day, Month, Vacation, Team) display their summary cards in a consistent horizontal row layout.
+
+---
+
+### Task 7: [Refactor] UI: Multi-Column / Row Layout with Spacing for Presence / Who Is Working Dashboard
+
+- **Specification Reference**:
+  - Section 8 (Anwesenheitsstatus)
+  - Section 12.1 #5 (Status: Anwesenheitsliste in Zeilenanordnung mit Abständen)
+- **Current Implementation Location**:
+  - `chronivaro-web/src/main/webapp/js/pages/PresenceView.js` (or `StatusView.js`)
+  - `chronivaro-web/src/main/webapp/assets/css/`
+- **Missing / Deficient Behaviour**:
+  - Employees in the presence / who is working dashboard are listed in a single vertical column instead of side-by-side in rows with margins.
+- **Proposed Implementation Plan**:
+  - Update the presence dashboard container and employee card styling to use a responsive flex-row wrapping layout (`display: flex; flex-wrap: wrap; gap: 12px;` or CSS grid) with distinct card margins.
+- **Dependencies**:
+  - `PresenceView.js` / `StatusView.js`
+- **Acceptance Criteria**:
+  1. The presence dashboard renders employee cards arranged horizontally in rows that wrap responsively.
+  2. Employee cards have clear margin/spacing between each other.
+
+---
+
+### Task 8: [Fix] UI: Display Entity Names Instead of Technical IDs in Deletion Confirmation Dialogs
+
+- **Specification Reference**:
+  - Section 12.2 (UI-Grundsätze: Bestätigung vor fachlich weitreichenden Aktionen)
+- **Current Implementation Location**:
+  - `chronivaro-web/src/main/webapp/js/pages/TeamsView.js`
+  - `chronivaro-web/src/main/webapp/js/pages/LocationsView.js`
+  - `chronivaro-web/src/main/webapp/js/pages/UsersView.js`
+  - `chronivaro-web/src/main/webapp/js/pages/AbsenceTypesView.js`
+  - `chronivaro-web/src/main/webapp/js/pages/HolidayCalendarsView.js`
+- **Missing / Deficient Behaviour**:
+  - Deletion confirmation dialogs (e.g. deleting a team, location, etc.) display the technical ID rather than the human-readable entity name.
+- **Proposed Implementation Plan**:
+  - Update deletion confirmation dialog prompts across admin views to display the entity's `name` or `displayName` instead of its technical `id`.
+- **Dependencies**:
+  - Admin view components (`TeamsView.js`, `LocationsView.js`, etc.).
+- **Acceptance Criteria**:
+  1. Confirming deletion of a team displays the team's name in the dialog text.
+  2. Confirming deletion of a location displays the location's name in the dialog text.
+  3. All other deletion confirmation dialogs show human-readable entity names.
+
+---
+
+### Task 9: [Fix] UI: Modal Dialog Scrolling and Viewport Overflow Handling for Add Employee, Edit Schedule, and All Dialogs
+
+- **Specification Reference**:
+  - Section 12.2 (UI-Grundsätze: Modale Dialoge und Viewport-Overflow)
+- **Current Implementation Location**:
+  - `chronivaro-web/src/main/webapp/js/components/Modal.js`
+  - `chronivaro-web/src/main/webapp/js/pages/EmployeesView.js`
+  - `chronivaro-web/src/main/webapp/js/pages/SchedulesView.js`
+  - `chronivaro-web/src/main/webapp/assets/css/`
+- **Missing / Deficient Behaviour**:
+  - The "Add Employee" and "Edit Schedule" dialogs (and potentially other tall dialogs) do not scroll when the browser window is not tall enough, causing action buttons to be pushed off-screen and inaccessible.
+- **Proposed Implementation Plan**:
+  - Update modal component container styles (`max-height: 90vh; overflow-y: auto;`) and ensure dialog bodies scroll vertically while keeping action buttons accessible.
+- **Dependencies**:
+  - `Modal.js` and global modal dialog styles.
+- **Acceptance Criteria**:
+  1. The "Add Employee" dialog is vertically scrollable on short browser viewports, and action buttons remain reachable.
+  2. The "Edit Schedule" dialog is vertically scrollable on short browser viewports.
+  3. All modal dialogs across the application scroll properly whenever their content exceeds the viewport height.
+
+---
+
 ## Explicitly Excluded / Post-MVP Out of Scope
 
 The following items are defined in Section 4.3 as post-MVP expansions and are not part of the active implementation backlog:

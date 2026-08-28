@@ -33,10 +33,16 @@ Audit date: 2026-08-28. `IMPLEMENTATION_SPECIFICATION.md` is authoritative; the 
 
 ### Missing
 1. **Employee Self-Profile API & View (`GET /me/profile`) (Sections 10.4, 14.2, 15.3, 20 #2):** Dedicated REST endpoint `GET /rest/chronivaro/v1/me/profile` returning the caller's linked `EmployeeDto` (personal number, entry/exit date, schedule/workload, target time model, team, location) and dedicated user profile inspection view/modal in the web UI.
+2. **Enhanced Onboarding Registration Email with Direct URL & Configurable Base URL (Sections 6.11, 9.6, 12.1 #8):** Welcoming on-boarding email template containing a clickable direct URL with prefilled registration token, supported by a global `serverBaseUrl` configuration.
 
-### Partially Implemented
+### Partially Implemented & Bugs / UI Refinements
 1. **User Language Persistence to Backend Profile (`POST /auth/language`) (Sections 4.2.1, 4.2.2, 14.1, 18.5, 20.1 #4):** Language is currently persisted in browser `localStorage` (`I18n.js`), but `POST /rest/chronivaro/v1/auth/language` (or `/me/language`) is missing to update the Strolch `UserRep.locale` persistently upon language change.
 2. **Employee Self-Service Work Entry Deletion (`DELETE /me/work-entries/{id}`) (Sections 14.2, 15.2, 20 #4):** Administrative/managerial deletion endpoint `/admin/work-entries/{id}` exists, but employee self-service deletion route `@DELETE @Path("me/work-entries/{id}")` and frontend wiring for non-manager self-deletion in open periods are missing.
+3. **Undefined Values in Vacation Report for New Employees (Sections 6.7, 11.3):** Newly created employees without bookings or historical records see `undefined` values in vacation summary metrics and journal entries instead of clean defaults.
+4. **Horizontal Single-Row Layout for Report Summaries Across All Report Types (Sections 11.1–11.5, 12.1 #7):** Summary metrics (e.g. Absences Report: Total Absences, Total Duration, Paid Absence Time, Unpaid Absence Time) currently render in vertical columns and must be laid out in a single horizontal row across all report views.
+5. **Multi-Column / Row Layout with Spacing for Presence / Who Is Working Dashboard (Sections 8, 12.1 #5):** Employees in the presence dashboard are currently listed in a single column instead of horizontally in rows side-by-side with appropriate margins.
+6. **Display Entity Names in Deletion Confirmation Dialogs (Section 12.2):** Confirmation dialogs for deleting entities (teams, locations, users, etc.) currently display technical IDs instead of human-readable names.
+7. **Modal Dialog Scrolling & Viewport Overflow Handling (Section 12.2):** Modal dialogs (such as Add Employee and Edit Schedule) do not scroll on short viewports, pushing action buttons off-screen.
 
 ### Specification Ambiguities & Open Decisions (Section 22)
 1. **Illness During Pre-Approved Vacation (Section 22 #5):** Automatic conversion/credit reversal vs. manual cancellation/correction workflow.

@@ -416,15 +416,17 @@ Zusätzlich zu den bereits bestehenden globalen Einstellungen unterstützt Chron
 | `defaultLanguage` | Standardsprache der Anwendung; initial `de` oder `en` |
 | `companyName` | global angezeigter Firmenname |
 | `companyLogo` | optionales globales Firmenlogo (unterstützt Bild-Upload und Speicherung/Auslieferung) |
+| `serverBaseUrl` | konfigurierbare Basis-URL des Servers (z. B. `https://chronivaro.example.com`) für Links in E-Mails (z. B. Registrierung) |
 
 Regeln:
 
 - Die initial unterstützten Sprachen sind Deutsch (`de`) und Englisch (`en`).
 - Weitere Sprachen müssen ohne Änderung der fachlichen Kernlogik ergänzbar sein.
-- `companyName` und `companyLogo` gelten global und sind nicht benutzer-, team- oder reportspezifisch.
+- `companyName`, `companyLogo` und `serverBaseUrl` gelten global und sind nicht benutzer-, team- oder reportspezifisch.
 - In der Systemkonfiguration der Administration kann eine Bilddatei für das Firmenlogo hochgeladen werden.
 - Ist ein Firmenlogo konfiguriert, wird es sowohl in der Anwendung als auch in unterstützten PDF-Reports angezeigt.
 - Ist kein Firmenlogo konfiguriert, dürfen UI und PDF-Ausgabe keine leeren oder fehlerhaften Platzhalter anzeigen.
+- `serverBaseUrl` wird für die Generierung von absoluten Links in E-Mails verwendet. Ist kein Wert konfiguriert, wird ein sinnvoller Standardwert (z. B. aus der Server-Konfiguration oder dem aktuellen Request) verwendet.
 
 ## 7. Berechnungsregeln
 
@@ -566,7 +568,7 @@ Um neuen Mitarbeitern den Zugriff auf Chronivaro zu ermöglichen, wird ein admin
 1. Ein Administrator wählt in der Mitarbeiterliste die Aktion "Registrieren" für einen bestimmten Mitarbeiter aus.
 2. Das System identifiziert den verknüpften Strolch-Benutzer anhand der `userId` und `username`.
 3. Das System löst eine Strolch-Challenge (`Usage.SET_PASSWORD`) für diesen Benutzer aus.
-4. Die Challenge wird über den konfigurierten `UserChallengeHandler` (z. B. Konsole oder E-Mail) an den Mitarbeiter übermittelt.
+4. Die Challenge wird über den konfigurierten `UserChallengeHandler` (z. B. Konsole oder E-Mail) an den Mitarbeiter übermittelt. Die Registrierungs-E-Mail ist als ansprechende Onboarding-Nachricht gestaltet und enthält einen direkten Link mit dem Registrierungstoken, welcher den Benutzer direkt zum Registrierungs-/Passwortsetzungsformular führt (unter Verwendung der konfigurierten `serverBaseUrl`).
 5. Der Mitarbeiter verwendet den erhaltenen Link/Code, um sein initiales Passwort festzulegen und sich anschliessend anzumelden.
 
 Dieser Prozess nutzt den Standard-Strolch-Mechanismus zur Passwortinitialisierung und stellt sicher, dass keine Passwörter manuell durch Administratoren vergeben oder per Klartext-E-Mail versendet werden müssen.
@@ -673,7 +675,7 @@ Die Darstellung muss Vorgesetzten ermöglichen, lange Arbeitsblöcke und die daz
 - bezogene Ferien
 - genehmigte zukünftige Ferien
 - noch verfügbare Ferien
-- tabellarische Kontobuchungen mit sauber lokalisiertem Buchungstyp (z. B. Anspruch, Übertrag, Bezug, Korrektur, Verfall) und definierten Werten (keine `undefined`-Minutenwerte)
+- tabellarische Kontobuchungen mit sauber lokalisiertem Buchungstyp (z. B. Anspruch, Übertrag, Bezug, Korrektur, Verfall) und definierten Werten (keine `undefined`-Werte oder fehlende Berechnungsdaten bei neuen, bestehenden oder reaktivierten Mitarbeitern)
 
 ### 11.4 Teamreport
 
@@ -789,6 +791,7 @@ Die UI wird mit HTML, CSS und Vanilla JavaScript umgesetzt. Es wird kein Fronten
    - Filter nach Team und Standort
    - farblicher Status
    - datenschutzkonforme Anzeige
+   - Anwesenheitsliste ("Wer arbeitet gerade"): Darstellung der anwesenden Mitarbeiter nebeneinander in einer flexiblen Zeilenanordnung (Row/Grid-Layout) mit angemessenem Abstand (Margin) zwischen den einzelnen Einträgen/Karten statt einer rein vertikalen Spaltenliste
 6. **Genehmigungen**
    - offene Abwesenheiten
    - eingereichte Monatsperioden mit Detailprüfung (Öffnen des vollständigen Monatsreports in einer Inspektionsansicht mit direkter Genehmigungs-/Ablehnungsaktion)
@@ -797,6 +800,7 @@ Die UI wird mit HTML, CSS und Vanilla JavaScript umgesetzt. Es wird kein Fronten
    - Mitarbeiter-Auswahl für berechtigte Rollen zweistufig (zuerst Team-Auswahl, danach Mitarbeiter-Auswahl per Dropdown; keine manuelle Eingabe einer Mitarbeiter-ID)
    - Monatsreport: Datumsauswahl per Datumswähler/Monatsauswahl
    - Team-Monatsübersicht: Nur für Rollen mit entsprechender Berechtigung (Supervisor, HR, Admin) sichtbar; Team-Auswahl per Dropdown und Datumsauswahl per Datumswähler
+   - Zusammenfassungen/Kennzahlen (Summary-Blöcke/Karten, z. B. Gesamtabwesenheiten, Gesamtdauer, bezahlte/unbezahlte Abwesenheitszeit) werden einheitlich über alle Report-Typen hinweg horizontal in einer Zeile (Row) statt untereinander in Spalten angeordnet
    - Soll-/Ist-Vergleich
    - CSV-Export
    - PDF-Export für Monatsreport, Ferienübersicht und Abwesenheitsreport
@@ -817,7 +821,8 @@ Die UI wird mit HTML, CSS und Vanilla JavaScript umgesetzt. Es wird kein Fronten
 - ausreichender Farbkontrast
 - Status nicht ausschliesslich durch Farbe vermitteln
 - verständliche Fehlermeldungen direkt am betroffenen Feld
-- Bestätigung vor fachlich weitreichenden Aktionen
+- Bestätigung vor fachlich weitreichenden Aktionen: Bestätigungsdialoge beim Löschen von Elementen (z. B. Teams, Standorte, Benutzer) zeigen zur eindeutigen Identifikation den lesbaren Namen bzw. die Bezeichnung des Elements anstelle einer internen/technischen ID an.
+- Modale Dialoge (z. B. Mitarbeiter hinzufügen, Arbeitsplan bearbeiten und alle weiteren Eingabedialoge) müssen bei begrenzter Fensterhöhe bzw. auf kleineren Bildschirmen vertikal scrollbar sein (Viewport-Overflow), sodass alle Formularfelder und Aktionsschaltflächen (z. B. Speichern, Abbrechen) stets sichtbar und erreichbar bleiben.
 - Datumsdarstellung in der UI vorerst einheitlich im Format `yyyy-MM-dd`; Übertragung in eindeutigem ISO-Format
 - Lade-, Leer- und Fehlerzustände für jede asynchrone Ansicht
 
