@@ -152,39 +152,13 @@ The following foundational areas are verified as fully implemented in the reposi
 - **System Configuration – Company Logo Image Upload and Settings Layout (Sections 6.11, 12.1 #8):** Image file upload (PNG/JPEG/SVG/GIF/WebP data URI validation, Base64 size limits, and dedicated upload/delete/serve endpoints), image preview and removal controls in `ConfigurationView.js`, centered settings container layout (`.configuration-container`), description texts formatted directly below section titles, and full test coverage across core, rest, and web modules.
 - **HR and Supervisor Employee Work Entry Management (Sections 3.2, 3.3, 6.4, 9.3, 12.1 #2, 13.2, 20):** Core services (`AddWorkEntryService`, `CorrectWorkEntryService`, `RemoveWorkEntryService`) extended to allow supervisors acting on assigned team members (`assertCanManageEmployee`) and HR/Admins organization-wide; REST endpoints (`GET /employees/{id}/work-entries`, `POST /employees/{id}/work-entries`, `PUT /admin/work-entries/{id}`, `DELETE /admin/work-entries/{id}`) with role-based scoping; Web UI (`MyTimesView.js` and `WorkEntryApi.js`) with team/employee dropdowns for managers, add/edit/delete modals, and complete Swiss German and English translations with 100% key parity.
 - **Work Entry Employee Modifications, Highlighting of Modified/Manual Entries, and Creator Attribution (Sections 3.1–3.3, 4.1 #5, 6.4, 9.3, 11, 12.1 #2, 13.2, 20 #3):** Enabled full work entry editing for employees in open periods via `CorrectWorkEntryService` and `PUT /me/work-entries/{id}` with same-day and non-overlap validations; exposed `source`, `createdBy`, and `modified` in `WorkEntryDto`, `WorkEntryRangeDto`, and `WorkEntryRange`; visual badges/highlighting for manual and modified entries across `MyTimesView.js`, `ApprovalsView.js`, and `ReportsView.js`; creator attribution (`createdBy`) displayed whenever entries are created on behalf of the employee; complete Swiss German and English translations with 100% key parity and comprehensive unit/REST/UI tests.
+- **Employee Self-Profile API & View (Sections 3.1, 6.1, 12.1 #0, 13.2, 20 #2):** REST endpoints `GET /rest/chronivaro/v1/me/profile` returning linked `EmployeeDto` with resolved team, location, timezone, join/exit dates, active status, and `GET /rest/chronivaro/v1/me/schedules` returning employment schedule history; web UI `ProfileView.js` (`#profile`) accessible from the top user dropdown menu displaying user account details, role badges, employee master data, current schedule breakdown with daily target hours, workload percentage calculation, and schedule version history; complete Swiss German and English translations with 100% key parity and automated REST/UI tests.
 
 ---
 
 ## Prioritized Implementation Backlog
 
-### Task 1: [New] Implement Employee Self-Profile REST Endpoint and Profile View/Modal (`GET /me/profile`)
-
-- **Specification Reference**:
-  - Section 10.4 (Profile and Reporting overview: `- GET /me/profile: eigenes Mitarbeiterprofil`)
-  - Section 14.2 (Profile & Zeiterfassung REST endpoints: `- GET /me/profile: Eigenes Mitarbeiterprofil`)
-  - Section 15.3 (REST endpoint permission mapping: `GET /me/profile`)
-  - Section 20, Acceptance Criterion 2 (`"ein Mitarbeiter seine eigenen Mitarbeiter- und Profilinformationen (u. a. Personalnummer, Eintrittsdatum, Pensum, Team, Standort) einsehen kann"`)
-- **Current Implementation Location**:
-  - `chronivaro-rest/src/main/java/ch/eitchnet/chronivaro/rest/resource/ChronivaroResource.java` (currently only `/me/work-entries`, `/me/absences`, `/me/vacation-account`, `/me/periods/{yearMonth}`, `/me/working-location-defaults` exist).
-  - `chronivaro-web` lacks a dedicated employee profile view or profile inspection modal.
-- **Missing Behaviour**:
-  - Endpoint `GET /rest/chronivaro/v1/me/profile` returning the logged-in user's linked `EmployeeDto` (including employee number, entry/exit date, current employment schedule / workload percentage, target time model, team, and location).
-  - Web UI component (modal or view) accessible from the header navigation allowing employees to inspect their own master data and schedule parameters.
-- **Proposed Implementation Plan**:
-  - Add `GET /me/profile` to `ChronivaroResource.java` resolving the linked employee via `ChronivaroModelHelper.findEmployeeByUser` and mapping to `EmployeeDto` with `ChronivaroMapper.toDto`.
-  - Add API client method in `chronivaro-web/src/main/webapp/js/api/EmployeeApi.js` (or `AuthApi.js`).
-  - Add profile dialog/view in `chronivaro-web` accessible from the top navigation / user menu with full localization in German and English.
-- **Dependencies**:
-  - `ChronivaroModelHelper.findEmployeeByUser`
-  - `ChronivaroMapper.toDto(Resource employee)`
-- **Acceptance Criteria**:
-  1. Calling `GET /rest/chronivaro/v1/me/profile` with an authenticated Employee session returns HTTP 200 with the employee's ID, firstname, lastname, email, employee number, entry date, exit date, primary team, location, and current workload.
-  2. Calling `GET /rest/chronivaro/v1/me/profile` with a pure system user (no linked employee) returns HTTP 404 with error code `NOT_FOUND`.
-  3. The web frontend provides a "My Profile" view/dialog displaying these details to the logged-in user in their active language.
-
----
-
-### Task 2: [New] Implement User Language Persistence to Backend (`POST /auth/language`) and Frontend Sync
+### Task 1: [New] Implement User Language Persistence to Backend (`POST /auth/language`) and Frontend Sync
 
 - **Specification Reference**:
   - Section 4.2.1 & 4.2.2 (Sprachwahl und Persistenz: `"Ein Sprachwechsel nach Login wird persistent auf dem Strolch-Benutzer gespeichert und zusätzlich im Browser Storage abgelegt."`)
@@ -213,7 +187,7 @@ The following foundational areas are verified as fully implemented in the reposi
 
 ---
 
-### Task 3: [Fix] Implement Employee Self-Service Work Entry Deletion (`DELETE /me/work-entries/{id}`) and Connect in Web UI
+### Task 2: [Fix] Implement Employee Self-Service Work Entry Deletion (`DELETE /me/work-entries/{id}`) and Connect in Web UI
 
 - **Specification Reference**:
   - Section 14.2 (Profile & Zeiterfassung: `- DELETE /me/work-entries/{id}: Arbeitsblock löschen`)
@@ -240,7 +214,7 @@ The following foundational areas are verified as fully implemented in the reposi
 
 ---
 
-### Task 4: [Fix] Fix Undefined Values in Vacation Report for New Employees
+### Task 3: [Fix] Fix Undefined Values in Vacation Report for New Employees
 
 - **Specification Reference**:
   - Section 11.3 (Ferienübersicht: `definierte Werte (keine undefined-Werte oder fehlende Berechnungsdaten bei neuen, bestehenden oder reaktivierten Mitarbeitern)`)
@@ -262,7 +236,7 @@ The following foundational areas are verified as fully implemented in the reposi
 
 ---
 
-### Task 5: [New] Enhanced Onboarding Registration Email with Direct URL and Configurable Server Base URL
+### Task 4: [New] Enhanced Onboarding Registration Email with Direct URL and Configurable Server Base URL
 
 - **Specification Reference**:
   - Section 6.11 (Globale Anwendungskonfiguration: `serverBaseUrl`)
@@ -291,7 +265,7 @@ The following foundational areas are verified as fully implemented in the reposi
 
 ---
 
-### Task 6: [Refactor] UI: Horizontal Single-Row Layout for Report Summaries Across All Report Types
+### Task 5: [Refactor] UI: Horizontal Single-Row Layout for Report Summaries Across All Report Types
 
 - **Specification Reference**:
   - Section 11 (Reports: 11.1–11.5)
@@ -315,7 +289,7 @@ The following foundational areas are verified as fully implemented in the reposi
 
 ---
 
-### Task 7: [Refactor] UI: Multi-Column / Row Layout with Spacing for Presence / Who Is Working Dashboard
+### Task 6: [Refactor] UI: Multi-Column / Row Layout with Spacing for Presence / Who Is Working Dashboard
 
 - **Specification Reference**:
   - Section 8 (Anwesenheitsstatus)
@@ -335,7 +309,7 @@ The following foundational areas are verified as fully implemented in the reposi
 
 ---
 
-### Task 8: [Fix] UI: Display Entity Names Instead of Technical IDs in Deletion Confirmation Dialogs
+### Task 7: [Fix] UI: Display Entity Names Instead of Technical IDs in Deletion Confirmation Dialogs
 
 - **Specification Reference**:
   - Section 12.2 (UI-Grundsätze: Bestätigung vor fachlich weitreichenden Aktionen)
@@ -358,7 +332,7 @@ The following foundational areas are verified as fully implemented in the reposi
 
 ---
 
-### Task 9: [Fix] UI: Modal Dialog Scrolling and Viewport Overflow Handling for Add Employee, Edit Schedule, and All Dialogs
+### Task 8: [Fix] UI: Modal Dialog Scrolling and Viewport Overflow Handling for Add Employee, Edit Schedule, and All Dialogs
 
 - **Specification Reference**:
   - Section 12.2 (UI-Grundsätze: Modale Dialoge und Viewport-Overflow)
