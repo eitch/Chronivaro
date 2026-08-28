@@ -21,6 +21,8 @@ import static ch.eitchnet.chronivaro.core.ChronivaroTestHelper.createEmployee;
 import static ch.eitchnet.chronivaro.core.ChronivaroTestHelper.createWorkEntry;
 import static ch.eitchnet.chronivaro.core.model.ChronivaroConstants.*;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 public class DaySummaryServiceTest {
 
@@ -164,5 +166,47 @@ public class DaySummaryServiceTest {
 
 		DaySummary summary = result.daySummary;
 		assertEquals(480, summary.targetMinutes());
+	}
+
+	@Test
+	public void shouldCalculateDaySummaryWithActiveEntryFromPreviousDay() {
+		String employeeId = "emp-prev-day";
+		LocalDate today = LocalDate.now();
+
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
+			Resource employee = createEmployee(tx, employeeId, "Previous Day Doe");
+			employee = tx.readLock(employee);
+			employee.setString(PARAM_TIMEZONE, "Europe/Zurich");
+			tx.update(employee);
+
+			Resource schedule = tx.readLock(tx.getResourceByRelation(employee, PARAM_CURRENT_SCHEDULE, true));
+			schedule.setInteger(PARAM_DAILY_TARGET_MINUTES, 480);
+			tx.update(schedule);
+
+			// Active Work Entry started 2 days ago
+			ZonedDateTime start = ZonedDateTime
+					.now(ChronivaroModelHelper.getEmployeeTimezone(employee))
+					.minusDays(2);
+			createWorkEntry(tx, employee, start, ZonedDateTime.parse("1970-01-01T00:00:00+01:00"));
+
+			tx.commitOnClose();
+		}
+
+		ServiceHandler serviceHandler = runtimeMock.getServiceHandler();
+		DaySummaryService.DaySummaryArgument arg = new DaySummaryService.DaySummaryArgument();
+		arg.employeeId = employeeId;
+		arg.date = today;
+
+		DaySummaryService.DaySummaryResult result = serviceHandler.doService(certificate, new DaySummaryService(), arg);
+		assertEquals(ServiceResult.success().getState(), result.getState());
+
+		DaySummary summary = result.daySummary;
+		assertEquals(DayState.WORKING, summary.state());
+		assertEquals(DayState.WORKING.getLabel(), summary.stateLabel());
+		assertNotNull(summary.activeTimer());
+		assertTrue(summary.activeTimer().isPreviousDay());
+		// Today's actual minutes should be 0 because the timer was forgotten 2 days ago
+		assertEquals(0, summary.actualMinutes());
+		assertTrue(summary.workEntries().isEmpty());
 	}
 }

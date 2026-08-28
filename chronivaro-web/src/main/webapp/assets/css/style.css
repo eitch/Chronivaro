@@ -888,8 +888,19 @@ tr:hover {
 }
 
 #presence-status.status-not-working {
+    background-color: #ffedd5;
+    color: #9a3412;
+}
+
+#presence-status.status-danger,
+#presence-status.status-error {
     background-color: #fee2e2;
     color: #991b1b;
+}
+
+#presence-status.status-off-duty {
+    background-color: #f1f5f9;
+    color: #475569;
 }
 
 /* Layouts */
@@ -944,9 +955,36 @@ tr:hover {
     font-size: 2.5rem;
     font-weight: 800;
     margin: 1rem 0 0;
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     padding: 0.5rem 1.5rem;
     border-radius: 0.5rem;
+}
+
+.timer-warning-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    margin-left: 0.75rem;
+    font-size: 1.25rem;
+    font-weight: 800;
+    line-height: 1;
+    background-color: #ef4444;
+    color: #ffffff;
+    border-radius: 50%;
+    cursor: pointer;
+    vertical-align: middle;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    border: 2px solid #ffffff;
+    transition: transform 0.15s ease, background-color 0.15s ease;
+}
+
+.timer-warning-icon:hover {
+    transform: scale(1.15);
+    background-color: #dc2626;
 }
 
 #timer-controls {

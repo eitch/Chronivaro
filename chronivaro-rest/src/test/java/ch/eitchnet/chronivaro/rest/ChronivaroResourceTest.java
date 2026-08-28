@@ -282,6 +282,21 @@ public class ChronivaroResourceTest extends AbstractChronivaroRestfulTest {
 			assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
 		}
 
+		// Check Day Summary contains activeTimer
+		String todayStr = java.time.LocalDate.now().toString();
+		try (Response response = target()
+				.path("chronivaro/v1/me/day-summary/" + todayStr)
+				.request(MediaType.APPLICATION_JSON)
+				.header("Authorization", authToken)
+				.get()) {
+			assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+			com.google.gson.JsonObject obj = ChronivaroRestHelper.createGson().fromJson(response.readEntity(String.class), com.google.gson.JsonObject.class);
+			assertEquals("WORKING", obj.get("state").getAsString());
+			org.junit.Assert.assertTrue(obj.has("activeTimer") && !obj.get("activeTimer").isJsonNull());
+			com.google.gson.JsonObject activeTimer = obj.getAsJsonObject("activeTimer");
+			org.junit.Assert.assertFalse(activeTimer.get("isPreviousDay").getAsBoolean());
+		}
+
 		// Stop timer
 		try (Response response = target()
 				.path("chronivaro/v1/me/timer/stop")

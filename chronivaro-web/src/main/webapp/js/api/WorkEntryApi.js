@@ -6,8 +6,13 @@ export default class WorkEntryApi {
         return await Rest.post('rest/chronivaro/v1/me/timer/start', {workingLocation});
     }
 
-    static async stopTimer(comment) {
-        return await Rest.post('rest/chronivaro/v1/me/timer/stop', comment ? {comment} : {});
+    static async stopTimer(comment, time) {
+        const payload = {};
+        if (comment) payload.comment = comment;
+        if (time) {
+            payload.time = (time instanceof Date) ? time.toISOString() : time;
+        }
+        return await Rest.post('rest/chronivaro/v1/me/timer/stop', payload);
     }
 
     static async updateWorkEntry(id, data, etag) {

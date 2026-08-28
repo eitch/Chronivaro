@@ -95,6 +95,9 @@ public class ChronivaroMapper {
 	}
 
 	public static DaySummaryDto toDto(DaySummary summary) {
+		ActiveTimerDto activeTimerDto = summary.activeTimer() != null ?
+				new ActiveTimerDto(summary.activeTimer().id(), summary.activeTimer().start(),
+						summary.activeTimer().workingLocation(), summary.activeTimer().isPreviousDay()) : null;
 		return new DaySummaryDto(summary.date(), summary.state(), summary.stateLabel(), summary.targetMinutes(),
 				summary.actualMinutes(), summary.holidayMinutes(), summary.absenceMinutes(), summary.isOff(),
 				summary.getBalance(), summary.workingLocation(), summary
@@ -105,7 +108,8 @@ public class ChronivaroMapper {
 				.breaks()
 				.stream()
 				.map(b -> new BreakRangeDto(b.start(), b.end(), b.durationMinutes()))
-				.toList());
+				.toList(),
+				activeTimerDto);
 	}
 
 	public static MonthSummaryDto toDto(MonthSummary summary) {

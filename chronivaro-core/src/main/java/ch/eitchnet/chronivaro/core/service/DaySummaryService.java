@@ -14,6 +14,7 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import static ch.eitchnet.chronivaro.core.model.ChronivaroConstants.*;
 import static ch.eitchnet.chronivaro.core.model.ChronivaroVersionHelper.getVersion;
@@ -59,6 +60,29 @@ public class DaySummaryService
 			DayState state = DayState.NOT_WORKING;
 			WorkingLocation workingLocation = null;
 
+			Optional<Resource> activeEntryOpt = WorkEntryHelper.findActiveWorkEntry(tx, arg.employeeId);
+			DaySummary.ActiveTimer activeTimer = null;
+			if (activeEntryOpt.isPresent()) {
+				Resource activeEntry = activeEntryOpt.get();
+				ZonedDateTime activeStart = activeEntry.getDate(PARAM_START);
+				LocalDate activeStartDate = activeStart.toLocalDate();
+				WorkingLocation activeLoc = activeEntry.hasParameter(PARAM_WORKING_LOCATION)
+						&& !activeEntry.getString(PARAM_WORKING_LOCATION).isBlank()
+						? WorkingLocation.valueOf(activeEntry.getString(PARAM_WORKING_LOCATION)) : null;
+
+				if (activeStartDate.isEqual(arg.date)) {
+					activeTimer = new DaySummary.ActiveTimer(activeEntry.getId(), activeStart, activeLoc, false);
+					state = DayState.WORKING;
+					if (workingLocation == null)
+						workingLocation = activeLoc;
+				} else if (activeStartDate.isBefore(arg.date)) {
+					activeTimer = new DaySummary.ActiveTimer(activeEntry.getId(), activeStart, activeLoc, true);
+					state = DayState.WORKING;
+					if (workingLocation == null)
+						workingLocation = activeLoc;
+				}
+			}
+
 			DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
 
 			ZonedDateTime lastEnd = null;
@@ -67,6 +91,10 @@ public class DaySummaryService
 				ZonedDateTime start = entry.getDate(PARAM_START);
 				ZonedDateTime end = entry.getDate(PARAM_END);
 				boolean isActive = end.getYear() == 1970;
+
+				if (isActive && start.toLocalDate().isBefore(arg.date))
+					continue;
+
 				if (isActive) {
 					state = DayState.WORKING;
 					workingLocation = WorkingLocation.valueOf(entry.getString(PARAM_WORKING_LOCATION));
@@ -101,7 +129,7 @@ public class DaySummaryService
 			}
 
 			DaySummary summary = new DaySummary(arg.date, state, state.getLabel(), targetMinutes, actualMinutes,
-					holidayMinutes, absenceMinutes, targetMinutes == 0, workingLocation, ranges, breaks);
+					holidayMinutes, absenceMinutes, targetMinutes == 0, workingLocation, ranges, breaks, activeTimer);
 			return new DaySummaryResult(summary);
 		}
 	}

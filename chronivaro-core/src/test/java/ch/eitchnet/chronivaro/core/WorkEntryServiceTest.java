@@ -3,6 +3,8 @@ package ch.eitchnet.chronivaro.core;
 import ch.eitchnet.chronivaro.core.model.ChronivaroModelHelper;
 import ch.eitchnet.chronivaro.core.model.ChronivaroVersionHelper;
 import ch.eitchnet.chronivaro.core.model.DaySummary;
+import ch.eitchnet.chronivaro.core.model.ScheduleHelper;
+import ch.eitchnet.chronivaro.core.model.WorkDayHelper;
 import ch.eitchnet.chronivaro.core.model.WorkEntryHelper;
 import ch.eitchnet.chronivaro.core.model.WorkEntryRange;
 import ch.eitchnet.chronivaro.core.model.WorkingLocation;
@@ -639,5 +641,59 @@ public class WorkEntryServiceTest {
 				.findFirst().orElseThrow();
 		assertEquals(1, dayInMonth.workEntries().size());
 		assertTrue(dayInMonth.workEntries().get(0).modified());
+	}
+
+	@Test
+	public void shouldStopForgottenTimerWithSpecificTimeOnStartingDate() {
+		String employeeId = "emp-stop-specific";
+
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
+			Resource employee = createEmployee(tx, employeeId, "Specific Stop Time");
+			employee = tx.readLock(employee);
+			employee.setString(PARAM_TIMEZONE, "Europe/Zurich");
+			tx.update(employee);
+			tx.commitOnClose();
+		}
+
+		ServiceHandler serviceHandler = runtimeMock.getServiceHandler();
+
+		// Start timer 3 days ago at 08:30
+		LocalDate startDate = LocalDate.now().minusDays(3);
+		ZonedDateTime start = startDate.atTime(8, 30).atZone(java.time.ZoneId.of("Europe/Zurich"));
+
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
+			Resource employee = tx.getResourceBy(TYPE_EMPLOYEE, employeeId, true);
+			Resource workDay = WorkDayHelper.getOrCreateWorkDay(tx, employee, start);
+			Resource workEntry = tx.getResourceTemplate(TYPE_WORK_ENTRY, true);
+			workEntry.setName("WorkEntry " + start);
+			workEntry.setRelation(PARAM_EMPLOYEE, employee);
+			workEntry.setRelation(PARAM_WORK_DAY, workDay);
+			workEntry.setDate(PARAM_START, start);
+			workEntry.setString(PARAM_SOURCE, SOURCE_TIMER);
+			workEntry.setString(PARAM_WORKING_LOCATION, WorkingLocation.OFFICE.name());
+			Resource scheduleVersion = ScheduleHelper.findScheduleVersion(tx, employeeId).orElseThrow();
+			workEntry.setRelation(PARAM_SCHEDULE, scheduleVersion);
+			tx.add(workEntry);
+			workDay.addRelation(PARAM_WORK_ENTRIES, workEntry);
+			tx.update(workDay);
+			tx.commitOnClose();
+		}
+
+		// Stop timer fixing the time to 17:00 on the starting date
+		ZonedDateTime stopTime = startDate.atTime(17, 0).atZone(java.time.ZoneId.of("Europe/Zurich"));
+		StopTimerService.StopTimerArgument stopArg = new StopTimerService.StopTimerArgument(employeeId, stopTime, "Forgot to stop");
+		ServiceResult stopResult = serviceHandler.doService(certificate, new StopTimerService(), stopArg);
+		assertTrue(stopResult.getMessage(), stopResult.isOk());
+
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
+			assertTrue(WorkEntryHelper.findActiveWorkEntry(tx, employeeId).isEmpty());
+			List<Resource> entries = tx.streamResources(TYPE_WORK_ENTRY)
+					.filter(e -> e.getRelationId(PARAM_EMPLOYEE).equals(employeeId))
+					.toList();
+			assertEquals(1, entries.size());
+			Resource stoppedEntry = entries.getFirst();
+			assertEquals(stopTime, stoppedEntry.getDate(PARAM_END));
+			assertEquals("Forgot to stop", stoppedEntry.getString(PARAM_COMMENT));
+		}
 	}
 }

@@ -10,5 +10,14 @@ import java.util.List;
 public record DaySummaryDto(LocalDate date, DayState state, String stateLabel, int targetMinutes, int actualMinutes, int holidayMinutes,
 							int absenceMinutes, boolean isOff, int balance, WorkingLocation workingLocation,
 							List<WorkEntryRangeDto> workEntries,
-							List<BreakRangeDto> breaks) {
+							List<BreakRangeDto> breaks,
+							ActiveTimerDto activeTimer) {
+
+	public DaySummaryDto(LocalDate date, DayState state, String stateLabel, int targetMinutes, int actualMinutes,
+						 int holidayMinutes, int absenceMinutes, boolean isOff, int balance,
+						 WorkingLocation workingLocation, List<WorkEntryRangeDto> workEntries,
+						 List<BreakRangeDto> breaks) {
+		this(date, state, stateLabel, targetMinutes, actualMinutes, holidayMinutes, absenceMinutes, isOff, balance,
+				workingLocation, workEntries, breaks, null);
+	}
 }
