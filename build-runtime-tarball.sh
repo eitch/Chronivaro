@@ -1,7 +1,7 @@
 #!/bin/bash
 
 SOURCE_DIR="runtime"
-OUTPUT_FILE="runtime.tar.gz"
+OUTPUT_FILE="target/runtime.tar.gz"
 
 declare SCRIPT_DIR
 SCRIPT_DIR="$(
