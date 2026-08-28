@@ -20,13 +20,25 @@ export default class Format {
         if (!dateStr) return '';
         const date = new Date(dateStr);
         const lang = (typeof I18n !== 'undefined' && I18n.getLanguage) ? I18n.getLanguage() : 'de';
-        return isNaN(date.getTime()) ? dateStr : date.toLocaleDateString(lang);
+        if (isNaN(date.getTime())) return dateStr;
+        const pad = (n) => String(n).padStart(2, '0');
+        return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+    }
+
+    static time(dateStr) {
+        if (!dateStr) return '';
+        const date = new Date(dateStr);
+        if (isNaN(date.getTime())) return dateStr;
+        const pad = (n) => String(n).padStart(2, '0');
+        return `${pad(date.getHours())}:${pad(date.getMinutes())}`;
     }
 
     static dateTime(dateStr) {
         if (!dateStr) return '';
         const date = new Date(dateStr);
         const lang = (typeof I18n !== 'undefined' && I18n.getLanguage) ? I18n.getLanguage() : 'de';
-        return isNaN(date.getTime()) ? dateStr : date.toLocaleString(lang);
+        if (isNaN(date.getTime())) return dateStr;
+        const pad = (n) => String(n).padStart(2, '0');
+        return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
     }
 }
