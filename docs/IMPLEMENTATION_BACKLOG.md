@@ -1,6 +1,6 @@
 # Chronivaro – Implementation Backlog
 
-Audit basis: 2026-08-21. `IMPLEMENTATION_SPECIFICATION.md` is authoritative for requirements; the repository is authoritative for implementation status.
+Audit basis: 2026-08-28. `IMPLEMENTATION_SPECIFICATION.md` is authoritative for requirements; the repository is authoritative for implementation status.
 
 See [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md) for the summary classification.
 
@@ -157,7 +157,86 @@ The following foundational areas are verified as fully implemented in the reposi
 
 ## Prioritized Implementation Backlog
 
-None. All prioritized MVP implementation backlog tasks have been implemented and verified.
+### Task 1: [New] Implement Employee Self-Profile REST Endpoint and Profile View/Modal (`GET /me/profile`)
+
+- **Specification Reference**:
+  - Section 10.4 (Profile and Reporting overview: `- GET /me/profile: eigenes Mitarbeiterprofil`)
+  - Section 14.2 (Profile & Zeiterfassung REST endpoints: `- GET /me/profile: Eigenes Mitarbeiterprofil`)
+  - Section 15.3 (REST endpoint permission mapping: `GET /me/profile`)
+  - Section 20, Acceptance Criterion 2 (`"ein Mitarbeiter seine eigenen Mitarbeiter- und Profilinformationen (u. a. Personalnummer, Eintrittsdatum, Pensum, Team, Standort) einsehen kann"`)
+- **Current Implementation Location**:
+  - `chronivaro-rest/src/main/java/ch/eitchnet/chronivaro/rest/resource/ChronivaroResource.java` (currently only `/me/work-entries`, `/me/absences`, `/me/vacation-account`, `/me/periods/{yearMonth}`, `/me/working-location-defaults` exist).
+  - `chronivaro-web` lacks a dedicated employee profile view or profile inspection modal.
+- **Missing Behaviour**:
+  - Endpoint `GET /rest/chronivaro/v1/me/profile` returning the logged-in user's linked `EmployeeDto` (including employee number, entry/exit date, current employment schedule / workload percentage, target time model, team, and location).
+  - Web UI component (modal or view) accessible from the header navigation allowing employees to inspect their own master data and schedule parameters.
+- **Proposed Implementation Plan**:
+  - Add `GET /me/profile` to `ChronivaroResource.java` resolving the linked employee via `ChronivaroModelHelper.findEmployeeByUser` and mapping to `EmployeeDto` with `ChronivaroMapper.toDto`.
+  - Add API client method in `chronivaro-web/src/main/webapp/js/api/EmployeeApi.js` (or `AuthApi.js`).
+  - Add profile dialog/view in `chronivaro-web` accessible from the top navigation / user menu with full localization in German and English.
+- **Dependencies**:
+  - `ChronivaroModelHelper.findEmployeeByUser`
+  - `ChronivaroMapper.toDto(Resource employee)`
+- **Acceptance Criteria**:
+  1. Calling `GET /rest/chronivaro/v1/me/profile` with an authenticated Employee session returns HTTP 200 with the employee's ID, firstname, lastname, email, employee number, entry date, exit date, primary team, location, and current workload.
+  2. Calling `GET /rest/chronivaro/v1/me/profile` with a pure system user (no linked employee) returns HTTP 404 with error code `NOT_FOUND`.
+  3. The web frontend provides a "My Profile" view/dialog displaying these details to the logged-in user in their active language.
+
+---
+
+### Task 2: [New] Implement User Language Persistence to Backend (`POST /auth/language`) and Frontend Sync
+
+- **Specification Reference**:
+  - Section 4.2.1 & 4.2.2 (Sprachwahl und Persistenz: `"Ein Sprachwechsel nach Login wird persistent auf dem Strolch-Benutzer gespeichert und zusätzlich im Browser Storage abgelegt."`)
+  - Section 14.1 (Authentifizierung & Session: `- POST /auth/language: Sprache des angemeldeten Benutzers persistent aktualisieren`)
+  - Section 18.5 (Internationalisierung: `"Sprachwechsel nach dem Login erfolgt ohne erneute Authentifizierung und wird persistent gespeichert."`)
+  - Section 20.1, Acceptance Criterion 4 (`"ein Sprachwechsel nach Login unmittelbar wirksam wird und sowohl im Browser Storage als auch im Strolch-Benutzer persistiert wird"`)
+- **Current Implementation Location**:
+  - `chronivaro-web/src/main/webapp/js/i18n/I18n.js` (persists language to `localStorage` key `'chronivaro_lang'`).
+  - `chronivaro-web/src/main/webapp/js/app.js` (triggers `I18n.setLanguage` on header dropdown change).
+  - `chronivaro-core/src/main/java/ch/eitchnet/chronivaro/core/service/UpdateUserService.java` (supports updating user `locale`, but only via Admin user management).
+- **Missing Behaviour**:
+  - `POST /rest/chronivaro/v1/auth/language` endpoint is missing in `chronivaro-rest`.
+  - Changing the language in the web UI header selector does not update the Strolch `UserRep` for the active certificate's user.
+- **Proposed Implementation Plan**:
+  - Implement `UpdateUserLanguageService` in `chronivaro-core` allowing any authenticated user to update their own `locale` on the Strolch `UserRep`.
+  - Add `@POST @Path("auth/language")` endpoint in `AuthResource.java` or `ChronivaroResource.java`.
+  - Grant privilege in `PrivilegeRoles.xml` for `UpdateUserLanguageService` to `ROLE_EMPLOYEE`, `ROLE_SUPERVISOR`, `ROLE_HR`, and `ROLE_ADMIN`.
+  - Wire `I18n.setLanguage` in `chronivaro-web` to invoke this endpoint asynchronously when authenticated.
+- **Dependencies**:
+  - `StrolchTransaction.getContainer().getPrivilegeHandler()`
+  - `PrivilegeRoles.xml`
+- **Acceptance Criteria**:
+  1. Authenticated users can invoke `POST /rest/chronivaro/v1/auth/language` with `{"language": "en"}` or `{"language": "de"}`.
+  2. The Strolch `UserRep.getLocale()` is updated persistently without requiring administrator privileges or re-login.
+  3. Changing language in the web UI header selector updates both `localStorage` and the Strolch user profile.
+
+---
+
+### Task 3: [Fix] Implement Employee Self-Service Work Entry Deletion (`DELETE /me/work-entries/{id}`) and Connect in Web UI
+
+- **Specification Reference**:
+  - Section 14.2 (Profile & Zeiterfassung: `- DELETE /me/work-entries/{id}: Arbeitsblock löschen`)
+  - Section 15.2 (Rollenmatrix: `Mitarbeiter: Eigene Zeiten löschen (nur in offener Periode)`)
+  - Section 20, Acceptance Criterion 4 (`"Mitarbeiter ihre offenen Zeitbuchungen bei Bedarf bearbeiten ... können"`)
+- **Current Implementation Location**:
+  - `chronivaro-rest/src/main/java/ch/eitchnet/chronivaro/rest/resource/ChronivaroResource.java` implements `@DELETE @Path("admin/work-entries/{id}")` which uses `RemoveWorkEntryService`.
+  - `chronivaro-web/src/main/webapp/js/api/WorkEntryApi.js` only exposes `adminDeleteWorkEntry` targeting `/admin/work-entries/{id}`.
+- **Missing Behaviour**:
+  - Endpoint `@DELETE @Path("me/work-entries/{id}")` is missing.
+  - When a non-administrative employee attempts to delete their own open work entry, the UI has no self-deletion route or attempts an admin endpoint which fails permission checks.
+- **Proposed Implementation Plan**:
+  - Add `@DELETE @Path("me/work-entries/{id}")` in `ChronivaroResource.java` verifying that the target work entry belongs to the caller's linked employee and is in an open period before invoking `RemoveWorkEntryService`.
+  - Update `WorkEntryApi.js` to add `deleteMyWorkEntry(id)` pointing to `/me/work-entries/${id}`.
+  - Wire self-service deletion action and confirmation dialog in `MyTimesView.js`.
+- **Dependencies**:
+  - `RemoveWorkEntryService`
+  - `ChronivaroModelHelper.findEmployeeByUser`
+  - `PeriodHelper.assertPeriodNotLocked`
+- **Acceptance Criteria**:
+  1. An employee with `ROLE_EMPLOYEE` can delete their own work entry via `DELETE /rest/chronivaro/v1/me/work-entries/{id}` as long as the corresponding period is not locked or submitted.
+  2. Attempting to delete another employee's work entry via `/me/work-entries/{id}` returns HTTP 403 / 404.
+  3. Attempting to delete an entry in a submitted/locked period returns HTTP 400 / 409 with error code `PERIOD_LOCKED`.
 
 ---
 

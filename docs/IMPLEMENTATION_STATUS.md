@@ -1,6 +1,6 @@
 # Chronivaro Implementation Status
 
-Audit date: 2026-08-24. `IMPLEMENTATION_SPECIFICATION.md` is authoritative; the repository is authoritative for current implementation state.
+Audit date: 2026-08-28. `IMPLEMENTATION_SPECIFICATION.md` is authoritative; the repository is authoritative for current implementation state.
 
 ---
 
@@ -31,7 +31,17 @@ Audit date: 2026-08-24. `IMPLEMENTATION_SPECIFICATION.md` is authoritative; the 
 
 ## Incomplete Requirements / Active Backlog Tasks
 
-None. All prioritized MVP implementation backlog tasks have been implemented and verified.
+### Missing
+1. **Employee Self-Profile API & View (`GET /me/profile`) (Sections 10.4, 14.2, 15.3, 20 #2):** Dedicated REST endpoint `GET /rest/chronivaro/v1/me/profile` returning the caller's linked `EmployeeDto` (personal number, entry/exit date, schedule/workload, target time model, team, location) and dedicated user profile inspection view/modal in the web UI.
+
+### Partially Implemented
+1. **User Language Persistence to Backend Profile (`POST /auth/language`) (Sections 4.2.1, 4.2.2, 14.1, 18.5, 20.1 #4):** Language is currently persisted in browser `localStorage` (`I18n.js`), but `POST /rest/chronivaro/v1/auth/language` (or `/me/language`) is missing to update the Strolch `UserRep.locale` persistently upon language change.
+2. **Employee Self-Service Work Entry Deletion (`DELETE /me/work-entries/{id}`) (Sections 14.2, 15.2, 20 #4):** Administrative/managerial deletion endpoint `/admin/work-entries/{id}` exists, but employee self-service deletion route `@DELETE @Path("me/work-entries/{id}")` and frontend wiring for non-manager self-deletion in open periods are missing.
+
+### Specification Ambiguities & Open Decisions (Section 22)
+1. **Illness During Pre-Approved Vacation (Section 22 #5):** Automatic conversion/credit reversal vs. manual cancellation/correction workflow.
+2. **Automated Vacation Forfeiture & Overtime Expiry (Section 22 #6):** Automated policy scheduling for expiration of carried-over vacation or excess overtime.
+3. **Data Retention & Purging Policies (Section 22 #10):** Specific retention schedule and automated deletion/anonymization workflows.
 
 ---
 
