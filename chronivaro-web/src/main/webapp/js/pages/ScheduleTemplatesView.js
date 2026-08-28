@@ -46,31 +46,31 @@ export default class ScheduleTemplatesView {
 						</div>
 						<div class="form-group">
 							<label for="template-mon">${I18n.t('scheduleTemplates.monday')}:</label>
-							<input type="text" id="template-mon" required placeholder="HH:mm" value="08:00">
+							<input type="time" id="template-mon" required value="08:00">
 						</div>
 						<div class="form-group">
 							<label for="template-tue">${I18n.t('scheduleTemplates.tuesday')}:</label>
-							<input type="text" id="template-tue" required placeholder="HH:mm" value="08:00">
+							<input type="time" id="template-tue" required value="08:00">
 						</div>
 						<div class="form-group">
 							<label for="template-wed">${I18n.t('scheduleTemplates.wednesday')}:</label>
-							<input type="text" id="template-wed" required placeholder="HH:mm" value="08:00">
+							<input type="time" id="template-wed" required value="08:00">
 						</div>
 						<div class="form-group">
 							<label for="template-thu">${I18n.t('scheduleTemplates.thursday')}:</label>
-							<input type="text" id="template-thu" required placeholder="HH:mm" value="08:00">
+							<input type="time" id="template-thu" required value="08:00">
 						</div>
 						<div class="form-group">
 							<label for="template-fri">${I18n.t('scheduleTemplates.friday')}:</label>
-							<input type="text" id="template-fri" required placeholder="HH:mm" value="08:00">
+							<input type="time" id="template-fri" required value="08:00">
 						</div>
 						<div class="form-group">
 							<label for="template-sat">${I18n.t('scheduleTemplates.saturday')}:</label>
-							<input type="text" id="template-sat" required placeholder="HH:mm" value="00:00">
+							<input type="time" id="template-sat" required value="00:00">
 						</div>
 						<div class="form-group">
 							<label for="template-sun">${I18n.t('scheduleTemplates.sunday')}:</label>
-							<input type="text" id="template-sun" required placeholder="HH:mm" value="00:00">
+							<input type="time" id="template-sun" required value="00:00">
 						</div>
 						<div class="actions">
 							<button type="submit">${I18n.t('common.save')}</button>

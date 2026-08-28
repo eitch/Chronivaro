@@ -70,31 +70,31 @@ export default class SchedulesView {
 						</div>
 						<div class="form-group">
 							<label for="sched-mon">${I18n.t('scheduleTemplates.monday')}:</label>
-							<input type="text" id="sched-mon" required placeholder="HH:mm" value="08:00">
+							<input type="time" id="sched-mon" required value="08:00">
 						</div>
 						<div class="form-group">
 							<label for="sched-tue">${I18n.t('scheduleTemplates.tuesday')}:</label>
-							<input type="text" id="sched-tue" required placeholder="HH:mm" value="08:00">
+							<input type="time" id="sched-tue" required value="08:00">
 						</div>
 						<div class="form-group">
 							<label for="sched-wed">${I18n.t('scheduleTemplates.wednesday')}:</label>
-							<input type="text" id="sched-wed" required placeholder="HH:mm" value="08:00">
+							<input type="time" id="sched-wed" required value="08:00">
 						</div>
 						<div class="form-group">
 							<label for="sched-thu">${I18n.t('scheduleTemplates.thursday')}:</label>
-							<input type="text" id="sched-thu" required placeholder="HH:mm" value="08:00">
+							<input type="time" id="sched-thu" required value="08:00">
 						</div>
 						<div class="form-group">
 							<label for="sched-fri">${I18n.t('scheduleTemplates.friday')}:</label>
-							<input type="text" id="sched-fri" required placeholder="HH:mm" value="08:00">
+							<input type="time" id="sched-fri" required value="08:00">
 						</div>
 						<div class="form-group">
 							<label for="sched-sat">${I18n.t('scheduleTemplates.saturday')}:</label>
-							<input type="text" id="sched-sat" required placeholder="HH:mm" value="00:00">
+							<input type="time" id="sched-sat" required value="00:00">
 						</div>
 						<div class="form-group">
 							<label for="sched-sun">${I18n.t('scheduleTemplates.sunday')}:</label>
-							<input type="text" id="sched-sun" required placeholder="HH:mm" value="00:00">
+							<input type="time" id="sched-sun" required value="00:00">
 						</div>
 						<div class="actions">
 							<button type="submit">${I18n.t('common.save')}</button>
