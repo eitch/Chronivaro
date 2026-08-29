@@ -159,35 +159,13 @@ The following foundational areas are verified as fully implemented in the reposi
 - **Enhanced Onboarding Registration Email with Direct URL and Configurable Server Base URL (Sections 6.11, 9.6, 12.1 #8):** Added `serverBaseUrl` parameter to global configuration model (`ChronivaroConstants`, `Templates.xml`, `Model.xml`), DTOs, and REST API (`ConfigurationResource`); implemented `ChronivaroUserChallengeHandler` providing friendly, localized onboarding emails (German/English) containing personalized greetings, direct registration links (`${serverBaseUrl}/#complete-registration?user=${username}&token=${token}`), and fallback registration codes; updated `CompleteRegistrationView.js` to auto-populate username and challenge token from URL query parameters; added `serverBaseUrl` field, validation, hint, and translations in `ConfigurationView.js` and `i18n` dictionaries; covered by comprehensive core, REST, and UI test suites.
 - **Report Summaries Horizontal Single-Row Layout (Sections 11.1–11.5, 12.1 #7):** Summary metrics/cards across all report views (`DayReport`, `MonthReport`, `VacationReport`, `TeamReport`, `AbsenceReport` in `ReportsView.js` as well as `ApprovalsView.js` period inspection) styled with single flexbox row layout (`.summary-grid`, `.report-summary-grid` with `display: flex; flex-direction: row; flex-wrap: wrap; gap: 1rem;` and `.summary-card` flex growth with min-width), preventing vertical column stacking and ensuring consistent single-row layout with responsive wrapping; verified with automated UI tests in `WebReportsUiTest`.
 - **Multi-Column / Row Layout with Spacing for Presence / Who Is Working Dashboard (Sections 8, 12.1 #5):** Updated `PresenceView.js` to render employee cards in dedicated `.presence-cards-grid` containers within each team group, and configured responsive flex-row wrapping layout (`display: flex; flex-direction: row; flex-wrap: wrap; gap: 1.5rem;`) and distinct card dimensions/margins (`flex: 1 1 280px; min-width: 260px; max-width: 380px;`) in `style.css`; verified with automated UI tests in `WebPresenceUiTest.java`.
+- **Entity Deletion and Action Confirmation Dialogs with Human-Readable Names (Section 12.2):** Updated confirmation dialog prompts across admin views (`TeamsView.js`, `LocationsView.js`, `AbsenceTypesView.js`, `EmployeesView.js`, `ScheduleTemplatesView.js`, `HolidayCalendarsView.js`, `UsersView.js`) to look up and format human-readable entity names (`name`, `firstname lastname`, `username`) instead of technical IDs; updated German (Swiss German) and English translations with `{name}` placeholders and 100% key parity; covered by automated UI tests in `WebConfirmationDialogsUiTest.java`.
 
 ---
 
 ## Prioritized Implementation Backlog
 
-### Task 1: [Fix] UI: Display Entity Names Instead of Technical IDs in Deletion Confirmation Dialogs
-
-- **Specification Reference**:
-  - Section 12.2 (UI-Grundsätze: Bestätigung vor fachlich weitreichenden Aktionen)
-- **Current Implementation Location**:
-  - `chronivaro-web/src/main/webapp/js/pages/TeamsView.js`
-  - `chronivaro-web/src/main/webapp/js/pages/LocationsView.js`
-  - `chronivaro-web/src/main/webapp/js/pages/UsersView.js`
-  - `chronivaro-web/src/main/webapp/js/pages/AbsenceTypesView.js`
-  - `chronivaro-web/src/main/webapp/js/pages/HolidayCalendarsView.js`
-- **Missing / Deficient Behaviour**:
-  - Deletion confirmation dialogs (e.g. deleting a team, location, etc.) display the technical ID rather than the human-readable entity name.
-- **Proposed Implementation Plan**:
-  - Update deletion confirmation dialog prompts across admin views to display the entity's `name` or `displayName` instead of its technical `id`.
-- **Dependencies**:
-  - Admin view components (`TeamsView.js`, `LocationsView.js`, etc.).
-- **Acceptance Criteria**:
-  1. Confirming deletion of a team displays the team's name in the dialog text.
-  2. Confirming deletion of a location displays the location's name in the dialog text.
-  3. All other deletion confirmation dialogs show human-readable entity names.
-
----
-
-### Task 2: [Fix] UI: Modal Dialog Scrolling and Viewport Overflow Handling for Add Employee, Edit Schedule, and All Dialogs
+### Task 1: [Fix] UI: Modal Dialog Scrolling and Viewport Overflow Handling for Add Employee, Edit Schedule, and All Dialogs
 
 - **Specification Reference**:
   - Section 12.2 (UI-Grundsätze: Modale Dialoge und Viewport-Overflow)
