@@ -4,6 +4,7 @@ import ch.eitchnet.chronivaro.core.service.CreateEmployeeService;
 import ch.eitchnet.chronivaro.core.service.CreateUserService;
 import ch.eitchnet.chronivaro.core.service.InitiateUserRegistrationService;
 import ch.eitchnet.chronivaro.core.service.RemoveUserService;
+import ch.eitchnet.chronivaro.core.service.UpdateUserLanguageService;
 import ch.eitchnet.chronivaro.core.service.UpdateUserService;
 import li.strolch.model.Resource;
 import li.strolch.persistence.api.StrolchTransaction;
@@ -272,5 +273,30 @@ public class UserServiceTest {
 							&& AUDIT_ACTION_REMOVE.equals(r.getString(PARAM_ACTION)));
 			assertTrue("User deletion must be audited", userDeletionAudited);
 		}
+	}
+
+	@Test
+	public void shouldUpdateUserLanguage() {
+		ServiceHandler serviceHandler = runtimeMock.getServiceHandler();
+
+		// Update admin user language to English
+		UpdateUserLanguageService.UpdateUserLanguageArgument arg = new UpdateUserLanguageService.UpdateUserLanguageArgument();
+		arg.language = "en";
+
+		ServiceResult result = serviceHandler.doService(certificate, new UpdateUserLanguageService(), arg);
+		assertTrue(result.getMessage(), result.isOk());
+
+		UserRep user = runtimeMock.getPrivilegeHandler().getPrivilegeHandler().getUser(certificate, "admin");
+		assertNotNull(user);
+		assertEquals("en", user.getLocale().getLanguage());
+
+		// Update back to German
+		arg.language = "de";
+		result = serviceHandler.doService(certificate, new UpdateUserLanguageService(), arg);
+		assertTrue(result.getMessage(), result.isOk());
+
+		user = runtimeMock.getPrivilegeHandler().getPrivilegeHandler().getUser(certificate, "admin");
+		assertNotNull(user);
+		assertEquals("de", user.getLocale().getLanguage());
 	}
 }

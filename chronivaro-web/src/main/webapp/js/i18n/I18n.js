@@ -9,6 +9,8 @@
  * 4. Configured defaultLanguage (from Branding / Global Configuration)
  */
 
+import AuthApi from '../api/AuthApi.js';
+
 export class I18nEngine {
 	static STORAGE_KEY = 'chronivaro_lang';
 	static DEFAULT_LANGUAGE = 'de';
@@ -116,6 +118,9 @@ export class I18nEngine {
 				localStorage.setItem(I18nEngine.STORAGE_KEY, normalized);
 			} catch (e) {
 				// ignore storage errors
+			}
+			if (typeof AuthApi !== 'undefined' && AuthApi.isLoggedIn && AuthApi.isLoggedIn()) {
+				AuthApi.updateLanguage(normalized).catch(() => {});
 			}
 		}
 

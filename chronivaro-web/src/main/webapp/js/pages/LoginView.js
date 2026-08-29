@@ -57,6 +57,10 @@ export default class LoginView {
                 if (result && result.locale) {
                     await I18n.init({ userLocale: result.locale });
                 }
+                const activeLang = I18n.getLanguage();
+                if (activeLang) {
+                    await AuthApi.updateLanguage(activeLang);
+                }
                 this.app.navigate('');
             } catch (err) {
                 errorDiv.textContent = err.message || I18n.t('auth.invalidCredentials');

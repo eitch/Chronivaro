@@ -51,6 +51,24 @@ export default class AuthApi {
 		});
 	}
 
+	static async updateLanguage(language) {
+		if (!this.isLoggedIn()) {
+			return;
+		}
+		try {
+			await Rest.post('rest/chronivaro/v1/auth/language', {
+				language
+			});
+			localStorage.setItem('userLocale', language);
+		} catch (err) {
+			console.warn('Could not persist language to backend', err);
+		}
+	}
+
+	static async setLanguage(language) {
+		return await this.updateLanguage(language);
+	}
+
 	static logout() {
 		localStorage.removeItem('authToken');
 		localStorage.removeItem('roles');

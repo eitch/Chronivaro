@@ -457,4 +457,29 @@ public class ChronivaroResourceTest extends AbstractChronivaroRestfulTest {
 			org.junit.Assert.assertNotNull(arr);
 		}
 	}
+
+	@Test
+	public void shouldUpdateUserLanguage() {
+		String authToken = authenticate("employee", "admin");
+		com.google.gson.JsonObject payload = new com.google.gson.JsonObject();
+		payload.addProperty("language", "en");
+
+		try (Response response = target()
+				.path("chronivaro/v1/auth/language")
+				.request(MediaType.APPLICATION_JSON)
+				.header("Authorization", authToken)
+				.post(Entity.json(payload.toString()))) {
+			assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+		}
+
+		// Update back with "locale" key
+		payload.addProperty("locale", "de");
+		try (Response response = target()
+				.path("chronivaro/v1/auth/language")
+				.request(MediaType.APPLICATION_JSON)
+				.header("Authorization", authToken)
+				.post(Entity.json(payload.toString()))) {
+			assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+		}
+	}
 }

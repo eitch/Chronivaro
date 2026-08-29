@@ -12,6 +12,8 @@ import ch.eitchnet.chronivaro.rest.dto.PeriodActionRequestDto;
 import ch.eitchnet.chronivaro.rest.dto.VacationAccountSummaryDto;
 import ch.eitchnet.chronivaro.rest.dto.WorkEntryDto;
 import ch.eitchnet.chronivaro.rest.dto.WorkingLocationDefaultDto;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.Context;
@@ -892,6 +894,40 @@ public class ChronivaroResource {
 							MediaType.APPLICATION_JSON)
 					.build();
 		}
+		return ChronivaroRestHelper.toResponse(result);
+	}
+
+	@POST
+	@Path("auth/language")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response updateLanguage(@Context HttpServletRequest request, String json) {
+		Certificate cert = (Certificate) request.getAttribute(STROLCH_CERTIFICATE);
+		ServiceHandler serviceHandler = ChronivaroRestHelper.getServiceHandler();
+
+		String language = null;
+		if (isNotEmpty(json)) {
+			try {
+				JsonObject obj = JsonParser.parseString(json).getAsJsonObject();
+				if (obj.has("language") && !obj.get("language").isJsonNull()) {
+					language = obj.get("language").getAsString();
+				} else if (obj.has("locale") && !obj.get("locale").isJsonNull()) {
+					language = obj.get("locale").getAsString();
+				}
+			} catch (Exception e) {
+				language = json.trim().replaceAll("^\"|\"$", "");
+			}
+		}
+
+		if (language == null || language.isBlank()) {
+			return ChronivaroRestHelper.toErrorResponse(Response.Status.BAD_REQUEST, "INVALID_ARGUMENT",
+					"Language must not be empty");
+		}
+
+		UpdateUserLanguageService.UpdateUserLanguageArgument arg = new UpdateUserLanguageService.UpdateUserLanguageArgument();
+		arg.language = language;
+
+		ServiceResult result = serviceHandler.doService(cert, new UpdateUserLanguageService(), arg);
 		return ChronivaroRestHelper.toResponse(result);
 	}
 }

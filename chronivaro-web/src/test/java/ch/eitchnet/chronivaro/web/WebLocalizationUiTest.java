@@ -334,4 +334,26 @@ public class WebLocalizationUiTest {
 		assertTrue("ConfigurationView must localize save button", content.contains("I18n.t('configuration.saveConfig')"));
 		assertTrue("ConfigurationView must localize reload button", content.contains("I18n.t('configuration.reloadConfig')"));
 	}
+
+	@Test
+	public void shouldVerifyLanguagePersistenceAndSync() throws IOException {
+		File authApiFile = new File(getWebappDir(), "js/api/AuthApi.js");
+		assertTrue("AuthApi.js must exist", authApiFile.exists());
+		String authApiContent = Files.readString(authApiFile.toPath());
+		assertTrue("AuthApi must have updateLanguage", authApiContent.contains("updateLanguage(language)"));
+		assertTrue("AuthApi updateLanguage must call rest/chronivaro/v1/auth/language",
+				authApiContent.contains("rest/chronivaro/v1/auth/language"));
+
+		File i18nFile = new File(getWebappDir(), "js/i18n/I18n.js");
+		assertTrue("I18n.js must exist", i18nFile.exists());
+		String i18nContent = Files.readString(i18nFile.toPath());
+		assertTrue("I18n.js must import AuthApi", i18nContent.contains("import AuthApi from '../api/AuthApi.js'"));
+		assertTrue("I18n.setLanguage must sync language to AuthApi", i18nContent.contains("AuthApi.updateLanguage"));
+
+		File loginViewFile = new File(getWebappDir(), "js/pages/LoginView.js");
+		assertTrue("LoginView.js must exist", loginViewFile.exists());
+		String loginViewContent = Files.readString(loginViewFile.toPath());
+		assertTrue("LoginView must update backend language on login",
+				loginViewContent.contains("AuthApi.updateLanguage(activeLang)"));
+	}
 }
