@@ -167,6 +167,7 @@
     "timerStopped": "Timer is stopped",
     "fixStopDialogTitle": "Stop Forgotten Timer",
     "fixStopHelpText": "You forgot to stop the timer on {date}. Please enter the stop time for this date.",
+    "workedPastMidnight": "Worked past midnight (into next day)",
     "startDate": "Start Date",
     "stopTimeMustBeAfterStart": "Stop time must be after start time.",
     "timerStoppedSuccess": "Timer stopped successfully.",

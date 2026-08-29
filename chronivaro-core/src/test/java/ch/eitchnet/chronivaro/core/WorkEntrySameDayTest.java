@@ -351,4 +351,89 @@ public class WorkEntrySameDayTest {
 			assertEquals("Timer vergessen - auf Sollzeit begrenzt", entry.getString(PARAM_COMMENT));
 		}
 	}
+
+	@Test
+	public void shouldFailToStopPreviousDayTimerWithoutExplicitTime() {
+		String employeeId = "fail-stop-no-time-test";
+		ZonedDateTime start = ZonedDateTime.of(LocalDate.now().minusDays(1), LocalTime.of(8, 0), ZoneId.systemDefault());
+
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
+			createEmployee(tx, employeeId, "Fail Stop No Time Test");
+			tx.commitOnClose();
+		}
+
+		ServiceHandler serviceHandler = runtimeMock.getServiceHandler();
+
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
+			Resource employee = tx.getResourceBy(TYPE_EMPLOYEE, employeeId, true);
+			Resource workDay = WorkDayHelper.getOrCreateWorkDay(tx, employee, start);
+			Resource workEntry = tx.getResourceTemplate(TYPE_WORK_ENTRY, true);
+			workEntry.setId(employeeId + "-active-prev-day");
+			workEntry.setRelation(PARAM_EMPLOYEE, employee);
+			workEntry.setRelation(PARAM_WORK_DAY, workDay);
+			workEntry.setDate(PARAM_START, start);
+			workEntry.setString(PARAM_SOURCE, SOURCE_TIMER);
+			tx.add(workEntry);
+			workDay.addRelation(PARAM_WORK_ENTRIES, workEntry);
+			tx.update(workDay);
+
+			employee.setRelation(PARAM_CURRENT_WORK_DAY, workDay);
+			tx.update(employee);
+			tx.commitOnClose();
+		}
+
+		StopTimerService.StopTimerArgument stopArg = new StopTimerService.StopTimerArgument(employeeId);
+		ServiceResult stopResult = serviceHandler.doService(certificate, new StopTimerService(), stopArg);
+		assertFalse("Should fail to stop previous day timer when time is not supplied", stopResult.isOk());
+		assertTrue("Error message should mention explicit stop time",
+				stopResult.getMessage().contains("Stop time must be explicitly supplied"));
+	}
+
+	@Test
+	public void shouldStopPreviousDayTimerWithSuppliedTimeOnSameDay() {
+		String employeeId = "stop-prev-day-supplied-time-test";
+		ZonedDateTime start = ZonedDateTime.of(LocalDate.now().minusDays(1), LocalTime.of(8, 0), ZoneId.systemDefault());
+		ZonedDateTime stop = ZonedDateTime.of(LocalDate.now().minusDays(1), LocalTime.of(17, 0), ZoneId.systemDefault());
+
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
+			createEmployee(tx, employeeId, "Stop Prev Day Supplied Time Test");
+			tx.commitOnClose();
+		}
+
+		ServiceHandler serviceHandler = runtimeMock.getServiceHandler();
+
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
+			Resource employee = tx.getResourceBy(TYPE_EMPLOYEE, employeeId, true);
+			Resource workDay = WorkDayHelper.getOrCreateWorkDay(tx, employee, start);
+			Resource workEntry = tx.getResourceTemplate(TYPE_WORK_ENTRY, true);
+			workEntry.setId(employeeId + "-active-prev-day-2");
+			workEntry.setRelation(PARAM_EMPLOYEE, employee);
+			workEntry.setRelation(PARAM_WORK_DAY, workDay);
+			workEntry.setDate(PARAM_START, start);
+			workEntry.setString(PARAM_SOURCE, SOURCE_TIMER);
+			tx.add(workEntry);
+			workDay.addRelation(PARAM_WORK_ENTRIES, workEntry);
+			tx.update(workDay);
+
+			employee.setRelation(PARAM_CURRENT_WORK_DAY, workDay);
+			tx.update(employee);
+			tx.commitOnClose();
+		}
+
+		StopTimerService.StopTimerArgument stopArg = new StopTimerService.StopTimerArgument(employeeId, stop, "Stopped on previous day");
+		ServiceResult stopResult = serviceHandler.doService(certificate, new StopTimerService(), stopArg);
+		assertTrue(stopResult.getMessage(), stopResult.isOk());
+
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
+			List<Resource> workEntries = tx.streamResources(TYPE_WORK_ENTRY)
+					.filter(we -> we.getRelationId(PARAM_EMPLOYEE).equals(employeeId))
+					.toList();
+
+			assertEquals("Only one work entry should exist", 1, workEntries.size());
+			Resource entry = workEntries.get(0);
+			assertEquals(start, entry.getDate(PARAM_START));
+			assertEquals(stop, entry.getDate(PARAM_END));
+			assertEquals("Stopped on previous day", entry.getString(PARAM_COMMENT));
+		}
+	}
 }

@@ -365,6 +365,34 @@ public class ChronivaroResourceTest extends AbstractChronivaroRestfulTest {
 	}
 
 	@Test
+	public void shouldStartAndStopTimerWithSuppliedTimeAndComment() {
+		String authToken = authenticate();
+
+		// Start timer
+		try (Response response = target()
+				.path("chronivaro/v1/me/timer/start")
+				.request(MediaType.APPLICATION_JSON)
+				.header("Authorization", authToken)
+				.post(Entity.json("{\"workingLocation\":\"HOME_OFFICE\"}"))) {
+			assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+		}
+
+		// Stop timer with explicit time and comment
+		String stopTimeIso = java.time.ZonedDateTime.now().format(java.time.format.DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+		com.google.gson.JsonObject payload = new com.google.gson.JsonObject();
+		payload.addProperty("time", stopTimeIso);
+		payload.addProperty("comment", "Stopped with REST payload");
+
+		try (Response response = target()
+				.path("chronivaro/v1/me/timer/stop")
+				.request(MediaType.APPLICATION_JSON)
+				.header("Authorization", authToken)
+				.post(Entity.json(payload.toString()))) {
+			assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+		}
+	}
+
+	@Test
 	public void shouldGetDaySummary() {
 		String authToken = authenticate();
 		String date = "2025-01-01";

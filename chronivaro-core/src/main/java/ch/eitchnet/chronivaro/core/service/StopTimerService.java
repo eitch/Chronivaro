@@ -26,8 +26,6 @@ public class StopTimerService extends AbstractService<StopTimerService.StopTimer
 
 		try (StrolchTransaction tx = openArgOrUserTx(arg)) {
 			Resource employee = ChronivaroModelHelper.getEmployee(tx, arg.employeeId);
-			ZonedDateTime now = arg.time != null ? arg.time : ZonedDateTime.now(ChronivaroModelHelper.getEmployeeTimezone(employee));
-
 			Optional<Resource> activeEntryOpt = WorkEntryHelper.findActiveWorkEntry(tx, arg.employeeId);
 			if (activeEntryOpt.isEmpty()) {
 				throw new IllegalStateException("No active work entry found for this employee!");
@@ -35,6 +33,13 @@ public class StopTimerService extends AbstractService<StopTimerService.StopTimer
 
 			Resource workEntry = activeEntryOpt.get();
 			ZonedDateTime start = workEntry.getDate(PARAM_START);
+			ZonedDateTime systemNow = ZonedDateTime.now(ChronivaroModelHelper.getEmployeeTimezone(employee));
+
+			if (arg.time == null && !start.toLocalDate().equals(systemNow.toLocalDate())) {
+				throw new IllegalStateException("Stop time must be explicitly supplied when stopping a timer from a previous day!");
+			}
+
+			ZonedDateTime now = arg.time != null ? arg.time : systemNow;
 
 			if (now.isBefore(start)) {
 				throw new IllegalStateException("Stop time cannot be before start time!");

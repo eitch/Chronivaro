@@ -720,22 +720,24 @@ public class ChronivaroResource {
 		}
 
 		String comment = null;
+		ZonedDateTime time = null;
 		if (isNotEmpty(data)) {
 			try {
 				TimerStopDto stopDto = ChronivaroRestHelper.createGson().fromJson(data, TimerStopDto.class);
 				if (stopDto != null) {
 					comment = stopDto.comment();
+					time = stopDto.time();
 				}
 			} catch (Exception ignored) {
 			}
 		}
 
-		StopTimerService.StopTimerArgument arg = new StopTimerService.StopTimerArgument(employeeId, comment);
+		StopTimerService.StopTimerArgument arg = new StopTimerService.StopTimerArgument(employeeId, time, comment);
 		ServiceResult result = serviceHandler.doService(cert, new StopTimerService(), arg);
 		return ChronivaroRestHelper.toResponse(result);
 	}
 
-	private record TimerStopDto(String comment) {
+	private record TimerStopDto(String comment, ZonedDateTime time) {
 	}
 
 	@GET

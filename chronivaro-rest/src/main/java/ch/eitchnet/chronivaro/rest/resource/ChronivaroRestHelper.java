@@ -46,9 +46,10 @@ public class ChronivaroRestHelper {
 				.registerTypeAdapter(ZonedDateTime.class,
 						(JsonSerializer<ZonedDateTime>) (src, typeOfSrc, context) -> new JsonPrimitive(
 								src.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)))
-				.registerTypeAdapter(ZonedDateTime.class,
-						(JsonDeserializer<ZonedDateTime>) (json, typeOfT, context) -> ZonedDateTime.parse(
-								json.getAsString(), DateTimeFormatter.ISO_OFFSET_DATE_TIME))
+				.registerTypeAdapter(ZonedDateTime.class, (JsonDeserializer<ZonedDateTime>) (json, typeOfT, context) -> {
+					String s = json.getAsString();
+					return isEmpty(s) ? null : ZonedDateTime.parse(s, DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+				})
 				.create();
 	}
 

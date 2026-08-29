@@ -65,6 +65,10 @@ export default class DashboardView {
 								<label for="fix-stop-end-time" style="display: block; margin-bottom: 0.25rem; font-weight: 500;">${I18n.t('times.endTime')} * (24h):</label>
 								<input type="text" id="fix-stop-end-time" required placeholder="17:00" maxlength="5" pattern="^([01]?[0-9]|2[0-3]):[0-5][0-9]$" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color, #e2e8f0); border-radius: 4px; box-sizing: border-box;">
 							</div>
+							<div class="form-group" style="display: flex; align-items: center; gap: 0.5rem; margin-top: 0.25rem;">
+								<input type="checkbox" id="fix-stop-past-midnight" style="width: auto; cursor: pointer;">
+								<label for="fix-stop-past-midnight" style="margin: 0; cursor: pointer; font-weight: 500;">${I18n.t('dashboard.workedPastMidnight')}</label>
+							</div>
 							<div class="form-group">
 								<label for="fix-stop-comment" style="display: block; margin-bottom: 0.25rem; font-weight: 500;">${I18n.t('common.comment')}:</label>
 								<input type="text" id="fix-stop-comment" placeholder="${I18n.t('dashboard.optionalComment')}" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color, #e2e8f0); border-radius: 4px; box-sizing: border-box;">
@@ -99,6 +103,7 @@ export default class DashboardView {
 		const fixStopStartDate = container.querySelector('#fix-stop-start-date');
 		const fixStopStartTime = container.querySelector('#fix-stop-start-time');
 		const fixStopEndTime = container.querySelector('#fix-stop-end-time');
+		const fixStopPastMidnight = container.querySelector('#fix-stop-past-midnight');
 		const fixStopComment = container.querySelector('#fix-stop-comment');
 		const fixStopForm = container.querySelector('#fix-stop-form');
 		const closeFixStopModalIcon = container.querySelector('#close-fix-stop-modal-icon');
@@ -115,6 +120,9 @@ export default class DashboardView {
 			fixStopHelpText.textContent = I18n.t('dashboard.fixStopHelpText', { date: startDateStr });
 			fixStopStartDate.value = startDateStr;
 			fixStopStartTime.value = startTimeStr;
+			if (fixStopPastMidnight) {
+				fixStopPastMidnight.checked = false;
+			}
 			fixStopEndTime.value = '';
 			fixStopEndTime.min = startTimeStr;
 			fixStopComment.value = timerCommentInput ? timerCommentInput.value.trim() : '';
@@ -129,6 +137,21 @@ export default class DashboardView {
 
 		if (closeFixStopModalIcon) closeFixStopModalIcon.addEventListener('click', closeFixStopModal);
 		if (closeFixStopModalBtn) closeFixStopModalBtn.addEventListener('click', closeFixStopModal);
+
+		if (fixStopPastMidnight) {
+			fixStopPastMidnight.addEventListener('change', () => {
+				if (fixStopPastMidnight.checked) {
+					fixStopEndTime.removeAttribute('min');
+				} else {
+					const startStr = currentSummary && currentSummary.activeTimer ? currentSummary.activeTimer.start : '';
+					const timeMatch = startStr.match(/T(\d{2}:\d{2})/);
+					const startTimeStr = timeMatch ? timeMatch[1] : '';
+					if (startTimeStr) {
+						fixStopEndTime.min = startTimeStr;
+					}
+				}
+			});
+		}
 
 		if (fixStopEndTime) {
 			fixStopEndTime.addEventListener('blur', () => {
@@ -153,14 +176,26 @@ export default class DashboardView {
 					return;
 				}
 
-				if (stopTimeStr <= startTimeStr) {
+				const pastMidnight = fixStopPastMidnight && fixStopPastMidnight.checked;
+
+				if (!pastMidnight && stopTimeStr <= startTimeStr) {
 					NotificationDialog.error(I18n.t('dashboard.stopTimeMustBeAfterStart'));
 					return;
 				}
 
+				let targetDateStr = startDateStr;
+				if (pastMidnight) {
+					const startDate = new Date(startDateStr + 'T00:00:00');
+					startDate.setDate(startDate.getDate() + 1);
+					const y = startDate.getFullYear();
+					const m = String(startDate.getMonth() + 1).padStart(2, '0');
+					const d = String(startDate.getDate()).padStart(2, '0');
+					targetDateStr = `${y}-${m}-${d}`;
+				}
+
 				const offsetMatch = startStr.match(/([+-]\d{2}:\d{2}|Z)$/);
 				const offset = offsetMatch ? offsetMatch[0] : 'Z';
-				const stopDateTimeIso = `${startDateStr}T${stopTimeStr}:00${offset}`;
+				const stopDateTimeIso = `${targetDateStr}T${stopTimeStr}:00${offset}`;
 				const comment = fixStopComment.value.trim() || (timerCommentInput ? timerCommentInput.value.trim() : null);
 
 				try {
