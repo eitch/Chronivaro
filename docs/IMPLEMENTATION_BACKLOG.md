@@ -158,32 +158,13 @@ The following foundational areas are verified as fully implemented in the reposi
 - **Vacation Report Metric Initialization & Zero Defaulting for New Employees (Sections 6.7, 11.3):** Guarded against null, uninitialized, or missing balance fields in vacation summaries, DTO mapping, CSV and PDF report export helpers, and web report rendering (`ReportsView.js`); ensured all metrics default to clean numeric zeros (0 days / 0:00 h) without displaying undefined text; covered by comprehensive core, REST, and UI test suites.
 - **Enhanced Onboarding Registration Email with Direct URL and Configurable Server Base URL (Sections 6.11, 9.6, 12.1 #8):** Added `serverBaseUrl` parameter to global configuration model (`ChronivaroConstants`, `Templates.xml`, `Model.xml`), DTOs, and REST API (`ConfigurationResource`); implemented `ChronivaroUserChallengeHandler` providing friendly, localized onboarding emails (German/English) containing personalized greetings, direct registration links (`${serverBaseUrl}/#complete-registration?user=${username}&token=${token}`), and fallback registration codes; updated `CompleteRegistrationView.js` to auto-populate username and challenge token from URL query parameters; added `serverBaseUrl` field, validation, hint, and translations in `ConfigurationView.js` and `i18n` dictionaries; covered by comprehensive core, REST, and UI test suites.
 - **Report Summaries Horizontal Single-Row Layout (Sections 11.1–11.5, 12.1 #7):** Summary metrics/cards across all report views (`DayReport`, `MonthReport`, `VacationReport`, `TeamReport`, `AbsenceReport` in `ReportsView.js` as well as `ApprovalsView.js` period inspection) styled with single flexbox row layout (`.summary-grid`, `.report-summary-grid` with `display: flex; flex-direction: row; flex-wrap: wrap; gap: 1rem;` and `.summary-card` flex growth with min-width), preventing vertical column stacking and ensuring consistent single-row layout with responsive wrapping; verified with automated UI tests in `WebReportsUiTest`.
+- **Multi-Column / Row Layout with Spacing for Presence / Who Is Working Dashboard (Sections 8, 12.1 #5):** Updated `PresenceView.js` to render employee cards in dedicated `.presence-cards-grid` containers within each team group, and configured responsive flex-row wrapping layout (`display: flex; flex-direction: row; flex-wrap: wrap; gap: 1.5rem;`) and distinct card dimensions/margins (`flex: 1 1 280px; min-width: 260px; max-width: 380px;`) in `style.css`; verified with automated UI tests in `WebPresenceUiTest.java`.
 
 ---
 
 ## Prioritized Implementation Backlog
 
-### Task 1: [Refactor] UI: Multi-Column / Row Layout with Spacing for Presence / Who Is Working Dashboard
-
-- **Specification Reference**:
-  - Section 8 (Anwesenheitsstatus)
-  - Section 12.1 #5 (Status: Anwesenheitsliste in Zeilenanordnung mit Abständen)
-- **Current Implementation Location**:
-  - `chronivaro-web/src/main/webapp/js/pages/PresenceView.js` (or `StatusView.js`)
-  - `chronivaro-web/src/main/webapp/assets/css/`
-- **Missing / Deficient Behaviour**:
-  - Employees in the presence / who is working dashboard are listed in a single vertical column instead of side-by-side in rows with margins.
-- **Proposed Implementation Plan**:
-  - Update the presence dashboard container and employee card styling to use a responsive flex-row wrapping layout (`display: flex; flex-wrap: wrap; gap: 12px;` or CSS grid) with distinct card margins.
-- **Dependencies**:
-  - `PresenceView.js` / `StatusView.js`
-- **Acceptance Criteria**:
-  1. The presence dashboard renders employee cards arranged horizontally in rows that wrap responsively.
-  2. Employee cards have clear margin/spacing between each other.
-
----
-
-### Task 2: [Fix] UI: Display Entity Names Instead of Technical IDs in Deletion Confirmation Dialogs
+### Task 1: [Fix] UI: Display Entity Names Instead of Technical IDs in Deletion Confirmation Dialogs
 
 - **Specification Reference**:
   - Section 12.2 (UI-Grundsätze: Bestätigung vor fachlich weitreichenden Aktionen)
@@ -206,7 +187,7 @@ The following foundational areas are verified as fully implemented in the reposi
 
 ---
 
-### Task 3: [Fix] UI: Modal Dialog Scrolling and Viewport Overflow Handling for Add Employee, Edit Schedule, and All Dialogs
+### Task 2: [Fix] UI: Modal Dialog Scrolling and Viewport Overflow Handling for Add Employee, Edit Schedule, and All Dialogs
 
 - **Specification Reference**:
   - Section 12.2 (UI-Grundsätze: Modale Dialoge und Viewport-Overflow)
