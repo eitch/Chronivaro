@@ -153,41 +153,13 @@ The following foundational areas are verified as fully implemented in the reposi
 - **HR and Supervisor Employee Work Entry Management (Sections 3.2, 3.3, 6.4, 9.3, 12.1 #2, 13.2, 20):** Core services (`AddWorkEntryService`, `CorrectWorkEntryService`, `RemoveWorkEntryService`) extended to allow supervisors acting on assigned team members (`assertCanManageEmployee`) and HR/Admins organization-wide; REST endpoints (`GET /employees/{id}/work-entries`, `POST /employees/{id}/work-entries`, `PUT /admin/work-entries/{id}`, `DELETE /admin/work-entries/{id}`) with role-based scoping; Web UI (`MyTimesView.js` and `WorkEntryApi.js`) with team/employee dropdowns for managers, add/edit/delete modals, and complete Swiss German and English translations with 100% key parity.
 - **Work Entry Employee Modifications, Highlighting of Modified/Manual Entries, and Creator Attribution (Sections 3.1–3.3, 4.1 #5, 6.4, 9.3, 11, 12.1 #2, 13.2, 20 #3):** Enabled full work entry editing for employees in open periods via `CorrectWorkEntryService` and `PUT /me/work-entries/{id}` with same-day and non-overlap validations; exposed `source`, `createdBy`, and `modified` in `WorkEntryDto`, `WorkEntryRangeDto`, and `WorkEntryRange`; visual badges/highlighting for manual and modified entries across `MyTimesView.js`, `ApprovalsView.js`, and `ReportsView.js`; creator attribution (`createdBy`) displayed whenever entries are created on behalf of the employee; complete Swiss German and English translations with 100% key parity and comprehensive unit/REST/UI tests.
 - **Employee Self-Profile API & View (Sections 3.1, 6.1, 12.1 #0, 13.2, 20 #2):** REST endpoints `GET /rest/chronivaro/v1/me/profile` returning linked `EmployeeDto` with resolved team, location, timezone, join/exit dates, active status, and `GET /rest/chronivaro/v1/me/schedules` returning employment schedule history; web UI `ProfileView.js` (`#profile`) accessible from the top user dropdown menu displaying user account details, role badges, employee master data, current schedule breakdown with daily target hours, workload percentage calculation, and schedule version history; complete Swiss German and English translations with 100% key parity and automated REST/UI tests.
+- **User Language Persistence & Frontend Sync (Sections 4.2.1, 4.2.2, 14.1, 18.5, 20.1 #4):** Implemented `UpdateUserLanguageService` in `chronivaro-core` and REST endpoint `POST /rest/chronivaro/v1/auth/language` in `chronivaro-rest` allowing authenticated users to persistently update their language on their Strolch `UserRep`; wired `I18n.js` and `LoginView.js` in `chronivaro-web` to synchronize explicit language choices directly to the backend profile while retaining local browser storage caching; verified with comprehensive unit, REST, and UI tests.
 
 ---
 
 ## Prioritized Implementation Backlog
 
-### Task 1: [New] Implement User Language Persistence to Backend (`POST /auth/language`) and Frontend Sync
-
-- **Specification Reference**:
-  - Section 4.2.1 & 4.2.2 (Sprachwahl und Persistenz: `"Ein Sprachwechsel nach Login wird persistent auf dem Strolch-Benutzer gespeichert und zusätzlich im Browser Storage abgelegt."`)
-  - Section 14.1 (Authentifizierung & Session: `- POST /auth/language: Sprache des angemeldeten Benutzers persistent aktualisieren`)
-  - Section 18.5 (Internationalisierung: `"Sprachwechsel nach dem Login erfolgt ohne erneute Authentifizierung und wird persistent gespeichert."`)
-  - Section 20.1, Acceptance Criterion 4 (`"ein Sprachwechsel nach Login unmittelbar wirksam wird und sowohl im Browser Storage als auch im Strolch-Benutzer persistiert wird"`)
-- **Current Implementation Location**:
-  - `chronivaro-web/src/main/webapp/js/i18n/I18n.js` (persists language to `localStorage` key `'chronivaro_lang'`).
-  - `chronivaro-web/src/main/webapp/js/app.js` (triggers `I18n.setLanguage` on header dropdown change).
-  - `chronivaro-core/src/main/java/ch/eitchnet/chronivaro/core/service/UpdateUserService.java` (supports updating user `locale`, but only via Admin user management).
-- **Missing Behaviour**:
-  - `POST /rest/chronivaro/v1/auth/language` endpoint is missing in `chronivaro-rest`.
-  - Changing the language in the web UI header selector does not update the Strolch `UserRep` for the active certificate's user.
-- **Proposed Implementation Plan**:
-  - Implement `UpdateUserLanguageService` in `chronivaro-core` allowing any authenticated user to update their own `locale` on the Strolch `UserRep`.
-  - Add `@POST @Path("auth/language")` endpoint in `AuthResource.java` or `ChronivaroResource.java`.
-  - Grant privilege in `PrivilegeRoles.xml` for `UpdateUserLanguageService` to `ROLE_EMPLOYEE`, `ROLE_SUPERVISOR`, `ROLE_HR`, and `ROLE_ADMIN`.
-  - Wire `I18n.setLanguage` in `chronivaro-web` to invoke this endpoint asynchronously when authenticated.
-- **Dependencies**:
-  - `StrolchTransaction.getContainer().getPrivilegeHandler()`
-  - `PrivilegeRoles.xml`
-- **Acceptance Criteria**:
-  1. Authenticated users can invoke `POST /rest/chronivaro/v1/auth/language` with `{"language": "en"}` or `{"language": "de"}`.
-  2. The Strolch `UserRep.getLocale()` is updated persistently without requiring administrator privileges or re-login.
-  3. Changing language in the web UI header selector updates both `localStorage` and the Strolch user profile.
-
----
-
-### Task 2: [Fix] Implement Employee Self-Service Work Entry Deletion (`DELETE /me/work-entries/{id}`) and Connect in Web UI
+### Task 1: [Fix] Implement Employee Self-Service Work Entry Deletion (`DELETE /me/work-entries/{id}`) and Connect in Web UI
 
 - **Specification Reference**:
   - Section 14.2 (Profile & Zeiterfassung: `- DELETE /me/work-entries/{id}: Arbeitsblock löschen`)
@@ -214,7 +186,7 @@ The following foundational areas are verified as fully implemented in the reposi
 
 ---
 
-### Task 3: [Fix] Fix Undefined Values in Vacation Report for New Employees
+### Task 2: [Fix] Fix Undefined Values in Vacation Report for New Employees
 
 - **Specification Reference**:
   - Section 11.3 (Ferienübersicht: `definierte Werte (keine undefined-Werte oder fehlende Berechnungsdaten bei neuen, bestehenden oder reaktivierten Mitarbeitern)`)
@@ -236,7 +208,7 @@ The following foundational areas are verified as fully implemented in the reposi
 
 ---
 
-### Task 4: [New] Enhanced Onboarding Registration Email with Direct URL and Configurable Server Base URL
+### Task 3: [New] Enhanced Onboarding Registration Email with Direct URL and Configurable Server Base URL
 
 - **Specification Reference**:
   - Section 6.11 (Globale Anwendungskonfiguration: `serverBaseUrl`)
@@ -265,7 +237,7 @@ The following foundational areas are verified as fully implemented in the reposi
 
 ---
 
-### Task 5: [Refactor] UI: Horizontal Single-Row Layout for Report Summaries Across All Report Types
+### Task 4: [Refactor] UI: Horizontal Single-Row Layout for Report Summaries Across All Report Types
 
 - **Specification Reference**:
   - Section 11 (Reports: 11.1–11.5)
@@ -289,7 +261,7 @@ The following foundational areas are verified as fully implemented in the reposi
 
 ---
 
-### Task 6: [Refactor] UI: Multi-Column / Row Layout with Spacing for Presence / Who Is Working Dashboard
+### Task 5: [Refactor] UI: Multi-Column / Row Layout with Spacing for Presence / Who Is Working Dashboard
 
 - **Specification Reference**:
   - Section 8 (Anwesenheitsstatus)
@@ -309,7 +281,7 @@ The following foundational areas are verified as fully implemented in the reposi
 
 ---
 
-### Task 7: [Fix] UI: Display Entity Names Instead of Technical IDs in Deletion Confirmation Dialogs
+### Task 6: [Fix] UI: Display Entity Names Instead of Technical IDs in Deletion Confirmation Dialogs
 
 - **Specification Reference**:
   - Section 12.2 (UI-Grundsätze: Bestätigung vor fachlich weitreichenden Aktionen)
@@ -332,7 +304,7 @@ The following foundational areas are verified as fully implemented in the reposi
 
 ---
 
-### Task 8: [Fix] UI: Modal Dialog Scrolling and Viewport Overflow Handling for Add Employee, Edit Schedule, and All Dialogs
+### Task 7: [Fix] UI: Modal Dialog Scrolling and Viewport Overflow Handling for Add Employee, Edit Schedule, and All Dialogs
 
 - **Specification Reference**:
   - Section 12.2 (UI-Grundsätze: Modale Dialoge und Viewport-Overflow)
