@@ -100,6 +100,8 @@ export default class PresenceView {
 						noEmployees.textContent = I18n.t('presence.noEmployeesPresent');
 						teamGroup.appendChild(noEmployees);
 					} else {
+						const cardsContainer = document.createElement('div');
+						cardsContainer.className = 'presence-cards-grid';
 						teamEmployees.forEach(info => {
 							const card = document.createElement('div');
 							card.className = 'presence-card';
@@ -139,8 +141,9 @@ export default class PresenceView {
 									${I18n.t('presence.todayStats', { time: Format.duration(info.minutesToday) })}
 								</div>
 							`;
-							teamGroup.appendChild(card);
+							cardsContainer.appendChild(card);
 						});
+						teamGroup.appendChild(cardsContainer);
 					}
 					presenceList.appendChild(teamGroup);
 				});

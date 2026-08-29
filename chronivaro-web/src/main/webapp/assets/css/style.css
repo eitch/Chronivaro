@@ -1042,10 +1042,21 @@ tr:hover {
 
 /* Presence View */
 .presence-list {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
     margin-top: 1.5rem;
+}
+
+.presence-team-group {
+    margin-bottom: 2rem;
+}
+
+.presence-cards-grid {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 1.5rem;
 }
 
 .presence-card {
@@ -1055,6 +1066,10 @@ tr:hover {
     padding: 1.5rem;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     transition: transform 0.2s, box-shadow 0.2s;
+    flex: 1 1 280px;
+    min-width: 260px;
+    max-width: 380px;
+    box-sizing: border-box;
 }
 
 .presence-card:hover {
