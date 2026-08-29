@@ -160,30 +160,13 @@ The following foundational areas are verified as fully implemented in the reposi
 - **Report Summaries Horizontal Single-Row Layout (Sections 11.1–11.5, 12.1 #7):** Summary metrics/cards across all report views (`DayReport`, `MonthReport`, `VacationReport`, `TeamReport`, `AbsenceReport` in `ReportsView.js` as well as `ApprovalsView.js` period inspection) styled with single flexbox row layout (`.summary-grid`, `.report-summary-grid` with `display: flex; flex-direction: row; flex-wrap: wrap; gap: 1rem;` and `.summary-card` flex growth with min-width), preventing vertical column stacking and ensuring consistent single-row layout with responsive wrapping; verified with automated UI tests in `WebReportsUiTest`.
 - **Multi-Column / Row Layout with Spacing for Presence / Who Is Working Dashboard (Sections 8, 12.1 #5):** Updated `PresenceView.js` to render employee cards in dedicated `.presence-cards-grid` containers within each team group, and configured responsive flex-row wrapping layout (`display: flex; flex-direction: row; flex-wrap: wrap; gap: 1.5rem;`) and distinct card dimensions/margins (`flex: 1 1 280px; min-width: 260px; max-width: 380px;`) in `style.css`; verified with automated UI tests in `WebPresenceUiTest.java`.
 - **Entity Deletion and Action Confirmation Dialogs with Human-Readable Names (Section 12.2):** Updated confirmation dialog prompts across admin views (`TeamsView.js`, `LocationsView.js`, `AbsenceTypesView.js`, `EmployeesView.js`, `ScheduleTemplatesView.js`, `HolidayCalendarsView.js`, `UsersView.js`) to look up and format human-readable entity names (`name`, `firstname lastname`, `username`) instead of technical IDs; updated German (Swiss German) and English translations with `{name}` placeholders and 100% key parity; covered by automated UI tests in `WebConfirmationDialogsUiTest.java`.
+- **Modal Dialog Scrolling & Viewport Overflow Handling for All Dialogs (Section 12.2):** Configured modal dialog containers (`.modal-content` with `max-height: 90vh; overflow-y: auto;` in `style.css` and `.notification-dialog-body` with `overflow-y: auto;`) ensuring all input dialogs (such as Add Employee, Edit Schedule, and all administration/time-tracking modals) scroll vertically within short browser viewports while keeping all form controls and action buttons accessible; verified with automated UI tests in `WebModalDialogsUiTest.java`.
 
 ---
 
 ## Prioritized Implementation Backlog
 
-### Task 1: [Fix] UI: Modal Dialog Scrolling and Viewport Overflow Handling for Add Employee, Edit Schedule, and All Dialogs
-
-- **Specification Reference**:
-  - Section 12.2 (UI-Grundsätze: Modale Dialoge und Viewport-Overflow)
-- **Current Implementation Location**:
-  - `chronivaro-web/src/main/webapp/js/components/Modal.js`
-  - `chronivaro-web/src/main/webapp/js/pages/EmployeesView.js`
-  - `chronivaro-web/src/main/webapp/js/pages/SchedulesView.js`
-  - `chronivaro-web/src/main/webapp/assets/css/`
-- **Missing / Deficient Behaviour**:
-  - The "Add Employee" and "Edit Schedule" dialogs (and potentially other tall dialogs) do not scroll when the browser window is not tall enough, causing action buttons to be pushed off-screen and inaccessible.
-- **Proposed Implementation Plan**:
-  - Update modal component container styles (`max-height: 90vh; overflow-y: auto;`) and ensure dialog bodies scroll vertically while keeping action buttons accessible.
-- **Dependencies**:
-  - `Modal.js` and global modal dialog styles.
-- **Acceptance Criteria**:
-  1. The "Add Employee" dialog is vertically scrollable on short browser viewports, and action buttons remain reachable.
-  2. The "Edit Schedule" dialog is vertically scrollable on short browser viewports.
-  3. All modal dialogs across the application scroll properly whenever their content exceeds the viewport height.
+*(None – All prioritized functional, UI, and maintenance tasks implemented and verified)*
 
 ---
 
