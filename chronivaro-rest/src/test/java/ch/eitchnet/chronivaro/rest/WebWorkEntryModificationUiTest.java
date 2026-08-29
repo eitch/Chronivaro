@@ -41,7 +41,7 @@ public class WebWorkEntryModificationUiTest extends AbstractChronivaroRestfulTes
 
 		// Verify MyTimesView does not enforce client-side shorten-only restrictions
 		assertFalse("MyTimesView must not enforce shortenOnlyError on client", myTimesContent.contains("shortenOnlyError"));
-		assertTrue("MyTimesView must allow start time editing", myTimesContent.contains("editStartInput.value = toLocalDateTimeInputString"));
+		assertTrue("MyTimesView must allow start time editing", myTimesContent.contains("editStartInput.value =") && myTimesContent.contains("editStartInput.removeAttribute('readonly')"));
 
 		// Verify ApprovalsView contains badges for work entries
 		File approvalsViewJs = new File(webDir, "js/pages/ApprovalsView.js");

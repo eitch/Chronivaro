@@ -112,16 +112,20 @@ export default class MyTimesView {
 						<button type="button" id="close-add-modal-icon" class="close-btn" style="background: none; border: none; font-size: 1.5rem; cursor: pointer;">&times;</button>
 					</div>
 					<form id="add-work-entry-form">
-						<div class="form-grid" style="display: grid; gap: 1rem;">
-							<div class="form-group">
-								<label for="add-start-time" style="display: block; margin-bottom: 0.25rem; font-weight: 500;">${I18n.t('times.startTime')} *:</label>
-								<input type="datetime-local" id="add-start-time" required style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color, #e2e8f0); border-radius: 4px; box-sizing: border-box;">
+						<div class="form-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+							<div class="form-group" style="grid-column: span 2;">
+								<label for="add-entry-date" style="display: block; margin-bottom: 0.25rem; font-weight: 500;">${I18n.t('common.date')} *:</label>
+								<input type="date" id="add-entry-date" required style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color, #e2e8f0); border-radius: 4px; box-sizing: border-box;">
 							</div>
 							<div class="form-group">
-								<label for="add-end-time" style="display: block; margin-bottom: 0.25rem; font-weight: 500;">${I18n.t('times.endTime')} *:</label>
-								<input type="datetime-local" id="add-end-time" required style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color, #e2e8f0); border-radius: 4px; box-sizing: border-box;">
+								<label for="add-start-time" style="display: block; margin-bottom: 0.25rem; font-weight: 500;">${I18n.t('times.startTime')} * (24h):</label>
+								<input type="text" id="add-start-time" required placeholder="08:00" maxlength="5" pattern="^([01]?[0-9]|2[0-3]):[0-5][0-9]$" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color, #e2e8f0); border-radius: 4px; box-sizing: border-box;">
 							</div>
 							<div class="form-group">
+								<label for="add-end-time" style="display: block; margin-bottom: 0.25rem; font-weight: 500;">${I18n.t('times.endTime')} * (24h):</label>
+								<input type="text" id="add-end-time" required placeholder="17:00" maxlength="5" pattern="^([01]?[0-9]|2[0-3]):[0-5][0-9]$" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color, #e2e8f0); border-radius: 4px; box-sizing: border-box;">
+							</div>
+							<div class="form-group" style="grid-column: span 2;">
 								<label for="add-working-location" style="display: block; margin-bottom: 0.25rem; font-weight: 500;">${I18n.t('times.workingLocation')}:</label>
 								<select id="add-working-location" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color, #e2e8f0); border-radius: 4px; box-sizing: border-box;">
 									<option value="">-- ${I18n.t('common.selectOption')} --</option>
@@ -131,7 +135,7 @@ export default class MyTimesView {
 									<option value="REMOTE">${I18n.t('enums.workingLocation.REMOTE', {}, 'REMOTE')}</option>
 								</select>
 							</div>
-							<div class="form-group">
+							<div class="form-group" style="grid-column: span 2;">
 								<label for="add-comment" style="display: block; margin-bottom: 0.25rem; font-weight: 500;">${I18n.t('common.comment')}:</label>
 								<textarea id="add-comment" rows="3" placeholder="${I18n.t('common.comment')}..." style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color, #e2e8f0); border-radius: 4px; box-sizing: border-box;"></textarea>
 							</div>
@@ -155,16 +159,20 @@ export default class MyTimesView {
 						${I18n.t('times.shortenHelpText')}
 					</p>
 					<form id="work-entry-form">
-						<div class="form-grid" style="display: grid; gap: 1rem;">
+						<div class="form-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+							<div class="form-group" id="edit-date-group" style="grid-column: span 2;">
+								<label for="modal-entry-date" style="display: block; margin-bottom: 0.25rem; font-weight: 500;">${I18n.t('common.date')} *:</label>
+								<input type="date" id="modal-entry-date" required style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color, #e2e8f0); border-radius: 4px; box-sizing: border-box;">
+							</div>
 							<div class="form-group" id="edit-start-group">
-								<label for="modal-start-time" style="display: block; margin-bottom: 0.25rem; font-weight: 500;">${I18n.t('times.startTime')}:</label>
-								<input type="datetime-local" id="modal-start-time" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color, #e2e8f0); border-radius: 4px; box-sizing: border-box;">
+								<label for="modal-start-time" style="display: block; margin-bottom: 0.25rem; font-weight: 500;">${I18n.t('times.startTime')} * (24h):</label>
+								<input type="text" id="modal-start-time" required placeholder="08:00" maxlength="5" pattern="^([01]?[0-9]|2[0-3]):[0-5][0-9]$" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color, #e2e8f0); border-radius: 4px; box-sizing: border-box;">
 							</div>
 							<div class="form-group">
-								<label for="modal-end-time" id="edit-end-label" style="display: block; margin-bottom: 0.25rem; font-weight: 500;">${I18n.t('times.shortenTime')}:</label>
-								<input type="datetime-local" id="modal-end-time" required style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color, #e2e8f0); border-radius: 4px; box-sizing: border-box;">
+								<label for="modal-end-time" id="edit-end-label" style="display: block; margin-bottom: 0.25rem; font-weight: 500;">${I18n.t('times.shortenTime')} * (24h):</label>
+								<input type="text" id="modal-end-time" required placeholder="17:00" maxlength="5" pattern="^([01]?[0-9]|2[0-3]):[0-5][0-9]$" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color, #e2e8f0); border-radius: 4px; box-sizing: border-box;">
 							</div>
-							<div class="form-group" id="edit-location-group">
+							<div class="form-group" id="edit-location-group" style="grid-column: span 2;">
 								<label for="modal-working-location" style="display: block; margin-bottom: 0.25rem; font-weight: 500;">${I18n.t('times.workingLocation')}:</label>
 								<select id="modal-working-location" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color, #e2e8f0); border-radius: 4px; box-sizing: border-box;">
 									<option value="">-- ${I18n.t('common.selectOption')} --</option>
@@ -174,7 +182,7 @@ export default class MyTimesView {
 									<option value="REMOTE">${I18n.t('enums.workingLocation.REMOTE', {}, 'REMOTE')}</option>
 								</select>
 							</div>
-							<div class="form-group">
+							<div class="form-group" style="grid-column: span 2;">
 								<label for="modal-comment" style="display: block; margin-bottom: 0.25rem; font-weight: 500;">${I18n.t('common.comment')}:</label>
 								<textarea id="modal-comment" rows="3" placeholder="${I18n.t('common.comment')}..." style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color, #e2e8f0); border-radius: 4px; box-sizing: border-box;"></textarea>
 							</div>
@@ -202,6 +210,7 @@ export default class MyTimesView {
 		const addModalIcon = container.querySelector('#close-add-modal-icon');
 		const addModalBtn = container.querySelector('#close-add-modal-btn');
 		const addForm = container.querySelector('#add-work-entry-form');
+		const addDateInput = container.querySelector('#add-entry-date');
 		const addStartInput = container.querySelector('#add-start-time');
 		const addEndInput = container.querySelector('#add-end-time');
 		const addLocationSelect = container.querySelector('#add-working-location');
@@ -214,11 +223,20 @@ export default class MyTimesView {
 		const editModalIcon = container.querySelector('#close-work-entry-modal-icon');
 		const editModalBtn = container.querySelector('#close-work-entry-modal-btn');
 		const editForm = container.querySelector('#work-entry-form');
+		const editDateInput = container.querySelector('#modal-entry-date');
 		const editStartInput = container.querySelector('#modal-start-time');
 		const editEndLabel = container.querySelector('#edit-end-label');
 		const editEndInput = container.querySelector('#modal-end-time');
 		const editLocationSelect = container.querySelector('#modal-working-location');
 		const editCommentInput = container.querySelector('#modal-comment');
+
+		[addStartInput, addEndInput, editStartInput, editEndInput].forEach(inp => {
+			if (inp) {
+				inp.addEventListener('blur', () => {
+					if (inp.value) inp.value = Format.normalizeTime(inp.value);
+				});
+			}
+		});
 
 		// Filter elements (if manage role)
 		const teamFilter = container.querySelector('#times-team-filter');
@@ -357,17 +375,29 @@ export default class MyTimesView {
 
 							editModalTitle.textContent = I18n.t('times.editDialogTitle');
 							editHelpText.textContent = I18n.t('times.editHelpText');
-							editEndLabel.textContent = `${I18n.t('times.endTime')} *:`;
+							editEndLabel.textContent = `${I18n.t('times.endTime')} * (24h):`;
 
-							editStartInput.value = toLocalDateTimeInputString(entry.start);
+							const startDate = new Date(entry.start);
+							const pad = (n) => String(n).padStart(2, '0');
+							const dateStr = !isNaN(startDate.getTime())
+									? `${startDate.getFullYear()}-${pad(startDate.getMonth() + 1)}-${pad(startDate.getDate())}`
+									: '';
+							const startTimeStr = !isNaN(startDate.getTime())
+									? `${pad(startDate.getHours())}:${pad(startDate.getMinutes())}`
+									: '';
+
+							editDateInput.value = dateStr;
+							editStartInput.value = startTimeStr;
 							editStartInput.removeAttribute('readonly');
 							editStartInput.removeAttribute('disabled');
 							editStartInput.style.background = '';
 
 							const endIso = entry.end || new Date().toISOString();
-							editEndInput.value = toLocalDateTimeInputString(endIso);
-							editEndInput.removeAttribute('min');
-							editEndInput.removeAttribute('max');
+							const endDate = new Date(endIso);
+							const endTimeStr = !isNaN(endDate.getTime())
+									? `${pad(endDate.getHours())}:${pad(endDate.getMinutes())}`
+									: '';
+							editEndInput.value = endTimeStr;
 
 							editLocationSelect.value = entry.workingLocation || '';
 							editCommentInput.value = entry.comment || '';
@@ -410,8 +440,9 @@ export default class MyTimesView {
 				const pad = (n) => String(n).padStart(2, '0');
 				const todayDate = `${nowD.getFullYear()}-${pad(nowD.getMonth() + 1)}-${pad(nowD.getDate())}`;
 
-				addStartInput.value = `${todayDate}T08:00`;
-				addEndInput.value = `${todayDate}T17:00`;
+				addDateInput.value = todayDate;
+				addStartInput.value = '08:00';
+				addEndInput.value = '17:00';
 				addLocationSelect.value = '';
 				addCommentInput.value = '';
 				addModal.style.display = 'flex';
@@ -433,9 +464,18 @@ export default class MyTimesView {
 					return;
 				}
 
-				const startDate = new Date(addStartInput.value);
-				const endDate = new Date(addEndInput.value);
-				if (endDate <= startDate) {
+				const dateVal = addDateInput.value;
+				const startVal = Format.normalizeTime(addStartInput.value);
+				const endVal = Format.normalizeTime(addEndInput.value);
+
+				if (!Format.isValidTime(startVal) || !Format.isValidTime(endVal)) {
+					NotificationDialog.error(I18n.t('times.invalidDuration'));
+					return;
+				}
+
+				const startDate = new Date(`${dateVal}T${startVal}:00`);
+				const endDate = new Date(`${dateVal}T${endVal}:00`);
+				if (isNaN(startDate.getTime()) || isNaN(endDate.getTime()) || endDate <= startDate) {
 					NotificationDialog.error(I18n.t('times.invalidDuration'));
 					return;
 				}
@@ -472,25 +512,34 @@ export default class MyTimesView {
 				e.preventDefault();
 				if (!this.currentEditingEntry) return;
 
+				const dateVal = editDateInput.value;
+				const startVal = Format.normalizeTime(editStartInput.value);
+				const endVal = Format.normalizeTime(editEndInput.value);
+
+				if (!Format.isValidTime(startVal) || !Format.isValidTime(endVal)) {
+					NotificationDialog.error(I18n.t('times.invalidDuration'));
+					return;
+				}
+
+				const startDate = new Date(`${dateVal}T${startVal}:00`);
+				const endDate = new Date(`${dateVal}T${endVal}:00`);
+				if (isNaN(startDate.getTime()) || isNaN(endDate.getTime()) || endDate <= startDate) {
+					NotificationDialog.error(I18n.t('times.invalidDuration'));
+					return;
+				}
+
+				const isManagerEdit = this.canManage;
+
+				const payload = {
+					id: this.currentEditingEntry.id,
+					employeeId: this.currentEditingEntry.employeeId,
+					start: startDate.toISOString(),
+					end: endDate.toISOString(),
+					workingLocation: editLocationSelect.value || undefined,
+					comment: editCommentInput.value.trim() || undefined
+				};
+
 				try {
-					const startDate = new Date(editStartInput.value || this.currentEditingEntry.start);
-					const endDate = new Date(editEndInput.value);
-					if (endDate <= startDate) {
-						NotificationDialog.error(I18n.t('times.invalidDuration'));
-						return;
-					}
-
-					const isManagerEdit = this.canManage;
-
-					const payload = {
-						id: this.currentEditingEntry.id,
-						employeeId: this.currentEditingEntry.employeeId,
-						start: startDate.toISOString(),
-						end: endDate.toISOString(),
-						workingLocation: editLocationSelect.value || undefined,
-						comment: editCommentInput.value.trim() || undefined
-					};
-
 					if (isManagerEdit) {
 						await WorkEntryApi.adminUpdateWorkEntry(this.currentEditingEntry.id, payload);
 					} else {

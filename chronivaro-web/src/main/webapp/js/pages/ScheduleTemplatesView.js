@@ -46,31 +46,31 @@ export default class ScheduleTemplatesView {
 						</div>
 						<div class="form-group">
 							<label for="template-mon">${I18n.t('scheduleTemplates.monday')}:</label>
-							<input type="time" id="template-mon" required value="08:00">
+							<input type="text" id="template-mon" placeholder="08:00" maxlength="5" pattern="^([01]?[0-9]|2[0-3]):[0-5][0-9]$" required value="08:00">
 						</div>
 						<div class="form-group">
 							<label for="template-tue">${I18n.t('scheduleTemplates.tuesday')}:</label>
-							<input type="time" id="template-tue" required value="08:00">
+							<input type="text" id="template-tue" placeholder="08:00" maxlength="5" pattern="^([01]?[0-9]|2[0-3]):[0-5][0-9]$" required value="08:00">
 						</div>
 						<div class="form-group">
 							<label for="template-wed">${I18n.t('scheduleTemplates.wednesday')}:</label>
-							<input type="time" id="template-wed" required value="08:00">
+							<input type="text" id="template-wed" placeholder="08:00" maxlength="5" pattern="^([01]?[0-9]|2[0-3]):[0-5][0-9]$" required value="08:00">
 						</div>
 						<div class="form-group">
 							<label for="template-thu">${I18n.t('scheduleTemplates.thursday')}:</label>
-							<input type="time" id="template-thu" required value="08:00">
+							<input type="text" id="template-thu" placeholder="08:00" maxlength="5" pattern="^([01]?[0-9]|2[0-3]):[0-5][0-9]$" required value="08:00">
 						</div>
 						<div class="form-group">
 							<label for="template-fri">${I18n.t('scheduleTemplates.friday')}:</label>
-							<input type="time" id="template-fri" required value="08:00">
+							<input type="text" id="template-fri" placeholder="08:00" maxlength="5" pattern="^([01]?[0-9]|2[0-3]):[0-5][0-9]$" required value="08:00">
 						</div>
 						<div class="form-group">
 							<label for="template-sat">${I18n.t('scheduleTemplates.saturday')}:</label>
-							<input type="time" id="template-sat" required value="00:00">
+							<input type="text" id="template-sat" placeholder="00:00" maxlength="5" pattern="^([01]?[0-9]|2[0-3]):[0-5][0-9]$" required value="00:00">
 						</div>
 						<div class="form-group">
 							<label for="template-sun">${I18n.t('scheduleTemplates.sunday')}:</label>
-							<input type="time" id="template-sun" required value="00:00">
+							<input type="text" id="template-sun" placeholder="00:00" maxlength="5" pattern="^([01]?[0-9]|2[0-3]):[0-5][0-9]$" required value="00:00">
 						</div>
 						<div class="actions">
 							<button type="submit">${I18n.t('common.save')}</button>
@@ -97,10 +97,22 @@ export default class ScheduleTemplatesView {
 		};
 
 		const parseTime = (timeStr) => {
-			const parts = timeStr.split(':');
+			if (!timeStr) return 0;
+			const normalized = Format.normalizeTime(timeStr);
+			const parts = normalized.split(':');
 			if (parts.length !== 2) return 0;
-			return parseInt(parts[0]) * 60 + parseInt(parts[1]);
+			return parseInt(parts[0], 10) * 60 + parseInt(parts[1], 10);
 		};
+
+		const dayInputs = ['#template-mon', '#template-tue', '#template-wed', '#template-thu', '#template-fri', '#template-sat', '#template-sun']
+			.map(sel => container.querySelector(sel));
+		dayInputs.forEach(inp => {
+			if (inp) {
+				inp.addEventListener('blur', () => {
+					if (inp.value) inp.value = Format.normalizeTime(inp.value);
+				});
+			}
+		});
 
 		const refresh = async () => {
 			try {

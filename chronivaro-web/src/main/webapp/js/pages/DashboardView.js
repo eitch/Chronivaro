@@ -59,11 +59,11 @@ export default class DashboardView {
 							</div>
 							<div class="form-group">
 								<label style="display: block; margin-bottom: 0.25rem; font-weight: 500;">${I18n.t('times.startTime')}:</label>
-								<input type="time" id="fix-stop-start-time" readonly disabled style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color, #e2e8f0); border-radius: 4px; box-sizing: border-box; background: var(--bg-disabled, #f1f5f9);">
+								<input type="text" id="fix-stop-start-time" readonly disabled placeholder="HH:mm" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color, #e2e8f0); border-radius: 4px; box-sizing: border-box; background: var(--bg-disabled, #f1f5f9);">
 							</div>
 							<div class="form-group">
-								<label for="fix-stop-end-time" style="display: block; margin-bottom: 0.25rem; font-weight: 500;">${I18n.t('times.endTime')} *:</label>
-								<input type="time" id="fix-stop-end-time" required style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color, #e2e8f0); border-radius: 4px; box-sizing: border-box;">
+								<label for="fix-stop-end-time" style="display: block; margin-bottom: 0.25rem; font-weight: 500;">${I18n.t('times.endTime')} * (24h):</label>
+								<input type="text" id="fix-stop-end-time" required placeholder="17:00" maxlength="5" pattern="^([01]?[0-9]|2[0-3]):[0-5][0-9]$" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color, #e2e8f0); border-radius: 4px; box-sizing: border-box;">
 							</div>
 							<div class="form-group">
 								<label for="fix-stop-comment" style="display: block; margin-bottom: 0.25rem; font-weight: 500;">${I18n.t('common.comment')}:</label>
@@ -130,6 +130,12 @@ export default class DashboardView {
 		if (closeFixStopModalIcon) closeFixStopModalIcon.addEventListener('click', closeFixStopModal);
 		if (closeFixStopModalBtn) closeFixStopModalBtn.addEventListener('click', closeFixStopModal);
 
+		if (fixStopEndTime) {
+			fixStopEndTime.addEventListener('blur', () => {
+				if (fixStopEndTime.value) fixStopEndTime.value = Format.normalizeTime(fixStopEndTime.value);
+			});
+		}
+
 		if (fixStopForm) {
 			fixStopForm.addEventListener('submit', async (e) => {
 				e.preventDefault();
@@ -140,9 +146,9 @@ export default class DashboardView {
 				const startDateStr = startStr.substring(0, 10);
 				const timeMatch = startStr.match(/T(\d{2}:\d{2})/);
 				const startTimeStr = timeMatch ? timeMatch[1] : '';
-				const stopTimeStr = fixStopEndTime.value;
+				const stopTimeStr = Format.normalizeTime(fixStopEndTime.value);
 
-				if (!stopTimeStr) {
+				if (!Format.isValidTime(stopTimeStr)) {
 					NotificationDialog.error(I18n.t('times.invalidDuration'));
 					return;
 				}

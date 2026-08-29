@@ -28,8 +28,8 @@ public class WebTimesUiTest {
 
 		// Verify work entry edit modal elements
 		assertTrue("MyTimesView must have work-entry-modal", viewJs.contains("id=\"work-entry-modal\""));
-		assertTrue("MyTimesView must have modal-end-time datetime-local input",
-				viewJs.contains("input type=\"datetime-local\" id=\"modal-end-time\""));
+		assertTrue("MyTimesView must have modal-end-time input",
+				viewJs.contains("id=\"modal-end-time\""));
 
 		// Verify manager team and employee selection filters
 		assertTrue("MyTimesView must have team filter for managers", viewJs.contains("id=\"times-team-filter\""));

@@ -41,4 +41,31 @@ export default class Format {
         const pad = (n) => String(n).padStart(2, '0');
         return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
     }
+
+    static normalizeTime(timeStr) {
+        if (!timeStr) return '';
+        const trimmed = String(timeStr).trim();
+        const match = trimmed.match(/^(\d{1,2})[:.](\d{2})$/);
+        if (match) {
+            const h = parseInt(match[1], 10);
+            const m = parseInt(match[2], 10);
+            if (h >= 0 && h <= 23 && m >= 0 && m <= 59) {
+                return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+            }
+        }
+        const matchH = trimmed.match(/^(\d{1,2})$/);
+        if (matchH) {
+            const h = parseInt(matchH[1], 10);
+            if (h >= 0 && h <= 23) {
+                return `${String(h).padStart(2, '0')}:00`;
+            }
+        }
+        return trimmed;
+    }
+
+    static isValidTime(timeStr) {
+        if (!timeStr) return false;
+        const normalized = Format.normalizeTime(timeStr);
+        return /^([01]\d|2[0-3]):[0-5]\d$/.test(normalized);
+    }
 }

@@ -70,31 +70,31 @@ export default class SchedulesView {
 						</div>
 						<div class="form-group">
 							<label for="sched-mon">${I18n.t('scheduleTemplates.monday')}:</label>
-							<input type="time" id="sched-mon" required value="08:00">
+							<input type="text" id="sched-mon" placeholder="08:00" maxlength="5" pattern="^([01]?[0-9]|2[0-3]):[0-5][0-9]$" required value="08:00">
 						</div>
 						<div class="form-group">
 							<label for="sched-tue">${I18n.t('scheduleTemplates.tuesday')}:</label>
-							<input type="time" id="sched-tue" required value="08:00">
+							<input type="text" id="sched-tue" placeholder="08:00" maxlength="5" pattern="^([01]?[0-9]|2[0-3]):[0-5][0-9]$" required value="08:00">
 						</div>
 						<div class="form-group">
 							<label for="sched-wed">${I18n.t('scheduleTemplates.wednesday')}:</label>
-							<input type="time" id="sched-wed" required value="08:00">
+							<input type="text" id="sched-wed" placeholder="08:00" maxlength="5" pattern="^([01]?[0-9]|2[0-3]):[0-5][0-9]$" required value="08:00">
 						</div>
 						<div class="form-group">
 							<label for="sched-thu">${I18n.t('scheduleTemplates.thursday')}:</label>
-							<input type="time" id="sched-thu" required value="08:00">
+							<input type="text" id="sched-thu" placeholder="08:00" maxlength="5" pattern="^([01]?[0-9]|2[0-3]):[0-5][0-9]$" required value="08:00">
 						</div>
 						<div class="form-group">
 							<label for="sched-fri">${I18n.t('scheduleTemplates.friday')}:</label>
-							<input type="time" id="sched-fri" required value="08:00">
+							<input type="text" id="sched-fri" placeholder="08:00" maxlength="5" pattern="^([01]?[0-9]|2[0-3]):[0-5][0-9]$" required value="08:00">
 						</div>
 						<div class="form-group">
 							<label for="sched-sat">${I18n.t('scheduleTemplates.saturday')}:</label>
-							<input type="time" id="sched-sat" required value="00:00">
+							<input type="text" id="sched-sat" placeholder="00:00" maxlength="5" pattern="^([01]?[0-9]|2[0-3]):[0-5][0-9]$" required value="00:00">
 						</div>
 						<div class="form-group">
 							<label for="sched-sun">${I18n.t('scheduleTemplates.sunday')}:</label>
-							<input type="time" id="sched-sun" required value="00:00">
+							<input type="text" id="sched-sun" placeholder="00:00" maxlength="5" pattern="^([01]?[0-9]|2[0-3]):[0-5][0-9]$" required value="00:00">
 						</div>
 						<div class="actions">
 							<button type="submit">${I18n.t('common.save')}</button>
@@ -131,10 +131,22 @@ export default class SchedulesView {
         };
 
         const parseTime = (timeStr) => {
-            const parts = timeStr.split(':');
+            if (!timeStr) return 0;
+            const normalized = Format.normalizeTime(timeStr);
+            const parts = normalized.split(':');
             if (parts.length !== 2) return 0;
-            return parseInt(parts[0]) * 60 + parseInt(parts[1]);
+            return parseInt(parts[0], 10) * 60 + parseInt(parts[1], 10);
         };
+
+        const schedDayInputs = ['#sched-mon', '#sched-tue', '#sched-wed', '#sched-thu', '#sched-fri', '#sched-sat', '#sched-sun']
+            .map(sel => container.querySelector(sel));
+        schedDayInputs.forEach(inp => {
+            if (inp) {
+                inp.addEventListener('blur', () => {
+                    if (inp.value) inp.value = Format.normalizeTime(inp.value);
+                });
+            }
+        });
 
         const updateWeeklySummary = (schedules) => {
             if (schedules.length === 0) {
