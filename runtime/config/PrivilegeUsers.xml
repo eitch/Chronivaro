@@ -55,7 +55,7 @@
         <Firstname>Jill</Firstname>
         <Lastname>Someone</Lastname>
         <State>ENABLED</State>
-        <Locale>de</Locale>
+        <Locale>en</Locale>
         <Roles>
             <Role>Employee</Role>
             <Role>ModelAccessor</Role>
@@ -66,7 +66,7 @@
         </Properties>
         <History>
             <FirstLogin>2026-08-15T22:35:58.804+02:00</FirstLogin>
-            <LastLogin>2026-08-22T17:51:24.308+02:00</LastLogin>
+            <LastLogin>2026-08-29T21:58:06.549+02:00</LastLogin>
             <LastPasswordChange>2026-08-22T17:51:20.305+02:00</LastPasswordChange>
         </History>
     </User>
