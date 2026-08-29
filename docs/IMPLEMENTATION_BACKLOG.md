@@ -157,36 +157,13 @@ The following foundational areas are verified as fully implemented in the reposi
 - **Employee Self-Service Work Entry Deletion (Sections 14.2, 15.2, 20 #4):** Core service `RemoveWorkEntryService` updated to allow employees deleting their own work entries in open periods (`isSelf`); REST endpoint `DELETE /rest/chronivaro/v1/me/work-entries/{id}` implemented in `ChronivaroResource` with optimistic concurrency validation via `If-Match`; `WorkEntryApi.js` updated with `deleteWorkEntry` / `deleteMyWorkEntry`; `MyTimesView.js` wired with deletion action buttons and confirmation dialog for employees on their work entries; `PrivilegeRoles.xml` updated across all runtime and test configurations; covered by unit tests in `WorkEntryServiceTest`, REST integration tests in `ChronivaroResourceTest`, and web asset tests in `WebWorkEntryModificationUiTest`.
 - **Vacation Report Metric Initialization & Zero Defaulting for New Employees (Sections 6.7, 11.3):** Guarded against null, uninitialized, or missing balance fields in vacation summaries, DTO mapping, CSV and PDF report export helpers, and web report rendering (`ReportsView.js`); ensured all metrics default to clean numeric zeros (0 days / 0:00 h) without displaying undefined text; covered by comprehensive core, REST, and UI test suites.
 - **Enhanced Onboarding Registration Email with Direct URL and Configurable Server Base URL (Sections 6.11, 9.6, 12.1 #8):** Added `serverBaseUrl` parameter to global configuration model (`ChronivaroConstants`, `Templates.xml`, `Model.xml`), DTOs, and REST API (`ConfigurationResource`); implemented `ChronivaroUserChallengeHandler` providing friendly, localized onboarding emails (German/English) containing personalized greetings, direct registration links (`${serverBaseUrl}/#complete-registration?user=${username}&token=${token}`), and fallback registration codes; updated `CompleteRegistrationView.js` to auto-populate username and challenge token from URL query parameters; added `serverBaseUrl` field, validation, hint, and translations in `ConfigurationView.js` and `i18n` dictionaries; covered by comprehensive core, REST, and UI test suites.
+- **Report Summaries Horizontal Single-Row Layout (Sections 11.1–11.5, 12.1 #7):** Summary metrics/cards across all report views (`DayReport`, `MonthReport`, `VacationReport`, `TeamReport`, `AbsenceReport` in `ReportsView.js` as well as `ApprovalsView.js` period inspection) styled with single flexbox row layout (`.summary-grid`, `.report-summary-grid` with `display: flex; flex-direction: row; flex-wrap: wrap; gap: 1rem;` and `.summary-card` flex growth with min-width), preventing vertical column stacking and ensuring consistent single-row layout with responsive wrapping; verified with automated UI tests in `WebReportsUiTest`.
 
 ---
 
 ## Prioritized Implementation Backlog
 
-### Task 1: [Refactor] UI: Horizontal Single-Row Layout for Report Summaries Across All Report Types
-
-- **Specification Reference**:
-  - Section 11 (Reports: 11.1–11.5)
-  - Section 12.1 #7 (Reports & Export: Zusammenfassungen/Kennzahlen in einer Zeile)
-- **Current Implementation Location**:
-  - `chronivaro-web/src/main/webapp/js/pages/AbsenceReportView.js`
-  - `chronivaro-web/src/main/webapp/js/pages/DayReportView.js`
-  - `chronivaro-web/src/main/webapp/js/pages/MonthReportView.js`
-  - `chronivaro-web/src/main/webapp/js/pages/VacationReportView.js`
-  - `chronivaro-web/src/main/webapp/js/pages/TeamReportView.js`
-  - `chronivaro-web/src/main/webapp/assets/css/`
-- **Missing / Deficient Behaviour**:
-  - Summary metrics in reports (e.g. Absences Report: Total Absences, Total Duration, Paid Absence Time, Unpaid Absence Time) are stacked vertically in columns below each other rather than in a horizontal row.
-- **Proposed Implementation Plan**:
-  - Update report views and CSS to lay out summary metric cards in a single flex/grid row (`flex-direction: row; flex-wrap: wrap; gap: 1rem;`) across all report types (Absences, Day, Month, Vacation, Team).
-- **Dependencies**:
-  - Report view components and shared report styles.
-- **Acceptance Criteria**:
-  1. In the Absences Report, summary items (Total Absences, Total Duration, Paid Absence Time, Unpaid Absence Time) appear in a horizontal row.
-  2. All other report types (Day, Month, Vacation, Team) display their summary cards in a consistent horizontal row layout.
-
----
-
-### Task 2: [Refactor] UI: Multi-Column / Row Layout with Spacing for Presence / Who Is Working Dashboard
+### Task 1: [Refactor] UI: Multi-Column / Row Layout with Spacing for Presence / Who Is Working Dashboard
 
 - **Specification Reference**:
   - Section 8 (Anwesenheitsstatus)
@@ -206,7 +183,7 @@ The following foundational areas are verified as fully implemented in the reposi
 
 ---
 
-### Task 3: [Fix] UI: Display Entity Names Instead of Technical IDs in Deletion Confirmation Dialogs
+### Task 2: [Fix] UI: Display Entity Names Instead of Technical IDs in Deletion Confirmation Dialogs
 
 - **Specification Reference**:
   - Section 12.2 (UI-Grundsätze: Bestätigung vor fachlich weitreichenden Aktionen)
@@ -229,7 +206,7 @@ The following foundational areas are verified as fully implemented in the reposi
 
 ---
 
-### Task 4: [Fix] UI: Modal Dialog Scrolling and Viewport Overflow Handling for Add Employee, Edit Schedule, and All Dialogs
+### Task 3: [Fix] UI: Modal Dialog Scrolling and Viewport Overflow Handling for Add Employee, Edit Schedule, and All Dialogs
 
 - **Specification Reference**:
   - Section 12.2 (UI-Grundsätze: Modale Dialoge und Viewport-Overflow)
