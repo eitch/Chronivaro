@@ -89,6 +89,7 @@ export default class ScheduleTemplatesView {
 		const closeBtn = container.querySelector('#close-modal');
 
 		let editingId = null;
+		let templatesList = [];
 
 		const formatTime = (minutes) => {
 			const h = Math.floor(minutes / 60);
@@ -117,6 +118,7 @@ export default class ScheduleTemplatesView {
 		const refresh = async () => {
 			try {
 				const templates = await ScheduleTemplateApi.getAll();
+				templatesList = templates;
 				tbody.innerHTML = '';
 				templates.forEach(t => {
 					const totalMinutes = t.monday + t.tuesday + t.wednesday + t.thursday + t.friday + t.saturday + t.sunday;
@@ -153,8 +155,7 @@ export default class ScheduleTemplatesView {
 
 		const editTemplate = async (id) => {
 			try {
-				const templates = await ScheduleTemplateApi.getAll();
-				const template = templates.find(t => t.id === id);
+				const template = templatesList.find(t => t.id === id) || (await ScheduleTemplateApi.getAll()).find(t => t.id === id);
 				if (template) {
 					editingId = id;
 					modalTitle.innerText = I18n.t('scheduleTemplates.editTemplate');
@@ -174,7 +175,9 @@ export default class ScheduleTemplatesView {
 		};
 
 		const deleteTemplate = async (id) => {
-			if (await NotificationDialog.confirm(I18n.t('scheduleTemplates.confirmDelete'))) {
+			const template = templatesList.find(t => t.id === id);
+			const name = template ? template.name : id;
+			if (await NotificationDialog.confirm(I18n.t('scheduleTemplates.confirmDelete', { name, id }))) {
 				try {
 					await ScheduleTemplateApi.remove(id);
 					refresh();

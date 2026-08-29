@@ -68,6 +68,7 @@ export default class LocationsView {
         const holidayCalendarSelect = container.querySelector('#loc-holiday-calendar');
 
         let editingId = null;
+        let locationsList = [];
 
         const loadOptions = async () => {
             try {
@@ -87,6 +88,7 @@ export default class LocationsView {
         const refresh = async () => {
             try {
                 const locations = await LocationApi.getAll();
+                locationsList = locations;
                 tbody.innerHTML = '';
                 locations.forEach(loc => {
                     const row = document.createElement('tr');
@@ -117,8 +119,7 @@ export default class LocationsView {
         const editLocation = async (id) => {
             try {
                 await loadOptions();
-                const locations = await LocationApi.getAll();
-                const loc = locations.find(l => l.id === id);
+                const loc = locationsList.find(l => l.id === id) || (await LocationApi.getAll()).find(l => l.id === id);
                 if (loc) {
                     editingId = id;
                     modalTitle.innerText = I18n.t('locations.editLocation');
@@ -136,7 +137,9 @@ export default class LocationsView {
         };
 
         const deleteLocation = async (id) => {
-            if (await NotificationDialog.confirm(I18n.t('locations.confirmDelete', { id }))) {
+            const loc = locationsList.find(l => l.id === id);
+            const name = loc ? loc.name : id;
+            if (await NotificationDialog.confirm(I18n.t('locations.confirmDelete', { name, id }))) {
                 try {
                     await LocationApi.remove(id);
                     refresh();

@@ -56,10 +56,12 @@ export default class TeamsView {
         const closeBtn = container.querySelector('#close-modal');
 
         let editingId = null;
+        let teamsList = [];
 
         const refresh = async () => {
             try {
                 const teams = await TeamApi.getAll();
+                teamsList = teams;
                 tbody.innerHTML = '';
                 teams.forEach(team => {
                     const row = document.createElement('tr');
@@ -87,8 +89,7 @@ export default class TeamsView {
 
         const editTeam = async (id) => {
             try {
-                const teams = await TeamApi.getAll();
-                const team = teams.find(t => t.id === id);
+                const team = teamsList.find(t => t.id === id) || (await TeamApi.getAll()).find(t => t.id === id);
                 if (team) {
                     editingId = id;
                     modalTitle.innerText = I18n.t('teams.editTeam');
@@ -104,7 +105,9 @@ export default class TeamsView {
         };
 
         const deleteTeam = async (id) => {
-            if (await NotificationDialog.confirm(I18n.t('teams.confirmDelete', { id }))) {
+            const team = teamsList.find(t => t.id === id);
+            const name = team ? team.name : id;
+            if (await NotificationDialog.confirm(I18n.t('teams.confirmDelete', { name, id }))) {
                 try {
                     await TeamApi.remove(id);
                     refresh();

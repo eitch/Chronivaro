@@ -341,8 +341,16 @@ export default class EmployeesView {
             }
         };
 
+        const getEmployeeName = (id) => {
+            const emp = (this.employees || []).find(e => e.id === id);
+            if (!emp) return id;
+            const full = `${emp.firstname || ''} ${emp.lastname || ''}`.trim();
+            return full || emp.username || id;
+        };
+
         const registerEmployee = async (id) => {
-            if (await NotificationDialog.confirm(I18n.t('employees.confirmRegister', { id }))) {
+            const name = getEmployeeName(id);
+            if (await NotificationDialog.confirm(I18n.t('employees.confirmRegister', { name, id }))) {
                 try {
                     await EmployeeApi.register(id);
                     NotificationDialog.info(I18n.t('employees.registerSuccess'));
@@ -353,7 +361,8 @@ export default class EmployeesView {
         };
 
         const reactivateEmployee = async (id) => {
-            if (await NotificationDialog.confirm(I18n.t('employees.confirmReactivate', { id }))) {
+            const name = getEmployeeName(id);
+            if (await NotificationDialog.confirm(I18n.t('employees.confirmReactivate', { name, id }))) {
                 try {
                     await EmployeeApi.reactivate(id);
                     NotificationDialog.info(I18n.t('employees.reactivateSuccess'));
@@ -365,7 +374,8 @@ export default class EmployeesView {
         };
 
         const deleteEmployee = async (id) => {
-            if (await NotificationDialog.confirm(I18n.t('employees.confirmDelete', { id }))) {
+            const name = getEmployeeName(id);
+            if (await NotificationDialog.confirm(I18n.t('employees.confirmDelete', { name, id }))) {
                 try {
                     await EmployeeApi.remove(id);
                     refresh();

@@ -84,10 +84,12 @@ export default class AbsenceTypesView {
         const closeBtn = container.querySelector('#close-modal');
 
         let editingId = null;
+        let typesList = [];
 
         const refresh = async () => {
             try {
                 const types = await AbsenceTypeApi.getAll();
+                typesList = types;
                 tbody.innerHTML = '';
                 types.forEach(type => {
                     const row = document.createElement('tr');
@@ -118,8 +120,7 @@ export default class AbsenceTypesView {
 
         const editAbsenceType = async (id) => {
             try {
-                const types = await AbsenceTypeApi.getAll();
-                const type = types.find(t => t.id === id);
+                const type = typesList.find(t => t.id === id) || (await AbsenceTypeApi.getAll()).find(t => t.id === id);
                 if (type) {
                     editingId = id;
                     modalTitle.innerText = I18n.t('absenceTypes.editAbsenceType');
@@ -143,7 +144,9 @@ export default class AbsenceTypesView {
         };
 
         const deleteAbsenceType = async (id) => {
-            if (await NotificationDialog.confirm(I18n.t('absenceTypes.confirmDelete', { id }))) {
+            const type = typesList.find(t => t.id === id);
+            const name = type ? type.name : id;
+            if (await NotificationDialog.confirm(I18n.t('absenceTypes.confirmDelete', { name, id }))) {
                 try {
                     await AbsenceTypeApi.remove(id);
                     refresh();
