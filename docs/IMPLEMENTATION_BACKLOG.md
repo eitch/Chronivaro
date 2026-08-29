@@ -156,41 +156,13 @@ The following foundational areas are verified as fully implemented in the reposi
 - **User Language Persistence & Frontend Sync (Sections 4.2.1, 4.2.2, 14.1, 18.5, 20.1 #4):** Implemented `UpdateUserLanguageService` in `chronivaro-core` and REST endpoint `POST /rest/chronivaro/v1/auth/language` in `chronivaro-rest` allowing authenticated users to persistently update their language on their Strolch `UserRep`; wired `I18n.js` and `LoginView.js` in `chronivaro-web` to synchronize explicit language choices directly to the backend profile while retaining local browser storage caching; verified with comprehensive unit, REST, and UI tests.
 - **Employee Self-Service Work Entry Deletion (Sections 14.2, 15.2, 20 #4):** Core service `RemoveWorkEntryService` updated to allow employees deleting their own work entries in open periods (`isSelf`); REST endpoint `DELETE /rest/chronivaro/v1/me/work-entries/{id}` implemented in `ChronivaroResource` with optimistic concurrency validation via `If-Match`; `WorkEntryApi.js` updated with `deleteWorkEntry` / `deleteMyWorkEntry`; `MyTimesView.js` wired with deletion action buttons and confirmation dialog for employees on their work entries; `PrivilegeRoles.xml` updated across all runtime and test configurations; covered by unit tests in `WorkEntryServiceTest`, REST integration tests in `ChronivaroResourceTest`, and web asset tests in `WebWorkEntryModificationUiTest`.
 - **Vacation Report Metric Initialization & Zero Defaulting for New Employees (Sections 6.7, 11.3):** Guarded against null, uninitialized, or missing balance fields in vacation summaries, DTO mapping, CSV and PDF report export helpers, and web report rendering (`ReportsView.js`); ensured all metrics default to clean numeric zeros (0 days / 0:00 h) without displaying undefined text; covered by comprehensive core, REST, and UI test suites.
+- **Enhanced Onboarding Registration Email with Direct URL and Configurable Server Base URL (Sections 6.11, 9.6, 12.1 #8):** Added `serverBaseUrl` parameter to global configuration model (`ChronivaroConstants`, `Templates.xml`, `Model.xml`), DTOs, and REST API (`ConfigurationResource`); implemented `ChronivaroUserChallengeHandler` providing friendly, localized onboarding emails (German/English) containing personalized greetings, direct registration links (`${serverBaseUrl}/#complete-registration?user=${username}&token=${token}`), and fallback registration codes; updated `CompleteRegistrationView.js` to auto-populate username and challenge token from URL query parameters; added `serverBaseUrl` field, validation, hint, and translations in `ConfigurationView.js` and `i18n` dictionaries; covered by comprehensive core, REST, and UI test suites.
 
 ---
 
 ## Prioritized Implementation Backlog
 
-### Task 1: [New] Enhanced Onboarding Registration Email with Direct URL and Configurable Server Base URL
-
-- **Specification Reference**:
-  - Section 6.11 (Globale Anwendungskonfiguration: `serverBaseUrl`)
-  - Section 9.6 (Mitarbeiter-Registrierung: Onboarding-E-Mail mit direktem Registrierungslink)
-  - Section 12.1 #8 (Administration: Globale Einstellungen)
-- **Current Implementation Location**:
-  - `chronivaro-core/src/main/java/ch/eitchnet/chronivaro/core/service/InitiateUserRegistrationService.java`
-  - `chronivaro-web/src/main/webapp/js/pages/ConfigurationView.js`
-  - `chronivaro-web/src/main/webapp/js/pages/CompleteRegistrationView.js`
-- **Missing Behaviour**:
-  - Registration email is currently a minimal challenge text rather than a welcoming onboarding experience.
-  - Direct registration URL containing the token is missing in the email body.
-  - Global configuration for `serverBaseUrl` is not yet defined/configurable to construct absolute URLs.
-- **Proposed Implementation Plan**:
-  - Add `serverBaseUrl` to global configuration parameters and provide configuration UI in `ConfigurationView.js`.
-  - Design a structured, friendly onboarding email template for `Usage.SET_PASSWORD` challenges that includes a direct registration URL (`${serverBaseUrl}/#complete-registration?user=${username}&token=${token}`).
-  - Ensure the web client handles token deep linking in `CompleteRegistrationView.js`.
-- **Dependencies**:
-  - `InitiateUserRegistrationService`
-  - `ConfigurationView.js`
-  - `CompleteRegistrationView.js`
-- **Acceptance Criteria**:
-  1. Triggering employee/user registration sends an onboarding email containing a clickable direct URL with the prefilled registration token.
-  2. Server base URL is configurable via global settings (`serverBaseUrl`).
-  3. Opening the link opens `CompleteRegistrationView` with the token populated for password setup.
-
----
-
-### Task 2: [Refactor] UI: Horizontal Single-Row Layout for Report Summaries Across All Report Types
+### Task 1: [Refactor] UI: Horizontal Single-Row Layout for Report Summaries Across All Report Types
 
 - **Specification Reference**:
   - Section 11 (Reports: 11.1–11.5)
@@ -214,7 +186,7 @@ The following foundational areas are verified as fully implemented in the reposi
 
 ---
 
-### Task 3: [Refactor] UI: Multi-Column / Row Layout with Spacing for Presence / Who Is Working Dashboard
+### Task 2: [Refactor] UI: Multi-Column / Row Layout with Spacing for Presence / Who Is Working Dashboard
 
 - **Specification Reference**:
   - Section 8 (Anwesenheitsstatus)
@@ -234,7 +206,7 @@ The following foundational areas are verified as fully implemented in the reposi
 
 ---
 
-### Task 4: [Fix] UI: Display Entity Names Instead of Technical IDs in Deletion Confirmation Dialogs
+### Task 3: [Fix] UI: Display Entity Names Instead of Technical IDs in Deletion Confirmation Dialogs
 
 - **Specification Reference**:
   - Section 12.2 (UI-Grundsätze: Bestätigung vor fachlich weitreichenden Aktionen)
@@ -257,7 +229,7 @@ The following foundational areas are verified as fully implemented in the reposi
 
 ---
 
-### Task 5: [Fix] UI: Modal Dialog Scrolling and Viewport Overflow Handling for Add Employee, Edit Schedule, and All Dialogs
+### Task 4: [Fix] UI: Modal Dialog Scrolling and Viewport Overflow Handling for Add Employee, Edit Schedule, and All Dialogs
 
 - **Specification Reference**:
   - Section 12.2 (UI-Grundsätze: Modale Dialoge und Viewport-Overflow)
