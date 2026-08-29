@@ -423,7 +423,10 @@ public class ChronivaroMapper {
 				config.hasParameter(PARAM_COMPANY_NAME) ? config.getString(PARAM_COMPANY_NAME) : DEFAULT_COMPANY_NAME,
 				config.hasParameter(PARAM_COMPANY_LOGO) ? config.getString(PARAM_COMPANY_LOGO) : "",
 				config.hasParameter(PARAM_DEFAULT_LANGUAGE) ? config.getString(PARAM_DEFAULT_LANGUAGE) :
-						DEFAULT_LANGUAGE, ch.eitchnet.chronivaro.core.model.ChronivaroVersionHelper.getVersion(config),
+						DEFAULT_LANGUAGE,
+				config.hasParameter(PARAM_SERVER_BASE_URL) ? config.getString(PARAM_SERVER_BASE_URL) :
+						DEFAULT_SERVER_BASE_URL,
+				ch.eitchnet.chronivaro.core.model.ChronivaroVersionHelper.getVersion(config),
 				config.hasParameter(PARAM_UPDATED_BY) ? config.getString(PARAM_UPDATED_BY) : null);
 	}
 

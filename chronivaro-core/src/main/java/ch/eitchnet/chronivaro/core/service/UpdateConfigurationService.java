@@ -35,6 +35,7 @@ public class UpdateConfigurationService extends AbstractService<UpdateConfigurat
 		public String companyName;
 		public String companyLogo;
 		public String defaultLanguage;
+		public String serverBaseUrl;
 	}
 
 	@Override
@@ -62,6 +63,9 @@ public class UpdateConfigurationService extends AbstractService<UpdateConfigurat
 		}
 		if (arg.companyLogo != null && !arg.companyLogo.isBlank() && !isValidLogo(arg.companyLogo)) {
 			throw new IllegalArgumentException("companyLogo must be a valid image URL, relative image path, or data URI");
+		}
+		if (arg.serverBaseUrl != null && !arg.serverBaseUrl.isBlank() && !isValidServerBaseUrl(arg.serverBaseUrl)) {
+			throw new IllegalArgumentException("serverBaseUrl must be a valid HTTP or HTTPS URL");
 		}
 
 		try (StrolchTransaction tx = openArgOrUserTx(arg)) {
@@ -99,6 +103,14 @@ public class UpdateConfigurationService extends AbstractService<UpdateConfigurat
 				String lang = arg.defaultLanguage.trim().toLowerCase();
 				config.setString(PARAM_DEFAULT_LANGUAGE, lang);
 				changes.append(" defaultLanguage=").append(lang);
+			}
+			if (arg.serverBaseUrl != null) {
+				String baseUrl = arg.serverBaseUrl.trim();
+				while (baseUrl.endsWith("/")) {
+					baseUrl = baseUrl.substring(0, baseUrl.length() - 1);
+				}
+				config.setString(PARAM_SERVER_BASE_URL, baseUrl);
+				changes.append(" serverBaseUrl=").append(baseUrl.isEmpty() ? "(cleared)" : baseUrl);
 			}
 
 			bumpVersion(config, tx);
@@ -154,6 +166,22 @@ public class UpdateConfigurationService extends AbstractService<UpdateConfigurat
 		String lower = trimmed.toLowerCase();
 		return lower.endsWith(".png") || lower.endsWith(".jpg") || lower.endsWith(".jpeg")
 				|| lower.endsWith(".svg") || lower.endsWith(".gif") || lower.endsWith(".webp") || lower.endsWith(".ico");
+	}
+
+	private static boolean isValidServerBaseUrl(String url) {
+		if (url == null || url.isBlank()) {
+			return true;
+		}
+		String trimmed = url.trim();
+		if (!trimmed.startsWith("http://") && !trimmed.startsWith("https://")) {
+			return false;
+		}
+		try {
+			URI uri = new URI(trimmed);
+			return uri.getHost() != null && !uri.getHost().isBlank();
+		} catch (Exception e) {
+			return false;
+		}
 	}
 
 	@Override

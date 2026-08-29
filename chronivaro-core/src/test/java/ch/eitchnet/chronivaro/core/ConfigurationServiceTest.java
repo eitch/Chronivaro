@@ -47,6 +47,7 @@ public class ConfigurationServiceTest {
 		arg.companyName = "Acme Corp";
 		arg.companyLogo = "https://example.com/logo.png";
 		arg.defaultLanguage = "en";
+		arg.serverBaseUrl = "https://chronivaro.example.com";
 
 		ServiceResult result = serviceHandler.doService(adminCert, service, arg);
 		assertTrue(result.getMessage(), result.isOk());
@@ -60,6 +61,7 @@ public class ConfigurationServiceTest {
 			assertEquals("Acme Corp", config.getString(ch.eitchnet.chronivaro.core.model.ChronivaroConstants.PARAM_COMPANY_NAME));
 			assertEquals("https://example.com/logo.png", config.getString(ch.eitchnet.chronivaro.core.model.ChronivaroConstants.PARAM_COMPANY_LOGO));
 			assertEquals("en", config.getString(ch.eitchnet.chronivaro.core.model.ChronivaroConstants.PARAM_DEFAULT_LANGUAGE));
+			assertEquals("https://chronivaro.example.com", config.getString(ch.eitchnet.chronivaro.core.model.ChronivaroConstants.PARAM_SERVER_BASE_URL));
 		}
 	}
 
@@ -106,6 +108,11 @@ public class ConfigurationServiceTest {
 		invalidBase64.companyLogo = "data:image/png;base64,not-valid-base-64-!!";
 		ServiceResult result8 = serviceHandler.doService(adminCert, new UpdateConfigurationService(), invalidBase64);
 		assertTrue("Corrupt base64 payload should fail", result8.isNok());
+
+		UpdateConfigurationService.UpdateConfigurationArgument invalidUrl = new UpdateConfigurationService.UpdateConfigurationArgument();
+		invalidUrl.serverBaseUrl = "not-a-valid-url";
+		ServiceResult result9 = serviceHandler.doService(adminCert, new UpdateConfigurationService(), invalidUrl);
+		assertTrue("Invalid serverBaseUrl should fail", result9.isNok());
 	}
 
 	@Test

@@ -81,7 +81,8 @@ public class ConfigurationResourceTest extends AbstractChronivaroRestfulTest {
 				  "vacationAbsenceTypeCode": "VACATION",
 				  "companyName": "Acme Time Corp",
 				  "companyLogo": "https://example.com/logo.png",
-				  "defaultLanguage": "en"
+				  "defaultLanguage": "en",
+				  "serverBaseUrl": "https://app.chronivaro.example.com"
 				}
 				""";
 
@@ -104,6 +105,7 @@ public class ConfigurationResourceTest extends AbstractChronivaroRestfulTest {
 			assertEquals("Acme Time Corp", updated.companyName());
 			assertEquals("https://example.com/logo.png", updated.companyLogo());
 			assertEquals("en", updated.defaultLanguage());
+			assertEquals("https://app.chronivaro.example.com", updated.serverBaseUrl());
 			assertEquals(Integer.valueOf(initial.version() + 1), updated.version());
 			assertEquals("admin", updated.updatedBy());
 		}

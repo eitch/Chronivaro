@@ -48,6 +48,7 @@ public class WebConfigurationUiTest extends AbstractChronivaroRestfulTest {
 		assertTrue("ConfigurationView must contain config-company-name ID", viewContent.contains("id=\"config-company-name\""));
 		assertTrue("ConfigurationView must contain config-company-logo ID", viewContent.contains("id=\"config-company-logo\""));
 		assertTrue("ConfigurationView must contain config-default-language ID", viewContent.contains("id=\"config-default-language\""));
+		assertTrue("ConfigurationView must contain config-server-base-url ID", viewContent.contains("id=\"config-server-base-url\""));
 		assertTrue("ConfigurationView must contain config-weekly-target ID", viewContent.contains("id=\"config-weekly-target\""));
 		assertTrue("ConfigurationView must contain config-vacation-days ID", viewContent.contains("id=\"config-vacation-days\""));
 		assertTrue("ConfigurationView must contain config-day-minutes ID", viewContent.contains("id=\"config-day-minutes\""));

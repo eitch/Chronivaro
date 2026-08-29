@@ -44,6 +44,7 @@ public class WebConfigurationUiTest {
 		assertTrue("ConfigurationView must have view-header with subtitle below title", viewJs.contains("class=\"view-header\"") && viewJs.contains("class=\"subtitle\""));
 		assertTrue("ConfigurationView must have configuration-container", viewJs.contains("class=\"configuration-container\""));
 		assertTrue("ConfigurationView must have config-company-name input", viewJs.contains("id=\"config-company-name\""));
+		assertTrue("ConfigurationView must have config-server-base-url input", viewJs.contains("id=\"config-server-base-url\""));
 		assertTrue("ConfigurationView must have config-logo-file input", viewJs.contains("id=\"config-logo-file\""));
 		assertTrue("ConfigurationView must have config-logo-upload-btn", viewJs.contains("id=\"config-logo-upload-btn\""));
 		assertTrue("ConfigurationView must have config-logo-remove-btn", viewJs.contains("id=\"config-logo-remove-btn\""));

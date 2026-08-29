@@ -91,6 +91,7 @@ public class ChronivaroConstants {
 	public static final String PARAM_COMPANY_NAME = "companyName";
 	public static final String PARAM_COMPANY_LOGO = "companyLogo";
 	public static final String PARAM_DEFAULT_LANGUAGE = "defaultLanguage";
+	public static final String PARAM_SERVER_BASE_URL = "serverBaseUrl";
 
 	public static final int DEFAULT_ANNUAL_VACATION_DAYS = 25;
 	public static final int DEFAULT_MINUTES_PER_VACATION_DAY = 480;
@@ -98,6 +99,7 @@ public class ChronivaroConstants {
 	public static final int DEFAULT_WEEKLY_TARGET_MINUTES = 2520;
 	public static final String DEFAULT_COMPANY_NAME = "Chronivaro";
 	public static final String DEFAULT_LANGUAGE = "de";
+	public static final String DEFAULT_SERVER_BASE_URL = "http://localhost:9000";
 
 	public static final String PARAM_HOLIDAY_CALENDAR = "holidayCalendar";
 	public static final String PARAM_DATE = "date";

@@ -156,6 +156,7 @@ public class ConfigurationResource {
 		arg.companyName = dto.companyName();
 		arg.companyLogo = dto.companyLogo();
 		arg.defaultLanguage = dto.defaultLanguage();
+		arg.serverBaseUrl = dto.serverBaseUrl();
 
 		ServiceResult result = serviceHandler.doService(cert, new UpdateConfigurationService(), arg);
 		if (result.isOk()) {
