@@ -133,7 +133,7 @@ public class CsvExportHelper {
 		StringBuilder sb = new StringBuilder();
 		sb.append(UTF8_BOM);
 
-		String employeeId = employee != null ? employee.getId() : "";
+		String employeeId = employee != null ? employee.getId() : (summary != null ? summary.employeeId() : "");
 		String employeeName = employee != null ? employee.getName() : "";
 
 		// Summary Section
@@ -148,6 +148,12 @@ public class CsvExportHelper {
 			sb.append(summary.usageMinutes()).append(",");
 			sb.append(summary.remainingMinutes()).append(",");
 			sb.append(escapeCsv(formatDuration(summary.remainingMinutes()))).append("\n\n");
+		} else {
+			sb.append(escapeCsv(employeeId)).append(",");
+			sb.append(escapeCsv(employeeName)).append(",");
+			sb.append(year).append(",");
+			sb.append("0,0,0,0,0,");
+			sb.append(escapeCsv(formatDuration(0))).append("\n\n");
 		}
 
 		// Journal Entries Section

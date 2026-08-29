@@ -262,6 +262,53 @@ public class PdfExportHelperTest {
 	}
 
 	@Test
+	public void shouldExportVacationReportToPdfForNewEmployeeWithEmptyOrNullSummary() throws Exception {
+		Resource config = createMockCompanyConfig("Alpha Corp", null);
+		Resource emp = createMockEmployee("newbie", "Newbie Employee", "1099", "team-1", "loc-1");
+
+		// Test with null summary and empty entries
+		byte[] pdfBytesNull = PdfExportHelper.exportVacationReportToPdf(
+				null,
+				List.of(),
+				emp,
+				2026,
+				config,
+				"de"
+		);
+		assertNotNull(pdfBytesNull);
+		assertTrue(pdfBytesNull.length > 500);
+
+		PdfReader readerNull = new PdfReader(pdfBytesNull);
+		PdfTextExtractor extractorNull = new PdfTextExtractor(readerNull);
+		String textNull = extractorNull.getTextFromPage(1);
+		assertTrue(textNull.contains("Ferienübersicht"));
+		assertTrue(textNull.contains("Newbie"));
+		assertTrue(textNull.contains("00:00"));
+		readerNull.close();
+
+		// Test with zeroed summary
+		VacationAccountSummary zeroSummary = new VacationAccountSummary("newbie", 2026, 0, 0, 0, 0, 0);
+		byte[] pdfBytesZero = PdfExportHelper.exportVacationReportToPdf(
+				zeroSummary,
+				List.of(),
+				emp,
+				2026,
+				config,
+				"en"
+		);
+		assertNotNull(pdfBytesZero);
+		assertTrue(pdfBytesZero.length > 500);
+
+		PdfReader readerZero = new PdfReader(pdfBytesZero);
+		PdfTextExtractor extractorZero = new PdfTextExtractor(readerZero);
+		String textZero = extractorZero.getTextFromPage(1);
+		assertTrue(textZero.contains("Vacation Summary"));
+		assertTrue(textZero.contains("Newbie"));
+		assertTrue(textZero.contains("00:00"));
+		readerZero.close();
+	}
+
+	@Test
 	public void shouldExportAbsenceReportToPdf() throws Exception {
 		Resource config = createMockCompanyConfig("Alpha Corp", null);
 

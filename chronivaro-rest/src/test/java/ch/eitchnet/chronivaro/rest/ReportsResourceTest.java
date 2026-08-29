@@ -354,6 +354,86 @@ public class ReportsResourceTest extends AbstractChronivaroRestfulTest {
 	}
 
 	@Test
+	public void shouldGetVacationReportForNewlyCreatedEmployeeWithoutBookings() {
+		// Create a new employee without vacation bookings
+		String adminToken = authenticate("admin", "admin");
+		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(runtimeMock.loginAdmin())) {
+			Resource newEmp = tx.getResourceTemplate(TYPE_EMPLOYEE, true);
+			newEmp.setId("newbie_emp");
+			newEmp.setName("Newbie User");
+			newEmp.setString(PARAM_FIRSTNAME, "Newbie");
+			newEmp.setString(PARAM_LASTNAME, "User");
+			newEmp.setString(PARAM_USERNAME, "newbie");
+			newEmp.setString(PARAM_PERSONAL_NUMBER, "9999");
+			newEmp.setDate(PARAM_JOIN_DATE, LocalDate.of(2026, 1, 1).atStartOfDay(ZoneId.of(ZONE)));
+			newEmp.setRelation(PARAM_PRIMARY_TEAM, tx.getResourceBy(TYPE_TEAM, "team-1"));
+			newEmp.setRelation(PARAM_LOCATION, tx.getResourceBy(TYPE_LOCATION, "test-loc"));
+			newEmp.setBoolean(PARAM_ACTIVE, true);
+			tx.add(newEmp);
+			tx.commitOnClose();
+		}
+
+		// 1. JSON Vacation Report for newly created employee
+		try (Response resJson = target()
+				.path("chronivaro/v1/reports/vacation")
+				.queryParam("employeeId", "newbie_emp")
+				.queryParam("year", 2026)
+				.request(MediaType.APPLICATION_JSON)
+				.header("Authorization", adminToken)
+				.get()) {
+
+			assertEquals(200, resJson.getStatus());
+			String jsonStr = resJson.readEntity(String.class);
+			JsonObject vacObj = JsonParser.parseString(jsonStr).getAsJsonObject();
+			assertEquals("newbie_emp", vacObj.get("employeeId").getAsString());
+			assertEquals("Newbie User", vacObj.get("employeeName").getAsString());
+			assertEquals(2026, vacObj.get("year").getAsInt());
+			assertEquals(0, vacObj.get("carryOverMinutes").getAsInt());
+			assertEquals(0, vacObj.get("entitlementMinutes").getAsInt());
+			assertEquals(0, vacObj.get("correctionsMinutes").getAsInt());
+			assertEquals(0, vacObj.get("usageMinutes").getAsInt());
+			assertEquals(0, vacObj.get("remainingMinutes").getAsInt());
+			assertNotNull(vacObj.get("entries"));
+			assertEquals(0, vacObj.get("entries").getAsJsonArray().size());
+		}
+
+		// 2. CSV Vacation Report for newly created employee
+		try (Response resCsv = target()
+				.path("chronivaro/v1/reports/vacation")
+				.queryParam("employeeId", "newbie_emp")
+				.queryParam("year", 2026)
+				.queryParam("format", "csv")
+				.request()
+				.header("Authorization", adminToken)
+				.get()) {
+
+			assertEquals(200, resCsv.getStatus());
+			String csvStr = resCsv.readEntity(String.class);
+			assertTrue(csvStr.startsWith(CsvExportHelper.UTF8_BOM));
+			assertTrue(csvStr.contains("newbie_emp,Newbie User,2026,0,0,0,0,0,00:00"));
+			assertTrue(csvStr.contains("JournalEntries:"));
+		}
+
+		// 3. PDF Vacation Report for newly created employee
+		try (Response resPdf = target()
+				.path("chronivaro/v1/reports/vacation")
+				.queryParam("employeeId", "newbie_emp")
+				.queryParam("year", 2026)
+				.queryParam("format", "pdf")
+				.request()
+				.header("Authorization", adminToken)
+				.get()) {
+
+			assertEquals(200, resPdf.getStatus());
+			assertTrue(resPdf.getMediaType().toString().startsWith("application/pdf"));
+			byte[] pdfBytes = resPdf.readEntity(byte[].class);
+			assertNotNull(pdfBytes);
+			assertTrue(pdfBytes.length > 500);
+			assertTrue(new String(pdfBytes, 0, 5).startsWith("%PDF-"));
+		}
+	}
+
+	@Test
 	public void shouldGetTeamReportWithScopingAndMissingBookings() {
 		String supervisorToken = authenticate("supervisor", "admin");
 		String employeeToken = authenticate("employee", "admin");

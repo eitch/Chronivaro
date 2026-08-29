@@ -70,6 +70,14 @@ public class WebReportsUiTest {
 		assertTrue("ReportsView must format employee display with username/personal number in vacation report",
 				viewJs.contains("username") && viewJs.contains("personalNumber") && viewJs.contains("empDisplay"));
 
+		// Verify vacation report protects against undefined values for uninitialized/new employees
+		assertTrue("ReportsView must guard vacation metrics with default nullish coalescing to 0",
+				viewJs.contains("entitlementMinutes ?? data.annualEntitlementMinutes ?? 0") &&
+				viewJs.contains("carryOverMinutes ?? 0") &&
+				viewJs.contains("correctionsMinutes ?? data.correctionMinutes ?? 0") &&
+				viewJs.contains("usageMinutes ?? data.takenMinutes ?? 0") &&
+				viewJs.contains("remainingMinutes ?? data.remainingBalanceMinutes ?? 0"));
+
 		// Verify role-based visibility gating for team monthly overview
 		assertTrue("ReportsView must define canViewTeamReport method", viewJs.contains("canViewTeamReport()"));
 		assertTrue("ReportsView canViewTeamReport must check Supervisor role", viewJs.contains("AuthApi.hasRole('Supervisor')"));

@@ -13,7 +13,8 @@ import java.util.Locale;
 
 import static ch.eitchnet.chronivaro.core.model.ChronivaroConstants.AUDIT_ACTION_UPDATE;
 
-public class UpdateUserLanguageService extends AbstractService<UpdateUserLanguageService.UpdateUserLanguageArgument, ServiceResult> {
+public class UpdateUserLanguageService
+		extends AbstractService<UpdateUserLanguageService.UpdateUserLanguageArgument, ServiceResult> {
 
 	@Override
 	protected ServiceResult internalDoService(UpdateUserLanguageArgument arg) throws Exception {
@@ -24,9 +25,8 @@ public class UpdateUserLanguageService extends AbstractService<UpdateUserLanguag
 
 		try (StrolchTransaction tx = openArgOrUserTx(arg)) {
 			PrivilegeHandler privilegeHandler = tx.getContainer().getPrivilegeHandler().getPrivilegeHandler();
-			UserRep user = privilegeHandler.setUserLocale(tx.getCertificate(), tx.getCertificate().getUsername(), locale);
-			if (privilegeHandler.isPersistOnUserDataChanged())
-				privilegeHandler.persist(tx.getCertificate());
+			UserRep user = privilegeHandler.setUserLocale(tx.getCertificate(), tx.getCertificate().getUsername(),
+					locale);
 
 			ChronivaroAuditHelper.audit(tx, "User", user.getUserId(), AUDIT_ACTION_UPDATE,
 					"Updated user language for " + user.getUsername() + " to " + locale.toLanguageTag());

@@ -302,28 +302,31 @@ public class PdfExportHelper {
 			document.add(metaTable);
 
 			// Vacation Summary KPIs
-			if (summary != null) {
-				Paragraph kpiHeading = new Paragraph(i18n.summary, FONT_SECTION);
-				kpiHeading.setSpacingBefore(4f);
-				kpiHeading.setSpacingAfter(4f);
-				document.add(kpiHeading);
+			Paragraph kpiHeading = new Paragraph(i18n.summary, FONT_SECTION);
+			kpiHeading.setSpacingBefore(4f);
+			kpiHeading.setSpacingAfter(4f);
+			document.add(kpiHeading);
 
-				PdfPTable kpiTable = new PdfPTable(3);
-				kpiTable.setWidthPercentage(100);
-				kpiTable.setWidths(new float[]{33, 33, 34});
-				kpiTable.setSpacingAfter(8f);
+			PdfPTable kpiTable = new PdfPTable(3);
+			kpiTable.setWidthPercentage(100);
+			kpiTable.setWidths(new float[]{33, 33, 34});
+			kpiTable.setSpacingAfter(8f);
 
-				addKpiCell(kpiTable, i18n.annualEntitlement, formatDuration(summary.entitlementMinutes()), false);
-				addKpiCell(kpiTable, i18n.carryOver, formatDuration(summary.carryOverMinutes()), false);
-				addKpiCell(kpiTable, i18n.corrections, formatDuration(summary.correctionsMinutes()), summary.correctionsMinutes() < 0);
+			int entitlement = summary != null ? summary.entitlementMinutes() : 0;
+			int carryOver = summary != null ? summary.carryOverMinutes() : 0;
+			int corrections = summary != null ? summary.correctionsMinutes() : 0;
+			int usage = summary != null ? summary.usageMinutes() : 0;
+			int remaining = summary != null ? summary.remainingMinutes() : 0;
+			int totalEntitlement = entitlement + carryOver + corrections;
 
-				int totalEntitlement = summary.entitlementMinutes() + summary.carryOverMinutes() + summary.correctionsMinutes();
-				addKpiCell(kpiTable, i18n.totalEntitlement, formatDuration(totalEntitlement), false);
-				addKpiCell(kpiTable, i18n.vacationTaken, formatDuration(summary.usageMinutes()), false);
-				addKpiCell(kpiTable, i18n.remainingBalance, formatDuration(summary.remainingMinutes()), summary.remainingMinutes() < 0);
+			addKpiCell(kpiTable, i18n.annualEntitlement, formatDuration(entitlement), false);
+			addKpiCell(kpiTable, i18n.carryOver, formatDuration(carryOver), false);
+			addKpiCell(kpiTable, i18n.corrections, formatDuration(corrections), corrections < 0);
+			addKpiCell(kpiTable, i18n.totalEntitlement, formatDuration(totalEntitlement), false);
+			addKpiCell(kpiTable, i18n.vacationTaken, formatDuration(usage), false);
+			addKpiCell(kpiTable, i18n.remainingBalance, formatDuration(remaining), remaining < 0);
 
-				document.add(kpiTable);
-			}
+			document.add(kpiTable);
 
 			// Vacation Journal Table
 			Paragraph tableHeading = new Paragraph(i18n.vacationJournal, FONT_SECTION);

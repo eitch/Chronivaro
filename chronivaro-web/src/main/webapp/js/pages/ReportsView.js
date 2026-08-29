@@ -927,7 +927,13 @@ export default class ReportsView {
 			return;
 		}
 
-		const remBalClass = data.remainingBalanceMinutes >= 0 ? 'positive' : 'negative';
+		const entitlement = data.entitlementMinutes ?? data.annualEntitlementMinutes ?? 0;
+		const carryOver = data.carryOverMinutes ?? 0;
+		const corrections = data.correctionsMinutes ?? data.correctionMinutes ?? 0;
+		const usage = data.usageMinutes ?? data.takenMinutes ?? 0;
+		const planned = data.plannedMinutes ?? 0;
+		const remaining = data.remainingMinutes ?? data.remainingBalanceMinutes ?? 0;
+		const remBalClass = remaining >= 0 ? 'positive' : 'negative';
 
 		let entriesHtml = '';
 		if (!data.entries || data.entries.length === 0) {
@@ -957,7 +963,7 @@ export default class ReportsView {
 
 		this.resultsContainer.innerHTML = `
 			<div class="report-result-header">
-				<h3>${I18n.t('reports.vacationReport')}: ${I18n.t('common.year')} ${data.year}</h3>
+				<h3>${I18n.t('reports.vacationReport')}: ${I18n.t('common.year')} ${data.year || new Date().getFullYear()}</h3>
 				<span class="report-emp-tag">${I18n.t('common.employee')}: ${empDisplay}</span>
 			</div>
 
@@ -965,33 +971,33 @@ export default class ReportsView {
 			<div class="summary-grid report-summary-grid">
 				<div class="summary-card">
 					<div class="card-title">${I18n.t('reports.annualEntitlement')}</div>
-					<div class="card-value">${Format.durationDays(data.annualEntitlementMinutes)}</div>
-					<div class="card-sub">${data.annualEntitlementMinutes} min</div>
+					<div class="card-value">${Format.durationDays(entitlement)}</div>
+					<div class="card-sub">${entitlement} min</div>
 				</div>
 				<div class="summary-card">
 					<div class="card-title">${I18n.t('reports.carryOver')}</div>
-					<div class="card-value">${Format.durationDays(data.carryOverMinutes)}</div>
-					<div class="card-sub">${data.carryOverMinutes} min</div>
+					<div class="card-value">${Format.durationDays(carryOver)}</div>
+					<div class="card-sub">${carryOver} min</div>
 				</div>
 				<div class="summary-card">
 					<div class="card-title">${I18n.t('reports.corrections')}</div>
-					<div class="card-value">${Format.durationDays(data.correctionMinutes)}</div>
-					<div class="card-sub">${data.correctionMinutes} min</div>
+					<div class="card-value">${Format.durationDays(corrections)}</div>
+					<div class="card-sub">${corrections} min</div>
 				</div>
 				<div class="summary-card">
 					<div class="card-title">${I18n.t('reports.takenUsed')}</div>
-					<div class="card-value">${Format.durationDays(data.takenMinutes)}</div>
-					<div class="card-sub">${data.takenMinutes} min</div>
+					<div class="card-value">${Format.durationDays(usage)}</div>
+					<div class="card-sub">${usage} min</div>
 				</div>
 				<div class="summary-card">
 					<div class="card-title">${I18n.t('reports.plannedFuture')}</div>
-					<div class="card-value">${Format.durationDays(data.plannedMinutes)}</div>
-					<div class="card-sub">${data.plannedMinutes} min</div>
+					<div class="card-value">${Format.durationDays(planned)}</div>
+					<div class="card-sub">${planned} min</div>
 				</div>
 				<div class="summary-card highlight-card">
 					<div class="card-title">${I18n.t('reports.remainingBalance')}</div>
-					<div class="card-value ${remBalClass}">${Format.durationDays(data.remainingBalanceMinutes)}</div>
-					<div class="card-sub">${data.remainingBalanceMinutes} min</div>
+					<div class="card-value ${remBalClass}">${Format.durationDays(remaining)}</div>
+					<div class="card-sub">${remaining} min</div>
 				</div>
 			</div>
 
