@@ -60,6 +60,7 @@
             <Allow>ch.eitchnet.chronivaro.core.service.StartTimerService</Allow>
             <Allow>ch.eitchnet.chronivaro.core.service.StopTimerService</Allow>
             <Allow>ch.eitchnet.chronivaro.core.service.CorrectWorkEntryService</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.service.RemoveWorkEntryService</Allow>
             <Allow>ch.eitchnet.chronivaro.core.service.SubmitPeriodService</Allow>
             <Allow>ch.eitchnet.chronivaro.core.service.CalculateVacationEntitlementService</Allow>
             <Allow>ch.eitchnet.chronivaro.core.service.GetVacationAccountSummaryService</Allow>
