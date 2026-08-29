@@ -3,6 +3,7 @@ package ch.eitchnet.chronivaro.core;
 import ch.eitchnet.chronivaro.core.model.ChronivaroModelHelper;
 import ch.eitchnet.chronivaro.core.model.ChronivaroVersionHelper;
 import ch.eitchnet.chronivaro.core.model.DaySummary;
+import ch.eitchnet.chronivaro.core.model.PeriodHelper;
 import ch.eitchnet.chronivaro.core.model.ScheduleHelper;
 import ch.eitchnet.chronivaro.core.model.WorkDayHelper;
 import ch.eitchnet.chronivaro.core.model.WorkEntryHelper;
@@ -695,5 +696,113 @@ public class WorkEntryServiceTest {
 			assertEquals(stopTime, stoppedEntry.getDate(PARAM_END));
 			assertEquals("Forgot to stop", stoppedEntry.getString(PARAM_COMMENT));
 		}
+	}
+
+	@Test
+	public void shouldAllowEmployeeToDeleteOwnWorkEntryAndRejectDeletingOthersOrInLockedPeriod() {
+		String emp1Id = "emp-del-1";
+		String emp1User = "emp_del_user_1";
+		String emp2Id = "emp-del-2";
+		String emp2User = "emp_del_user_2";
+
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
+			Resource e1 = createEmployee(tx, emp1Id, "Delete Test User 1");
+			UserRep u1 = new UserRep(null, emp1User, "Del", "One", UserState.ENABLED, emptySet(),
+					Set.of(ROLE_EMPLOYEE, ROLE_MODEL_ACCESSOR), Locale.of("de", "CH"), emptyMap(), null);
+			UserRep added1 = runtimeMock.getPrivilegeHandler().getPrivilegeHandler().addUser(certificate, u1, emp1User.toCharArray());
+			e1.setString(PARAM_USERNAME, added1.getUsername());
+			e1.setString(PARAM_USER_ID, added1.getUserId());
+			tx.update(e1);
+
+			Resource e2 = createEmployee(tx, emp2Id, "Delete Test User 2");
+			UserRep u2 = new UserRep(null, emp2User, "Del", "Two", UserState.ENABLED, emptySet(),
+					Set.of(ROLE_EMPLOYEE, ROLE_MODEL_ACCESSOR), Locale.of("de", "CH"), emptyMap(), null);
+			UserRep added2 = runtimeMock.getPrivilegeHandler().getPrivilegeHandler().addUser(certificate, u2, emp2User.toCharArray());
+			e2.setString(PARAM_USERNAME, added2.getUsername());
+			e2.setString(PARAM_USER_ID, added2.getUserId());
+			tx.update(e2);
+
+			tx.commitOnClose();
+		}
+
+		Certificate emp1Cert = runtimeMock.login(emp1User, emp1User);
+		Certificate emp2Cert = runtimeMock.login(emp2User, emp2User);
+		ServiceHandler serviceHandler = runtimeMock.getServiceHandler();
+
+		// Add work entry for emp1
+		ZonedDateTime start1 = ZonedDateTime.parse("2026-07-10T08:00:00+02:00[Europe/Zurich]");
+		ZonedDateTime end1 = ZonedDateTime.parse("2026-07-10T16:00:00+02:00[Europe/Zurich]");
+		AddWorkEntryService.AddWorkEntryArgument addArg1 = new AddWorkEntryService.AddWorkEntryArgument();
+		addArg1.employeeId = emp1Id;
+		addArg1.start = start1;
+		addArg1.end = end1;
+		addArg1.workingLocation = WorkingLocation.OFFICE;
+		ServiceResult addRes1 = serviceHandler.doService(certificate, new AddWorkEntryService(), addArg1);
+		assertTrue(addRes1.getMessage(), addRes1.isOk());
+
+		// Add work entry for emp2
+		ZonedDateTime start2 = ZonedDateTime.parse("2026-07-10T09:00:00+02:00[Europe/Zurich]");
+		ZonedDateTime end2 = ZonedDateTime.parse("2026-07-10T17:00:00+02:00[Europe/Zurich]");
+		AddWorkEntryService.AddWorkEntryArgument addArg2 = new AddWorkEntryService.AddWorkEntryArgument();
+		addArg2.employeeId = emp2Id;
+		addArg2.start = start2;
+		addArg2.end = end2;
+		addArg2.workingLocation = WorkingLocation.HOME_OFFICE;
+		ServiceResult addRes2 = serviceHandler.doService(certificate, new AddWorkEntryService(), addArg2);
+		assertTrue(addRes2.getMessage(), addRes2.isOk());
+
+		String entry1Id;
+		String entry2Id;
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
+			entry1Id = tx.streamResources(TYPE_WORK_ENTRY)
+					.filter(we -> emp1Id.equals(we.getRelationId(PARAM_EMPLOYEE)))
+					.findFirst().orElseThrow().getId();
+			entry2Id = tx.streamResources(TYPE_WORK_ENTRY)
+					.filter(we -> emp2Id.equals(we.getRelationId(PARAM_EMPLOYEE)))
+					.findFirst().orElseThrow().getId();
+		}
+
+		// 1. emp1 attempts to delete emp2's work entry -> Fails (AccessDenied)
+		ServiceResult delResOther = serviceHandler.doService(emp1Cert, new RemoveWorkEntryService(), new StringArgument(entry2Id));
+		assertFalse("Employee must not be able to delete another employee's work entry", delResOther.isOk());
+
+		// 2. emp1 deletes own work entry -> Success
+		ServiceResult delResSelf = serviceHandler.doService(emp1Cert, new RemoveWorkEntryService(), new StringArgument(entry1Id));
+		assertTrue(delResSelf.getMessage(), delResSelf.isOk());
+
+		// Verify entry1 is deleted from model and work day relations
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
+			assertNull(tx.getResourceBy(TYPE_WORK_ENTRY, entry1Id, false));
+			Resource workDay = tx.getResourceBy(TYPE_WORK_DAY, emp1Id + "-" + start1.toLocalDate(), false);
+			if (workDay != null && workDay.hasParameter(BAG_RELATIONS, PARAM_WORK_ENTRIES)) {
+				assertFalse(workDay.getStringList(BAG_RELATIONS, PARAM_WORK_ENTRIES).contains(entry1Id));
+			}
+		}
+
+		// 3. Re-add entry for emp1 in August 2026, lock period (SUBMITTED), emp1 attempts to delete -> Fails
+		ZonedDateTime startAug = ZonedDateTime.parse("2026-08-10T08:00:00+02:00[Europe/Zurich]");
+		ZonedDateTime endAug = ZonedDateTime.parse("2026-08-10T16:00:00+02:00[Europe/Zurich]");
+		AddWorkEntryService.AddWorkEntryArgument addArgAug = new AddWorkEntryService.AddWorkEntryArgument();
+		addArgAug.employeeId = emp1Id;
+		addArgAug.start = startAug;
+		addArgAug.end = endAug;
+		addArgAug.workingLocation = WorkingLocation.OFFICE;
+		ServiceResult addResAug = serviceHandler.doService(certificate, new AddWorkEntryService(), addArgAug);
+		assertTrue(addResAug.getMessage(), addResAug.isOk());
+
+		String entryAugId;
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
+			entryAugId = tx.streamResources(TYPE_WORK_ENTRY)
+					.filter(we -> emp1Id.equals(we.getRelationId(PARAM_EMPLOYEE)))
+					.filter(we -> startAug.equals(we.getDate(PARAM_START)))
+					.findFirst().orElseThrow().getId();
+			Resource period = PeriodHelper.getOrCreatePeriod(tx, emp1Id, java.time.YearMonth.from(startAug));
+			period.setString(PARAM_STATE, STATE_SUBMITTED);
+			tx.update(period);
+			tx.commitOnClose();
+		}
+
+		ServiceResult delResLocked = serviceHandler.doService(emp1Cert, new RemoveWorkEntryService(), new StringArgument(entryAugId));
+		assertFalse("Deleting work entry in locked/submitted period must fail", delResLocked.isOk());
 	}
 }

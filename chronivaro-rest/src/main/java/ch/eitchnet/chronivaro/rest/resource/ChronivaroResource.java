@@ -256,6 +256,21 @@ public class ChronivaroResource {
 		return ChronivaroRestHelper.toResponse(result);
 	}
 
+	@DELETE
+	@Path("me/work-entries/{id}")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response deleteWorkEntry(@Context HttpServletRequest request, @PathParam("id") String id) {
+		Certificate cert = (Certificate) request.getAttribute(STROLCH_CERTIFICATE);
+		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
+			Resource workEntry = tx.getResourceBy(TYPE_WORK_ENTRY, id, true);
+			ConcurrencyHelper.validateIfMatch(request, workEntry);
+		}
+
+		ServiceHandler serviceHandler = ChronivaroRestHelper.getServiceHandler();
+		ServiceResult result = serviceHandler.doService(cert, new RemoveWorkEntryService(), new StringArgument(id));
+		return ChronivaroRestHelper.toResponse(result);
+	}
+
 	@PUT
 	@Path("admin/work-entries/{id}")
 	@Consumes(MediaType.APPLICATION_JSON)
@@ -297,6 +312,11 @@ public class ChronivaroResource {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response adminDeleteWorkEntry(@Context HttpServletRequest request, @PathParam("id") String id) {
 		Certificate cert = (Certificate) request.getAttribute(STROLCH_CERTIFICATE);
+		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
+			Resource workEntry = tx.getResourceBy(TYPE_WORK_ENTRY, id, true);
+			ConcurrencyHelper.validateIfMatch(request, workEntry);
+		}
+
 		ServiceHandler serviceHandler = ChronivaroRestHelper.getServiceHandler();
 		ServiceResult result = serviceHandler.doService(cert, new RemoveWorkEntryService(), new StringArgument(id));
 		return ChronivaroRestHelper.toResponse(result);

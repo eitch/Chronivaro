@@ -121,6 +121,63 @@ public class ChronivaroResourceTest extends AbstractChronivaroRestfulTest {
 	}
 
 	@Test
+	public void shouldDeleteWorkEntryByEmployee() {
+		String adminToken = authenticate();
+		String employeeToken = authenticate("employee", "admin");
+
+		// 1. Admin creates a work entry for employee
+		String addJson = """
+				{
+				  "start": "2025-03-01T08:00:00+01:00",
+				  "end": "2025-03-01T12:00:00+01:00",
+				  "comment": "Work entry to delete",
+				  "workingLocation": "OFFICE"
+				}
+				""";
+		String entryId;
+		String etag;
+		try (Response response = target()
+				.path("chronivaro/v1/employees/employee_emp/work-entries")
+				.request(MediaType.APPLICATION_JSON)
+				.header("Authorization", adminToken)
+				.post(Entity.json(addJson))) {
+			assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+			etag = response.getHeaderString("ETag");
+			com.google.gson.JsonObject obj = ChronivaroRestHelper.createGson().fromJson(response.readEntity(String.class), com.google.gson.JsonObject.class);
+			entryId = obj.get("id").getAsString();
+		}
+
+		// 2. Concurrency mismatch with invalid If-Match
+		try (Response response = target()
+				.path("chronivaro/v1/me/work-entries/" + entryId)
+				.request(MediaType.APPLICATION_JSON)
+				.header("Authorization", employeeToken)
+				.header("If-Match", "\"99999\"")
+				.delete()) {
+			assertEquals(Response.Status.CONFLICT.getStatusCode(), response.getStatus());
+		}
+
+		// 3. Delete work entry with valid If-Match
+		try (Response response = target()
+				.path("chronivaro/v1/me/work-entries/" + entryId)
+				.request(MediaType.APPLICATION_JSON)
+				.header("Authorization", employeeToken)
+				.header("If-Match", etag)
+				.delete()) {
+			assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+		}
+
+		// 4. Verify entry is deleted
+		try (Response response = target()
+				.path("chronivaro/v1/me/work-entries/" + entryId)
+				.request(MediaType.APPLICATION_JSON)
+				.header("Authorization", employeeToken)
+				.get()) {
+			assertEquals(Response.Status.NOT_FOUND.getStatusCode(), response.getStatus());
+		}
+	}
+
+	@Test
 	public void shouldRequestAbsence() {
 		String authToken = authenticate();
 

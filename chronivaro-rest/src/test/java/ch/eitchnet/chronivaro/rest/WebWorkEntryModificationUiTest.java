@@ -43,6 +43,16 @@ public class WebWorkEntryModificationUiTest extends AbstractChronivaroRestfulTes
 		assertFalse("MyTimesView must not enforce shortenOnlyError on client", myTimesContent.contains("shortenOnlyError"));
 		assertTrue("MyTimesView must allow start time editing", myTimesContent.contains("editStartInput.value =") && myTimesContent.contains("editStartInput.removeAttribute('readonly')"));
 
+		// Verify MyTimesView contains delete action for work entries
+		assertTrue("MyTimesView must render delete-entry-btn", myTimesContent.contains("delete-entry-btn"));
+		assertTrue("MyTimesView must call deleteWorkEntry", myTimesContent.contains("WorkEntryApi.deleteWorkEntry"));
+
+		File workEntryApiJs = new File(webDir, "js/api/WorkEntryApi.js");
+		assertTrue("WorkEntryApi.js must exist", workEntryApiJs.exists());
+		String workEntryApiContent = Files.readString(workEntryApiJs.toPath());
+		assertTrue("WorkEntryApi must contain deleteWorkEntry", workEntryApiContent.contains("deleteWorkEntry"));
+		assertTrue("WorkEntryApi must contain deleteMyWorkEntry", workEntryApiContent.contains("deleteMyWorkEntry"));
+
 		// Verify ApprovalsView contains badges for work entries
 		File approvalsViewJs = new File(webDir, "js/pages/ApprovalsView.js");
 		assertTrue("ApprovalsView.js must exist", approvalsViewJs.exists());
@@ -174,6 +184,29 @@ public class WebWorkEntryModificationUiTest extends AbstractChronivaroRestfulTes
 			assertTrue("Modified work entry must have modified = true", updated.modified());
 			assertEquals("Adjusted by employee directly", updated.comment());
 			assertEquals("HOME_OFFICE", updated.workingLocation().name());
+		}
+
+		// 5. Employee deletes their own work entry via DELETE /chronivaro/v1/me/work-entries/{id}
+		try (Response deleteRes = target().path("/chronivaro/v1/me/work-entries/" + entryId)
+				.request(MediaType.APPLICATION_JSON)
+				.header("Authorization", employeeToken)
+				.delete()) {
+			assertEquals(Response.Status.OK.getStatusCode(), deleteRes.getStatus());
+		}
+
+		// 6. Verify work entry is gone
+		try (Response entriesRes = target().path("/chronivaro/v1/me/work-entries")
+				.queryParam("from", "2026-08-01")
+				.queryParam("to", "2026-08-31")
+				.request(MediaType.APPLICATION_JSON)
+				.header("Authorization", employeeToken)
+				.get()) {
+			assertEquals(Response.Status.OK.getStatusCode(), entriesRes.getStatus());
+			String jsonStr = entriesRes.readEntity(String.class);
+			WorkEntryDto[] dtos = ChronivaroRestHelper.createGson().fromJson(jsonStr, WorkEntryDto[].class);
+			for (WorkEntryDto dto : dtos) {
+				assertNotEquals(entryId, dto.id());
+			}
 		}
 	}
 }

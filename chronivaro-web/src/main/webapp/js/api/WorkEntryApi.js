@@ -25,9 +25,19 @@ export default class WorkEntryApi {
         return await Rest.put(`rest/chronivaro/v1/admin/work-entries/${id}`, data, headers);
     }
 
-    static async adminDeleteWorkEntry(id) {
-        return await Rest.delete(`rest/chronivaro/v1/admin/work-entries/${id}`);
-    }
+	static async deleteWorkEntry(id, etag) {
+		const headers = etag ? {'If-Match': etag} : {};
+		return await Rest.delete(`rest/chronivaro/v1/me/work-entries/${id}`, headers);
+	}
+
+	static async deleteMyWorkEntry(id, etag) {
+		return await this.deleteWorkEntry(id, etag);
+	}
+
+	static async adminDeleteWorkEntry(id, etag) {
+		const headers = etag ? {'If-Match': etag} : {};
+		return await Rest.delete(`rest/chronivaro/v1/admin/work-entries/${id}`, headers);
+	}
 
     static async getDaySummary(date) {
         const dateStr = date.toISOString().split('T')[0];

@@ -347,9 +347,6 @@ export default class MyTimesView {
 					const creatorAttr = (entry.createdBy && entry.createdBy !== targetUsername)
 							? `<div style="font-size: 0.75rem; color: #6b7280; margin-top: 2px;">${I18n.t('times.createdBy', { user: entry.createdBy })}</div>`
 							: '';
-
-					const canFullManage = this.canManage;
-
 					row.innerHTML = `
 						<td>${Format.dateTime(entry.start)}</td>
 						<td>${endText}</td>
@@ -362,9 +359,7 @@ export default class MyTimesView {
 						<td>${entry.comment || ''}</td>
 						<td style="text-align: right; white-space: nowrap;">
 							<button class="secondary-btn edit-entry-btn" style="margin-right: 0.5rem;" title="${I18n.t('times.editEntry')}">${I18n.t('common.edit')}</button>
-							${canFullManage ? `
 							<button class="danger-btn delete-entry-btn" title="${I18n.t('times.deleteEntry')}">${I18n.t('common.delete')}</button>
-							` : ''}
 						</td>
 					`;
 
@@ -416,7 +411,11 @@ export default class MyTimesView {
 							if (!confirmed) return;
 
 							try {
-								await WorkEntryApi.adminDeleteWorkEntry(entry.id);
+								if (this.canManage) {
+									await WorkEntryApi.adminDeleteWorkEntry(entry.id);
+								} else {
+									await WorkEntryApi.deleteWorkEntry(entry.id);
+								}
 								NotificationDialog.info(I18n.t('times.entryDeleted'));
 								await refresh();
 							} catch (err) {

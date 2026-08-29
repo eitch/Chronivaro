@@ -11,6 +11,7 @@ import li.strolch.service.api.ServiceResult;
 import li.strolch.utils.dbc.DBC;
 
 import java.time.ZonedDateTime;
+import java.util.Optional;
 
 import static ch.eitchnet.chronivaro.core.model.ChronivaroConstants.*;
 
@@ -29,7 +30,12 @@ public class RemoveWorkEntryService extends AbstractService<StringArgument, Serv
 					|| tx.getPrivilegeContext().hasRole(ROLE_ADMINISTRATOR);
 
 			if (!isAdminOrHr) {
-				ChronivaroModelHelper.assertCanManageEmployee(tx, employeeId);
+				Optional<Resource> callerEmployee = ChronivaroModelHelper.findEmployeeByUser(tx, tx.getCertificate().getUserId());
+				boolean isSelf = callerEmployee.isPresent() && callerEmployee.get().getId().equals(employeeId);
+
+				if (!isSelf) {
+					ChronivaroModelHelper.assertCanManageEmployee(tx, employeeId);
+				}
 			}
 
 			ZonedDateTime start = workEntry.getDate(PARAM_START);
