@@ -1357,7 +1357,8 @@ tr:has(.dropdown.show) {
     color: var(--error-color);
 }
 
-.summary-card .card-label {
+.summary-card .card-label,
+.summary-card .card-title {
     font-size: 0.75rem;
     font-weight: 600;
     text-transform: uppercase;
@@ -1369,6 +1370,12 @@ tr:has(.dropdown.show) {
     font-size: 1.25rem;
     font-weight: 700;
     color: var(--text-color);
+}
+
+.summary-card .card-sub {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-top: 0.15rem;
 }
 
 .vacation-journal-details {
@@ -2138,8 +2145,19 @@ tr.inactive-row:hover {
     border-radius: 0.375rem;
 }
 
+.summary-grid,
 .report-summary-grid {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 1rem;
     margin-bottom: 2rem;
+}
+
+.summary-grid .summary-card,
+.report-summary-grid .summary-card {
+    flex: 1 1 180px;
+    min-width: 160px;
 }
 
 .report-section {
