@@ -104,5 +104,17 @@ public class InitiateEmployeeRegistrationServiceTest {
 		regResult = serviceHandler.doService(certificate, new InitiateEmployeeRegistrationService(),
 				new StringArgument(employeeId));
 		assertTrue(regResult.getMessage(), regResult.isOk());
+
+		// Verify sent onboarding email
+		TestUserChallengeHandler challengeHandler = TestUserChallengeHandler.getInstance();
+		assertNotNull(challengeHandler);
+		TestUserChallengeHandler.SentEmail sentEmail = challengeHandler.getSentEmails().stream()
+				.filter(e -> e.recipient().equals("reguser@eitchnet.ch"))
+				.findFirst()
+				.orElseThrow();
+		assertNotNull(sentEmail);
+		assertTrue(sentEmail.subject().contains("Registrierung") || sentEmail.subject().contains("registration"));
+		assertTrue(sentEmail.body().contains("http://localhost:8080/#complete-registration?user=reguser&token="));
+		assertTrue(sentEmail.body().contains(sentEmail.challenge()));
 	}
 }

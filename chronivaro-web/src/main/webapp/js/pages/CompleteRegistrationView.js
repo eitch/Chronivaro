@@ -12,8 +12,8 @@ export default class CompleteRegistrationView {
         container.id = 'complete-registration-view';
         const currentLang = I18n.getLanguage();
         
-        const username = params.username || '';
-        const challenge = params.challenge || '';
+        const username = (params && (params.username || params.user)) || '';
+        const challenge = (params && (params.challenge || params.token)) || '';
 
         container.innerHTML = `
 			<form id="complete-registration-form">
