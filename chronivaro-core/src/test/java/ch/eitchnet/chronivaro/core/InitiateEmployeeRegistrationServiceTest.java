@@ -114,7 +114,7 @@ public class InitiateEmployeeRegistrationServiceTest {
 				.orElseThrow();
 		assertNotNull(sentEmail);
 		assertTrue(sentEmail.subject().contains("Registrierung") || sentEmail.subject().contains("registration"));
-		assertTrue(sentEmail.body().contains("http://localhost:8080/#complete-registration?user=reguser&token="));
+		assertTrue(sentEmail.body().contains("http://localhost:9000/#complete-registration?user=reguser&token="));
 		assertTrue(sentEmail.body().contains(sentEmail.challenge()));
 	}
 }
