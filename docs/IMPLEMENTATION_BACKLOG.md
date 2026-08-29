@@ -155,34 +155,13 @@ The following foundational areas are verified as fully implemented in the reposi
 - **Employee Self-Profile API & View (Sections 3.1, 6.1, 12.1 #0, 13.2, 20 #2):** REST endpoints `GET /rest/chronivaro/v1/me/profile` returning linked `EmployeeDto` with resolved team, location, timezone, join/exit dates, active status, and `GET /rest/chronivaro/v1/me/schedules` returning employment schedule history; web UI `ProfileView.js` (`#profile`) accessible from the top user dropdown menu displaying user account details, role badges, employee master data, current schedule breakdown with daily target hours, workload percentage calculation, and schedule version history; complete Swiss German and English translations with 100% key parity and automated REST/UI tests.
 - **User Language Persistence & Frontend Sync (Sections 4.2.1, 4.2.2, 14.1, 18.5, 20.1 #4):** Implemented `UpdateUserLanguageService` in `chronivaro-core` and REST endpoint `POST /rest/chronivaro/v1/auth/language` in `chronivaro-rest` allowing authenticated users to persistently update their language on their Strolch `UserRep`; wired `I18n.js` and `LoginView.js` in `chronivaro-web` to synchronize explicit language choices directly to the backend profile while retaining local browser storage caching; verified with comprehensive unit, REST, and UI tests.
 - **Employee Self-Service Work Entry Deletion (Sections 14.2, 15.2, 20 #4):** Core service `RemoveWorkEntryService` updated to allow employees deleting their own work entries in open periods (`isSelf`); REST endpoint `DELETE /rest/chronivaro/v1/me/work-entries/{id}` implemented in `ChronivaroResource` with optimistic concurrency validation via `If-Match`; `WorkEntryApi.js` updated with `deleteWorkEntry` / `deleteMyWorkEntry`; `MyTimesView.js` wired with deletion action buttons and confirmation dialog for employees on their work entries; `PrivilegeRoles.xml` updated across all runtime and test configurations; covered by unit tests in `WorkEntryServiceTest`, REST integration tests in `ChronivaroResourceTest`, and web asset tests in `WebWorkEntryModificationUiTest`.
+- **Vacation Report Metric Initialization & Zero Defaulting for New Employees (Sections 6.7, 11.3):** Guarded against null, uninitialized, or missing balance fields in vacation summaries, DTO mapping, CSV and PDF report export helpers, and web report rendering (`ReportsView.js`); ensured all metrics default to clean numeric zeros (0 days / 0:00 h) without displaying undefined text; covered by comprehensive core, REST, and UI test suites.
 
 ---
 
 ## Prioritized Implementation Backlog
 
-### Task 1: [Fix] Fix Undefined Values in Vacation Report for New Employees
-
-- **Specification Reference**:
-  - Section 11.3 (Ferienübersicht: `definierte Werte (keine undefined-Werte oder fehlende Berechnungsdaten bei neuen, bestehenden oder reaktivierten Mitarbeitern)`)
-  - Section 6.7 & 6.7.1 (VacationAccountEntry & Automatisierte Ferienanspruchsregelung)
-- **Current Implementation Location**:
-  - `chronivaro-core/src/main/java/ch/eitchnet/chronivaro/core/service/VacationReportService.java`
-  - `chronivaro-web/src/main/webapp/js/pages/VacationOverviewView.js` / `VacationReportView.js`
-- **Missing / Deficient Behaviour**:
-  - When opening the vacation report for newly created employees who have no historical bookings or carry-overs, `undefined` values appear in report metrics or journal tables instead of initialized, formatted numeric values (0 days / 0:00 h).
-- **Proposed Implementation Plan**:
-  - Guard against null or missing balance fields in `VacationReportService` and DTO mapping.
-  - Ensure frontend formatting utils and views default uninitialized metrics to `0` instead of displaying `undefined`.
-- **Dependencies**:
-  - `VacationReportService`
-  - `VacationReportView.js` / `VacationOverviewView.js`
-- **Acceptance Criteria**:
-  1. Opening the vacation report for any newly created employee displays 0 / formatted values for all summary metrics without any `undefined` text.
-  2. CSV and PDF exports for newly created employees render cleanly with numeric zero values.
-
----
-
-### Task 2: [New] Enhanced Onboarding Registration Email with Direct URL and Configurable Server Base URL
+### Task 1: [New] Enhanced Onboarding Registration Email with Direct URL and Configurable Server Base URL
 
 - **Specification Reference**:
   - Section 6.11 (Globale Anwendungskonfiguration: `serverBaseUrl`)
@@ -211,7 +190,7 @@ The following foundational areas are verified as fully implemented in the reposi
 
 ---
 
-### Task 3: [Refactor] UI: Horizontal Single-Row Layout for Report Summaries Across All Report Types
+### Task 2: [Refactor] UI: Horizontal Single-Row Layout for Report Summaries Across All Report Types
 
 - **Specification Reference**:
   - Section 11 (Reports: 11.1–11.5)
@@ -235,7 +214,7 @@ The following foundational areas are verified as fully implemented in the reposi
 
 ---
 
-### Task 4: [Refactor] UI: Multi-Column / Row Layout with Spacing for Presence / Who Is Working Dashboard
+### Task 3: [Refactor] UI: Multi-Column / Row Layout with Spacing for Presence / Who Is Working Dashboard
 
 - **Specification Reference**:
   - Section 8 (Anwesenheitsstatus)
@@ -255,7 +234,7 @@ The following foundational areas are verified as fully implemented in the reposi
 
 ---
 
-### Task 5: [Fix] UI: Display Entity Names Instead of Technical IDs in Deletion Confirmation Dialogs
+### Task 4: [Fix] UI: Display Entity Names Instead of Technical IDs in Deletion Confirmation Dialogs
 
 - **Specification Reference**:
   - Section 12.2 (UI-Grundsätze: Bestätigung vor fachlich weitreichenden Aktionen)
@@ -278,7 +257,7 @@ The following foundational areas are verified as fully implemented in the reposi
 
 ---
 
-### Task 6: [Fix] UI: Modal Dialog Scrolling and Viewport Overflow Handling for Add Employee, Edit Schedule, and All Dialogs
+### Task 5: [Fix] UI: Modal Dialog Scrolling and Viewport Overflow Handling for Add Employee, Edit Schedule, and All Dialogs
 
 - **Specification Reference**:
   - Section 12.2 (UI-Grundsätze: Modale Dialoge und Viewport-Overflow)
