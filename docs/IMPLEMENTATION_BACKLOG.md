@@ -154,39 +154,13 @@ The following foundational areas are verified as fully implemented in the reposi
 - **Work Entry Employee Modifications, Highlighting of Modified/Manual Entries, and Creator Attribution (Sections 3.1–3.3, 4.1 #5, 6.4, 9.3, 11, 12.1 #2, 13.2, 20 #3):** Enabled full work entry editing for employees in open periods via `CorrectWorkEntryService` and `PUT /me/work-entries/{id}` with same-day and non-overlap validations; exposed `source`, `createdBy`, and `modified` in `WorkEntryDto`, `WorkEntryRangeDto`, and `WorkEntryRange`; visual badges/highlighting for manual and modified entries across `MyTimesView.js`, `ApprovalsView.js`, and `ReportsView.js`; creator attribution (`createdBy`) displayed whenever entries are created on behalf of the employee; complete Swiss German and English translations with 100% key parity and comprehensive unit/REST/UI tests.
 - **Employee Self-Profile API & View (Sections 3.1, 6.1, 12.1 #0, 13.2, 20 #2):** REST endpoints `GET /rest/chronivaro/v1/me/profile` returning linked `EmployeeDto` with resolved team, location, timezone, join/exit dates, active status, and `GET /rest/chronivaro/v1/me/schedules` returning employment schedule history; web UI `ProfileView.js` (`#profile`) accessible from the top user dropdown menu displaying user account details, role badges, employee master data, current schedule breakdown with daily target hours, workload percentage calculation, and schedule version history; complete Swiss German and English translations with 100% key parity and automated REST/UI tests.
 - **User Language Persistence & Frontend Sync (Sections 4.2.1, 4.2.2, 14.1, 18.5, 20.1 #4):** Implemented `UpdateUserLanguageService` in `chronivaro-core` and REST endpoint `POST /rest/chronivaro/v1/auth/language` in `chronivaro-rest` allowing authenticated users to persistently update their language on their Strolch `UserRep`; wired `I18n.js` and `LoginView.js` in `chronivaro-web` to synchronize explicit language choices directly to the backend profile while retaining local browser storage caching; verified with comprehensive unit, REST, and UI tests.
+- **Employee Self-Service Work Entry Deletion (Sections 14.2, 15.2, 20 #4):** Core service `RemoveWorkEntryService` updated to allow employees deleting their own work entries in open periods (`isSelf`); REST endpoint `DELETE /rest/chronivaro/v1/me/work-entries/{id}` implemented in `ChronivaroResource` with optimistic concurrency validation via `If-Match`; `WorkEntryApi.js` updated with `deleteWorkEntry` / `deleteMyWorkEntry`; `MyTimesView.js` wired with deletion action buttons and confirmation dialog for employees on their work entries; `PrivilegeRoles.xml` updated across all runtime and test configurations; covered by unit tests in `WorkEntryServiceTest`, REST integration tests in `ChronivaroResourceTest`, and web asset tests in `WebWorkEntryModificationUiTest`.
 
 ---
 
 ## Prioritized Implementation Backlog
 
-### Task 1: [Fix] Implement Employee Self-Service Work Entry Deletion (`DELETE /me/work-entries/{id}`) and Connect in Web UI
-
-- **Specification Reference**:
-  - Section 14.2 (Profile & Zeiterfassung: `- DELETE /me/work-entries/{id}: Arbeitsblock löschen`)
-  - Section 15.2 (Rollenmatrix: `Mitarbeiter: Eigene Zeiten löschen (nur in offener Periode)`)
-  - Section 20, Acceptance Criterion 4 (`"Mitarbeiter ihre offenen Zeitbuchungen bei Bedarf bearbeiten ... können"`)
-- **Current Implementation Location**:
-  - `chronivaro-rest/src/main/java/ch/eitchnet/chronivaro/rest/resource/ChronivaroResource.java` implements `@DELETE @Path("admin/work-entries/{id}")` which uses `RemoveWorkEntryService`.
-  - `chronivaro-web/src/main/webapp/js/api/WorkEntryApi.js` only exposes `adminDeleteWorkEntry` targeting `/admin/work-entries/{id}`.
-- **Missing Behaviour**:
-  - Endpoint `@DELETE @Path("me/work-entries/{id}")` is missing.
-  - When a non-administrative employee attempts to delete their own open work entry, the UI has no self-deletion route or attempts an admin endpoint which fails permission checks.
-- **Proposed Implementation Plan**:
-  - Add `@DELETE @Path("me/work-entries/{id}")` in `ChronivaroResource.java` verifying that the target work entry belongs to the caller's linked employee and is in an open period before invoking `RemoveWorkEntryService`.
-  - Update `WorkEntryApi.js` to add `deleteMyWorkEntry(id)` pointing to `/me/work-entries/${id}`.
-  - Wire self-service deletion action and confirmation dialog in `MyTimesView.js`.
-- **Dependencies**:
-  - `RemoveWorkEntryService`
-  - `ChronivaroModelHelper.findEmployeeByUser`
-  - `PeriodHelper.assertPeriodNotLocked`
-- **Acceptance Criteria**:
-  1. An employee with `ROLE_EMPLOYEE` can delete their own work entry via `DELETE /rest/chronivaro/v1/me/work-entries/{id}` as long as the corresponding period is not locked or submitted.
-  2. Attempting to delete another employee's work entry via `/me/work-entries/{id}` returns HTTP 403 / 404.
-  3. Attempting to delete an entry in a submitted/locked period returns HTTP 400 / 409 with error code `PERIOD_LOCKED`.
-
----
-
-### Task 2: [Fix] Fix Undefined Values in Vacation Report for New Employees
+### Task 1: [Fix] Fix Undefined Values in Vacation Report for New Employees
 
 - **Specification Reference**:
   - Section 11.3 (Ferienübersicht: `definierte Werte (keine undefined-Werte oder fehlende Berechnungsdaten bei neuen, bestehenden oder reaktivierten Mitarbeitern)`)
@@ -208,7 +182,7 @@ The following foundational areas are verified as fully implemented in the reposi
 
 ---
 
-### Task 3: [New] Enhanced Onboarding Registration Email with Direct URL and Configurable Server Base URL
+### Task 2: [New] Enhanced Onboarding Registration Email with Direct URL and Configurable Server Base URL
 
 - **Specification Reference**:
   - Section 6.11 (Globale Anwendungskonfiguration: `serverBaseUrl`)
@@ -237,7 +211,7 @@ The following foundational areas are verified as fully implemented in the reposi
 
 ---
 
-### Task 4: [Refactor] UI: Horizontal Single-Row Layout for Report Summaries Across All Report Types
+### Task 3: [Refactor] UI: Horizontal Single-Row Layout for Report Summaries Across All Report Types
 
 - **Specification Reference**:
   - Section 11 (Reports: 11.1–11.5)
@@ -261,7 +235,7 @@ The following foundational areas are verified as fully implemented in the reposi
 
 ---
 
-### Task 5: [Refactor] UI: Multi-Column / Row Layout with Spacing for Presence / Who Is Working Dashboard
+### Task 4: [Refactor] UI: Multi-Column / Row Layout with Spacing for Presence / Who Is Working Dashboard
 
 - **Specification Reference**:
   - Section 8 (Anwesenheitsstatus)
@@ -281,7 +255,7 @@ The following foundational areas are verified as fully implemented in the reposi
 
 ---
 
-### Task 6: [Fix] UI: Display Entity Names Instead of Technical IDs in Deletion Confirmation Dialogs
+### Task 5: [Fix] UI: Display Entity Names Instead of Technical IDs in Deletion Confirmation Dialogs
 
 - **Specification Reference**:
   - Section 12.2 (UI-Grundsätze: Bestätigung vor fachlich weitreichenden Aktionen)
@@ -304,7 +278,7 @@ The following foundational areas are verified as fully implemented in the reposi
 
 ---
 
-### Task 7: [Fix] UI: Modal Dialog Scrolling and Viewport Overflow Handling for Add Employee, Edit Schedule, and All Dialogs
+### Task 6: [Fix] UI: Modal Dialog Scrolling and Viewport Overflow Handling for Add Employee, Edit Schedule, and All Dialogs
 
 - **Specification Reference**:
   - Section 12.2 (UI-Grundsätze: Modale Dialoge und Viewport-Overflow)
