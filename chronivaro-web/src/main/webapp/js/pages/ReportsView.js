@@ -282,6 +282,24 @@ export default class ReportsView {
 		}
 	}
 
+	getEmployeeDisplay(employeeId, data = null) {
+		const targetId = employeeId || (data ? data.employeeId : null) || AuthApi.getUserId();
+		const emp = (this.employees || []).find(e => e.id === targetId || e.username === targetId || e.userId === targetId);
+
+		let employeeName = emp ? `${emp.firstname || ''} ${emp.lastname || ''}`.trim() : (data?.employeeName || '');
+		if (!employeeName && (!emp || !targetId || targetId === AuthApi.getUserId() || targetId === AuthApi.getUsername())) {
+			employeeName = AuthApi.getFullName();
+		}
+
+		const username = emp?.username || data?.username || (targetId === AuthApi.getUserId() ? AuthApi.getUsername() : null);
+		const personalNumber = emp?.personalNumber || data?.personalNumber || null;
+
+		const name = employeeName || username || targetId || '-';
+		const persNr = personalNumber && !name.includes(`(${personalNumber})`) ? ` (${personalNumber})` : '';
+
+		return `${name}${persNr}`;
+	}
+
 	canSelectEmployee() {
 		return AuthApi.hasRole('Supervisor') || AuthApi.hasRole('HR') || AuthApi.hasRole('Administrator') || AuthApi.hasRole('StrolchAdmin');
 	}
@@ -707,10 +725,13 @@ export default class ReportsView {
 		}
 
 		const stateLabel = I18n.t(`enums.dayState.${data.state}`, {}, data.stateLabel || data.state);
+		const targetEmpId = data.employeeId || this.filters.day?.employeeId || AuthApi.getUserId();
+		const empDisplay = this.getEmployeeDisplay(targetEmpId, data);
 
 		this.resultsContainer.innerHTML = `
 			<div class="report-result-header">
 				<h3>${I18n.t('reports.dayReport')}: ${data.date}</h3>
+				<span class="report-emp-tag">${I18n.t('common.employee')}: ${empDisplay}</span>
 				<span class="status-badge state-${(data.state || 'OPEN').toLowerCase()}">${stateLabel}</span>
 			</div>
 
@@ -826,9 +847,13 @@ export default class ReportsView {
 			}).join('');
 		}
 
+		const targetEmpId = data.employeeId || this.filters.month?.employeeId || AuthApi.getUserId();
+		const empDisplay = this.getEmployeeDisplay(targetEmpId, data);
+
 		this.resultsContainer.innerHTML = `
 			<div class="report-result-header">
 				<h3>${I18n.t('reports.monthReport')}: ${data.yearMonth}</h3>
+				<span class="report-emp-tag">${I18n.t('common.employee')}: ${empDisplay}</span>
 			</div>
 
 			<!-- Summary Metrics Grid -->
@@ -927,23 +952,8 @@ export default class ReportsView {
 			}).join('');
 		}
 
-		const emp = (this.employees || []).find(e => e.id === data.employeeId);
-		const username = data.username || (emp ? emp.username : null) || (data.employeeId === AuthApi.getUserId() ? AuthApi.getUsername() : null);
-		const personalNumber = data.personalNumber || (emp ? emp.personalNumber : null);
-		const employeeName = data.employeeName || (emp ? `${emp.firstname || ''} ${emp.lastname || ''}`.trim() : null);
-
-		let empDisplay = '';
-		if (username && personalNumber && username !== personalNumber) {
-			empDisplay = `${username} (${personalNumber})`;
-		} else if (username) {
-			empDisplay = username;
-		} else if (personalNumber) {
-			empDisplay = personalNumber;
-		} else if (employeeName) {
-			empDisplay = employeeName;
-		} else {
-			empDisplay = data.employeeId || '-';
-		}
+		const targetEmpId = data.employeeId || this.filters.vacation?.employeeId || AuthApi.getUserId();
+		const empDisplay = this.getEmployeeDisplay(targetEmpId, data);
 
 		this.resultsContainer.innerHTML = `
 			<div class="report-result-header">
@@ -1063,7 +1073,7 @@ export default class ReportsView {
 
 		this.resultsContainer.innerHTML = `
 			<div class="report-result-header">
-				<h3>${I18n.t('reports.teamReport')}: ${data.teamName} (${data.teamId})</h3>
+				<h3>${I18n.t('reports.teamReport')}: ${data.teamName}</h3>
 				<span class="report-emp-tag">${I18n.t('common.month')}: ${data.yearMonth}</span>
 			</div>
 
