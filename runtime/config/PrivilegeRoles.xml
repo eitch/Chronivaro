@@ -50,6 +50,7 @@
     <Role name="Employee">
         <Privilege name="li.strolch.service.api.Service" policy="DefaultPrivilege">
             <Allow>li.strolch.service.privilege.users.PrivilegeSetUserPasswordService</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.service.UpdateUserLanguageService</Allow>
             <Allow>ch.eitchnet.chronivaro.core.service.DaySummaryService</Allow>
             <Allow>ch.eitchnet.chronivaro.core.service.MonthSummaryService</Allow>
             <Allow>ch.eitchnet.chronivaro.core.service.RequestAbsenceService</Allow>
@@ -73,11 +74,15 @@
         <Privilege name="PrivilegeSetUserPassword" policy="DefaultPrivilege">
             <AllAllowed>true</AllAllowed>
         </Privilege>
+        <Privilege name="PrivilegeSetUserLocale" policy="DefaultPrivilege">
+            <AllAllowed>true</AllAllowed>
+        </Privilege>
     </Role>
 
     <Role name="Supervisor">
         <Privilege name="li.strolch.service.api.Service" policy="DefaultPrivilege">
             <Allow>li.strolch.service.privilege.users.PrivilegeSetUserPasswordService</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.service.UpdateUserLanguageService</Allow>
             <Allow>ch.eitchnet.chronivaro.core.service.AddWorkEntryService</Allow>
             <Allow>ch.eitchnet.chronivaro.core.service.CorrectWorkEntryService</Allow>
             <Allow>ch.eitchnet.chronivaro.core.service.RemoveWorkEntryService</Allow>
@@ -107,11 +112,15 @@
         <Privilege name="PrivilegeSetUserPassword" policy="DefaultPrivilege">
             <AllAllowed>true</AllAllowed>
         </Privilege>
+        <Privilege name="PrivilegeSetUserLocale" policy="DefaultPrivilege">
+            <AllAllowed>true</AllAllowed>
+        </Privilege>
     </Role>
 
     <Role name="HR">
         <Privilege name="li.strolch.service.api.Service" policy="DefaultPrivilege">
             <Allow>li.strolch.service.privilege.users.PrivilegeSetUserPasswordService</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.service.UpdateUserLanguageService</Allow>
             <Allow>ch.eitchnet.chronivaro.core.service.AddWorkEntryService</Allow>
             <Allow>ch.eitchnet.chronivaro.core.service.CorrectWorkEntryService</Allow>
             <Allow>ch.eitchnet.chronivaro.core.service.RemoveWorkEntryService</Allow>
@@ -144,6 +153,9 @@
             <Allow>ch.eitchnet.chronivaro.core.search.VacationAccountEntrySearch</Allow>
         </Privilege>
         <Privilege name="PrivilegeSetUserPassword" policy="DefaultPrivilege">
+            <AllAllowed>true</AllAllowed>
+        </Privilege>
+        <Privilege name="PrivilegeSetUserLocale" policy="DefaultPrivilege">
             <AllAllowed>true</AllAllowed>
         </Privilege>
     </Role>
