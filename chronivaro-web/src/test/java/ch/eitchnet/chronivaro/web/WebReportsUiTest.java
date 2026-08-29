@@ -88,4 +88,40 @@ public class WebReportsUiTest {
 		assertTrue("ReportsView must redirect unauthorized team report access in render",
 				viewJs.contains("this.activeReportType === 'team' && !this.canViewTeamReport()"));
 	}
+
+	@Test
+	public void shouldVerifyHorizontalSingleRowLayoutForReportSummariesAcrossAllReportTypes() throws IOException {
+		File styleFile = new File(getWebappDir(), "assets/css/style.css");
+		assertTrue("style.css must exist", styleFile.exists());
+		String styleCss = Files.readString(styleFile.toPath());
+
+		// Verify CSS contains flexbox row layout for summary grids
+		assertTrue("style.css must define .report-summary-grid with flex display",
+				styleCss.contains(".report-summary-grid") && styleCss.contains("display: flex;"));
+		assertTrue("style.css must define flex-direction: row for summary grids",
+				styleCss.contains("flex-direction: row;"));
+		assertTrue("style.css must define flex-wrap: wrap for summary grids",
+				styleCss.contains("flex-wrap: wrap;"));
+		assertTrue("style.css must define summary card flex growth inside report summary grids",
+				styleCss.contains(".report-summary-grid .summary-card") && styleCss.contains("flex: 1 1 180px;"));
+
+		File viewFile = new File(getWebappDir(), "js/pages/ReportsView.js");
+		assertTrue("ReportsView.js must exist", viewFile.exists());
+		String viewJs = Files.readString(viewFile.toPath());
+
+		// Verify all 5 report renderers use report-summary-grid with summary-card elements
+		assertTrue("ReportsView renderDayReport must use report-summary-grid",
+				viewJs.contains("<!-- Summary Cards Grid -->\n\t\t\t<div class=\"summary-grid report-summary-grid\">"));
+		assertTrue("ReportsView renderMonthReport must use report-summary-grid",
+				viewJs.contains("<!-- Summary Metrics Grid -->\n\t\t\t<div class=\"summary-grid report-summary-grid\">"));
+		assertTrue("ReportsView renderVacationReport must use report-summary-grid",
+				viewJs.contains("<!-- Summary Grid -->\n\t\t\t<div class=\"summary-grid report-summary-grid\">"));
+		assertTrue("ReportsView renderTeamReport must use report-summary-grid",
+				viewJs.contains("<!-- Team Summary Cards -->\n\t\t\t<div class=\"summary-grid report-summary-grid\">"));
+		assertTrue("ReportsView renderAbsenceReport must use report-summary-grid",
+				viewJs.contains("${I18n.t('reports.totalAbsences')}") &&
+						viewJs.contains("${I18n.t('reports.totalDuration')}") &&
+						viewJs.contains("${I18n.t('reports.paidAbsenceTime')}") &&
+						viewJs.contains("${I18n.t('reports.unpaidAbsenceTime')}"));
+	}
 }
