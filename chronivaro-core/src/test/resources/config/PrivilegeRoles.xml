@@ -198,6 +198,7 @@
             <Allow>ch.eitchnet.chronivaro.core.service.RejectPeriodService</Allow>
             <Allow>ch.eitchnet.chronivaro.core.service.ReopenPeriodService</Allow>
             <Allow>ch.eitchnet.chronivaro.core.service.CalculateVacationEntitlementService</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.service.AddVacationCorrectionService</Allow>
             <Allow>ch.eitchnet.chronivaro.core.service.GetVacationAccountSummaryService</Allow>
             <Allow>ch.eitchnet.chronivaro.core.service.DaySummaryService</Allow>
             <Allow>ch.eitchnet.chronivaro.core.service.MonthSummaryService</Allow>
