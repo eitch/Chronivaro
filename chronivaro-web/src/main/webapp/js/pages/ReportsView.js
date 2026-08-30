@@ -1008,13 +1008,13 @@ export default class ReportsView {
 					<table class="data-table">
 						<thead>
 							<tr>
-								<th>${I18n.t('common.date')}</th>
+								<th>${I18n.t('common.effectiveDate')}</th>
 								<th>${I18n.t('reports.bookingType')}</th>
 								<th>${I18n.t('reports.valueDaysDuration')}</th>
 								<th>${I18n.t('reports.targetPeriod')}</th>
 								<th>${I18n.t('common.comment')}</th>
 								<th>${I18n.t('common.createdBy')}</th>
-								<th>${I18n.t('common.date')}</th>
+								<th>${I18n.t('common.createdAt')}</th>
 							</tr>
 						</thead>
 						<tbody>

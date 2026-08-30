@@ -340,8 +340,16 @@ public class ChronivaroMapper {
 		String comment = entry.hasParameter(PARAM_COMMENT) ? entry.getString(PARAM_COMMENT) : null;
 		String createdBy = entry.hasParameter(PARAM_CREATED_BY) ? entry.getString(PARAM_CREATED_BY) : null;
 		Integer version = entry.hasParameter(PARAM_VERSION) ? entry.getInteger(PARAM_VERSION) : null;
+		ZonedDateTime createdAt = null;
+		if (entry.hasParameter(PARAM_CREATED_AT) && entry.getDate(PARAM_CREATED_AT).getYear() > 1970) {
+			createdAt = entry.getDate(PARAM_CREATED_AT);
+		} else if (entry.hasParameter(PARAM_DATE)) {
+			createdAt = entry.getDate(PARAM_DATE);
+		} else if (entry.hasVersion() && entry.getVersion().getCreated() != null) {
+			createdAt = entry.getVersion().getCreated().toInstant().atZone(java.time.ZoneId.systemDefault());
+		}
 		return new VacationAccountEntryDto(entry.getId(), entry.getRelationId(PARAM_EMPLOYEE),
-				entry.getDate(PARAM_DATE), entry.getString(PARAM_VACATION_TYPE), entry.getInteger(PARAM_VALUE),
+				entry.getDate(PARAM_DATE), createdAt, entry.getString(PARAM_VACATION_TYPE), entry.getInteger(PARAM_VALUE),
 				absenceId, comment, createdBy, version);
 	}
 

@@ -46,6 +46,7 @@ public class AddVacationCorrectionService
 			entry.setRelation(PARAM_EMPLOYEE, employee);
 			entry.setString(PARAM_VACATION_TYPE, VACATION_CORRECTION);
 			entry.setDate(PARAM_DATE, entryDate);
+			entry.setDate(PARAM_CREATED_AT, ZonedDateTime.now(ChronivaroModelHelper.getEmployeeTimezone(employee)));
 			entry.setInteger(PARAM_VALUE, arg.value);
 			entry.setString(PARAM_COMMENT, arg.comment);
 			entry.setString(PARAM_CREATED_BY, tx.getCertificate().getUsername());

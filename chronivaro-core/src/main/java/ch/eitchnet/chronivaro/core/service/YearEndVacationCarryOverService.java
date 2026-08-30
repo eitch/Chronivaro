@@ -120,6 +120,7 @@ public class YearEndVacationCarryOverService
 							corr.setName("Carry-Over Adjustment " + tgtYear + " (" + empName + ")");
 							corr.setString(PARAM_VACATION_TYPE, VACATION_CORRECTION);
 							corr.setDate(PARAM_DATE, LocalDate.of(tgtYear, 1, 1).atStartOfDay(ChronivaroModelHelper.getEmployeeTimezone(emp)));
+							corr.setDate(PARAM_CREATED_AT, java.time.ZonedDateTime.now(ChronivaroModelHelper.getEmployeeTimezone(emp)));
 							corr.setInteger(PARAM_VALUE, delta);
 							corr.setString(PARAM_COMMENT, "Carry-over adjustment from " + srcYear + " to " + tgtYear);
 							corr.setString(PARAM_CREATED_BY, tx.getCertificate().getUsername());
@@ -138,6 +139,7 @@ public class YearEndVacationCarryOverService
 						entry.setName("Vacation Carry-Over " + tgtYear + " (" + empName + ")");
 						entry.setString(PARAM_VACATION_TYPE, VACATION_CARRY_OVER);
 						entry.setDate(PARAM_DATE, LocalDate.of(tgtYear, 1, 1).atStartOfDay(ChronivaroModelHelper.getEmployeeTimezone(emp)));
+						entry.setDate(PARAM_CREATED_AT, java.time.ZonedDateTime.now(ChronivaroModelHelper.getEmployeeTimezone(emp)));
 						entry.setInteger(PARAM_VALUE, remainingMinutes);
 						entry.setString(PARAM_COMMENT, "Vacation carry-over from " + srcYear + " to " + tgtYear);
 						entry.setString(PARAM_CREATED_BY, tx.getCertificate().getUsername());

@@ -404,4 +404,33 @@ public class VacationJournalTest {
 			assertEquals("2026 Correction", entries2026.getFirst().getString(PARAM_COMMENT));
 		}
 	}
+
+	@Test
+	public void testVacationAccountEntryCreatedAtTimestamp() {
+		String employeeId = "journal-emp-created-at";
+		createTestEmployee(employeeId, "Created At Test", LocalDate.of(2026, 1, 1), null, 1.0);
+
+		ServiceHandler serviceHandler = runtimeMock.getContainer().getComponent(ServiceHandler.class);
+
+		ZonedDateTime beforeCredit = ZonedDateTime.now(ZoneId.of("Europe/Zurich")).minusSeconds(2);
+		ServiceResult creditRes = serviceHandler.doService(adminCert, new CreditVacationEntitlementService(),
+				new CreditVacationEntitlementService.CreditVacationEntitlementArgument(employeeId, 2026, false));
+		assertTrue(creditRes.isOk());
+		ZonedDateTime afterCredit = ZonedDateTime.now(ZoneId.of("Europe/Zurich")).plusSeconds(2);
+
+		try (StrolchTransaction tx = runtimeMock.openUserTx(adminCert, true)) {
+			List<Resource> entries = new VacationAccountEntrySearch()
+					.forEmployee(employeeId)
+					.forVacationType(VACATION_ENTITLEMENT)
+					.search(tx)
+					.toList();
+			assertEquals(1, entries.size());
+			Resource entry = entries.getFirst();
+			assertTrue("Entry must have createdAt parameter", entry.hasParameter(PARAM_CREATED_AT));
+			ZonedDateTime createdAt = entry.getDate(PARAM_CREATED_AT);
+			assertNotNull("createdAt must not be null", createdAt);
+			assertTrue("createdAt must be after beforeCredit", !createdAt.isBefore(beforeCredit));
+			assertTrue("createdAt must be before afterCredit", !createdAt.isAfter(afterCredit));
+		}
+	}
 }

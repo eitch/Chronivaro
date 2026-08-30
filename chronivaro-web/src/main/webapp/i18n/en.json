@@ -99,6 +99,7 @@
     "type": "Type",
     "amount": "Amount",
     "effectiveDate": "Effective Date",
+    "createdAt": "Created At",
     "createdBy": "Created By",
     "creator": "Creator",
     "reason": "Reason",

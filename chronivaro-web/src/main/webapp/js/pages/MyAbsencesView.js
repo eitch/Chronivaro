@@ -64,6 +64,7 @@ export default class MyAbsencesView {
                         <thead>
                             <tr>
                                 <th>${I18n.t('common.effectiveDate')}</th>
+                                <th>${I18n.t('common.createdAt')}</th>
                                 <th>${I18n.t('common.type')}</th>
                                 <th>${I18n.t('common.amount')}</th>
                                 <th>${I18n.t('common.comment')}</th>
@@ -71,7 +72,7 @@ export default class MyAbsencesView {
                             </tr>
                         </thead>
                         <tbody id="vacation-journal-tbody">
-                            <tr><td colspan="5">${I18n.t('absences.loadingJournal')}</td></tr>
+                            <tr><td colspan="6">${I18n.t('absences.loadingJournal')}</td></tr>
                         </tbody>
                     </table>
                 </details>
@@ -265,7 +266,7 @@ export default class MyAbsencesView {
         const loadVacationAccount = async () => {
             const year = parseInt(yearSelect.value, 10);
             if (journalYearLabel) journalYearLabel.textContent = year;
-            journalTbody.innerHTML = `<tr><td colspan="5">${I18n.t('absences.loadingJournal')}</td></tr>`;
+            journalTbody.innerHTML = `<tr><td colspan="6">${I18n.t('absences.loadingJournal')}</td></tr>`;
             try {
                 const response = await VacationAccountApi.getMyVacationAccount(year);
                 const summary = (response && response.summary) ? response.summary : (response || {});
@@ -309,7 +310,7 @@ export default class MyAbsencesView {
                 // Render journal table
                 journalTbody.innerHTML = '';
                 if (entries.length === 0) {
-                    journalTbody.innerHTML = `<tr><td colspan="5" class="empty-state">${I18n.t('absences.noJournalEntries')}</td></tr>`;
+                    journalTbody.innerHTML = `<tr><td colspan="6" class="empty-state">${I18n.t('absences.noJournalEntries')}</td></tr>`;
                 } else {
                     entries.forEach(entry => {
                         const row = document.createElement('tr');
@@ -324,6 +325,7 @@ export default class MyAbsencesView {
 
                         row.innerHTML = `
                             <td>${Format.date(entry.date || entry.effectiveDate)}</td>
+                            <td>${Format.dateTime(entry.createdAt || entry.date)}</td>
                             <td><span class="journal-type-badge">${typeLabel}</span></td>
                             <td class="${amountClass}">${formattedAmount}</td>
                             <td>${entry.comment || '--'}</td>
@@ -339,7 +341,7 @@ export default class MyAbsencesView {
                 cardCorrections.textContent = I18n.t('common.error');
                 cardUsage.textContent = I18n.t('common.error');
                 cardRemaining.textContent = I18n.t('common.error');
-                journalTbody.innerHTML = `<tr><td colspan="5" class="error">${err.message || I18n.t('app.error')}</td></tr>`;
+                journalTbody.innerHTML = `<tr><td colspan="6" class="error">${err.message || I18n.t('app.error')}</td></tr>`;
             }
         };
 

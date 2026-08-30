@@ -99,6 +99,7 @@
     "type": "Typ",
     "amount": "Menge",
     "effectiveDate": "Gültigkeitsdatum",
+    "createdAt": "Erstellt am",
     "createdBy": "Erstellt von",
     "creator": "Ersteller",
     "reason": "Begründung",

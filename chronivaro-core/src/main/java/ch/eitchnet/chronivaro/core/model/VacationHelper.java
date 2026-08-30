@@ -326,7 +326,9 @@ public class VacationHelper {
 					corr.setString(PARAM_VACATION_TYPE, VACATION_CORRECTION);
 					LocalDate joinDate = ChronivaroModelHelper.getJoinDate(employee);
 					LocalDate creditDate = joinDate.isAfter(LocalDate.of(year, 1, 1)) ? joinDate : LocalDate.of(year, 1, 1);
+					ZonedDateTime tzNow = ZonedDateTime.now(ChronivaroModelHelper.getEmployeeTimezone(employee));
 					corr.setDate(PARAM_DATE, creditDate.atStartOfDay(ChronivaroModelHelper.getEmployeeTimezone(employee)));
+					corr.setDate(PARAM_CREATED_AT, tzNow);
 					corr.setInteger(PARAM_VALUE, delta);
 					String reasonDetail = (reason != null && !reason.isBlank()) ? " due to " + reason : "";
 					corr.setString(PARAM_COMMENT, "Recalculated vacation entitlement adjustment for year " + year
@@ -353,7 +355,9 @@ public class VacationHelper {
 			entry.setString(PARAM_VACATION_TYPE, VACATION_ENTITLEMENT);
 			LocalDate joinDate = ChronivaroModelHelper.getJoinDate(employee);
 			LocalDate creditDate = joinDate.isAfter(LocalDate.of(year, 1, 1)) ? joinDate : LocalDate.of(year, 1, 1);
+			ZonedDateTime tzNow = ZonedDateTime.now(ChronivaroModelHelper.getEmployeeTimezone(employee));
 			entry.setDate(PARAM_DATE, creditDate.atStartOfDay(ChronivaroModelHelper.getEmployeeTimezone(employee)));
+			entry.setDate(PARAM_CREATED_AT, tzNow);
 			entry.setInteger(PARAM_VALUE, entitlementMinutes);
 			entry.setString(PARAM_COMMENT, "Annual vacation entitlement " + year);
 			entry.setString(PARAM_CREATED_BY, username);

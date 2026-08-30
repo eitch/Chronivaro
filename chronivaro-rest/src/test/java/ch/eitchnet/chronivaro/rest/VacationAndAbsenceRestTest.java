@@ -256,6 +256,9 @@ public class VacationAndAbsenceRestTest extends AbstractChronivaroRestfulTest {
 			assertEquals(12000, summary.entitlementMinutes());
 			assertEquals(360, summary.correctionsMinutes());
 			assertEquals(4, summary.entries().size());
+			for (VacationAccountEntryDto entry : summary.entries()) {
+				assertNotNull("Entry createdAt must not be null", entry.createdAt());
+			}
 		}
 
 		// Query with pagination (offset=1, limit=2)
@@ -276,6 +279,7 @@ public class VacationAndAbsenceRestTest extends AbstractChronivaroRestfulTest {
 			assertEquals(4, paged.total());
 			assertEquals(2, paged.size());
 			assertEquals(2, paged.data().size());
+			assertNotNull("Paged entry createdAt must not be null", paged.data().get(0).createdAt());
 		}
 
 		// Calculate vacation entitlement

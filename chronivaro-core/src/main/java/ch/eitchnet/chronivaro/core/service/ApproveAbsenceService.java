@@ -58,6 +58,7 @@ public class ApproveAbsenceService extends AbstractService<StringArgument, Servi
 					entry.setRelation(PARAM_EMPLOYEE, tx.getResourceBy(TYPE_EMPLOYEE, employeeId, true));
 					entry.setRelation(PARAM_ABSENCE, absence);
 					entry.setDate(PARAM_DATE, absence.getDate(PARAM_START));
+					entry.setDate(PARAM_CREATED_AT, java.time.ZonedDateTime.now());
 					entry.setString(PARAM_VACATION_TYPE, VACATION_USAGE);
 					entry.setInteger(PARAM_VALUE, -totalMinutes);
 					entry.setString(PARAM_COMMENT, "Vacation usage for absence " + absence.getId());

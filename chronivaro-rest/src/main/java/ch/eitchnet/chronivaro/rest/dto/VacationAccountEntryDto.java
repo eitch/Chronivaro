@@ -6,6 +6,7 @@ public record VacationAccountEntryDto(
 		String id,
 		String employeeId,
 		ZonedDateTime date,
+		ZonedDateTime createdAt,
 		String vacationType,
 		int value,
 		String absenceId,
