@@ -98,6 +98,8 @@ public class WebWorkEntryModificationUiTest extends AbstractChronivaroRestfulTes
 		assertEquals("Translation keys must match between en.json and de.json", enKeys, deKeys);
 		assertTrue("en.json must contain times.manualBadge", enKeys.contains("times.manualBadge"));
 		assertTrue("en.json must contain times.modifiedBadge", enKeys.contains("times.modifiedBadge"));
+		assertTrue("en.json must contain times.onCallBadge", enKeys.contains("times.onCallBadge"));
+		assertTrue("en.json must contain times.onCall", enKeys.contains("times.onCall"));
 		assertTrue("en.json must contain times.createdBy", enKeys.contains("times.createdBy"));
 	}
 

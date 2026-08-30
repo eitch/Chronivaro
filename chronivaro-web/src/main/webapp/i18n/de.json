@@ -244,6 +244,8 @@
     "createdBy": "Erstellt von {user}",
     "source": "Quelle",
     "modified": "Bearbeitet",
+    "onCall": "Pikett",
+    "onCallBadge": "Pikett",
     "pastMidnight": "Über Mitternacht gearbeitet (Folgetag)",
     "endDate": "Enddatum"
   },

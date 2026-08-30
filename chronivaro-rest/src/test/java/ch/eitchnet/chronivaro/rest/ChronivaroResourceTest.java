@@ -38,13 +38,14 @@ public class ChronivaroResourceTest extends AbstractChronivaroRestfulTest {
 	public void shouldAddAndCorrectWorkEntry() {
 		String authToken = authenticate();
 
-		// Add work entry
+		// Add work entry with isOnCall = true
 		String json = """
 				{
 				  "start": "2025-01-01T08:00:00+01:00",
 				  "end": "2025-01-01T12:00:00+01:00",
 				  "comment": "Test work entry",
-				  "workingLocation": "OFFICE"
+				  "workingLocation": "OFFICE",
+				  "isOnCall": true
 				}
 				""";
 		String entryId;
@@ -59,15 +60,17 @@ public class ChronivaroResourceTest extends AbstractChronivaroRestfulTest {
 			assertEquals("MANUAL", obj.get("source").getAsString());
 			assertEquals("admin", obj.get("createdBy").getAsString());
 			org.junit.Assert.assertFalse(obj.get("modified").getAsBoolean());
+			org.junit.Assert.assertTrue(obj.get("isOnCall").getAsBoolean());
 		}
 
-		// Employee updates work entry (start time, end time, comment, workingLocation)
+		// Employee updates work entry (start time, end time, comment, workingLocation, isOnCall = false)
 		String updateJson = """
 				{
 				  "start": "2025-01-01T08:30:00+01:00",
 				  "end": "2025-01-01T12:30:00+01:00",
 				  "comment": "Updated by employee",
-				  "workingLocation": "OFFICE"
+				  "workingLocation": "OFFICE",
+				  "isOnCall": false
 				}
 				""";
 		try (Response response = target()
@@ -81,6 +84,7 @@ public class ChronivaroResourceTest extends AbstractChronivaroRestfulTest {
 			assertEquals("MANUAL", obj.get("source").getAsString());
 			assertEquals("admin", obj.get("createdBy").getAsString());
 			org.junit.Assert.assertTrue(obj.get("modified").getAsBoolean());
+			org.junit.Assert.assertFalse(obj.get("isOnCall").getAsBoolean());
 			assertEquals("Updated by employee", obj.get("comment").getAsString());
 		}
 

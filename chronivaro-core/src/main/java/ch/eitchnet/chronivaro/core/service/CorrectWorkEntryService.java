@@ -111,6 +111,9 @@ public class CorrectWorkEntryService
 					workEntry.setString(PARAM_SOURCE, SOURCE_MANUAL);
 				}
 				workEntry.setString(PARAM_WORKING_LOCATION, arg.workingLocation == null ? "" : arg.workingLocation.name());
+				if (arg.isOnCall != null) {
+					workEntry.setBoolean(PARAM_IS_ON_CALL, arg.isOnCall);
+				}
 
 				Resource scheduleVersion = ScheduleHelper.findScheduleVersion(tx, employeeId, arg.start.toLocalDate())
 						.orElseThrow(() -> new IllegalStateException("No schedule version found for employee " + employeeId
@@ -138,6 +141,11 @@ public class CorrectWorkEntryService
 				nextWorkEntry.setString(PARAM_CREATED_BY, tx.getCertificate().getUsername());
 				nextWorkEntry.setString(PARAM_COMMENT, arg.comment != null ? arg.comment.trim() : "");
 				nextWorkEntry.setString(PARAM_WORKING_LOCATION, arg.workingLocation == null ? "" : arg.workingLocation.name());
+				if (arg.isOnCall != null) {
+					nextWorkEntry.setBoolean(PARAM_IS_ON_CALL, arg.isOnCall);
+				} else if (workEntry.hasParameter(PARAM_IS_ON_CALL)) {
+					nextWorkEntry.setBoolean(PARAM_IS_ON_CALL, workEntry.getBoolean(PARAM_IS_ON_CALL));
+				}
 
 				Resource nextScheduleVersion = ScheduleHelper.findScheduleVersion(tx, employeeId, arg.end.toLocalDate())
 						.orElseThrow(() -> new IllegalStateException("No schedule version found for employee " + employeeId
@@ -164,6 +172,9 @@ public class CorrectWorkEntryService
 					workEntry.setString(PARAM_SOURCE, SOURCE_MANUAL);
 				}
 				workEntry.setString(PARAM_WORKING_LOCATION, arg.workingLocation == null ? "" : arg.workingLocation.name());
+				if (arg.isOnCall != null) {
+					workEntry.setBoolean(PARAM_IS_ON_CALL, arg.isOnCall);
+				}
 
 				Resource scheduleVersion = ScheduleHelper.findScheduleVersion(tx, employeeId, arg.start.toLocalDate())
 						.orElseThrow(() -> new IllegalStateException("No schedule version found for employee " + employeeId
@@ -201,5 +212,6 @@ public class CorrectWorkEntryService
 		public ZonedDateTime end;
 		public String comment;
 		public WorkingLocation workingLocation;
+		public Boolean isOnCall;
 	}
 }

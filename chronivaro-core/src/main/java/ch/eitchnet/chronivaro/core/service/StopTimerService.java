@@ -85,6 +85,12 @@ public class StopTimerService extends AbstractService<StopTimerService.StopTimer
 				if (comment != null) {
 					nextWorkEntry.setString(PARAM_COMMENT, comment);
 				}
+				if (workEntry.hasParameter(PARAM_WORKING_LOCATION)) {
+					nextWorkEntry.setString(PARAM_WORKING_LOCATION, workEntry.getString(PARAM_WORKING_LOCATION));
+				}
+				if (workEntry.hasParameter(PARAM_IS_ON_CALL)) {
+					nextWorkEntry.setBoolean(PARAM_IS_ON_CALL, workEntry.getBoolean(PARAM_IS_ON_CALL));
+				}
 				
 				Resource scheduleVersion = ScheduleHelper.findScheduleVersion(tx, arg.employeeId).orElseThrow();
 				nextWorkEntry.setRelation(PARAM_SCHEDULE, scheduleVersion);

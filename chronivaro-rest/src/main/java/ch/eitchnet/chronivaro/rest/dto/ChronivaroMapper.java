@@ -37,12 +37,13 @@ public class ChronivaroMapper {
 		}
 
 		boolean modified = getVersion(workEntry) > 0;
+		boolean isOnCall = workEntry.hasParameter(PARAM_IS_ON_CALL) && workEntry.getBoolean(PARAM_IS_ON_CALL);
 
 		return new WorkEntryDto(workEntry.getId(), workEntry.getRelationId(PARAM_EMPLOYEE), start, end, durationMinutes,
 				workEntry.getString(PARAM_SOURCE), workEntry.getString(PARAM_COMMENT),
 				workEntry.getString(PARAM_CREATED_BY),
 				WorkingLocation.fromValue(workEntry.getString(PARAM_WORKING_LOCATION)),
-				modified);
+				modified, isOnCall);
 	}
 
 	public static AbsenceDto toDto(StrolchTransaction tx, Resource absence, Resource type) {

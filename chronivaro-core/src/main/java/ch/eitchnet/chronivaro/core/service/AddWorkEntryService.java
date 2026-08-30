@@ -77,6 +77,7 @@ public class AddWorkEntryService extends AbstractService<AddWorkEntryService.Add
 				if (arg.comment != null)
 					workEntry1.setString(PARAM_COMMENT, arg.comment.trim());
 				workEntry1.setString(PARAM_WORKING_LOCATION, arg.workingLocation == null ? "" : arg.workingLocation.name());
+				workEntry1.setBoolean(PARAM_IS_ON_CALL, Boolean.TRUE.equals(arg.isOnCall));
 
 				Resource scheduleVersion1 = ScheduleHelper.findScheduleVersion(tx, arg.employeeId, arg.start.toLocalDate())
 						.orElseThrow(() -> new IllegalStateException("No schedule version found for employee " + arg.employeeId
@@ -106,6 +107,7 @@ public class AddWorkEntryService extends AbstractService<AddWorkEntryService.Add
 				if (arg.comment != null)
 					workEntry2.setString(PARAM_COMMENT, arg.comment.trim());
 				workEntry2.setString(PARAM_WORKING_LOCATION, arg.workingLocation == null ? "" : arg.workingLocation.name());
+				workEntry2.setBoolean(PARAM_IS_ON_CALL, Boolean.TRUE.equals(arg.isOnCall));
 
 				Resource scheduleVersion2 = ScheduleHelper.findScheduleVersion(tx, arg.employeeId, arg.end.toLocalDate())
 						.orElseThrow(() -> new IllegalStateException("No schedule version found for employee " + arg.employeeId
@@ -139,6 +141,7 @@ public class AddWorkEntryService extends AbstractService<AddWorkEntryService.Add
 				if (arg.comment != null)
 					workEntry.setString(PARAM_COMMENT, arg.comment.trim());
 				workEntry.setString(PARAM_WORKING_LOCATION, arg.workingLocation == null ? "" : arg.workingLocation.name());
+				workEntry.setBoolean(PARAM_IS_ON_CALL, Boolean.TRUE.equals(arg.isOnCall));
 
 				Resource scheduleVersion = ScheduleHelper.findScheduleVersion(tx, arg.employeeId, arg.start.toLocalDate())
 						.orElseThrow(() -> new IllegalStateException("No schedule version found for employee " + arg.employeeId
@@ -178,5 +181,6 @@ public class AddWorkEntryService extends AbstractService<AddWorkEntryService.Add
 		public ZonedDateTime end;
 		public String comment;
 		public WorkingLocation workingLocation;
+		public Boolean isOnCall;
 	}
 }

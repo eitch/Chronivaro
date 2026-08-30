@@ -2,8 +2,8 @@ import Rest from '../utils/Rest.js';
 
 export default class WorkEntryApi {
 
-    static async startTimer(workingLocation) {
-        return await Rest.post('rest/chronivaro/v1/me/timer/start', {workingLocation});
+    static async startTimer(workingLocation, isOnCall) {
+        return await Rest.post('rest/chronivaro/v1/me/timer/start', {workingLocation, isOnCall});
     }
 
     static async stopTimer(comment, time) {

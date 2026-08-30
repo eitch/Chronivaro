@@ -681,6 +681,7 @@ export default class ApprovalsView {
 						const badges = [];
 						if (e.source === 'MANUAL') badges.push(I18n.t('times.manualBadge'));
 						if (e.modified) badges.push(I18n.t('times.modifiedBadge'));
+						if (e.isOnCall) badges.push(I18n.t('times.onCallBadge'));
 						if (badges.length > 0) {
 							tag += ` [${badges.join(', ')}]`;
 						}

@@ -209,6 +209,7 @@ public class ChronivaroResource {
 		arg.end = dto.end();
 		arg.comment = dto.comment();
 		arg.workingLocation = dto.workingLocation();
+		arg.isOnCall = dto.isOnCall();
 
 		ServiceResult result = serviceHandler.doService(cert, new AddWorkEntryService(), arg);
 		if (result.isOk() && result instanceof StringResult stringResult) {
@@ -245,6 +246,7 @@ public class ChronivaroResource {
 		arg.end = dto.end();
 		arg.comment = dto.comment();
 		arg.workingLocation = dto.workingLocation();
+		arg.isOnCall = dto.isOnCall();
 
 		ServiceResult result = serviceHandler.doService(cert, new CorrectWorkEntryService(), arg);
 		if (result.isOk()) {
@@ -296,6 +298,7 @@ public class ChronivaroResource {
 		arg.end = dto.end();
 		arg.comment = dto.comment();
 		arg.workingLocation = dto.workingLocation();
+		arg.isOnCall = dto.isOnCall();
 
 		ServiceResult result = serviceHandler.doService(cert, new CorrectWorkEntryService(), arg);
 		if (result.isOk()) {
@@ -379,6 +382,7 @@ public class ChronivaroResource {
 		arg.end = dto.end();
 		arg.comment = dto.comment();
 		arg.workingLocation = dto.workingLocation();
+		arg.isOnCall = dto.isOnCall();
 
 		ServiceResult result = serviceHandler.doService(cert, new AddWorkEntryService(), arg);
 		if (result.isOk() && result instanceof StringResult stringResult) {
@@ -694,12 +698,17 @@ public class ChronivaroResource {
 		TimerStartDto dataObject = ChronivaroRestHelper.createGson().fromJson(data, TimerStartDto.class);
 		StartTimerService.Argument arg = new StartTimerService.Argument();
 		arg.employeeId = employeeId;
-		arg.workingLocation = WorkingLocation.valueOf(dataObject.workingLocation);
+		if (dataObject != null && dataObject.workingLocation != null && !dataObject.workingLocation.isBlank()) {
+			arg.workingLocation = WorkingLocation.valueOf(dataObject.workingLocation);
+		}
+		if (dataObject != null) {
+			arg.isOnCall = dataObject.isOnCall;
+		}
 		ServiceResult result = serviceHandler.doService(cert, new StartTimerService(), arg);
 		return ChronivaroRestHelper.toResponse(result);
 	}
 
-	private record TimerStartDto(String workingLocation) {
+	private record TimerStartDto(String workingLocation, Boolean isOnCall) {
 	}
 
 	@POST

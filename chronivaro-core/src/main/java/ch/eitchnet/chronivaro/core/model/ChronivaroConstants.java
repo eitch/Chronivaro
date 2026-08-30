@@ -67,6 +67,7 @@ public class ChronivaroConstants {
 	public static final String PARAM_CREATED_BY = "createdBy";
 	public static final String PARAM_WORKING_LOCATION = "workingLocation";
 	public static final String PARAM_WEEKDAY = "weekday";
+	public static final String PARAM_IS_ON_CALL = "isOnCall";
 
 	public static final String PARAM_START_DATE = "startDate";
 	public static final String PARAM_START_TIME = "startTime";

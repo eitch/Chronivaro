@@ -694,6 +694,9 @@ export default class ReportsView {
 				const modifiedBadge = entry.modified
 						? `<span class="badge badge-modified" style="background: #fed7aa; color: #9a3412; padding: 2px 6px; border-radius: 4px; font-size: 0.8rem; font-weight: 500;">${I18n.t('times.modifiedBadge')}</span>`
 						: '-';
+				const onCallBadge = entry.isOnCall
+						? `<span class="badge badge-on-call" style="background: #e0f2fe; color: #0369a1; padding: 2px 6px; border-radius: 4px; font-size: 0.8rem; font-weight: 500; margin-left: 4px;">${I18n.t('times.onCallBadge')}</span>`
+						: '';
 				const creatorAttr = entry.createdBy
 						? `<span style="font-size: 0.75rem; color: #6b7280;">${entry.createdBy}</span>`
 						: '-';
@@ -703,7 +706,7 @@ export default class ReportsView {
 						<td>${Format.dateTime(entry.start)}</td>
 						<td>${entry.end ? Format.dateTime(entry.end) : `<span class="status-badge state-open">${I18n.t('reports.inProgress')}</span>`}</td>
 						<td><strong>${Format.duration(entry.durationMinutes)}</strong></td>
-						<td>${sourceBadge}</td>
+						<td>${sourceBadge}${onCallBadge}</td>
 						<td>${modifiedBadge}</td>
 						<td>${creatorAttr}</td>
 						<td>${entry.id}</td>

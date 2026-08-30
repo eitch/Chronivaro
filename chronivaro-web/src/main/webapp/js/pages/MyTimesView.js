@@ -145,6 +145,12 @@ export default class MyTimesView {
 								</select>
 							</div>
 							<div class="form-group" style="grid-column: span 2;">
+								<label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-weight: 500;">
+									<input type="checkbox" id="add-is-on-call">
+									<span>${I18n.t('times.onCall')}</span>
+								</label>
+							</div>
+							<div class="form-group" style="grid-column: span 2;">
 								<label for="add-comment" style="display: block; margin-bottom: 0.25rem; font-weight: 500;">${I18n.t('common.comment')}:</label>
 								<textarea id="add-comment" rows="3" placeholder="${I18n.t('common.comment')}..." style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color, #e2e8f0); border-radius: 4px; box-sizing: border-box;"></textarea>
 							</div>
@@ -201,6 +207,12 @@ export default class MyTimesView {
 								</select>
 							</div>
 							<div class="form-group" style="grid-column: span 2;">
+								<label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-weight: 500;">
+									<input type="checkbox" id="modal-is-on-call">
+									<span>${I18n.t('times.onCall')}</span>
+								</label>
+							</div>
+							<div class="form-group" style="grid-column: span 2;">
 								<label for="modal-comment" style="display: block; margin-bottom: 0.25rem; font-weight: 500;">${I18n.t('common.comment')}:</label>
 								<textarea id="modal-comment" rows="3" placeholder="${I18n.t('common.comment')}..." style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color, #e2e8f0); border-radius: 4px; box-sizing: border-box;"></textarea>
 							</div>
@@ -235,6 +247,7 @@ export default class MyTimesView {
 		const addEndDateDisplay = container.querySelector('#add-end-date-display');
 		const addEndDateText = container.querySelector('#add-end-date-text');
 		const addLocationSelect = container.querySelector('#add-working-location');
+		const addIsOnCallCheckbox = container.querySelector('#add-is-on-call');
 		const addCommentInput = container.querySelector('#add-comment');
 
 		// Edit Modal elements
@@ -252,6 +265,7 @@ export default class MyTimesView {
 		const editEndDateDisplay = container.querySelector('#modal-end-date-display');
 		const editEndDateText = container.querySelector('#modal-end-date-text');
 		const editLocationSelect = container.querySelector('#modal-working-location');
+		const editIsOnCallCheckbox = container.querySelector('#modal-is-on-call');
 		const editCommentInput = container.querySelector('#modal-comment');
 
 		const getNextDayString = (dateStr) => {
@@ -409,6 +423,9 @@ export default class MyTimesView {
 					const modifiedBadge = entry.modified
 							? `<span class="badge badge-modified" style="background: #fed7aa; color: #9a3412; padding: 2px 6px; border-radius: 4px; font-size: 0.8rem; font-weight: 500; margin-right: 4px;">${I18n.t('times.modifiedBadge')}</span>`
 							: '';
+					const onCallBadge = entry.isOnCall
+							? `<span class="badge badge-on-call" style="background: #e0f2fe; color: #0369a1; padding: 2px 6px; border-radius: 4px; font-size: 0.8rem; font-weight: 500; margin-right: 4px;">${I18n.t('times.onCallBadge')}</span>`
+							: '';
 
 					const targetEmp = this.employees.find(e => e.id === (this.selectedEmployeeId || entry.employeeId));
 					const targetUsername = targetEmp ? targetEmp.username : AuthApi.getUsername();
@@ -421,7 +438,7 @@ export default class MyTimesView {
 						<td>${Format.duration(entry.durationMinutes)}</td>
 						<td>${locationText}</td>
 						<td>
-							<div>${sourceBadge}${modifiedBadge}</div>
+							<div>${sourceBadge}${modifiedBadge}${onCallBadge}</div>
 							${creatorAttr}
 						</td>
 						<td>${entry.comment || ''}</td>
@@ -473,6 +490,9 @@ export default class MyTimesView {
 							}
 
 							editLocationSelect.value = entry.workingLocation || '';
+							if (editIsOnCallCheckbox) {
+								editIsOnCallCheckbox.checked = Boolean(entry.isOnCall);
+							}
 							editCommentInput.value = entry.comment || '';
 
 							editModal.style.display = 'flex';
@@ -523,6 +543,7 @@ export default class MyTimesView {
 				if (addPastMidnightCheckbox) addPastMidnightCheckbox.checked = false;
 				updateAddEndDateDisplay();
 				addLocationSelect.value = '';
+				if (addIsOnCallCheckbox) addIsOnCallCheckbox.checked = false;
 				addCommentInput.value = '';
 				addModal.style.display = 'flex';
 			});
@@ -566,7 +587,8 @@ export default class MyTimesView {
 					start: startDate.toISOString(),
 					end: endDate.toISOString(),
 					workingLocation: addLocationSelect.value || undefined,
-					comment: addCommentInput.value.trim() || undefined
+					comment: addCommentInput.value.trim() || undefined,
+					isOnCall: addIsOnCallCheckbox ? addIsOnCallCheckbox.checked : false
 				};
 
 				try {
@@ -619,7 +641,8 @@ export default class MyTimesView {
 					start: startDate.toISOString(),
 					end: endDate.toISOString(),
 					workingLocation: editLocationSelect.value || undefined,
-					comment: editCommentInput.value.trim() || undefined
+					comment: editCommentInput.value.trim() || undefined,
+					isOnCall: editIsOnCallCheckbox ? editIsOnCallCheckbox.checked : false
 				};
 
 				try {

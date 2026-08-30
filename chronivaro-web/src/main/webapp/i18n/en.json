@@ -244,6 +244,8 @@
     "createdBy": "Created by {user}",
     "source": "Source",
     "modified": "Modified",
+    "onCall": "On Call",
+    "onCallBadge": "On-Call",
     "pastMidnight": "Worked past midnight (next day)",
     "endDate": "End Date"
   },

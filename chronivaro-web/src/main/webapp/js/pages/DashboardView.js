@@ -25,6 +25,12 @@ export default class DashboardView {
 						<label><input type="radio" name="working-location" value="CUSTOMER"> ${I18n.t('enums.workingLocation.CUSTOMER')}</label>
 						<button id="clear-working-location" type="button">${I18n.t('dashboard.clearLocation')}</button>
 					</fieldset>
+					<div style="margin-top: 8px;">
+						<label style="display: inline-flex; align-items: center; gap: 0.5rem; cursor: pointer; font-weight: 500;">
+							<input type="checkbox" id="timer-is-on-call" style="cursor: pointer;">
+							<span>${I18n.t('times.onCall')}</span>
+						</label>
+					</div>
                 </div>
                 <div id="timer-controls">
 					<button id="start-timer" disabled>${I18n.t('dashboard.start')}</button>
@@ -91,6 +97,7 @@ export default class DashboardView {
 		const workingLocationGroup = container.querySelector('#working-location-group');
 		const workingLocations = [...container.querySelectorAll('input[name="working-location"]')];
 		const clearWorkingLocationBtn = container.querySelector('#clear-working-location');
+		const timerIsOnCallCheckbox = container.querySelector('#timer-is-on-call');
 		const timerCommentInput = container.querySelector('#timer-comment');
 		let locationSelectionCleared = false;
         const workedSpan = container.querySelector('#worked-time');
@@ -273,6 +280,7 @@ export default class DashboardView {
 				stopBtn.disabled = !isWorking;
 				changeWorkingLocationBtn.disabled = !isWorking || isPreviousDayTimer;
 				workingLocations.forEach(input => input.disabled = isWorking);
+				if (timerIsOnCallCheckbox) timerIsOnCallCheckbox.disabled = isWorking;
 				workingLocationGroup.classList.toggle('read-only', isWorking);
             } catch (err) {
                 console.error(err);
@@ -287,7 +295,8 @@ export default class DashboardView {
 					NotificationDialog.error(I18n.t('dashboard.selectLocationFirst'));
 					return;
 				}
-				await WorkEntryApi.startTimer(workingLocation.value);
+				const isOnCall = timerIsOnCallCheckbox ? timerIsOnCallCheckbox.checked : false;
+				await WorkEntryApi.startTimer(workingLocation.value, isOnCall);
                 await refresh();
             } catch (err) {
                 NotificationDialog.error(err.message);
