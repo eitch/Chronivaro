@@ -30,6 +30,7 @@
             <Parameter Id="source" Name="Source" Type="String" Value=""/>
             <Parameter Id="comment" Name="Comment" Type="String" Value=""/>
             <Parameter Id="createdBy" Name="Created By" Type="String" Value=""/>
+            <Parameter Id="isOnCall" Name="Is On Call" Type="Boolean" Value="false"/>
         </ParameterBag>
         <ParameterBag Id="relations" Name="Relations" Type="Relations">
             <Parameter Id="employee" Name="Employee" Type="String" Interpretation="Resource-Ref" Uom="Employee" Value=""/>
