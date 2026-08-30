@@ -199,6 +199,8 @@
             <Parameter Id="companyLogo" Name="Company Logo" Type="String" Value=""/>
             <Parameter Id="defaultLanguage" Name="Default Language" Type="String" Value="de"/>
             <Parameter Id="serverBaseUrl" Name="Server Base URL" Type="String" Value="http://localhost:8080"/>
+            <Parameter Id="officeHoursStart" Name="Office Hours Start" Type="String" Value="07:00"/>
+            <Parameter Id="officeHoursEnd" Name="Office Hours End" Type="String" Value="18:00"/>
         </ParameterBag>
     </Resource>
 

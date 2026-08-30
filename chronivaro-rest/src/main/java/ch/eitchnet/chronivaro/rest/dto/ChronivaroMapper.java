@@ -434,6 +434,10 @@ public class ChronivaroMapper {
 						DEFAULT_LANGUAGE,
 				config.hasParameter(PARAM_SERVER_BASE_URL) ? config.getString(PARAM_SERVER_BASE_URL) :
 						DEFAULT_SERVER_BASE_URL,
+				config.hasParameter(PARAM_OFFICE_HOURS_START) ? config.getString(PARAM_OFFICE_HOURS_START) :
+						DEFAULT_OFFICE_HOURS_START,
+				config.hasParameter(PARAM_OFFICE_HOURS_END) ? config.getString(PARAM_OFFICE_HOURS_END) :
+						DEFAULT_OFFICE_HOURS_END,
 				ch.eitchnet.chronivaro.core.model.ChronivaroVersionHelper.getVersion(config),
 				config.hasParameter(PARAM_UPDATED_BY) ? config.getString(PARAM_UPDATED_BY) : null);
 	}

@@ -9,6 +9,8 @@ public record ConfigurationDto(
 		String companyLogo,
 		String defaultLanguage,
 		String serverBaseUrl,
+		String officeHoursStart,
+		String officeHoursEnd,
 		Integer version,
 		String updatedBy
 ) {
@@ -20,7 +22,7 @@ public record ConfigurationDto(
 			Integer version,
 			String updatedBy
 	) {
-		this(weeklyTargetMinutes, annualVacationDays, minutesPerVacationDay, vacationAbsenceTypeCode, "Chronivaro", "", "de", "http://localhost:8080", version, updatedBy);
+		this(weeklyTargetMinutes, annualVacationDays, minutesPerVacationDay, vacationAbsenceTypeCode, "Chronivaro", "", "de", "http://localhost:8080", "07:00", "18:00", version, updatedBy);
 	}
 
 	public ConfigurationDto(
@@ -34,6 +36,6 @@ public record ConfigurationDto(
 			Integer version,
 			String updatedBy
 	) {
-		this(weeklyTargetMinutes, annualVacationDays, minutesPerVacationDay, vacationAbsenceTypeCode, companyName, companyLogo, defaultLanguage, "http://localhost:8080", version, updatedBy);
+		this(weeklyTargetMinutes, annualVacationDays, minutesPerVacationDay, vacationAbsenceTypeCode, companyName, companyLogo, defaultLanguage, "http://localhost:8080", "07:00", "18:00", version, updatedBy);
 	}
 }

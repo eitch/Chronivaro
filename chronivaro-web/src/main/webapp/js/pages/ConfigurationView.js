@@ -72,6 +72,18 @@ export default class ConfigurationView {
 						</div>
 
 						<div class="form-group">
+							<label for="config-office-hours-start">${I18n.t('configuration.officeHoursStart')} *:</label>
+							<input type="time" id="config-office-hours-start" required>
+							<small class="form-hint">${I18n.t('configuration.officeHoursStartHint')}</small>
+						</div>
+
+						<div class="form-group">
+							<label for="config-office-hours-end">${I18n.t('configuration.officeHoursEnd')} *:</label>
+							<input type="time" id="config-office-hours-end" required>
+							<small class="form-hint">${I18n.t('configuration.officeHoursEndHint')}</small>
+						</div>
+
+						<div class="form-group">
 							<label for="config-weekly-target">${I18n.t('configuration.weeklyTargetMinutes')} *:</label>
 							<input type="number" id="config-weekly-target" min="0" max="10080" required>
 							<small class="form-hint" id="weekly-target-hint">${I18n.t('configuration.weeklyTargetHint')}</small>
@@ -113,6 +125,8 @@ export default class ConfigurationView {
 		this.logoRemoveBtn = container.querySelector('#config-logo-remove-btn');
 		this.defaultLanguageSelect = container.querySelector('#config-default-language');
 		this.serverBaseUrlInput = container.querySelector('#config-server-base-url');
+		this.officeHoursStartInput = container.querySelector('#config-office-hours-start');
+		this.officeHoursEndInput = container.querySelector('#config-office-hours-end');
 		this.logoPreview = container.querySelector('#config-logo-preview');
 		this.logoPreviewBox = container.querySelector('#config-logo-preview-box');
 		this.weeklyTargetInput = container.querySelector('#config-weekly-target');
@@ -227,6 +241,8 @@ export default class ConfigurationView {
 			this.companyLogoInput.value = config.companyLogo || '';
 			this.defaultLanguageSelect.value = config.defaultLanguage || 'de';
 			this.serverBaseUrlInput.value = config.serverBaseUrl || 'http://localhost:8080';
+			this.officeHoursStartInput.value = config.officeHoursStart || '07:00';
+			this.officeHoursEndInput.value = config.officeHoursEnd || '18:00';
 			this.weeklyTargetInput.value = config.weeklyTargetMinutes != null ? config.weeklyTargetMinutes : 2520;
 			this.vacationDaysInput.value = config.annualVacationDays != null ? config.annualVacationDays : 25;
 			this.dayMinutesInput.value = config.minutesPerVacationDay != null ? config.minutesPerVacationDay : 480;
@@ -250,6 +266,8 @@ export default class ConfigurationView {
 		const companyLogo = this.companyLogoInput.value.trim();
 		const defaultLanguage = this.defaultLanguageSelect.value;
 		const serverBaseUrl = this.serverBaseUrlInput.value.trim();
+		const officeHoursStart = this.officeHoursStartInput.value.trim();
+		const officeHoursEnd = this.officeHoursEndInput.value.trim();
 		const weeklyTargetMinutes = parseInt(this.weeklyTargetInput.value, 10);
 		const annualVacationDays = parseInt(this.vacationDaysInput.value, 10);
 		const minutesPerVacationDay = parseInt(this.dayMinutesInput.value, 10);
@@ -267,6 +285,11 @@ export default class ConfigurationView {
 
 		if (serverBaseUrl && !serverBaseUrl.startsWith('http://') && !serverBaseUrl.startsWith('https://')) {
 			NotificationDialog.error(I18n.t('configuration.invalidServerBaseUrl'));
+			return;
+		}
+
+		if (!officeHoursStart || !officeHoursEnd) {
+			NotificationDialog.error(I18n.t('configuration.officeHoursEmpty'));
 			return;
 		}
 
@@ -295,6 +318,8 @@ export default class ConfigurationView {
 			companyLogo,
 			defaultLanguage,
 			serverBaseUrl,
+			officeHoursStart,
+			officeHoursEnd,
 			weeklyTargetMinutes,
 			annualVacationDays,
 			minutesPerVacationDay,

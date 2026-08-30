@@ -157,6 +157,8 @@ public class ConfigurationResource {
 		arg.companyLogo = dto.companyLogo();
 		arg.defaultLanguage = dto.defaultLanguage();
 		arg.serverBaseUrl = dto.serverBaseUrl();
+		arg.officeHoursStart = dto.officeHoursStart();
+		arg.officeHoursEnd = dto.officeHoursEnd();
 
 		ServiceResult result = serviceHandler.doService(cert, new UpdateConfigurationService(), arg);
 		if (result.isOk()) {

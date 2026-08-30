@@ -82,7 +82,9 @@ public class ConfigurationResourceTest extends AbstractChronivaroRestfulTest {
 				  "companyName": "Acme Time Corp",
 				  "companyLogo": "https://example.com/logo.png",
 				  "defaultLanguage": "en",
-				  "serverBaseUrl": "https://app.chronivaro.example.com"
+				  "serverBaseUrl": "https://app.chronivaro.example.com",
+				  "officeHoursStart": "08:00",
+				  "officeHoursEnd": "17:00"
 				}
 				""";
 
@@ -106,6 +108,8 @@ public class ConfigurationResourceTest extends AbstractChronivaroRestfulTest {
 			assertEquals("https://example.com/logo.png", updated.companyLogo());
 			assertEquals("en", updated.defaultLanguage());
 			assertEquals("https://app.chronivaro.example.com", updated.serverBaseUrl());
+			assertEquals("08:00", updated.officeHoursStart());
+			assertEquals("17:00", updated.officeHoursEnd());
 			assertEquals(Integer.valueOf(initial.version() + 1), updated.version());
 			assertEquals("admin", updated.updatedBy());
 		}

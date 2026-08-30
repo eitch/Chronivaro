@@ -36,6 +36,8 @@ public class UpdateConfigurationService extends AbstractService<UpdateConfigurat
 		public String companyLogo;
 		public String defaultLanguage;
 		public String serverBaseUrl;
+		public String officeHoursStart;
+		public String officeHoursEnd;
 	}
 
 	@Override
@@ -66,6 +68,12 @@ public class UpdateConfigurationService extends AbstractService<UpdateConfigurat
 		}
 		if (arg.serverBaseUrl != null && !arg.serverBaseUrl.isBlank() && !isValidServerBaseUrl(arg.serverBaseUrl)) {
 			throw new IllegalArgumentException("serverBaseUrl must be a valid HTTP or HTTPS URL");
+		}
+		if (arg.officeHoursStart != null && !arg.officeHoursStart.isBlank() && !isValidTime(arg.officeHoursStart)) {
+			throw new IllegalArgumentException("officeHoursStart must be in HH:mm format");
+		}
+		if (arg.officeHoursEnd != null && !arg.officeHoursEnd.isBlank() && !isValidTime(arg.officeHoursEnd)) {
+			throw new IllegalArgumentException("officeHoursEnd must be in HH:mm format");
 		}
 
 		try (StrolchTransaction tx = openArgOrUserTx(arg)) {
@@ -111,6 +119,16 @@ public class UpdateConfigurationService extends AbstractService<UpdateConfigurat
 				}
 				config.setString(PARAM_SERVER_BASE_URL, baseUrl);
 				changes.append(" serverBaseUrl=").append(baseUrl.isEmpty() ? "(cleared)" : baseUrl);
+			}
+			if (arg.officeHoursStart != null && !arg.officeHoursStart.isBlank()) {
+				String start = arg.officeHoursStart.trim();
+				config.setString(PARAM_OFFICE_HOURS_START, start);
+				changes.append(" officeHoursStart=").append(start);
+			}
+			if (arg.officeHoursEnd != null && !arg.officeHoursEnd.isBlank()) {
+				String end = arg.officeHoursEnd.trim();
+				config.setString(PARAM_OFFICE_HOURS_END, end);
+				changes.append(" officeHoursEnd=").append(end);
 			}
 
 			bumpVersion(config, tx);
@@ -179,6 +197,18 @@ public class UpdateConfigurationService extends AbstractService<UpdateConfigurat
 		try {
 			URI uri = new URI(trimmed);
 			return uri.getHost() != null && !uri.getHost().isBlank();
+		} catch (Exception e) {
+			return false;
+		}
+	}
+
+	private static boolean isValidTime(String time) {
+		if (time == null || time.isBlank()) {
+			return true;
+		}
+		try {
+			java.time.LocalTime.parse(time.trim());
+			return true;
 		} catch (Exception e) {
 			return false;
 		}

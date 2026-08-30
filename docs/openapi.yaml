@@ -5719,6 +5719,15 @@ components:
         defaultLanguage:
           type: string
           example: 'de'
+        serverBaseUrl:
+          type: string
+          example: 'http://localhost:8080'
+        officeHoursStart:
+          type: string
+          example: '07:00'
+        officeHoursEnd:
+          type: string
+          example: '18:00'
         version:
           type: integer
           example: 1

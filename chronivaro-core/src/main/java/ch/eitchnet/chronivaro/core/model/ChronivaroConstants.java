@@ -21,6 +21,7 @@ public class ChronivaroConstants {
 	public static final String TYPE_GLOBAL_CONFIGURATION = "GlobalConfiguration";
 	public static final String TYPE_WORK_DAY = "WorkDay";
 	public static final String TYPE_WORKING_LOCATION_DEFAULT = "WorkingLocationDefault";
+	public static final String TYPE_ON_CALL_PERIOD = "OnCallPeriod";
 
 	public static final String PARAM_PERSONAL_NUMBER = "personalNumber";
 	public static final String PARAM_FIRSTNAME = "firstname";
@@ -67,6 +68,11 @@ public class ChronivaroConstants {
 	public static final String PARAM_WORKING_LOCATION = "workingLocation";
 	public static final String PARAM_WEEKDAY = "weekday";
 
+	public static final String PARAM_START_DATE = "startDate";
+	public static final String PARAM_START_TIME = "startTime";
+	public static final String PARAM_END_DATE = "endDate";
+	public static final String PARAM_END_TIME = "endTime";
+
 	public static final String PARAM_CODE = "code";
 	public static final String PARAM_NAME = "name";
 	public static final String PARAM_COUNT_AS_TARGET_TIME = "countAsTargetTime";
@@ -92,6 +98,8 @@ public class ChronivaroConstants {
 	public static final String PARAM_COMPANY_LOGO = "companyLogo";
 	public static final String PARAM_DEFAULT_LANGUAGE = "defaultLanguage";
 	public static final String PARAM_SERVER_BASE_URL = "serverBaseUrl";
+	public static final String PARAM_OFFICE_HOURS_START = "officeHoursStart";
+	public static final String PARAM_OFFICE_HOURS_END = "officeHoursEnd";
 
 	public static final int DEFAULT_ANNUAL_VACATION_DAYS = 25;
 	public static final int DEFAULT_MINUTES_PER_VACATION_DAY = 480;
@@ -100,6 +108,8 @@ public class ChronivaroConstants {
 	public static final String DEFAULT_COMPANY_NAME = "Chronivaro";
 	public static final String DEFAULT_LANGUAGE = "de";
 	public static final String DEFAULT_SERVER_BASE_URL = "http://localhost:9000";
+	public static final String DEFAULT_OFFICE_HOURS_START = "07:00";
+	public static final String DEFAULT_OFFICE_HOURS_END = "18:00";
 
 	public static final String PARAM_HOLIDAY_CALENDAR = "holidayCalendar";
 	public static final String PARAM_DATE = "date";
@@ -174,4 +184,6 @@ public class ChronivaroConstants {
 	public static final String ROLE_HR = "HR";
 	public static final String ROLE_ADMIN = "StrolchAdmin";
 	public static final String ROLE_ADMINISTRATOR = "Administrator";
+	public static final String ROLE_STROLCH_ADMIN = "StrolchAdmin";
+	public static final String ROLE_PRIVILEGE_ADMIN = "PrivilegeAdmin";
 }

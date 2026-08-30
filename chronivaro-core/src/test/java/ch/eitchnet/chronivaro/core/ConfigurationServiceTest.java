@@ -48,6 +48,8 @@ public class ConfigurationServiceTest {
 		arg.companyLogo = "https://example.com/logo.png";
 		arg.defaultLanguage = "en";
 		arg.serverBaseUrl = "https://chronivaro.example.com";
+		arg.officeHoursStart = "08:00";
+		arg.officeHoursEnd = "17:30";
 
 		ServiceResult result = serviceHandler.doService(adminCert, service, arg);
 		assertTrue(result.getMessage(), result.isOk());
@@ -62,6 +64,8 @@ public class ConfigurationServiceTest {
 			assertEquals("https://example.com/logo.png", config.getString(ch.eitchnet.chronivaro.core.model.ChronivaroConstants.PARAM_COMPANY_LOGO));
 			assertEquals("en", config.getString(ch.eitchnet.chronivaro.core.model.ChronivaroConstants.PARAM_DEFAULT_LANGUAGE));
 			assertEquals("https://chronivaro.example.com", config.getString(ch.eitchnet.chronivaro.core.model.ChronivaroConstants.PARAM_SERVER_BASE_URL));
+			assertEquals("08:00", config.getString(ch.eitchnet.chronivaro.core.model.ChronivaroConstants.PARAM_OFFICE_HOURS_START));
+			assertEquals("17:30", config.getString(ch.eitchnet.chronivaro.core.model.ChronivaroConstants.PARAM_OFFICE_HOURS_END));
 		}
 	}
 
@@ -113,6 +117,11 @@ public class ConfigurationServiceTest {
 		invalidUrl.serverBaseUrl = "not-a-valid-url";
 		ServiceResult result9 = serviceHandler.doService(adminCert, new UpdateConfigurationService(), invalidUrl);
 		assertTrue("Invalid serverBaseUrl should fail", result9.isNok());
+
+		UpdateConfigurationService.UpdateConfigurationArgument invalidOfficeHours = new UpdateConfigurationService.UpdateConfigurationArgument();
+		invalidOfficeHours.officeHoursStart = "invalid-time";
+		ServiceResult result10 = serviceHandler.doService(adminCert, new UpdateConfigurationService(), invalidOfficeHours);
+		assertTrue("Invalid officeHoursStart should fail", result10.isNok());
 	}
 
 	@Test
