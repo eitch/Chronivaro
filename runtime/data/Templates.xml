@@ -204,6 +204,20 @@
         </ParameterBag>
     </Resource>
 
+    <Resource Id="OnCallPeriod" Name="Template On-Call Period" Type="Template">
+        <ParameterBag Id="parameters" Name="Parameters" Type="Parameters">
+            <Parameter Id="startDate" Name="Start Date" Type="Date" Value="1970-01-01T00:00:00.000+01:00"/>
+            <Parameter Id="startTime" Name="Start Time" Type="String" Value=""/>
+            <Parameter Id="endDate" Name="End Date" Type="Date" Value="1970-01-01T00:00:00.000+01:00"/>
+            <Parameter Id="endTime" Name="End Time" Type="String" Value=""/>
+            <Parameter Id="comment" Name="Comment" Type="String" Value=""/>
+            <Parameter Id="createdBy" Name="Created By" Type="String" Value=""/>
+        </ParameterBag>
+        <ParameterBag Id="relations" Name="Relations" Type="Relations">
+            <Parameter Id="employee" Name="Employee" Type="String" Interpretation="Resource-Ref" Uom="Employee" Value=""/>
+        </ParameterBag>
+    </Resource>
+
     <Resource Id="WorkingLocationDefault" Name="Template Working Location Default" Type="Template">
         <ParameterBag Id="parameters" Name="Parameters" Type="Parameters">
             <Parameter Id="weekday" Name="Weekday" Type="String" Value="MONDAY"/>
