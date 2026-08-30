@@ -298,6 +298,11 @@ public class VacationHelper {
 
 	public static Optional<String> creditOrRecalculateEntitlement(StrolchTransaction tx, String employeeId, int year,
 			boolean forceRecalculate) {
+		return creditOrRecalculateEntitlement(tx, employeeId, year, forceRecalculate, null);
+	}
+
+	public static Optional<String> creditOrRecalculateEntitlement(StrolchTransaction tx, String employeeId, int year,
+			boolean forceRecalculate, String reason) {
 		Resource employee = tx.getResourceBy(TYPE_EMPLOYEE, employeeId, true);
 
 		int entitlementMinutes = calculateAnnualEntitlement(tx, employeeId, year);
@@ -323,15 +328,16 @@ public class VacationHelper {
 					LocalDate creditDate = joinDate.isAfter(LocalDate.of(year, 1, 1)) ? joinDate : LocalDate.of(year, 1, 1);
 					corr.setDate(PARAM_DATE, creditDate.atStartOfDay(ChronivaroModelHelper.getEmployeeTimezone(employee)));
 					corr.setInteger(PARAM_VALUE, delta);
+					String reasonDetail = (reason != null && !reason.isBlank()) ? " due to " + reason : "";
 					corr.setString(PARAM_COMMENT, "Recalculated vacation entitlement adjustment for year " + year
-							+ " (" + (delta > 0 ? "+" + delta : String.valueOf(delta)) + " minutes)");
+							+ reasonDetail + " (" + (delta > 0 ? "+" + delta : String.valueOf(delta)) + " minutes)");
 					corr.setString(PARAM_CREATED_BY, username);
 
 					ChronivaroVersionHelper.initVersion(corr, tx);
 					tx.add(corr);
 
 					ChronivaroAuditHelper.audit(tx, TYPE_VACATION_ACCOUNT_ENTRY, corr.getId(), AUDIT_ACTION_CREATE,
-							"Recalculated vacation entitlement adjustment for year " + year + " from "
+							"Recalculated vacation entitlement adjustment for year " + year + reasonDetail + " from "
 									+ currentCredited + " to " + entitlementMinutes + " minutes (delta: " + delta + ")");
 					return Optional.of(corr.getId());
 				}

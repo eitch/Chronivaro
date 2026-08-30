@@ -91,7 +91,8 @@ public class CreateEmployeeService extends AbstractService<CreateEmployeeService
 						+ template.getInteger(PARAM_DAILY_TARGET_MINUTES_SATURDAY)
 						+ template.getInteger(PARAM_DAILY_TARGET_MINUTES_SUNDAY);
 				schedule.setInteger(PARAM_WEEKLY_TARGET_MINUTES, weeklyMin);
-				schedule.setDouble(PARAM_EMPLOYMENT_RATE, (double) weeklyMin / (5.0 * DEFAULT_MINUTES_PER_VACATION_DAY));
+				int minPerDay = VacationHelper.getMinutesPerVacationDay(tx);
+				schedule.setDouble(PARAM_EMPLOYMENT_RATE, (double) weeklyMin / (5.0 * minPerDay));
 
 				initVersion(schedule, tx);
 				tx.add(schedule);

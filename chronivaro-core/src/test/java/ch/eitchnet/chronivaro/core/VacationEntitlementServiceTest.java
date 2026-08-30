@@ -497,6 +497,7 @@ public class VacationEntitlementServiceTest {
 					.toList();
 			assertEquals(1, corrections.size());
 			assertEquals(-6049, corrections.get(0).getInteger(PARAM_VALUE));
+			assertTrue(corrections.get(0).getString(PARAM_COMMENT).contains("exit date update to 2025-06-30"));
 
 			VacationAccountSummary summary = VacationHelper.getVacationAccountSummary(tx, employeeId, 2025);
 			assertEquals(5951, summary.entitlementMinutes());
@@ -571,10 +572,68 @@ public class VacationEntitlementServiceTest {
 					.toList();
 			assertEquals(1, corrections.size());
 			assertEquals(-3025, corrections.get(0).getInteger(PARAM_VALUE));
+			assertTrue(corrections.get(0).getString(PARAM_COMMENT).contains("update of schedule version"));
 
 			VacationAccountSummary summary = VacationHelper.getVacationAccountSummary(tx, employeeId, 2025);
 			assertEquals(8975, summary.entitlementMinutes());
 			assertEquals(8975, summary.remainingMinutes());
+		}
+	}
+
+	@Test
+	public void testAutomatedVacationCorrectionOnScheduleCreation() {
+		ServiceHandler serviceHandler = runtimeMock.getContainer().getComponent(ServiceHandler.class);
+		CreateEmployeeService.EmployeeArgument arg = new CreateEmployeeService.EmployeeArgument();
+		arg.username = "emp-create-sched";
+		arg.firstname = "Create";
+		arg.lastname = "Schedule";
+		arg.personalNumber = "P-CREATE-SCHED";
+		arg.teamId = "vac-team";
+		arg.locationId = "vac-loc";
+		arg.joinDate = LocalDate.of(2025, 1, 1);
+		arg.active = true;
+
+		StringResult result = serviceHandler.doService(adminCert, new CreateEmployeeService(), arg);
+		assertTrue(result.getMessage(), result.isOk());
+		String employeeId = result.getValue();
+
+		// Employee was created without a schedule -> initial 100% entitlement = 12000
+		try (StrolchTransaction tx = runtimeMock.openUserTx(adminCert, true)) {
+			Optional<Resource> entryOpt = VacationHelper.findEntitlementEntry(tx, employeeId, 2025);
+			assertTrue(entryOpt.isPresent());
+			assertEquals(12000, entryOpt.get().getInteger(PARAM_VALUE));
+			assertEquals("Annual vacation entitlement 2025", entryOpt.get().getString(PARAM_COMMENT));
+		}
+
+		// Create a schedule with 80% (4 days of 480 = 1920 min / week)
+		CreateScheduleService.CreateScheduleArgument schedArg = new CreateScheduleService.CreateScheduleArgument();
+		schedArg.employeeId = employeeId;
+		schedArg.validFrom = LocalDate.of(2025, 1, 1).atStartOfDay(ZoneId.of("Europe/Zurich"));
+		schedArg.monday = 480;
+		schedArg.tuesday = 480;
+		schedArg.wednesday = 480;
+		schedArg.thursday = 480;
+		schedArg.friday = 0;
+		schedArg.saturday = 0;
+		schedArg.sunday = 0;
+
+		ServiceResult schedResult = serviceHandler.doService(adminCert, new CreateScheduleService(), schedArg);
+		assertTrue(schedResult.getMessage(), schedResult.isOk());
+
+		try (StrolchTransaction tx = runtimeMock.openUserTx(adminCert, true)) {
+			// Total entitlement for 2025: 80% of 12000 = 9600. Delta = 9600 - 12000 = -2400
+			List<Resource> corrections = tx.streamResources(TYPE_VACATION_ACCOUNT_ENTRY)
+					.filter(e -> e.hasRelation(PARAM_EMPLOYEE) && employeeId.equals(e.getRelationId(PARAM_EMPLOYEE)))
+					.filter(e -> VACATION_CORRECTION.equals(e.getString(PARAM_VACATION_TYPE)))
+					.toList();
+			assertEquals(1, corrections.size());
+			Resource corr = corrections.get(0);
+			assertEquals(-2400, corr.getInteger(PARAM_VALUE));
+			assertTrue(corr.getString(PARAM_COMMENT).contains("creation of schedule version"));
+
+			VacationAccountSummary summary = VacationHelper.getVacationAccountSummary(tx, employeeId, 2025);
+			assertEquals(9600, summary.entitlementMinutes());
+			assertEquals(9600, summary.remainingMinutes());
 		}
 	}
 }

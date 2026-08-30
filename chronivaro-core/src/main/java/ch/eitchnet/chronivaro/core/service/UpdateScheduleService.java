@@ -44,7 +44,7 @@ public class UpdateScheduleService
 					Resource newVersion = tx.getResourceTemplate(TYPE_EMPLOYMENT_SCHEDULE, true);
 					newVersion.setName("Schedule for " + employeeId);
 					newVersion.setRelationId(PARAM_EMPLOYEE, employeeId);
-					updateSchedule(newVersion, arg);
+					updateSchedule(tx, newVersion, arg);
 					initVersion(newVersion, tx);
 					tx.add(newVersion);
 					ChronivaroAuditHelper.audit(tx, TYPE_EMPLOYMENT_SCHEDULE, newVersion.getId(), AUDIT_ACTION_CREATE,
@@ -71,7 +71,7 @@ public class UpdateScheduleService
 						}
 					}
 
-					updateSchedule(schedule, arg);
+					updateSchedule(tx, schedule, arg);
 					bumpVersion(schedule, tx);
 					tx.update(schedule);
 					ChronivaroAuditHelper.audit(tx, TYPE_EMPLOYMENT_SCHEDULE, schedule.getId(), AUDIT_ACTION_UPDATE,
@@ -79,7 +79,7 @@ public class UpdateScheduleService
 				}
 			} else {
 				// No work entries and same validFrom, just update
-				updateSchedule(schedule, arg);
+				updateSchedule(tx, schedule, arg);
 				bumpVersion(schedule, tx);
 				tx.update(schedule);
 				ChronivaroAuditHelper.audit(tx, TYPE_EMPLOYMENT_SCHEDULE, schedule.getId(), AUDIT_ACTION_UPDATE,
@@ -106,7 +106,8 @@ public class UpdateScheduleService
 					.forEach(years::add);
 
 			for (int year : years) {
-				VacationHelper.creditOrRecalculateEntitlement(tx, employeeId, year, true);
+				VacationHelper.creditOrRecalculateEntitlement(tx, employeeId, year, true,
+						"update of schedule version (validFrom " + arg.validFrom.toLocalDate() + ")");
 			}
 
 			tx.commitOnClose();
@@ -147,7 +148,7 @@ public class UpdateScheduleService
 				&& schedule.getInteger(PARAM_DAILY_TARGET_MINUTES_SUNDAY) == arg.sunday;
 	}
 
-	private void updateSchedule(Resource schedule, UpdateScheduleArgument arg) {
+	private void updateSchedule(StrolchTransaction tx, Resource schedule, UpdateScheduleArgument arg) {
 		schedule.setDate(PARAM_VALID_FROM, arg.validFrom);
 		if (arg.validTo != null)
 			schedule.setDate(PARAM_VALID_TO, arg.validTo);
@@ -167,7 +168,8 @@ public class UpdateScheduleService
 		if (arg.employmentRate != null) {
 			schedule.setDouble(PARAM_EMPLOYMENT_RATE, arg.employmentRate);
 		} else {
-			schedule.setDouble(PARAM_EMPLOYMENT_RATE, (double) weeklyMinutes / (5.0 * DEFAULT_MINUTES_PER_VACATION_DAY));
+			int minPerDay = VacationHelper.getMinutesPerVacationDay(tx);
+			schedule.setDouble(PARAM_EMPLOYMENT_RATE, (double) weeklyMinutes / (5.0 * minPerDay));
 		}
 	}
 

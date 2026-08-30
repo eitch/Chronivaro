@@ -50,7 +50,7 @@ public class CreditVacationEntitlementService
 		try (StrolchTransaction tx = openArgOrUserTx(arg)) {
 			int entitlementMinutes = VacationHelper.calculateAnnualEntitlement(tx, arg.employeeId, arg.year);
 			Optional<String> entryId = VacationHelper.creditOrRecalculateEntitlement(tx, arg.employeeId, arg.year,
-					arg.forceRecalculate);
+					arg.forceRecalculate, "manual recalculation request");
 			tx.commitOnClose();
 			return new CreditVacationEntitlementResult(entitlementMinutes, entryId.orElse(null));
 		}

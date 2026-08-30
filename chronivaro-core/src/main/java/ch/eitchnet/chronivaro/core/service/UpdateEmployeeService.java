@@ -73,8 +73,26 @@ public class UpdateEmployeeService
 					.map(e -> e.getDate(PARAM_DATE).getYear())
 					.forEach(years::add);
 
+			String reason;
+			boolean exitDateChanged = (oldExitDate.isEmpty() && arg.exitDate != null)
+					|| (oldExitDate.isPresent() && arg.exitDate == null)
+					|| (oldExitDate.isPresent() && !oldExitDate.get().equals(arg.exitDate));
+			boolean joinDateChanged = !oldJoinDate.equals(arg.joinDate);
+
+			if (exitDateChanged && joinDateChanged) {
+				reason = "join date and exit date update (joinDate: " + arg.joinDate + ", exitDate: " + arg.exitDate + ")";
+			} else if (exitDateChanged) {
+				reason = arg.exitDate != null
+						? "exit date update to " + arg.exitDate
+						: "exit date removal";
+			} else if (joinDateChanged) {
+				reason = "join date update from " + oldJoinDate + " to " + arg.joinDate;
+			} else {
+				reason = "employee profile update";
+			}
+
 			for (int year : years) {
-				VacationHelper.creditOrRecalculateEntitlement(tx, employee.getId(), year, true);
+				VacationHelper.creditOrRecalculateEntitlement(tx, employee.getId(), year, true, reason);
 			}
 
 			tx.commitOnClose();

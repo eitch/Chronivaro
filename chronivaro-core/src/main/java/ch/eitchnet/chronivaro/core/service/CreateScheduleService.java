@@ -1,6 +1,7 @@
 package ch.eitchnet.chronivaro.core.service;
 
 import ch.eitchnet.chronivaro.core.model.ChronivaroAuditHelper;
+import ch.eitchnet.chronivaro.core.model.VacationHelper;
 import li.strolch.model.Resource;
 import li.strolch.persistence.api.StrolchTransaction;
 import li.strolch.service.api.AbstractService;
@@ -8,6 +9,8 @@ import li.strolch.service.api.ServiceArgument;
 import li.strolch.service.api.ServiceResult;
 
 import java.time.ZonedDateTime;
+import java.util.Set;
+import java.util.TreeSet;
 
 import static ch.eitchnet.chronivaro.core.model.ChronivaroConstants.*;
 import static ch.eitchnet.chronivaro.core.model.ChronivaroVersionHelper.initVersion;
@@ -37,12 +40,33 @@ public class CreateScheduleService
 			schedule.setInteger(PARAM_DAILY_TARGET_MINUTES_SATURDAY, arg.saturday);
 			schedule.setInteger(PARAM_DAILY_TARGET_MINUTES_SUNDAY, arg.sunday);
 
+			int weeklyMinutes = arg.monday + arg.tuesday + arg.wednesday + arg.thursday + arg.friday + arg.saturday + arg.sunday;
+			schedule.setInteger(PARAM_WEEKLY_TARGET_MINUTES, weeklyMinutes);
+			int minPerDay = VacationHelper.getMinutesPerVacationDay(tx);
+			schedule.setDouble(PARAM_EMPLOYMENT_RATE, (double) weeklyMinutes / (5.0 * minPerDay));
+
 			initVersion(schedule, tx);
 			tx.add(schedule);
 			ChronivaroAuditHelper.audit(tx, TYPE_EMPLOYMENT_SCHEDULE, schedule.getId(), AUDIT_ACTION_CREATE,
 					"Created schedule for employee " + arg.employeeId + " validFrom=" + arg.validFrom
 							+ (arg.validTo != null ? " to " + arg.validTo : ""));
 			updateEmployeeCurrentSchedule(tx, arg.employeeId, schedule, arg.validFrom, arg.validTo);
+
+			Set<Integer> years = new TreeSet<>();
+			years.add(arg.validFrom.getYear());
+			if (arg.validTo != null) {
+				years.add(arg.validTo.getYear());
+			}
+			tx.streamResources(TYPE_VACATION_ACCOUNT_ENTRY)
+					.filter(e -> e.hasRelation(PARAM_EMPLOYEE) && arg.employeeId.equals(e.getRelationId(PARAM_EMPLOYEE))
+							&& VACATION_ENTITLEMENT.equals(e.getString(PARAM_VACATION_TYPE)))
+					.map(e -> e.getDate(PARAM_DATE).getYear())
+					.forEach(years::add);
+
+			for (int year : years) {
+				VacationHelper.creditOrRecalculateEntitlement(tx, arg.employeeId, year, true,
+						"creation of schedule version (validFrom " + arg.validFrom.toLocalDate() + ")");
+			}
 
 			tx.commitOnClose();
 		}
