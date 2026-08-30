@@ -167,22 +167,27 @@ The following foundational areas are verified as fully implemented in the reposi
 - **Vacation Recalculation Comments and Enrollment Guard (Sections 6.7, 6.7.1, 7.5):** Guarded employee enrollment against redundant recalculations ensuring initial vacation credit is recorded purely as `ENTITLEMENT`; automated schedule creation (`CreateScheduleService`), updates (`UpdateScheduleService`), deletions (`RemoveScheduleService`), employee updates (`UpdateEmployeeService`), and manual requests (`CreditVacationEntitlementService`) generate descriptive, detailed comments on `CORRECTION` entries explicitly documenting the reason (e.g. exit date update, schedule version creation/update/removal) and delta; covered by comprehensive unit tests in `VacationEntitlementServiceTest`.
 - **Vacation Journal Created Date Column (Sections 6.7, 11.3, 12.1 #4, 13.2):** Added creation timestamp parameter (`PARAM_CREATED_AT`) to `VacationAccountEntry` templates and services; exposed `createdAt` in `VacationAccountEntryDto` and OpenAPI specifications; rendered dedicated "Created At" / "Erstellt am" column in `MyAbsencesView.js` vacation journal table and `ReportsView.js` vacation transactions table with localized datetime formatting (`Format.dateTime`); covered by unit tests in `VacationJournalTest` and REST tests in `VacationAndAbsenceRestTest`.
 - **Manual Vacation Correction Entry for HR and Supervisors (Sections 3.2, 3.3, 6.7, 12.1 #4, 13.2):** Core service `AddVacationCorrectionService` updated with supervisor permission verification (`assertCanManageEmployee`) allowing HR/Admins globally and Supervisors for assigned team members to add manual vacation corrections; support for positive and negative amounts with mandatory explanatory comments and insufficient balance protection; REST endpoints `POST /admin/employees/{id}/vacation-corrections` and `POST /admin/employees/{id}/vacation-adjustments` (and alias); Web UI modal dialog in `EmployeesView.js` allowing vacation corrections in days, hours, or minutes with comment and effective date; complete Swiss German and English translations with 100% key parity; covered by unit tests in `VacationJournalTest` and REST integration tests in `VacationAndAbsenceRestTest`.
+- **Office Hours Configuration & OnCallPeriod Management (Backlog Task 4.1):** Added `officeHoursStart` and `officeHoursEnd` parameters (with format validation `HH:mm`) to `GlobalConfiguration`, `UpdateConfigurationService`, `ConfigurationDto`, `ConfigurationResource`, and `ConfigurationView` UI with Swiss German and English translations; defined `OnCallPeriod` resource template; implemented `CreateOnCallPeriodService`, `UpdateOnCallPeriodService`, `RemoveOnCallPeriodService`, and `OnCallPeriodSearch` with supervisor team scoping and admin permissions; exposed REST endpoints `GET /admin/on-call-periods`, `POST /admin/on-call-periods`, `PUT /admin/on-call-periods/{id}`, `DELETE /admin/on-call-periods/{id}`, `GET /me/on-call-periods`, `GET /employees/{id}/on-call-periods`; documented in `openapi.yaml`; covered by unit tests in `OnCallPeriodServiceTest`, `ConfigurationServiceTest`, and REST integration tests in `OnCallPeriodResourceTest` and `ConfigurationResourceTest`.
 
 ---
 
 ## Prioritized Implementation Backlog
 
-### Task 4: On-Call Periods Management & Office Hours (Rufbereitschaft / Pikettdienst)
+### Task 4.2: Timer & Work Entry On-Call Tagging (Off-Duty Hours & UI Prompt)
 - **Priority:** High / New Feature Request
 - **Scope:** `chronivaro-core`, `chronivaro-rest`, `chronivaro-web`
 - **Description:**
-  - **Data Model & Configuration:** Support configurable on-call periods (`OnCallPeriod`) for employees (e.g. whole week, weekend) managed by HR/Supervisors.
-  - **Office Hours Concept:** Introduce global/configurable office hours to delineate standard business hours from off-duty hours.
-  - **Timer & Work Entry On-Call Flagging:** When an employee works outside office hours during an active on-call period, allow the employee (when stopping timer) or supervisor/HR (when editing work entry) to specify whether the work was on-call duty (`isOnCall = true`) or regular overtime.
-  - **Reports & Summaries:**
-    - Display on-call active indicators/icons on Day and Month reports.
-    - Separately calculate and display work entry summaries for off-duty / on-call times.
-    - Provide a dedicated On-Call Report (configured periods + on-call work entries).
+  - **WorkEntry On-Call Flag:** Extend `WorkEntry` model, DTOs, and services with `isOnCall` (boolean) parameter and relation/helper validation.
+  - **Timer Stop & Edit Workflow:** When stopping timer or creating/editing a work entry outside office hours during an active on-call period, prompt the user or allow setting `isOnCall = true` vs. regular overtime.
+  - **Web UI & Translations:** Update `MyTimesView` and work time dialogs with on-call checkbox / toggle and Swiss German and English translations.
+
+### Task 4.3: On-Call Reports & Period Summaries (Day/Month Reports and Dedicated On-Call Report)
+- **Priority:** High / New Feature Request
+- **Scope:** `chronivaro-core`, `chronivaro-rest`, `chronivaro-web`
+- **Description:**
+  - **Report Representation:** Display on-call active indicators/badges on Day and Month reports.
+  - **Calculations & Summaries:** Separately calculate and display work entry summaries for off-duty / on-call times in month calculation and reports.
+  - **Dedicated On-Call Report:** Provide a dedicated On-Call Report (configured periods + on-call work entries) in UI, CSV, and PDF exports.
 
 ---
 
