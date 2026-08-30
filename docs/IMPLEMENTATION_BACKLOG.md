@@ -165,19 +165,11 @@ The following foundational areas are verified as fully implemented in the reposi
 - **Supervisor and HR Work Time Editing – Midnight / Next-Day End Option & Automatic Splitting (Sections 3.2, 3.3, 6.4, 9.3, 12.1 #2, 13.2, 20):** Core services (`AddWorkEntryService`, `CorrectWorkEntryService`) and helper validations (`WorkEntryHelper`) updated to support overnight work entries ending on the next day, automatically splitting entries at midnight 24:00 across respective `WorkDay` records and verifying non-overlap and location rules on both days; work time dialogs in `MyTimesView.js` enhanced with "Worked past midnight (next day)" checkbox displaying end date on the next day and allowing next-day end times; complete Swiss German and English translations with 100% key parity; verified with comprehensive unit and integration tests across core, rest, and web modules.
 - **Date Formatting – DD.MM.YYYY / YYYY-MM-DD Locale Consistency (Sections 4.2, 12.1, 18.5):** Updated `Format.date` and `Format.dateTime` in `Format.js` to format dates as European/Swiss standard `dd.MM.yyyy` (e.g. `28.08.2026`) when active language is German (`de`) and ISO `yyyy-MM-dd` for English (`en`), preventing US `MM-DD-YYYY` formats across table columns, cards, and modal dialogs; verified with automated UI tests in `WebLocalizationUiTest.java`.
 - **Vacation Recalculation Comments and Enrollment Guard (Sections 6.7, 6.7.1, 7.5):** Guarded employee enrollment against redundant recalculations ensuring initial vacation credit is recorded purely as `ENTITLEMENT`; automated schedule creation (`CreateScheduleService`), updates (`UpdateScheduleService`), deletions (`RemoveScheduleService`), employee updates (`UpdateEmployeeService`), and manual requests (`CreditVacationEntitlementService`) generate descriptive, detailed comments on `CORRECTION` entries explicitly documenting the reason (e.g. exit date update, schedule version creation/update/removal) and delta; covered by comprehensive unit tests in `VacationEntitlementServiceTest`.
+- **Vacation Journal Created Date Column (Sections 6.7, 11.3, 12.1 #4, 13.2):** Added creation timestamp parameter (`PARAM_CREATED_AT`) to `VacationAccountEntry` templates and services; exposed `createdAt` in `VacationAccountEntryDto` and OpenAPI specifications; rendered dedicated "Created At" / "Erstellt am" column in `MyAbsencesView.js` vacation journal table and `ReportsView.js` vacation transactions table with localized datetime formatting (`Format.dateTime`); covered by unit tests in `VacationJournalTest` and REST tests in `VacationAndAbsenceRestTest`.
 
 ---
 
 ## Prioritized Implementation Backlog
-
-### Task 2: Vacation Journal Created Date Column
-- **Priority:** Medium / Bug Fix
-- **Scope:** `chronivaro-core`, `chronivaro-rest`, `chronivaro-web`
-- **Description:**
-  - Vacation Journal Transactions currently display two date columns (e.g. effective date / period) but lack the timestamp of when the journal entry was created (`createdAt`).
-  - Add `createdAt` to vacation journal models, DTOs, API responses, and the Vacation view table in the frontend.
-
----
 
 ### Task 3: Manual Vacation Correction Entry for HR and Supervisors
 - **Priority:** High / Feature / Bug Fix
