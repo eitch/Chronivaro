@@ -99,6 +99,7 @@
     <Resource Id="VacationAccountEntry" Name="Template Vacation Account Entry" Type="Template">
         <ParameterBag Id="parameters" Name="Parameters" Type="Parameters">
             <Parameter Id="date" Name="Date" Type="Date" Value="1970-01-01T00:00:00.000+01:00"/>
+            <Parameter Id="createdAt" Name="Created At" Type="Date" Value="1970-01-01T00:00:00.000+01:00"/>
             <Parameter Id="vacationType" Name="Vacation Type" Type="String" Value=""/>
             <Parameter Id="value" Name="Value" Type="Integer" Value="0"/>
             <Parameter Id="comment" Name="Comment" Type="String" Value=""/>
