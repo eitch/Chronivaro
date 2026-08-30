@@ -40,11 +40,30 @@ Audit date: 2026-08-28. `IMPLEMENTATION_SPECIFICATION.md` is authoritative; the 
 
 ## Incomplete Requirements / Active Backlog Tasks
 
-### Missing
-*(None – All missing functional areas implemented)*
+### Missing / New Feature Requests
+1. **Handling of On-Call Periods & Office Hours (Backlog Item 8):**
+   - Configurable on-call periods for employees (full week, weekend, etc.) managed by HR / Supervisors.
+   - Global definition of office hours to distinguish regular hours from off-duty hours.
+   - User prompt/option on timer stop and work entry editing when working outside office hours during on-call periods to designate on-call work vs. regular overtime.
+   - Representation in day/month reports (on-call active badge/icon, off-duty work entries summaries) and a dedicated on-call report.
 
 ### Partially Implemented & Bugs / UI Refinements
-*(None – All prioritized functional areas, UI requirements, and bug fixes implemented)*
+1. **Presence Dashboard – Forgotten Timer Indicator & Uniform Card Width (Backlog Item 1 & 4):**
+   - Show forgotten timer warning on "Who is working" dashboard cards identical to employee dashboard.
+   - Enforce uniform card width across all employee cards on the presence dashboard with proper handling of long employee names.
+2. **Supervisor/HR Work Time Editing – Midnight / Next-Day End Option (Backlog Item 2):**
+   - Provide explicit option in work time editing dialogs for supervisors/HR to indicate work past midnight, showing the end date as next day and enabling next-day end times with automated splitting.
+3. **Date Formatting – DD-MM-YYYY Consistency (Backlog Item 3):**
+   - Set standard UI formatted date display to `DD-MM-YYYY` instead of `MM-DD-YYYY`.
+4. **Vacation Calculation Comments & Enrollment Recalculation Guard (Backlog Item 5):**
+   - Provide informative and descriptive comments in vacation journal entries detailing why a recalculation occurred.
+   - Ensure initial employee enrollment grants only base entitlement (`ENTITLEMENT`) without triggering concurrent redundant recalculation corrections.
+5. **Vacation Journal Created Date Column (Backlog Item 6):**
+   - Include creation timestamp (`createdAt`) in Vacation Journal Transactions alongside effective date.
+6. **Manual Vacation Correction Entry by HR/Supervisors (Backlog Item 7):**
+   - Allow HR and Supervisors to record manual vacation corrections (+/- days) requiring an explicit explanatory comment.
+
+---
 
 ### Specification Ambiguities & Open Decisions (Section 22)
 1. **Illness During Pre-Approved Vacation (Section 22 #5):** Automatic conversion/credit reversal vs. manual cancellation/correction workflow.

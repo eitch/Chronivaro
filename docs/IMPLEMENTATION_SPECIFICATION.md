@@ -223,7 +223,7 @@ Regeln:
 - Direkte Tageszeiteingaben werden intern als separate manuelle Tagesbuchung oder als klar gekennzeichnete Dauerbuchung abgebildet; beide Erfassungsarten dürfen nicht zu einer Doppelzählung führen.
 - **Kommentare:** Mitarbeitende können zu jedem `WorkEntry` einen optionalen Kommentar erfassen und bearbeiten (z. B. beim Stoppen des Timers oder bei einer nachträglichen Korrektur).
 - **Bearbeitung von Zeitbuchungen durch Mitarbeitende:** Mitarbeitende können ihre eigenen, noch nicht eingereichten oder gesperrten `WorkEntry`-Buchungen in offenen Perioden bearbeiten (Start- und Endzeit anpassen, Arbeitsort ändern, Kommentar anpassen). Buchungen müssen weiterhin am selben Tag starten und enden, dürfen sich nicht mit anderen Buchungen überschneiden und das Ende muss nach dem Start liegen.
-- **Administrative und supervisorische Erfassung und Korrekturen:** Vorgesetzte (für ihre zugeordneten Mitarbeitenden/Teams) sowie die Personaladministration und Administratoren (unternehmensweit) können Arbeitszeitbuchungen von Mitarbeitenden in offenen Perioden vollständig anpassen (Start- und Endzeit ändern, Arbeitsort ändern, Kommentar anpassen), neue Zeitbuchungen für beliebige Tage manuell erfassen und fehlerhafte Zeitbuchungen löschen. Änderungen sind ausschliesslich in offenen (noch nicht genehmigten/gesperrten) Perioden zulässig; bei gesperrten Perioden muss die Periode zuerst wiedereröffnet werden. Jede manuelle Erfassung, Anpassung oder Löschung wird revisionssicher mit Vorher-/Nachher-Zustand, Begründung und ausführendem Benutzer im Audit-Log protokolliert.
+- **Administrative und supervisorische Erfassung und Korrekturen:** Vorgesetzte (für ihre zugeordneten Mitarbeitenden/Teams) sowie die Personaladministration und Administratoren (unternehmensweit) können Arbeitszeitbuchungen von Mitarbeitenden in offenen Perioden vollständig anpassen (Start- und Endzeit ändern, Arbeitsort ändern, Kommentar anpassen), neue Zeitbuchungen für beliebige Tage manuell erfassen und fehlerhafte Zeitbuchungen löschen. Änderungen sind ausschliesslich in offenen (noch nicht genehmigten/gesperrten) Perioden zulässig; bei gesperrten Perioden muss die Periode zuerst wiedereröffnet werden. Jede manuelle Erfassung, Anpassung oder Löschung wird revisionssicher mit Vorher-/Nachher-Zustand, Begründung und ausführendem Benutzer im Audit-Log protokolliert. Wenn ein Vorgesetzter oder HR die Arbeitszeit eines Mitarbeiters bearbeitet, muss zudem die Option bestehen anzugeben, dass der Mitarbeiter über Mitternacht gearbeitet hat. In diesem Fall wird das Enddatum als Folgetag angezeigt und eine Endzeit am nächsten Tag ermöglicht (mit automatischer Mitternachtsaufteilung).
 - **Visuelle Hervorhebung und Ausweisung des Erstellers:**
   - Alle modifizierten (nachträglich bearbeiteten) sowie manuell erstellten Arbeitszeitbuchungen (`source = MANUAL` oder modifizierter Status) werden in der Benutzeroberfläche (z. B. Tages-, Wochen-, Monatsansicht, Genehmigungsansicht) und in Berichten/Exporten visuell hervorgehoben (z. B. durch optische Kennzeichnung/Badge/Hervorhebung).
   - Wurde eine Arbeitszeitbuchung nicht durch den Mitarbeiter selbst erstellt (z. B. durch Vorgesetzte, HR oder Administrator manuell erfasst), wird beim Eintrag transparent und gut sichtbar ausgewiesen, von wem (`createdBy`) der Eintrag erstellt wurde.
@@ -332,6 +332,7 @@ Das Ferienguthaben wird als Journal geführt und nicht als veränderbarer Einzel
 | `vacationEntryId` | eindeutige ID |
 | `employeeId` | Mitarbeiter |
 | `effectiveDate` | Wirksamkeitsdatum |
+| `createdAt` | Erstellungszeitpunkt des Eintrags |
 | `entryType` | `ENTITLEMENT`, `CARRY_OVER`, `USAGE`, `CORRECTION`, `EXPIRY` |
 | `amountMinutes` | positive oder negative Anzahl Ferienminuten |
 | `relatedAbsenceId` | Referenz bei Ferienbezug |
@@ -360,6 +361,8 @@ Die automatisierte Anspruchsberechnung verwendet die folgenden Regelungen:
 - Übertragene Ferien verfallen nicht.
 - Nur der konfigurierte Standard-Abwesenheitstyp für Ferien erzeugt `USAGE`-Einträge. Der technische Bezeichner dieses Typs lautet `VACATION`.
 - Journaleinträge sind unveränderlich. Korrekturen und Stornierungen werden durch separat auditierte `CORRECTION`-Einträge dargestellt.
+- **Manuelle Ferienkorrektur durch HR/Vorgesetzte:** Personaladministration und Vorgesetzte können manuelle Korrekturbuchungen (`CORRECTION`) erfassen, um ein Ferienguthaben um eine beliebige Anzahl von Tagen (positiv oder negativ) anzupassen. Jede manuelle Korrektur erfordert zwingend die Angabe eines Begründungskommentars (`comment`) durch den ausführenden Benutzer und wird im Journal mit `createdAt`, `effectiveDate`, `createdBy` und dem Kommentar unveränderlich protokolliert.
+- **Nachvollziehbarkeit automatischer Neuberechnungen:** Bei der automatisierten Anspruchsberechnung (z. B. bei Eintritt oder Pensumsänderungen) müssen detaillierte und aussagekräftige Begründungskommentare im Journal hinterlegt werden, warum eine Neuberechnung bzw. Korrektur erfolgt ist. Eine doppelte bzw. parallele Neuberechnung/Korrektur zum selben Zeitpunkt der Mitarbeiteranmeldung/Erstellung muss verhindert werden (der initiale Anspruch wird ausschliesslich als `ENTITLEMENT` gebucht).
 - Die Genehmigung von Ferien wird blockiert, wenn der beantragte Bezug das verfügbare Guthaben überschreitet. Ein negatives Guthaben ist nicht zulässig.
 - Sämtliche Regelwerte, einschliesslich der Umrechnung von Ferientagen in Minuten, des jährlichen Anspruchs, der anteilsmässigen Berechnung, der Rundungsregel, der Übertragung, des Verfalls und der Konfiguration des Abwesenheitstyps, müssen konfigurierbar und dürfen nicht hart codiert sein.
 
@@ -417,6 +420,33 @@ Zusätzlich zu den bereits bestehenden globalen Einstellungen unterstützt Chron
 | `companyName` | global angezeigter Firmenname |
 | `companyLogo` | optionales globales Firmenlogo (unterstützt Bild-Upload und Speicherung/Auslieferung) |
 | `serverBaseUrl` | konfigurierbare Basis-URL des Servers (z. B. `https://chronivaro.example.com`) für Links in E-Mails (z. B. Registrierung) |
+| `officeHoursStart` | Beginn der regulären Büro-/Geschäftszeiten (z. B. `07:00`) |
+| `officeHoursEnd` | Ende der regulären Büro-/Geschäftszeiten (z. B. `18:00`) |
+
+### 6.12 OnCallPeriod – Pikettdienst / Rufbereitschaft
+
+Mitarbeitende können für konfigurierbare Zeiträume für den Pikettdienst (Rufbereitschaft / On-Call) eingeteilt werden.
+
+| Attribut | Beschreibung |
+| --- | --- |
+| `onCallPeriodId` | eindeutige ID |
+| `employeeId` | Mitarbeiter |
+| `startDate` | Beginn der Pikettperiode (Datum) |
+| `startTime` | optionale Beginnzeit |
+| `endDate` | Ende der Pikettperiode (Datum) |
+| `endTime` | optionale Endzeit |
+| `comment` | optionaler Kommentar |
+| `createdBy` | Ersteller (Vorgesetzter / HR) |
+
+Regeln:
+- **Konfiguration:** Personaladministration (HR) und Vorgesetzte können Pikettperioden für Mitarbeitende konfigurieren (z. B. eine ganze Woche oder nur das Wochenende).
+- **Bürozeiten (Office Hours):** Es werden reguläre Bürozeiten definiert. Zeiten ausserhalb der Bürozeiten gelten als arbeitsfreie Zeit / Freizeit (off-duty times).
+- **Pikett-Arbeitszeit vs. Überstunden:** Arbeitet ein Mitarbeiter ausserhalb der regulären Bürozeiten, stellt dies nicht automatisch Pikettarbeitszeit dar (es kann sich um reguläre Überstunden handeln).
+- **Kennzeichnung als Piketteinsatz:** Befindet sich der Mitarbeiter in einer aktiven Pikettperiode und arbeitet ausserhalb der Bürozeiten, kann der Mitarbeiter beim Stoppen des Timers (oder der Mitarbeiter / Vorgesetzte / HR im Bearbeitungsdialog des `WorkEntry`) explizit kennzeichnen, ob es sich um einen Piketteinsatz (`isOnCall = true`) oder um reguläre Überstunden handelt.
+- **Sichtbarkeit in Reports:**
+  - Auf relevanten Berichten (Tages- und Monatsreport) wird angezeigt, ob an den jeweiligen Tagen eine Pikettbereitschaft aktiv war (z. B. über ein entsprechendes Icon).
+  - Arbeitszeiten ausserhalb der Bürozeiten bzw. Piketteinsätze werden in den Berichten separat ausgewiesen und zusammengefasst.
+  - Es steht ein dedizierter Pikett-Report (On-Call Report) zur Verfügung, der konfigurierte Pikettperioden und geleistete Pikett-Arbeitszeiteinsätze übersichtlich zusammenfasst.
 
 Regeln:
 
@@ -791,7 +821,8 @@ Die UI wird mit HTML, CSS und Vanilla JavaScript umgesetzt. Es wird kein Fronten
    - Filter nach Team und Standort
    - farblicher Status
    - datenschutzkonforme Anzeige
-   - Anwesenheitsliste ("Wer arbeitet gerade"): Darstellung der anwesenden Mitarbeiter nebeneinander in einer flexiblen Zeilenanordnung (Row/Grid-Layout) mit angemessenem Abstand (Margin) zwischen den einzelnen Einträgen/Karten statt einer rein vertikalen Spaltenliste
+   - Anwesenheitsliste ("Wer arbeitet gerade"): Darstellung der anwesenden Mitarbeiter nebeneinander in einer flexiblen Zeilenanordnung (Row/Grid-Layout) mit einheitlicher Kartenbreite (gleiche Breite aller Mitarbeiterkarten, auch bei längeren Mitarbeiternamen) und angemessenem Abstand (Margin) zwischen den einzelnen Einträgen/Karten statt einer rein vertikalen Spaltenliste
+   - Information und Kennzeichnung, falls ein Mitarbeiter vergessen hat, seinen Timer zu stoppen (analog zur Anzeige auf dem Mitarbeiter-Dashboard)
 6. **Genehmigungen**
    - offene Abwesenheiten
    - eingereichte Monatsperioden mit Detailprüfung (Öffnen des vollständigen Monatsreports in einer Inspektionsansicht mit direkter Genehmigungs-/Ablehnungsaktion)
@@ -823,7 +854,7 @@ Die UI wird mit HTML, CSS und Vanilla JavaScript umgesetzt. Es wird kein Fronten
 - verständliche Fehlermeldungen direkt am betroffenen Feld
 - Bestätigung vor fachlich weitreichenden Aktionen: Bestätigungsdialoge beim Löschen von Elementen (z. B. Teams, Standorte, Benutzer) zeigen zur eindeutigen Identifikation den lesbaren Namen bzw. die Bezeichnung des Elements anstelle einer internen/technischen ID an.
 - Modale Dialoge (z. B. Mitarbeiter hinzufügen, Arbeitsplan bearbeiten und alle weiteren Eingabedialoge) müssen bei begrenzter Fensterhöhe bzw. auf kleineren Bildschirmen vertikal scrollbar sein (Viewport-Overflow), sodass alle Formularfelder und Aktionsschaltflächen (z. B. Speichern, Abbrechen) stets sichtbar und erreichbar bleiben.
-- Datumsdarstellung in der UI vorerst einheitlich im Format `yyyy-MM-dd`; Übertragung in eindeutigem ISO-Format
+- **Datumsformat:** Die standardmässige formatierte Datumsanzeige in der Benutzeroberfläche und in tabellarischen Ansichten erfolgt im Format `DD-MM-YYYY` (anstelle von `MM-DD-YYYY`). Die technische Übertragung über die REST-API erfolgt weiterhin in eindeutigem ISO-Format (`YYYY-MM-DD`).
 - Lade-, Leer- und Fehlerzustände für jede asynchrone Ansicht
 
 ### 12.3 Mehrsprachigkeit und Sprachwahl

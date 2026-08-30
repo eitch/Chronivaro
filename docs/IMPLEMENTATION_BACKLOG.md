@@ -166,7 +166,75 @@ The following foundational areas are verified as fully implemented in the reposi
 
 ## Prioritized Implementation Backlog
 
-*(None – All prioritized functional, UI, and maintenance tasks implemented and verified)*
+### Task 1: Presence Dashboard – Forgotten Timer Indicator & Uniform Card Width
+- **Priority:** High / Bug & UI Refinement
+- **Scope:** `chronivaro-web`
+- **Description:**
+  - On the "Who is working" (Presence / Status) dashboard, display whether an employee forgot to stop their timer (consistent with the indicator on the employee's personal dashboard).
+  - Ensure all employee cards on the presence dashboard have an identical, fixed/uniform width.
+  - Handle long employee names cleanly (e.g. text truncation/ellipsis, wrapping, or responsive styling) without distorting card widths.
+
+---
+
+### Task 2: Supervisor and HR Work Time Editing – Midnight / Next-Day End Time Support
+- **Priority:** High / Bug Fix & Enhancement
+- **Scope:** `chronivaro-core`, `chronivaro-rest`, `chronivaro-web`
+- **Description:**
+  - When a supervisor or HR edits an employee's work time, add an option to indicate that the employee worked past midnight.
+  - In the editing dialog, display the end date as the next day and allow setting the end time on that next day.
+  - Core service must handle automatic splitting at 24:00 across the respective `WorkDay` records.
+
+---
+
+### Task 3: Date Format Setting to DD-MM-YYYY
+- **Priority:** Medium / Bug Fix
+- **Scope:** `chronivaro-web` (and report generators where applicable)
+- **Description:**
+  - Ensure date formatting in the UI is consistently set to `DD-MM-YYYY` (e.g. European/Swiss standard display) rather than `MM-DD-YYYY`.
+  - Verify that date inputs, table columns, card displays, and tooltips follow `DD-MM-YYYY`.
+
+---
+
+### Task 4: Vacation Recalculation Comments and Enrollment Guard
+- **Priority:** High / Bug Fix & Investigation
+- **Scope:** `chronivaro-core`, `chronivaro-rest`, `chronivaro-web`
+- **Description:**
+  - Investigate why an employee enrolled on 01.01.2026 with a global 25-day entitlement showed 20d (160h) and why a recalculation happened at the same time an employee was enrolled.
+  - Prevent concurrent/redundant recalculations during employee enrollment so that initial entitlement is cleanly recorded as `ENTITLEMENT`.
+  - Add descriptive, detailed comments to all automated vacation recalculations and corrections explaining why the recalculation occurred.
+
+---
+
+### Task 5: Vacation Journal Created Date Column
+- **Priority:** Medium / Bug Fix
+- **Scope:** `chronivaro-core`, `chronivaro-rest`, `chronivaro-web`
+- **Description:**
+  - Vacation Journal Transactions currently display two date columns (e.g. effective date / period) but lack the timestamp of when the journal entry was created (`createdAt`).
+  - Add `createdAt` to vacation journal models, DTOs, API responses, and the Vacation view table in the frontend.
+
+---
+
+### Task 6: Manual Vacation Correction Entry for HR and Supervisors
+- **Priority:** High / Feature / Bug Fix
+- **Scope:** `chronivaro-core`, `chronivaro-rest`, `chronivaro-web`
+- **Description:**
+  - Allow HR and Supervisors to add a manual vacation correction entry (`CORRECTION`) with positive or negative number of days/hours.
+  - Require a mandatory comment explaining the reason for the correction.
+  - Ensure the correction is saved as an immutable journal entry with author attribution and audit logging.
+
+---
+
+### Task 7: On-Call Periods Management & Office Hours (Rufbereitschaft / Pikettdienst)
+- **Priority:** High / New Feature Request
+- **Scope:** `chronivaro-core`, `chronivaro-rest`, `chronivaro-web`
+- **Description:**
+  - **Data Model & Configuration:** Support configurable on-call periods (`OnCallPeriod`) for employees (e.g. whole week, weekend) managed by HR/Supervisors.
+  - **Office Hours Concept:** Introduce global/configurable office hours to delineate standard business hours from off-duty hours.
+  - **Timer & Work Entry On-Call Flagging:** When an employee works outside office hours during an active on-call period, allow the employee (when stopping timer) or supervisor/HR (when editing work entry) to specify whether the work was on-call duty (`isOnCall = true`) or regular overtime.
+  - **Reports & Summaries:**
+    - Display on-call active indicators/icons on Day and Month reports.
+    - Separately calculate and display work entry summaries for off-duty / on-call times.
+    - Provide a dedicated On-Call Report (configured periods + on-call work entries).
 
 ---
 
