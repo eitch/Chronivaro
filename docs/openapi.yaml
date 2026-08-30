@@ -5735,6 +5735,42 @@ components:
           type: string
           example: 'admin'
 
+    OnCallPeriodDto:
+      type: object
+      properties:
+        id:
+          type: string
+          example: 'oncall-001'
+        employeeId:
+          type: string
+          example: 'emp-001'
+        employeeName:
+          type: string
+          example: 'John Doe'
+        startDate:
+          type: string
+          format: date
+          example: '2026-09-01'
+        startTime:
+          type: string
+          example: '07:00'
+        endDate:
+          type: string
+          format: date
+          example: '2026-09-07'
+        endTime:
+          type: string
+          example: '18:00'
+        comment:
+          type: string
+          example: 'Weekend on-call duty'
+        createdBy:
+          type: string
+          example: 'admin'
+        version:
+          type: integer
+          example: 1
+
     ManualCorrectionRequestDto:
       type: object
       required:
