@@ -161,22 +161,13 @@ The following foundational areas are verified as fully implemented in the reposi
 - **Multi-Column / Row Layout with Spacing for Presence / Who Is Working Dashboard (Sections 8, 12.1 #5):** Updated `PresenceView.js` to render employee cards in dedicated `.presence-cards-grid` containers within each team group, and configured responsive flex-row wrapping layout (`display: flex; flex-direction: row; flex-wrap: wrap; gap: 1.5rem;`) and distinct card dimensions/margins (`flex: 1 1 280px; min-width: 260px; max-width: 380px;`) in `style.css`; verified with automated UI tests in `WebPresenceUiTest.java`.
 - **Entity Deletion and Action Confirmation Dialogs with Human-Readable Names (Section 12.2):** Updated confirmation dialog prompts across admin views (`TeamsView.js`, `LocationsView.js`, `AbsenceTypesView.js`, `EmployeesView.js`, `ScheduleTemplatesView.js`, `HolidayCalendarsView.js`, `UsersView.js`) to look up and format human-readable entity names (`name`, `firstname lastname`, `username`) instead of technical IDs; updated German (Swiss German) and English translations with `{name}` placeholders and 100% key parity; covered by automated UI tests in `WebConfirmationDialogsUiTest.java`.
 - **Modal Dialog Scrolling & Viewport Overflow Handling for All Dialogs (Section 12.2):** Configured modal dialog containers (`.modal-content` with `max-height: 90vh; overflow-y: auto;` in `style.css` and `.notification-dialog-body` with `overflow-y: auto;`) ensuring all input dialogs (such as Add Employee, Edit Schedule, and all administration/time-tracking modals) scroll vertically within short browser viewports while keeping all form controls and action buttons accessible; verified with automated UI tests in `WebModalDialogsUiTest.java`.
+- **Presence Dashboard – Forgotten Timer Indicator, Uniform Card Width, and Name Truncation (Sections 8, 12.1 #5):** Added backend detection of forgotten timers from previous days (`isPreviousDayTimer`, `timerStartDate`) in `PresenceService` and `PresenceDto`; updated `PresenceView.js` to render warning indicators (`.timer-warning-icon`, `status-danger`) with interactive notification tooltips consistent with the personal dashboard; styled all presence cards with fixed, uniform width (`flex: 0 0 280px; width: 280px; max-width: 280px;`) and added text ellipsis truncation with tooltip title attributes for long employee names; verified with unit tests in `PresenceServiceTest` and UI tests in `WebPresenceUiTest`.
 
 ---
 
 ## Prioritized Implementation Backlog
 
-### Task 1: Presence Dashboard – Forgotten Timer Indicator & Uniform Card Width
-- **Priority:** High / Bug & UI Refinement
-- **Scope:** `chronivaro-web`
-- **Description:**
-  - On the "Who is working" (Presence / Status) dashboard, display whether an employee forgot to stop their timer (consistent with the indicator on the employee's personal dashboard).
-  - Ensure all employee cards on the presence dashboard have an identical, fixed/uniform width.
-  - Handle long employee names cleanly (e.g. text truncation/ellipsis, wrapping, or responsive styling) without distorting card widths.
-
----
-
-### Task 2: Supervisor and HR Work Time Editing – Midnight / Next-Day End Time Support
+### Task 1: Supervisor and HR Work Time Editing – Midnight / Next-Day End Time Support
 - **Priority:** High / Bug Fix & Enhancement
 - **Scope:** `chronivaro-core`, `chronivaro-rest`, `chronivaro-web`
 - **Description:**
@@ -186,7 +177,7 @@ The following foundational areas are verified as fully implemented in the reposi
 
 ---
 
-### Task 3: Date Format Setting to DD-MM-YYYY
+### Task 2: Date Format Setting to DD-MM-YYYY
 - **Priority:** Medium / Bug Fix
 - **Scope:** `chronivaro-web` (and report generators where applicable)
 - **Description:**
@@ -195,7 +186,7 @@ The following foundational areas are verified as fully implemented in the reposi
 
 ---
 
-### Task 4: Vacation Recalculation Comments and Enrollment Guard
+### Task 3: Vacation Recalculation Comments and Enrollment Guard
 - **Priority:** High / Bug Fix & Investigation
 - **Scope:** `chronivaro-core`, `chronivaro-rest`, `chronivaro-web`
 - **Description:**
@@ -205,7 +196,7 @@ The following foundational areas are verified as fully implemented in the reposi
 
 ---
 
-### Task 5: Vacation Journal Created Date Column
+### Task 4: Vacation Journal Created Date Column
 - **Priority:** Medium / Bug Fix
 - **Scope:** `chronivaro-core`, `chronivaro-rest`, `chronivaro-web`
 - **Description:**
@@ -214,7 +205,7 @@ The following foundational areas are verified as fully implemented in the reposi
 
 ---
 
-### Task 6: Manual Vacation Correction Entry for HR and Supervisors
+### Task 5: Manual Vacation Correction Entry for HR and Supervisors
 - **Priority:** High / Feature / Bug Fix
 - **Scope:** `chronivaro-core`, `chronivaro-rest`, `chronivaro-web`
 - **Description:**
@@ -224,7 +215,7 @@ The following foundational areas are verified as fully implemented in the reposi
 
 ---
 
-### Task 7: On-Call Periods Management & Office Hours (Rufbereitschaft / Pikettdienst)
+### Task 6: On-Call Periods Management & Office Hours (Rufbereitschaft / Pikettdienst)
 - **Priority:** High / New Feature Request
 - **Scope:** `chronivaro-core`, `chronivaro-rest`, `chronivaro-web`
 - **Description:**

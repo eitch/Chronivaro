@@ -35,32 +35,30 @@ Audit date: 2026-08-28. `IMPLEMENTATION_SPECIFICATION.md` is authoritative; the 
 - **Multi-Column / Row Layout with Spacing for Presence / Who Is Working Dashboard (Sections 8, 12.1 #5):** Updated `PresenceView.js` and `style.css` so that employee cards within each team group are rendered horizontally in a responsive flex-row wrapping layout (`.presence-cards-grid` with `display: flex; flex-direction: row; flex-wrap: wrap; gap: 1.5rem;` and `.presence-card` with `flex: 1 1 280px; min-width: 260px; max-width: 380px;`) with clear spacing and margins, eliminating vertical single-column stacking; verified with automated UI tests in `WebPresenceUiTest.java`.
 - **Entity Deletion and Action Confirmation Dialogs with Human-Readable Names (Section 12.2):** Updated confirmation dialog prompts across admin views (`TeamsView.js`, `LocationsView.js`, `AbsenceTypesView.js`, `EmployeesView.js`, `ScheduleTemplatesView.js`, `HolidayCalendarsView.js`, `UsersView.js`) to look up and format human-readable entity names (`name`, `firstname lastname`, `username`) instead of technical IDs; updated German (Swiss German) and English translations with `{name}` placeholders and 100% key parity; covered by automated UI tests in `WebConfirmationDialogsUiTest.java`.
 - **Modal Dialog Scrolling & Viewport Overflow Handling for All Dialogs (Section 12.2):** Configured modal dialog containers (`.modal-content` with `max-height: 90vh; overflow-y: auto;` in `style.css` and `.notification-dialog-body` with `overflow-y: auto;`) ensuring all input dialogs (such as Add Employee, Edit Schedule, and all administration/time-tracking modals) scroll vertically within short browser viewports while keeping all form controls and action buttons accessible; verified with automated UI tests in `WebModalDialogsUiTest.java`.
+- **Presence Dashboard – Forgotten Timer Indicator, Uniform Card Width, and Name Truncation (Sections 8, 12.1 #5):** Added backend detection of forgotten timers from previous days (`isPreviousDayTimer`, `timerStartDate`) in `PresenceService` and `PresenceDto`; updated `PresenceView.js` to render warning indicators (`.timer-warning-icon`, `status-danger`) with interactive notification tooltips consistent with the personal dashboard; styled all presence cards with fixed, uniform width (`flex: 0 0 280px; width: 280px; max-width: 280px;`) and added text ellipsis truncation with tooltip title attributes for long employee names; verified with unit tests in `PresenceServiceTest` and UI tests in `WebPresenceUiTest`.
 
 ---
 
 ## Incomplete Requirements / Active Backlog Tasks
 
 ### Missing / New Feature Requests
-1. **Handling of On-Call Periods & Office Hours (Backlog Item 8):**
+1. **Handling of On-Call Periods & Office Hours (Backlog Item 6):**
    - Configurable on-call periods for employees (full week, weekend, etc.) managed by HR / Supervisors.
    - Global definition of office hours to distinguish regular hours from off-duty hours.
    - User prompt/option on timer stop and work entry editing when working outside office hours during on-call periods to designate on-call work vs. regular overtime.
    - Representation in day/month reports (on-call active badge/icon, off-duty work entries summaries) and a dedicated on-call report.
 
 ### Partially Implemented & Bugs / UI Refinements
-1. **Presence Dashboard – Forgotten Timer Indicator & Uniform Card Width (Backlog Item 1 & 4):**
-   - Show forgotten timer warning on "Who is working" dashboard cards identical to employee dashboard.
-   - Enforce uniform card width across all employee cards on the presence dashboard with proper handling of long employee names.
-2. **Supervisor/HR Work Time Editing – Midnight / Next-Day End Option (Backlog Item 2):**
+1. **Supervisor/HR Work Time Editing – Midnight / Next-Day End Option (Backlog Item 1):**
    - Provide explicit option in work time editing dialogs for supervisors/HR to indicate work past midnight, showing the end date as next day and enabling next-day end times with automated splitting.
-3. **Date Formatting – DD-MM-YYYY Consistency (Backlog Item 3):**
+2. **Date Formatting – DD-MM-YYYY Consistency (Backlog Item 2):**
    - Set standard UI formatted date display to `DD-MM-YYYY` instead of `MM-DD-YYYY`.
-4. **Vacation Calculation Comments & Enrollment Recalculation Guard (Backlog Item 5):**
+3. **Vacation Calculation Comments & Enrollment Recalculation Guard (Backlog Item 3):**
    - Provide informative and descriptive comments in vacation journal entries detailing why a recalculation occurred.
    - Ensure initial employee enrollment grants only base entitlement (`ENTITLEMENT`) without triggering concurrent redundant recalculation corrections.
-5. **Vacation Journal Created Date Column (Backlog Item 6):**
+4. **Vacation Journal Created Date Column (Backlog Item 4):**
    - Include creation timestamp (`createdAt`) in Vacation Journal Transactions alongside effective date.
-6. **Manual Vacation Correction Entry by HR/Supervisors (Backlog Item 7):**
+5. **Manual Vacation Correction Entry by HR/Supervisors (Backlog Item 5):**
    - Allow HR and Supervisors to record manual vacation corrections (+/- days) requiring an explicit explanatory comment.
 
 ---
