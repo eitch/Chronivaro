@@ -7,3 +7,4 @@ dependencies/
 *.iml
 .ai/
 runtime/temp/sessions.dat
+/.output.txt
