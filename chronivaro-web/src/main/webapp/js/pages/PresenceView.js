@@ -2,6 +2,7 @@ import AuthApi from '../api/AuthApi.js';
 import PresenceApi from '../api/PresenceApi.js';
 import TeamApi from '../api/TeamApi.js';
 import LocationApi from '../api/LocationApi.js';
+import NotificationDialog from '../utils/NotificationDialog.js';
 import Format from '../utils/Format.js';
 import I18n from '../i18n/I18n.js';
 
@@ -107,8 +108,16 @@ export default class PresenceView {
 							card.className = 'presence-card';
 							
 							let statusClass = 'status-not-working';
+							let warningHtml = '';
 							if (info.status === 'WORKING') {
-								statusClass = 'status-working';
+								if (info.isPreviousDayTimer) {
+									statusClass = 'status-danger';
+									const startDate = info.timerStartDate || '';
+									const infoMsg = I18n.t('dashboard.timerRunningSince', {date: startDate});
+									warningHtml = ` <span class="timer-warning-icon" role="button" tabindex="0" title="${infoMsg}">!</span>`;
+								} else {
+									statusClass = 'status-working';
+								}
 							} else if (info.isOff) {
 								statusClass = 'status-off-duty';
 							}
@@ -128,11 +137,13 @@ export default class PresenceView {
 								? I18n.t(`enums.workingLocation.${info.workingLocation}`, {}, info.workingLocation)
 								: '';
 
+							const fullName = `${info.firstname} ${info.lastname}`.trim();
+
 							card.innerHTML = `
 								<div class="presence-info">
-									<span class="presence-name">${info.firstname} ${info.lastname}</span>
+									<span class="presence-name" title="${fullName}">${fullName}</span>
 									<div class="presence-status-line">
-										<span class="presence-status ${statusClass}">${statusText}</span>
+										<span class="presence-status ${statusClass}">${statusText}${warningHtml}</span>
 										${info.status === 'WORKING' && locationText ? `<span class="presence-working-location">${locationText}</span>` : ''}
 									</div>
 									${extraInfo}
@@ -141,6 +152,26 @@ export default class PresenceView {
 									${I18n.t('presence.todayStats', { time: Format.duration(info.minutesToday) })}
 								</div>
 							`;
+
+							if (info.isPreviousDayTimer) {
+								const warningIcon = card.querySelector('.timer-warning-icon');
+								if (warningIcon) {
+									const startDate = info.timerStartDate || '';
+									const infoMsg = I18n.t('dashboard.timerRunningSince', {date: startDate});
+									warningIcon.addEventListener('click', (e) => {
+										e.stopPropagation();
+										NotificationDialog.info(infoMsg);
+									});
+									warningIcon.addEventListener('keydown', (e) => {
+										if (e.key === 'Enter' || e.key === ' ') {
+											e.preventDefault();
+											e.stopPropagation();
+											NotificationDialog.info(infoMsg);
+										}
+									});
+								}
+							}
+
 							cardsContainer.appendChild(card);
 						});
 						teamGroup.appendChild(cardsContainer);

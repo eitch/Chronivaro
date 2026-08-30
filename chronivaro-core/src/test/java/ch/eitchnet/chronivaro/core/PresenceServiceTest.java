@@ -256,4 +256,50 @@ public class PresenceServiceTest {
 		assertFalse(resultOtherTeam.isOk());
 		assertTrue(resultOtherTeam.getMessage().contains("Access denied"));
 	}
+
+	@Test
+	public void shouldDetectForgottenTimerFromPreviousDay() {
+		String teamId = "team-forgotten";
+		String locationId = "loc-forgotten";
+		String empId = "emp-forgotten-timer";
+
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
+			Resource team = tx.getResourceTemplate(TYPE_TEAM, true);
+			team.setId(teamId);
+			team.setName("Forgotten Timer Team");
+			tx.add(team);
+
+			Resource emp = createEmployee(tx, empId, "Forgotten Emp", ZonedDateTime.now());
+			emp = tx.readLock(emp);
+			emp.setRelationId(PARAM_LOCATION, locationId);
+			emp.setRelation(PARAM_PRIMARY_TEAM, team);
+			tx.update(emp);
+
+			// Active work entry started yesterday
+			ZonedDateTime yesterdayStart = ZonedDateTime.now().minusDays(1).withHour(9).withMinute(0).withSecond(0).withNano(0);
+			Resource workEntry = tx.getResourceTemplate(TYPE_WORK_ENTRY, true);
+			workEntry.setId("we-forgotten-1");
+			workEntry.setRelation(PARAM_EMPLOYEE, emp);
+			workEntry.setDate(PARAM_START, yesterdayStart);
+			workEntry.setDate(PARAM_END, ZonedDateTime.parse("1970-01-01T00:00:00+01:00"));
+			workEntry.setString(PARAM_WORKING_LOCATION, WorkingLocation.OFFICE.name());
+			workEntry.setString(PARAM_SOURCE, SOURCE_MANUAL);
+			tx.add(workEntry);
+
+			tx.commitOnClose();
+		}
+
+		ServiceHandler serviceHandler = runtimeMock.getServiceHandler();
+		PresenceService.PresenceArgument arg = new PresenceService.PresenceArgument();
+		arg.teamId = teamId;
+		PresenceService.PresenceResult result = serviceHandler.doService(certificate, new PresenceService(), arg);
+		assertTrue(result.isOk());
+		assertEquals(1, result.presenceInfos.size());
+
+		PresenceService.PresenceInfo info = result.presenceInfos.getFirst();
+		assertEquals(PresenceService.PresenceStatus.WORKING, info.status());
+		assertTrue(info.isPreviousDayTimer());
+		assertNotNull(info.timerStartDate());
+		assertEquals(LocalDate.now().minusDays(1).toString(), info.timerStartDate());
+	}
 }

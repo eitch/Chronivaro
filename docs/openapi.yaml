@@ -4260,6 +4260,13 @@ components:
           type: string
           enum: [OFFICE, REMOTE, CLIENT, TRANSIT]
           example: 'OFFICE'
+        isPreviousDayTimer:
+          type: boolean
+          example: false
+        timerStartDate:
+          type: string
+          nullable: true
+          example: '2026-08-17'
 
     PagedPresenceDto:
       type: object

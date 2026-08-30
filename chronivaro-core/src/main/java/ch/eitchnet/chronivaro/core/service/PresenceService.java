@@ -40,7 +40,8 @@ public class PresenceService extends AbstractService<PresenceService.PresenceArg
 
 	public record PresenceInfo(String employeeId, String firstname, String lastname, String teamId, String teamName,
 							   PresenceStatus status, String statusLabel, int minutesToday, String absenceTypeCode,
-							   String absenceTypeName, boolean isOff, String workingLocation) {
+							   String absenceTypeName, boolean isOff, String workingLocation,
+							   boolean isPreviousDayTimer, String timerStartDate) {
 	}
 
 	public static class PresenceArgument extends ServiceArgument {
@@ -99,6 +100,17 @@ public class PresenceService extends AbstractService<PresenceService.PresenceArg
 						int targetMinutes = ScheduleHelper.getTargetMinutes(tx, e.getId(), today);
 						boolean isOff = targetMinutes == 0;
 
+						boolean isPreviousDayTimer = false;
+						String timerStartDate = null;
+						if (activeEntry.isPresent()) {
+							ZonedDateTime activeStart = activeEntry.get().getDate(PARAM_START);
+							LocalDate activeStartDate = activeStart.toLocalDate();
+							if (activeStartDate.isBefore(today)) {
+								isPreviousDayTimer = true;
+								timerStartDate = activeStartDate.toString();
+							}
+						}
+
 						String absenceTypeCode = null;
 						String absenceTypeName = null;
 
@@ -127,7 +139,8 @@ public class PresenceService extends AbstractService<PresenceService.PresenceArg
 
 						return new PresenceInfo(e.getId(), e.getString(PARAM_FIRSTNAME), e.getString(PARAM_LASTNAME),
 								teamId, teamName, status, status.getLabel(), minutesToday, absenceTypeCode,
-								absenceTypeName, isOff, activeEntry.map(entry -> entry.getString(PARAM_WORKING_LOCATION)).orElse(null));
+								absenceTypeName, isOff, activeEntry.map(entry -> entry.getString(PARAM_WORKING_LOCATION)).orElse(null),
+								isPreviousDayTimer, timerStartDate);
 					})
 					.toList();
 
