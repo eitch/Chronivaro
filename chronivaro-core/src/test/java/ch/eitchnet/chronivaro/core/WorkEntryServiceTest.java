@@ -563,14 +563,14 @@ public class WorkEntryServiceTest {
 		assertFalse(res1.isOk());
 		assertTrue(res1.getMessage().contains("must be after start time"));
 
-		// 2. Cross-day start and end
+		// 2. Cross-day start and end spanning multiple days beyond next day
 		CorrectWorkEntryService.CorrectWorkEntryArgument corrArg2 = new CorrectWorkEntryService.CorrectWorkEntryArgument();
 		corrArg2.workEntryId = workEntryId;
 		corrArg2.start = start;
-		corrArg2.end = ZonedDateTime.parse("2026-03-15T09:00:00+01:00[Europe/Zurich]");
+		corrArg2.end = ZonedDateTime.parse("2026-03-16T09:00:00+01:00[Europe/Zurich]");
 		ServiceResult res2 = serviceHandler.doService(empCert, new CorrectWorkEntryService(), corrArg2);
 		assertFalse(res2.isOk());
-		assertTrue(res2.getMessage().contains("must start and end on the same day"));
+		assertTrue(res2.getMessage().contains("must start and end on the same day or end on the next day"));
 	}
 
 	@Test

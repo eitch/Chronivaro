@@ -20,6 +20,7 @@ import java.util.Optional;
 
 import static ch.eitchnet.chronivaro.core.model.ChronivaroConstants.*;
 import static ch.eitchnet.chronivaro.core.model.ChronivaroVersionHelper.bumpVersion;
+import static ch.eitchnet.chronivaro.core.model.ChronivaroVersionHelper.initVersion;
 
 public class CorrectWorkEntryService
 		extends AbstractService<CorrectWorkEntryService.CorrectWorkEntryArgument, ServiceResult> {
@@ -48,8 +49,13 @@ public class CorrectWorkEntryService
 				throw new IllegalArgumentException("Work entry end time must be after start time!");
 			}
 
-			if (!arg.start.toLocalDate().equals(arg.end.toLocalDate())) {
-				throw new IllegalArgumentException("Work entry must start and end on the same day!");
+			boolean spansMidnight = arg.end.toLocalDate().equals(arg.start.toLocalDate().plusDays(1));
+			if (!arg.start.toLocalDate().equals(arg.end.toLocalDate()) && !spansMidnight) {
+				throw new IllegalArgumentException("Work entry must start and end on the same day or end on the next day!");
+			}
+
+			if (spansMidnight) {
+				PeriodHelper.assertPeriodOpen(tx, employeeId, arg.end.toLocalDate());
 			}
 
 			boolean isAdminOrHr = tx.getPrivilegeContext().hasRole(ROLE_HR)
@@ -73,10 +79,6 @@ public class CorrectWorkEntryService
 				}
 			}
 
-			WorkEntryHelper.validateNoOverlap(tx, employeeId, arg.start, arg.end, workEntry.getId());
-			WorkEntryHelper.validateWorkingLocation(tx, employeeId, arg.start, arg.end,
-					arg.workingLocation == null ? null : arg.workingLocation.name(), workEntry.getId());
-
 			if (!arg.start.toLocalDate().equals(oldStart.toLocalDate())) {
 				Resource employee = tx.getResourceBy(TYPE_EMPLOYEE, employeeId, true);
 				Resource oldWorkDay = tx.getResourceBy(TYPE_WORK_DAY, workEntry.getRelationId(PARAM_WORK_DAY), true);
@@ -90,26 +92,92 @@ public class CorrectWorkEntryService
 				tx.update(newWorkDay);
 			}
 
-			workEntry.setDate(PARAM_START, arg.start);
-			workEntry.setDate(PARAM_END, arg.end);
-			workEntry.setString(PARAM_COMMENT, arg.comment != null ? arg.comment.trim() : "");
-			if (!workEntry.hasParameter(PARAM_SOURCE) || workEntry.getString(PARAM_SOURCE).isBlank()) {
-				workEntry.setString(PARAM_SOURCE, SOURCE_MANUAL);
+			if (spansMidnight) {
+				ZonedDateTime midnight = arg.start.toLocalDate().plusDays(1).atStartOfDay(arg.start.getZone());
+
+				WorkEntryHelper.validateNoOverlap(tx, employeeId, arg.start, midnight, workEntry.getId());
+				WorkEntryHelper.validateWorkingLocation(tx, employeeId, arg.start, midnight,
+						arg.workingLocation == null ? null : arg.workingLocation.name(), workEntry.getId());
+
+				WorkEntryHelper.validateNoOverlap(tx, employeeId, midnight, arg.end, null);
+				WorkEntryHelper.validateWorkingLocation(tx, employeeId, midnight, arg.end,
+						arg.workingLocation == null ? null : arg.workingLocation.name(), null);
+
+				// 1. Update first entry up to midnight
+				workEntry.setDate(PARAM_START, arg.start);
+				workEntry.setDate(PARAM_END, midnight);
+				workEntry.setString(PARAM_COMMENT, arg.comment != null ? arg.comment.trim() : "");
+				if (!workEntry.hasParameter(PARAM_SOURCE) || workEntry.getString(PARAM_SOURCE).isBlank()) {
+					workEntry.setString(PARAM_SOURCE, SOURCE_MANUAL);
+				}
+				workEntry.setString(PARAM_WORKING_LOCATION, arg.workingLocation == null ? "" : arg.workingLocation.name());
+
+				Resource scheduleVersion = ScheduleHelper.findScheduleVersion(tx, employeeId, arg.start.toLocalDate())
+						.orElseThrow(() -> new IllegalStateException("No schedule version found for employee " + employeeId
+								+ " on " + arg.start.toLocalDate()));
+				workEntry.setRelation(PARAM_SCHEDULE, scheduleVersion);
+
+				bumpVersion(workEntry, tx);
+				tx.update(workEntry);
+
+				String auditComment = arg.comment != null && !arg.comment.isBlank() ? arg.comment : "Work entry corrected";
+				ChronivaroAuditHelper.audit(tx, TYPE_WORK_ENTRY, workEntry.getId(), AUDIT_ACTION_CORRECT, auditComment,
+						"Corrected work entry " + workEntry.getId() + " for employee " + employeeId + " (split at midnight: start: " + oldStart
+								+ " -> " + arg.start + ", end: " + oldEnd + " -> " + midnight + ")");
+
+				// 2. Create second entry on next day
+				Resource employee = tx.getResourceBy(TYPE_EMPLOYEE, employeeId, true);
+				Resource nextWorkDay = WorkDayHelper.getOrCreateWorkDay(tx, employee, arg.end);
+				Resource nextWorkEntry = tx.getResourceTemplate(TYPE_WORK_ENTRY, true);
+				nextWorkEntry.setName("WorkEntry " + midnight);
+				nextWorkEntry.setRelation(PARAM_EMPLOYEE, employee);
+				nextWorkEntry.setRelation(PARAM_WORK_DAY, nextWorkDay);
+				nextWorkEntry.setDate(PARAM_START, midnight);
+				nextWorkEntry.setDate(PARAM_END, arg.end);
+				nextWorkEntry.setString(PARAM_SOURCE, SOURCE_MANUAL);
+				nextWorkEntry.setString(PARAM_CREATED_BY, tx.getCertificate().getUsername());
+				nextWorkEntry.setString(PARAM_COMMENT, arg.comment != null ? arg.comment.trim() : "");
+				nextWorkEntry.setString(PARAM_WORKING_LOCATION, arg.workingLocation == null ? "" : arg.workingLocation.name());
+
+				Resource nextScheduleVersion = ScheduleHelper.findScheduleVersion(tx, employeeId, arg.end.toLocalDate())
+						.orElseThrow(() -> new IllegalStateException("No schedule version found for employee " + employeeId
+								+ " on " + arg.end.toLocalDate()));
+				nextWorkEntry.setRelation(PARAM_SCHEDULE, nextScheduleVersion);
+
+				initVersion(nextWorkEntry, tx);
+				tx.add(nextWorkEntry);
+				nextWorkDay.addRelation(PARAM_WORK_ENTRIES, nextWorkEntry);
+				tx.update(nextWorkDay);
+
+				ChronivaroAuditHelper.audit(tx, TYPE_WORK_ENTRY, nextWorkEntry.getId(), AUDIT_ACTION_CREATE, auditComment,
+						"Created split work entry for employee " + employeeId + " from " + midnight + " to " + arg.end
+								+ " following work entry correction " + workEntry.getId());
+			} else {
+				WorkEntryHelper.validateNoOverlap(tx, employeeId, arg.start, arg.end, workEntry.getId());
+				WorkEntryHelper.validateWorkingLocation(tx, employeeId, arg.start, arg.end,
+						arg.workingLocation == null ? null : arg.workingLocation.name(), workEntry.getId());
+
+				workEntry.setDate(PARAM_START, arg.start);
+				workEntry.setDate(PARAM_END, arg.end);
+				workEntry.setString(PARAM_COMMENT, arg.comment != null ? arg.comment.trim() : "");
+				if (!workEntry.hasParameter(PARAM_SOURCE) || workEntry.getString(PARAM_SOURCE).isBlank()) {
+					workEntry.setString(PARAM_SOURCE, SOURCE_MANUAL);
+				}
+				workEntry.setString(PARAM_WORKING_LOCATION, arg.workingLocation == null ? "" : arg.workingLocation.name());
+
+				Resource scheduleVersion = ScheduleHelper.findScheduleVersion(tx, employeeId, arg.start.toLocalDate())
+						.orElseThrow(() -> new IllegalStateException("No schedule version found for employee " + employeeId
+								+ " on " + arg.start.toLocalDate()));
+				workEntry.setRelation(PARAM_SCHEDULE, scheduleVersion);
+
+				bumpVersion(workEntry, tx);
+				tx.update(workEntry);
+
+				String auditComment = arg.comment != null && !arg.comment.isBlank() ? arg.comment : "Work entry corrected";
+				ChronivaroAuditHelper.audit(tx, TYPE_WORK_ENTRY, workEntry.getId(), AUDIT_ACTION_CORRECT, auditComment,
+						"Corrected work entry " + workEntry.getId() + " for employee " + employeeId + " (start: " + oldStart
+								+ " -> " + arg.start + ", end: " + oldEnd + " -> " + arg.end + ")");
 			}
-			workEntry.setString(PARAM_WORKING_LOCATION, arg.workingLocation == null ? "" : arg.workingLocation.name());
-
-			Resource scheduleVersion = ScheduleHelper.findScheduleVersion(tx, employeeId, arg.start.toLocalDate())
-					.orElseThrow(() -> new IllegalStateException("No schedule version found for employee " + employeeId
-							+ " on " + arg.start.toLocalDate()));
-			workEntry.setRelation(PARAM_SCHEDULE, scheduleVersion);
-
-			bumpVersion(workEntry, tx);
-			tx.update(workEntry);
-
-			String auditComment = arg.comment != null && !arg.comment.isBlank() ? arg.comment : "Work entry corrected";
-			ChronivaroAuditHelper.audit(tx, TYPE_WORK_ENTRY, workEntry.getId(), AUDIT_ACTION_CORRECT, auditComment,
-					"Corrected work entry " + workEntry.getId() + " for employee " + employeeId + " (start: " + oldStart
-							+ " -> " + arg.start + ", end: " + oldEnd + " -> " + arg.end + ")");
 
 			tx.commitOnClose();
 		}

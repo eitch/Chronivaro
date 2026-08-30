@@ -73,7 +73,8 @@ public class WorkEntryHelper {
 	public static void validateNoOverlap(StrolchTransaction tx, String employeeId, ZonedDateTime start,
 			ZonedDateTime end, String excludeId) {
 
-		if (end != null && end.getYear() != 1970 && !start.toLocalDate().equals(end.toLocalDate())) {
+		boolean isMidnightEnd = end != null && end.equals(start.toLocalDate().plusDays(1).atStartOfDay(start.getZone()));
+		if (end != null && end.getYear() != 1970 && !start.toLocalDate().equals(end.toLocalDate()) && !isMidnightEnd) {
 			throw new IllegalArgumentException("Work entry cannot span multiple days!");
 		}
 
@@ -124,8 +125,10 @@ public class WorkEntryHelper {
 		ZonedDateTime effectiveEnd = (end == null || end.getYear() == 1970) ? ZonedDateTime.now(start.getZone()) : end;
 		LocalTime endTime = effectiveEnd.toLocalTime();
 
+		boolean isMidnightEnd = effectiveEnd.equals(start.toLocalDate().plusDays(1).atStartOfDay(start.getZone()));
+
 		boolean touchesMorning = startTime.isBefore(NOON_BOUNDARY);
-		boolean touchesAfternoon = endTime.isAfter(NOON_BOUNDARY);
+		boolean touchesAfternoon = endTime.isAfter(NOON_BOUNDARY) || isMidnightEnd || startTime.isAfter(NOON_BOUNDARY) || startTime.equals(NOON_BOUNDARY);
 
 		List<Resource> workDays = tx
 				.streamResources(TYPE_WORK_DAY)
@@ -148,8 +151,10 @@ public class WorkEntryHelper {
 			ZonedDateTime exEffectiveEnd =
 					(exEnd == null || exEnd.getYear() == 1970) ? ZonedDateTime.now(exStart.getZone()) : exEnd;
 
+			boolean exIsMidnightEnd = exEffectiveEnd.equals(exStart.toLocalDate().plusDays(1).atStartOfDay(exStart.getZone()));
+
 			boolean exTouchesMorning = exStart.toLocalTime().isBefore(NOON_BOUNDARY);
-			boolean exTouchesAfternoon = exEffectiveEnd.toLocalTime().isAfter(NOON_BOUNDARY);
+			boolean exTouchesAfternoon = exEffectiveEnd.toLocalTime().isAfter(NOON_BOUNDARY) || exIsMidnightEnd || exStart.toLocalTime().isAfter(NOON_BOUNDARY) || exStart.toLocalTime().equals(NOON_BOUNDARY);
 
 			if (touchesMorning && exTouchesMorning && !workingLocation.equals(existingLoc)) {
 				throw new IllegalArgumentException(

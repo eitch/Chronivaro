@@ -126,6 +126,15 @@ export default class MyTimesView {
 								<input type="text" id="add-end-time" required placeholder="17:00" maxlength="5" pattern="^([01]?[0-9]|2[0-3]):[0-5][0-9]$" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color, #e2e8f0); border-radius: 4px; box-sizing: border-box;">
 							</div>
 							<div class="form-group" style="grid-column: span 2;">
+								<label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-weight: 500;">
+									<input type="checkbox" id="add-past-midnight">
+									<span>${I18n.t('times.pastMidnight')}</span>
+								</label>
+								<div id="add-end-date-display" style="display: none; font-size: 0.85rem; color: #4b5563; margin-top: 0.25rem;">
+									${I18n.t('times.endDate')}: <span id="add-end-date-text" style="font-weight: 600;"></span>
+								</div>
+							</div>
+							<div class="form-group" style="grid-column: span 2;">
 								<label for="add-working-location" style="display: block; margin-bottom: 0.25rem; font-weight: 500;">${I18n.t('times.workingLocation')}:</label>
 								<select id="add-working-location" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color, #e2e8f0); border-radius: 4px; box-sizing: border-box;">
 									<option value="">-- ${I18n.t('common.selectOption')} --</option>
@@ -172,6 +181,15 @@ export default class MyTimesView {
 								<label for="modal-end-time" id="edit-end-label" style="display: block; margin-bottom: 0.25rem; font-weight: 500;">${I18n.t('times.shortenTime')} * (24h):</label>
 								<input type="text" id="modal-end-time" required placeholder="17:00" maxlength="5" pattern="^([01]?[0-9]|2[0-3]):[0-5][0-9]$" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color, #e2e8f0); border-radius: 4px; box-sizing: border-box;">
 							</div>
+							<div class="form-group" id="edit-past-midnight-group" style="grid-column: span 2;">
+								<label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-weight: 500;">
+									<input type="checkbox" id="modal-past-midnight">
+									<span>${I18n.t('times.pastMidnight')}</span>
+								</label>
+								<div id="modal-end-date-display" style="display: none; font-size: 0.85rem; color: #4b5563; margin-top: 0.25rem;">
+									${I18n.t('times.endDate')}: <span id="modal-end-date-text" style="font-weight: 600;"></span>
+								</div>
+							</div>
 							<div class="form-group" id="edit-location-group" style="grid-column: span 2;">
 								<label for="modal-working-location" style="display: block; margin-bottom: 0.25rem; font-weight: 500;">${I18n.t('times.workingLocation')}:</label>
 								<select id="modal-working-location" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color, #e2e8f0); border-radius: 4px; box-sizing: border-box;">
@@ -213,6 +231,9 @@ export default class MyTimesView {
 		const addDateInput = container.querySelector('#add-entry-date');
 		const addStartInput = container.querySelector('#add-start-time');
 		const addEndInput = container.querySelector('#add-end-time');
+		const addPastMidnightCheckbox = container.querySelector('#add-past-midnight');
+		const addEndDateDisplay = container.querySelector('#add-end-date-display');
+		const addEndDateText = container.querySelector('#add-end-date-text');
 		const addLocationSelect = container.querySelector('#add-working-location');
 		const addCommentInput = container.querySelector('#add-comment');
 
@@ -227,8 +248,55 @@ export default class MyTimesView {
 		const editStartInput = container.querySelector('#modal-start-time');
 		const editEndLabel = container.querySelector('#edit-end-label');
 		const editEndInput = container.querySelector('#modal-end-time');
+		const editPastMidnightCheckbox = container.querySelector('#modal-past-midnight');
+		const editEndDateDisplay = container.querySelector('#modal-end-date-display');
+		const editEndDateText = container.querySelector('#modal-end-date-text');
 		const editLocationSelect = container.querySelector('#modal-working-location');
 		const editCommentInput = container.querySelector('#modal-comment');
+
+		const getNextDayString = (dateStr) => {
+			if (!dateStr) return '';
+			const [y, m, d] = dateStr.split('-').map(Number);
+			const date = new Date(y, m - 1, d);
+			date.setDate(date.getDate() + 1);
+			const pad = (n) => String(n).padStart(2, '0');
+			return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+		};
+
+		const updateAddEndDateDisplay = () => {
+			if (!addPastMidnightCheckbox || !addEndDateDisplay || !addEndDateText) return;
+			if (addPastMidnightCheckbox.checked) {
+				const nextDay = getNextDayString(addDateInput.value);
+				addEndDateText.textContent = nextDay;
+				addEndDateDisplay.style.display = 'block';
+			} else {
+				addEndDateDisplay.style.display = 'none';
+			}
+		};
+
+		const updateEditEndDateDisplay = () => {
+			if (!editPastMidnightCheckbox || !editEndDateDisplay || !editEndDateText) return;
+			if (editPastMidnightCheckbox.checked) {
+				const nextDay = getNextDayString(editDateInput.value);
+				editEndDateText.textContent = nextDay;
+				editEndDateDisplay.style.display = 'block';
+			} else {
+				editEndDateDisplay.style.display = 'none';
+			}
+		};
+
+		if (addPastMidnightCheckbox) {
+			addPastMidnightCheckbox.addEventListener('change', updateAddEndDateDisplay);
+		}
+		if (addDateInput) {
+			addDateInput.addEventListener('change', updateAddEndDateDisplay);
+		}
+		if (editPastMidnightCheckbox) {
+			editPastMidnightCheckbox.addEventListener('change', updateEditEndDateDisplay);
+		}
+		if (editDateInput) {
+			editDateInput.addEventListener('change', updateEditEndDateDisplay);
+		}
 
 		[addStartInput, addEndInput, editStartInput, editEndInput].forEach(inp => {
 			if (inp) {
@@ -394,6 +462,16 @@ export default class MyTimesView {
 									: '';
 							editEndInput.value = endTimeStr;
 
+							const isEntryPastMidnight = !isNaN(startDate.getTime()) && !isNaN(endDate.getTime()) && (
+									endDate.getFullYear() > startDate.getFullYear() ||
+									endDate.getMonth() > startDate.getMonth() ||
+									endDate.getDate() > startDate.getDate()
+							);
+							if (editPastMidnightCheckbox) {
+								editPastMidnightCheckbox.checked = isEntryPastMidnight;
+								updateEditEndDateDisplay();
+							}
+
 							editLocationSelect.value = entry.workingLocation || '';
 							editCommentInput.value = entry.comment || '';
 
@@ -442,6 +520,8 @@ export default class MyTimesView {
 				addDateInput.value = todayDate;
 				addStartInput.value = '08:00';
 				addEndInput.value = '17:00';
+				if (addPastMidnightCheckbox) addPastMidnightCheckbox.checked = false;
+				updateAddEndDateDisplay();
 				addLocationSelect.value = '';
 				addCommentInput.value = '';
 				addModal.style.display = 'flex';
@@ -472,8 +552,10 @@ export default class MyTimesView {
 					return;
 				}
 
+				const isPastMidnight = addPastMidnightCheckbox && addPastMidnightCheckbox.checked;
+				const endDateVal = isPastMidnight ? getNextDayString(dateVal) : dateVal;
 				const startDate = new Date(`${dateVal}T${startVal}:00`);
-				const endDate = new Date(`${dateVal}T${endVal}:00`);
+				const endDate = new Date(`${endDateVal}T${endVal}:00`);
 				if (isNaN(startDate.getTime()) || isNaN(endDate.getTime()) || endDate <= startDate) {
 					NotificationDialog.error(I18n.t('times.invalidDuration'));
 					return;
@@ -520,8 +602,10 @@ export default class MyTimesView {
 					return;
 				}
 
+				const isPastMidnight = editPastMidnightCheckbox && editPastMidnightCheckbox.checked;
+				const endDateVal = isPastMidnight ? getNextDayString(dateVal) : dateVal;
 				const startDate = new Date(`${dateVal}T${startVal}:00`);
-				const endDate = new Date(`${dateVal}T${endVal}:00`);
+				const endDate = new Date(`${endDateVal}T${endVal}:00`);
 				if (isNaN(startDate.getTime()) || isNaN(endDate.getTime()) || endDate <= startDate) {
 					NotificationDialog.error(I18n.t('times.invalidDuration'));
 					return;

@@ -242,7 +242,9 @@
     "timerBadge": "Timer",
     "createdBy": "Erstellt von {user}",
     "source": "Quelle",
-    "modified": "Bearbeitet"
+    "modified": "Bearbeitet",
+    "pastMidnight": "Über Mitternacht gearbeitet (Folgetag)",
+    "endDate": "Enddatum"
   },
   "absences": {
     "title": "Abwesenheiten & Ferien",

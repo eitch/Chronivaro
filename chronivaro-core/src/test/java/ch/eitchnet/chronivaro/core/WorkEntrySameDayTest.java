@@ -2,6 +2,7 @@ package ch.eitchnet.chronivaro.core;
 
 import ch.eitchnet.chronivaro.core.model.WorkDayHelper;
 import ch.eitchnet.chronivaro.core.model.WorkEntryHelper;
+import ch.eitchnet.chronivaro.core.model.WorkingLocation;
 import ch.eitchnet.chronivaro.core.service.AddWorkEntryService;
 import ch.eitchnet.chronivaro.core.service.StopTimerService;
 import li.strolch.model.Resource;
@@ -48,7 +49,7 @@ public class WorkEntrySameDayTest {
 	public void shouldFailToManualAddWorkEntrySpanningMultipleDays() {
 		String employeeId = "manual-same-day-test";
 		ZonedDateTime start = ZonedDateTime.of(LocalDate.now(), LocalTime.of(22, 0), ZoneId.systemDefault());
-		ZonedDateTime end = start.plusHours(4); // Spans midnight
+		ZonedDateTime end = start.plusDays(2); // Spans multiple days beyond next day
 
 		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
 			createEmployee(tx, employeeId, "Manual Same Day Test");
@@ -63,6 +64,132 @@ public class WorkEntrySameDayTest {
 
 		ServiceResult result = serviceHandler.doService(certificate, new AddWorkEntryService(), arg);
 		assertFalse("Should fail to add entry spanning multiple days", result.isOk());
+	}
+
+	@Test
+	public void shouldManualAddWorkEntrySpanningMidnightAndSplitEntries() {
+		String employeeId = "manual-midnight-split-test";
+		ZonedDateTime start = ZonedDateTime.of(LocalDate.now(), LocalTime.of(22, 0), ZoneId.systemDefault());
+		ZonedDateTime end = start.plusHours(4); // 02:00 next day
+
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
+			createEmployee(tx, employeeId, "Manual Midnight Split Test");
+			tx.commitOnClose();
+		}
+
+		ServiceHandler serviceHandler = runtimeMock.getServiceHandler();
+		AddWorkEntryService.AddWorkEntryArgument arg = new AddWorkEntryService.AddWorkEntryArgument();
+		arg.employeeId = employeeId;
+		arg.start = start;
+		arg.end = end;
+		arg.workingLocation = WorkingLocation.OFFICE;
+		arg.comment = "Night shift";
+
+		ServiceResult result = serviceHandler.doService(certificate, new AddWorkEntryService(), arg);
+		assertTrue(result.getMessage(), result.isOk());
+
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
+			List<Resource> workEntries = tx.streamResources(TYPE_WORK_ENTRY)
+					.filter(we -> we.getRelationId(PARAM_EMPLOYEE).equals(employeeId))
+					.sorted((we1, we2) -> we1.getDate(PARAM_START).compareTo(we2.getDate(PARAM_START)))
+					.toList();
+
+			assertEquals(2, workEntries.size());
+
+			Resource first = workEntries.get(0);
+			assertEquals(start, first.getDate(PARAM_START));
+			assertEquals(start.toLocalDate().plusDays(1).atStartOfDay(start.getZone()), first.getDate(PARAM_END));
+			assertEquals(SOURCE_MANUAL, first.getString(PARAM_SOURCE));
+			assertEquals("Night shift", first.getString(PARAM_COMMENT));
+			assertEquals(WorkingLocation.OFFICE.name(), first.getString(PARAM_WORKING_LOCATION));
+
+			Resource second = workEntries.get(1);
+			assertEquals(start.toLocalDate().plusDays(1).atStartOfDay(start.getZone()), second.getDate(PARAM_START));
+			assertEquals(end, second.getDate(PARAM_END));
+			assertEquals(SOURCE_MANUAL, second.getString(PARAM_SOURCE));
+			assertEquals("Night shift", second.getString(PARAM_COMMENT));
+			assertEquals(WorkingLocation.OFFICE.name(), second.getString(PARAM_WORKING_LOCATION));
+
+			Resource workDay1 = tx.getResourceBy(TYPE_WORK_DAY, employeeId + "-" + start.toLocalDate(), true);
+			assertTrue(workDay1.getStringList(BAG_RELATIONS, PARAM_WORK_ENTRIES).contains(first.getId()));
+
+			Resource workDay2 = tx.getResourceBy(TYPE_WORK_DAY, employeeId + "-" + end.toLocalDate(), true);
+			assertTrue(workDay2.getStringList(BAG_RELATIONS, PARAM_WORK_ENTRIES).contains(second.getId()));
+		}
+	}
+
+	@Test
+	public void shouldCorrectWorkEntrySpanningMidnightAndSplitEntries() {
+		String employeeId = "correct-midnight-split-test";
+		ZonedDateTime originalStart = ZonedDateTime.of(LocalDate.now(), LocalTime.of(18, 0), ZoneId.systemDefault());
+		ZonedDateTime originalEnd = ZonedDateTime.of(LocalDate.now(), LocalTime.of(22, 0), ZoneId.systemDefault());
+
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
+			createEmployee(tx, employeeId, "Correct Midnight Split Test");
+			tx.commitOnClose();
+		}
+
+		ServiceHandler serviceHandler = runtimeMock.getServiceHandler();
+		AddWorkEntryService.AddWorkEntryArgument addArg = new AddWorkEntryService.AddWorkEntryArgument();
+		addArg.employeeId = employeeId;
+		addArg.start = originalStart;
+		addArg.end = originalEnd;
+		addArg.workingLocation = WorkingLocation.OFFICE;
+
+		ServiceResult addResult = serviceHandler.doService(certificate, new AddWorkEntryService(), addArg);
+		assertTrue(addResult.getMessage(), addResult.isOk());
+
+		String workEntryId;
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
+			List<Resource> workEntries = tx.streamResources(TYPE_WORK_ENTRY)
+					.filter(we -> we.getRelationId(PARAM_EMPLOYEE).equals(employeeId))
+					.toList();
+			assertEquals(1, workEntries.size());
+			workEntryId = workEntries.get(0).getId();
+		}
+
+		// Correct work entry to extend past midnight to 03:00 next day
+		ZonedDateTime correctedStart = ZonedDateTime.of(LocalDate.now(), LocalTime.of(20, 0), ZoneId.systemDefault());
+		ZonedDateTime correctedEnd = correctedStart.toLocalDate().plusDays(1).atTime(3, 0).atZone(correctedStart.getZone());
+
+		ch.eitchnet.chronivaro.core.service.CorrectWorkEntryService.CorrectWorkEntryArgument correctArg =
+				new ch.eitchnet.chronivaro.core.service.CorrectWorkEntryService.CorrectWorkEntryArgument();
+		correctArg.workEntryId = workEntryId;
+		correctArg.start = correctedStart;
+		correctArg.end = correctedEnd;
+		correctArg.workingLocation = WorkingLocation.OFFICE;
+		correctArg.comment = "Overnight shift corrected";
+
+		ServiceResult correctResult = serviceHandler.doService(certificate,
+				new ch.eitchnet.chronivaro.core.service.CorrectWorkEntryService(), correctArg);
+		assertTrue(correctResult.getMessage(), correctResult.isOk());
+
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
+			List<Resource> workEntries = tx.streamResources(TYPE_WORK_ENTRY)
+					.filter(we -> we.getRelationId(PARAM_EMPLOYEE).equals(employeeId))
+					.sorted((we1, we2) -> we1.getDate(PARAM_START).compareTo(we2.getDate(PARAM_START)))
+					.toList();
+
+			assertEquals(2, workEntries.size());
+
+			Resource first = workEntries.get(0);
+			assertEquals(workEntryId, first.getId());
+			assertEquals(correctedStart, first.getDate(PARAM_START));
+			assertEquals(correctedStart.toLocalDate().plusDays(1).atStartOfDay(correctedStart.getZone()), first.getDate(PARAM_END));
+			assertEquals("Overnight shift corrected", first.getString(PARAM_COMMENT));
+
+			Resource second = workEntries.get(1);
+			assertNotEquals(workEntryId, second.getId());
+			assertEquals(correctedStart.toLocalDate().plusDays(1).atStartOfDay(correctedStart.getZone()), second.getDate(PARAM_START));
+			assertEquals(correctedEnd, second.getDate(PARAM_END));
+			assertEquals("Overnight shift corrected", second.getString(PARAM_COMMENT));
+
+			Resource workDay1 = tx.getResourceBy(TYPE_WORK_DAY, employeeId + "-" + correctedStart.toLocalDate(), true);
+			assertTrue(workDay1.getStringList(BAG_RELATIONS, PARAM_WORK_ENTRIES).contains(first.getId()));
+
+			Resource workDay2 = tx.getResourceBy(TYPE_WORK_DAY, employeeId + "-" + correctedEnd.toLocalDate(), true);
+			assertTrue(workDay2.getStringList(BAG_RELATIONS, PARAM_WORK_ENTRIES).contains(second.getId()));
+		}
 	}
 
 	@Test
