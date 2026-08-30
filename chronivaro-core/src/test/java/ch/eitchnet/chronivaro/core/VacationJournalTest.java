@@ -433,4 +433,56 @@ public class VacationJournalTest {
 			assertTrue("createdAt must be before afterCredit", !createdAt.isAfter(afterCredit));
 		}
 	}
+
+	@Test
+	public void testAddVacationCorrectionWithSupervisorAndNegativeBalanceCheck() {
+		String employeeId = "journal-emp-correction-test";
+		createTestEmployee(employeeId, "Correction Test", LocalDate.of(2026, 1, 1), null, 1.0);
+
+		ServiceHandler serviceHandler = runtimeMock.getContainer().getComponent(ServiceHandler.class);
+
+		// Initial credit of 1000 min
+		AddVacationCorrectionService.AddVacationCorrectionArgument initialCredit =
+				new AddVacationCorrectionService.AddVacationCorrectionArgument();
+		initialCredit.employeeId = employeeId;
+		initialCredit.value = 1000;
+		initialCredit.comment = "Initial credit";
+		initialCredit.date = LocalDate.of(2026, 1, 1).atStartOfDay(ZoneId.of("Europe/Zurich"));
+		assertTrue(serviceHandler.doService(adminCert, new AddVacationCorrectionService(), initialCredit).isOk());
+
+		// Positive correction
+		AddVacationCorrectionService.AddVacationCorrectionArgument pos =
+				new AddVacationCorrectionService.AddVacationCorrectionArgument();
+		pos.employeeId = employeeId;
+		pos.value = 480;
+		pos.comment = "Overtime bonus";
+		pos.date = LocalDate.of(2026, 2, 1).atStartOfDay(ZoneId.of("Europe/Zurich"));
+		ServiceResult posRes = serviceHandler.doService(adminCert, new AddVacationCorrectionService(), pos);
+		assertTrue(posRes.isOk());
+
+		// Deduct 500 min
+		AddVacationCorrectionService.AddVacationCorrectionArgument neg =
+				new AddVacationCorrectionService.AddVacationCorrectionArgument();
+		neg.employeeId = employeeId;
+		neg.value = -500;
+		neg.comment = "Manual adjustment";
+		neg.date = LocalDate.of(2026, 2, 2).atStartOfDay(ZoneId.of("Europe/Zurich"));
+		ServiceResult negRes = serviceHandler.doService(adminCert, new AddVacationCorrectionService(), neg);
+		assertTrue(negRes.isOk());
+
+		try (StrolchTransaction tx = runtimeMock.openUserTx(adminCert, true)) {
+			int balance = VacationHelper.getVacationBalance(tx, employeeId);
+			assertEquals(980, balance);
+		}
+
+		// Attempt deduction exceeding balance -> must fail with insufficient balance
+		AddVacationCorrectionService.AddVacationCorrectionArgument excessive =
+				new AddVacationCorrectionService.AddVacationCorrectionArgument();
+		excessive.employeeId = employeeId;
+		excessive.value = -1500;
+		excessive.comment = "Excessive reduction";
+		excessive.date = LocalDate.of(2026, 2, 3).atStartOfDay(ZoneId.of("Europe/Zurich"));
+		ServiceResult excessiveRes = serviceHandler.doService(adminCert, new AddVacationCorrectionService(), excessive);
+		assertTrue(excessiveRes.isNok());
+	}
 }

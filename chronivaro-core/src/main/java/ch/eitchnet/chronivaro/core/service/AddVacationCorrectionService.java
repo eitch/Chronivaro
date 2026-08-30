@@ -25,6 +25,12 @@ public class AddVacationCorrectionService
 		DBC.PRE.assertNotEmpty("comment must be set", arg.comment);
 
 		try (StrolchTransaction tx = openArgOrUserTx(arg)) {
+			if (!tx.getPrivilegeContext().hasRole(ROLE_HR)
+					&& !tx.getPrivilegeContext().hasRole(ROLE_ADMIN)
+					&& !tx.getPrivilegeContext().hasRole(ROLE_ADMINISTRATOR)) {
+				ChronivaroModelHelper.assertCanManageEmployee(tx, arg.employeeId);
+			}
+
 			Resource employee = ChronivaroModelHelper.getEmployee(tx, arg.employeeId);
 
 			Resource entry = tx.getResourceTemplate(TYPE_VACATION_ACCOUNT_ENTRY, true);

@@ -333,6 +333,15 @@ public class EmployeeResource {
 	}
 
 	@POST
+	@Path("{id}/vacation-adjustments")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response addVacationAdjustment(@Context HttpServletRequest request, @PathParam("id") String id,
+			String data) {
+		return addVacationCorrection(request, id, data);
+	}
+
+	@POST
 	@Path("{id}/vacation-entitlement/calculate")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)

@@ -144,6 +144,45 @@ export default class EmployeesView {
 					</form>
 				</div>
 			</div>
+
+			<div id="vacation-adjust-modal" class="modal">
+				<div class="modal-content">
+					<h3 id="vacation-adjust-modal-title">${I18n.t('employees.vacationAdjustment')}</h3>
+					<p class="text-muted" style="margin-bottom: 1rem; font-size: 0.875rem;">${I18n.t('employees.vacationAdjustmentHelp')}</p>
+					<form id="vacation-adjust-form">
+						<div class="form-group">
+							<label for="vacation-adjust-emp-name">${I18n.t('common.employee')}:</label>
+							<input type="text" id="vacation-adjust-emp-name" disabled>
+						</div>
+						<div class="form-group">
+							<label for="vacation-adjust-date">${I18n.t('common.effectiveDate')}:</label>
+							<input type="date" id="vacation-adjust-date" required>
+						</div>
+						<div class="form-grid" style="grid-template-columns: 2fr 1fr; gap: 1rem;">
+							<div class="form-group">
+								<label for="vacation-adjust-value">${I18n.t('employees.adjustmentValue')}:</label>
+								<input type="number" step="any" id="vacation-adjust-value" placeholder="+1, -0.5, etc." required>
+							</div>
+							<div class="form-group">
+								<label for="vacation-adjust-unit">${I18n.t('employees.adjustmentUnit')}:</label>
+								<select id="vacation-adjust-unit">
+									<option value="days" selected>${I18n.t('employees.adjustmentDays')}</option>
+									<option value="hours">${I18n.t('employees.adjustmentHours')}</option>
+									<option value="minutes">${I18n.t('employees.adjustmentMinutes')}</option>
+								</select>
+							</div>
+						</div>
+						<div class="form-group">
+							<label for="vacation-adjust-comment">${I18n.t('common.comment')}:</label>
+							<textarea id="vacation-adjust-comment" rows="3" required placeholder="${I18n.t('common.reason')} / ${I18n.t('common.comment')}"></textarea>
+						</div>
+						<div class="actions">
+							<button type="submit">${I18n.t('common.save')}</button>
+							<button type="button" id="close-vacation-adjust-modal">${I18n.t('common.cancel')}</button>
+						</div>
+					</form>
+				</div>
+			</div>
 		`;
 
         const tbody = container.querySelector('tbody');
@@ -152,6 +191,11 @@ export default class EmployeesView {
         const modalTitle = container.querySelector('#modal-title');
         const addBtn = container.querySelector('#add-employee-btn');
         const closeBtn = container.querySelector('#close-modal');
+
+        const vacationAdjustModal = container.querySelector('#vacation-adjust-modal');
+        const vacationAdjustForm = container.querySelector('#vacation-adjust-form');
+        const closeVacationAdjustBtn = container.querySelector('#close-vacation-adjust-modal');
+        let adjustingVacationEmpId = null;
         const teamSelect = container.querySelector('#emp-team');
         const locationSelect = container.querySelector('#emp-location');
         const templateSelect = container.querySelector('#sched-template');
@@ -264,6 +308,7 @@ export default class EmployeesView {
 								<button class="edit-btn" data-id="${emp.id}">${I18n.t('common.edit')}</button>
 								${emp.active ? `<button class="register-btn" data-id="${emp.id}">${I18n.t('employees.register')}</button>` : `<button class="reactivate-btn" data-id="${emp.id}">${I18n.t('employees.reactivate')}</button>`}
 								<button class="schedules-btn" data-id="${emp.id}">${I18n.t('employees.schedules')}</button>
+								<button class="vacation-adjust-btn" data-id="${emp.id}">${I18n.t('employees.adjustVacation')}</button>
 								<button class="delete-btn" data-id="${emp.id}">${I18n.t('common.delete')}</button>
 							</div>
 						</div>
@@ -293,6 +338,9 @@ export default class EmployeesView {
             });
             container.querySelectorAll('.schedules-btn').forEach(btn => {
                 btn.addEventListener('click', () => this.app.navigate('schedules', {employeeId: btn.dataset.id}));
+            });
+            container.querySelectorAll('.vacation-adjust-btn').forEach(btn => {
+                btn.addEventListener('click', () => openVacationAdjustModal(btn.dataset.id));
             });
             container.querySelectorAll('.delete-btn').forEach(btn => {
                 btn.addEventListener('click', () => deleteEmployee(btn.dataset.id));
@@ -384,6 +432,61 @@ export default class EmployeesView {
                 }
             }
         };
+
+        const openVacationAdjustModal = (id) => {
+            adjustingVacationEmpId = id;
+            const empName = getEmployeeName(id);
+            container.querySelector('#vacation-adjust-emp-name').value = `${empName} (${id})`;
+            const today = new Date().toISOString().split('T')[0];
+            container.querySelector('#vacation-adjust-date').value = today;
+            container.querySelector('#vacation-adjust-value').value = '';
+            container.querySelector('#vacation-adjust-unit').value = 'days';
+            container.querySelector('#vacation-adjust-comment').value = '';
+            vacationAdjustModal.style.display = 'block';
+        };
+
+        closeVacationAdjustBtn.addEventListener('click', () => {
+            vacationAdjustModal.style.display = 'none';
+            adjustingVacationEmpId = null;
+        });
+
+        vacationAdjustForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!adjustingVacationEmpId) return;
+
+            const valRaw = parseFloat(container.querySelector('#vacation-adjust-value').value);
+            const unit = container.querySelector('#vacation-adjust-unit').value;
+            const dateStr = container.querySelector('#vacation-adjust-date').value;
+            const comment = container.querySelector('#vacation-adjust-comment').value.trim();
+
+            if (isNaN(valRaw)) {
+                NotificationDialog.error('Please enter a valid numeric value');
+                return;
+            }
+
+            let valueMinutes = 0;
+            if (unit === 'days') {
+                valueMinutes = Math.round(valRaw * 480);
+            } else if (unit === 'hours') {
+                valueMinutes = Math.round(valRaw * 60);
+            } else {
+                valueMinutes = Math.round(valRaw);
+            }
+
+            try {
+                const payload = {
+                    value: valueMinutes,
+                    comment: comment,
+                    date: dateStr ? `${dateStr}T00:00:00Z` : undefined
+                };
+                await EmployeeApi.addVacationCorrection(adjustingVacationEmpId, payload);
+                NotificationDialog.info(I18n.t('employees.adjustmentSuccess'));
+                vacationAdjustModal.style.display = 'none';
+                adjustingVacationEmpId = null;
+            } catch (err) {
+                NotificationDialog.error(err.message);
+            }
+        });
 
         addBtn.addEventListener('click', async () => {
             await loadOptions();

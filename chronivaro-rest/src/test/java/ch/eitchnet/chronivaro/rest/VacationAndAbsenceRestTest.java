@@ -231,10 +231,13 @@ public class VacationAndAbsenceRestTest extends AbstractChronivaroRestfulTest {
 			assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
 		}
 
-		// Add multiple corrections
+		// Add multiple corrections (testing both vacation-corrections and vacation-adjustments)
 		for (int i = 1; i <= 3; i++) {
+			String path = (i % 2 == 0)
+					? "chronivaro/v1/admin/employees/emp-test/vacation-adjustments"
+					: "chronivaro/v1/admin/employees/emp-test/vacation-corrections";
 			try (Response response = target()
-					.path("chronivaro/v1/admin/employees/emp-test/vacation-corrections")
+					.path(path)
 					.request(MediaType.APPLICATION_JSON)
 					.header(HttpHeaders.AUTHORIZATION, adminToken)
 					.post(Entity.json("{\"value\":" + (i * 60) + ",\"comment\":\"Correction " + i + "\",\"date\":\"2025-06-01T00:00:00+02:00\"}"))) {

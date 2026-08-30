@@ -29,6 +29,19 @@ export default class EmployeeApi {
         return await Rest.post(`rest/chronivaro/v1/admin/employees/${id}/register`);
     }
 
+    static async addVacationCorrection(employeeId, data) {
+        return await Rest.post(`rest/chronivaro/v1/admin/employees/${employeeId}/vacation-corrections`, data);
+    }
+
+    static async getVacationAccount(employeeId, year, summary = true) {
+        let url = `rest/chronivaro/v1/admin/employees/${employeeId}/vacation-account`;
+        const params = [];
+        if (year) params.push(`year=${year}`);
+        if (summary) params.push('summary=true');
+        if (params.length > 0) url += `?${params.join('&')}`;
+        return await Rest.get(url);
+    }
+
     static async getMyProfile() {
         return await Rest.get('rest/chronivaro/v1/me/profile');
     }
