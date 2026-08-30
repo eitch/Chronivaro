@@ -8,3 +8,4 @@ dependencies/
 .ai/
 runtime/temp/sessions.dat
 /.output.txt
+/.output.json
