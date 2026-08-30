@@ -48,7 +48,9 @@ public class ChronivaroModelHelper {
 	public static List<String> getSupervisedEmployeeIds(StrolchTransaction tx, Certificate cert) {
 		if (tx.getPrivilegeContext().hasRole(ROLE_HR)
 				|| tx.getPrivilegeContext().hasRole(ROLE_ADMIN)
-				|| tx.getPrivilegeContext().hasRole(ROLE_ADMINISTRATOR)) {
+				|| tx.getPrivilegeContext().hasRole(ROLE_ADMINISTRATOR)
+				|| tx.getPrivilegeContext().hasRole(ROLE_STROLCH_ADMIN)
+				|| tx.getPrivilegeContext().hasRole(ROLE_PRIVILEGE_ADMIN)) {
 			return tx.streamResources(TYPE_EMPLOYEE).map(Resource::getId).toList();
 		}
 
@@ -93,7 +95,9 @@ public class ChronivaroModelHelper {
 	public static void assertCanManageEmployee(StrolchTransaction tx, String targetEmployeeId) {
 		if (tx.getPrivilegeContext().hasRole(ROLE_HR)
 				|| tx.getPrivilegeContext().hasRole(ROLE_ADMIN)
-				|| tx.getPrivilegeContext().hasRole(ROLE_ADMINISTRATOR)) {
+				|| tx.getPrivilegeContext().hasRole(ROLE_ADMINISTRATOR)
+				|| tx.getPrivilegeContext().hasRole(ROLE_STROLCH_ADMIN)
+				|| tx.getPrivilegeContext().hasRole(ROLE_PRIVILEGE_ADMIN)) {
 			return;
 		}
 

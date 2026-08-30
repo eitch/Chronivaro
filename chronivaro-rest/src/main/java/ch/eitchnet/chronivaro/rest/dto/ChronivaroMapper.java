@@ -452,4 +452,32 @@ public class ChronivaroMapper {
 				config != null && config.hasParameter(PARAM_WEEKLY_TARGET_MINUTES) ?
 						config.getInteger(PARAM_WEEKLY_TARGET_MINUTES) : DEFAULT_WEEKLY_TARGET_MINUTES);
 	}
+
+	public static OnCallPeriodDto onCallPeriodToDto(StrolchTransaction tx, Resource period) {
+		String employeeId = period.getRelationId(PARAM_EMPLOYEE);
+		String employeeName = null;
+		if (employeeId != null && tx != null) {
+			Resource employee = tx.getResourceBy(TYPE_EMPLOYEE, employeeId, false);
+			if (employee != null) {
+				String firstName = employee.hasParameter(PARAM_FIRSTNAME) ? employee.getString(PARAM_FIRSTNAME) : "";
+				String lastName = employee.hasParameter(PARAM_LASTNAME) ? employee.getString(PARAM_LASTNAME) : "";
+				employeeName = (firstName + " " + lastName).trim();
+				if (employeeName.isEmpty())
+					employeeName = employee.getName();
+			}
+		}
+
+		return new OnCallPeriodDto(
+				period.getId(),
+				employeeId,
+				employeeName,
+				period.getDate(PARAM_START_DATE).toLocalDate(),
+				period.hasParameter(PARAM_START_TIME) ? period.getString(PARAM_START_TIME) : "",
+				period.getDate(PARAM_END_DATE).toLocalDate(),
+				period.hasParameter(PARAM_END_TIME) ? period.getString(PARAM_END_TIME) : "",
+				period.hasParameter(PARAM_COMMENT) ? period.getString(PARAM_COMMENT) : "",
+				period.hasParameter(PARAM_CREATED_BY) ? period.getString(PARAM_CREATED_BY) : "",
+				ch.eitchnet.chronivaro.core.model.ChronivaroVersionHelper.getVersion(period)
+		);
+	}
 }
