@@ -4298,6 +4298,10 @@ components:
           type: string
           enum: [OFFICE, REMOTE, CLIENT, TRANSIT]
           example: 'OFFICE'
+        isOnCall:
+          type: boolean
+          default: false
+          example: false
 
     StopTimerRequestDto:
       type: object
@@ -4364,6 +4368,9 @@ components:
         modified:
           type: boolean
           example: false
+        isOnCall:
+          type: boolean
+          example: false
 
     WorkEntryCreateDto:
       type: object
@@ -4391,6 +4398,10 @@ components:
           enum: [OFFICE, REMOTE, CLIENT, TRANSIT]
           default: 'OFFICE'
           example: 'OFFICE'
+        isOnCall:
+          type: boolean
+          default: false
+          example: false
 
     WorkEntryUpdateDto:
       type: object
@@ -4413,6 +4424,9 @@ components:
           type: string
           enum: [OFFICE, REMOTE, CLIENT, TRANSIT]
           example: 'OFFICE'
+        isOnCall:
+          type: boolean
+          example: false
 
     WorkEntryRangeDto:
       type: object
