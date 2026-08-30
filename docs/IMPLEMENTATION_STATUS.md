@@ -38,6 +38,7 @@ Audit date: 2026-08-28. `IMPLEMENTATION_SPECIFICATION.md` is authoritative; the 
 - **Presence Dashboard – Forgotten Timer Indicator, Uniform Card Width, and Name Truncation (Sections 8, 12.1 #5):** Added backend detection of forgotten timers from previous days (`isPreviousDayTimer`, `timerStartDate`) in `PresenceService` and `PresenceDto`; updated `PresenceView.js` to render warning indicators (`.timer-warning-icon`, `status-danger`) with interactive notification tooltips consistent with the personal dashboard; styled all presence cards with fixed, uniform width (`flex: 0 0 280px; width: 280px; max-width: 280px;`) and added text ellipsis truncation with tooltip title attributes for long employee names; verified with unit tests in `PresenceServiceTest` and UI tests in `WebPresenceUiTest`.
 - **Supervisor and HR Work Time Editing – Midnight / Next-Day End Option & Automatic Splitting (Sections 3.2, 3.3, 6.4, 9.3, 12.1 #2, 13.2, 20):** Core services (`AddWorkEntryService`, `CorrectWorkEntryService`) and helper validations (`WorkEntryHelper`) updated to support overnight work entries ending on the next day, automatically splitting entries at midnight 24:00 across respective `WorkDay` records and verifying non-overlap and location rules on both days; work time dialogs in `MyTimesView.js` enhanced with "Worked past midnight (next day)" checkbox displaying end date on the next day and allowing next-day end times; complete Swiss German and English translations with 100% key parity; verified with comprehensive unit and integration tests across core, rest, and web modules.
 - **Date Formatting – DD.MM.YYYY / YYYY-MM-DD Locale Consistency (Sections 4.2, 12.1, 18.5):** Updated `Format.date` and `Format.dateTime` in `Format.js` to format dates as European/Swiss standard `dd.MM.yyyy` (e.g. `28.08.2026`) when active language is German (`de`) and ISO `yyyy-MM-dd` for English (`en`), preventing US `MM-DD-YYYY` formats across table columns, cards, and modal dialogs; verified with automated UI tests in `WebLocalizationUiTest.java`.
+- **Vacation Recalculation Comments and Enrollment Guard (Sections 6.7, 6.7.1, 7.5):** Guarded employee enrollment against redundant recalculations ensuring initial vacation credit is recorded purely as `ENTITLEMENT`; automated schedule creation (`CreateScheduleService`), updates (`UpdateScheduleService`), deletions (`RemoveScheduleService`), employee updates (`UpdateEmployeeService`), and manual requests (`CreditVacationEntitlementService`) generate descriptive, detailed comments on `CORRECTION` entries explicitly documenting the reason (e.g. exit date update, schedule version creation/update/removal) and delta; covered by comprehensive unit tests in `VacationEntitlementServiceTest`.
 
 ---
 
@@ -51,12 +52,9 @@ Audit date: 2026-08-28. `IMPLEMENTATION_SPECIFICATION.md` is authoritative; the 
    - Representation in day/month reports (on-call active badge/icon, off-duty work entries summaries) and a dedicated on-call report.
 
 ### Partially Implemented & Bugs / UI Refinements
-1. **Vacation Calculation Comments & Enrollment Recalculation Guard (Backlog Item 1):**
-   - Provide informative and descriptive comments in vacation journal entries detailing why a recalculation occurred.
-   - Ensure initial employee enrollment grants only base entitlement (`ENTITLEMENT`) without triggering concurrent redundant recalculation corrections.
-2. **Vacation Journal Created Date Column (Backlog Item 2):**
+1. **Vacation Journal Created Date Column (Backlog Item 2):**
    - Include creation timestamp (`createdAt`) in Vacation Journal Transactions alongside effective date.
-3. **Manual Vacation Correction Entry by HR/Supervisors (Backlog Item 3):**
+2. **Manual Vacation Correction Entry by HR/Supervisors (Backlog Item 3):**
    - Allow HR and Supervisors to record manual vacation corrections (+/- days) requiring an explicit explanatory comment.
 
 ---
