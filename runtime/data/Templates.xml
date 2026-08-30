@@ -105,7 +105,7 @@
         </ParameterBag>
         <ParameterBag Id="relations" Name="Relations" Type="Relations">
             <Parameter Id="employee" Name="Employee" Type="String" Interpretation="Resource-Ref" Uom="Employee" Value=""/>
-            <Parameter Id="absence" Name="Absence" Type="String" Interpretation="Resource-Ref" Uom="Absense" Value=""/>
+            <Parameter Id="absence" Name="Absence" Type="String" Interpretation="Resource-Ref" Uom="Absence" Value=""/>
         </ParameterBag>
     </Resource>
 

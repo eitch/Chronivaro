@@ -25,7 +25,6 @@
             <Parameter Id="companyName" Name="Company Name" Type="String" Value="Chronivaro"/>
             <Parameter Id="companyLogo" Name="Company Logo" Type="String" Value=""/>
             <Parameter Id="defaultLanguage" Name="Default Language" Type="String" Value="de"/>
-            <Parameter Id="serverBaseUrl" Name="Server Base URL" Type="String" Value="http://localhost:8080"/>
         </ParameterBag>
     </Resource>
 
