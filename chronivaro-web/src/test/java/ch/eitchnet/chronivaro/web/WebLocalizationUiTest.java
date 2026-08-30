@@ -356,4 +356,15 @@ public class WebLocalizationUiTest {
 		assertTrue("LoginView must update backend language on login",
 				loginViewContent.contains("AuthApi.updateLanguage(activeLang)"));
 	}
+
+	@Test
+	public void shouldVerifyFormatJsLocaleAwareDateFormatting() throws IOException {
+		File formatFile = new File(getWebappDir(), "js/utils/Format.js");
+		assertTrue("Format.js must exist", formatFile.exists());
+		String content = Files.readString(formatFile.toPath());
+
+		assertTrue("Format.js must handle German date formatting dd.MM.yyyy", content.contains("lang === 'de'"));
+		assertTrue("Format.js must pad date parts", content.contains("pad(date.getDate())"));
+		assertTrue("Format.js must handle English/default ISO date formatting yyyy-MM-dd", content.contains("date.getFullYear()"));
+	}
 }

@@ -19,9 +19,12 @@ export default class Format {
     static date(dateStr) {
         if (!dateStr) return '';
         const date = new Date(dateStr);
-        const lang = (typeof I18n !== 'undefined' && I18n.getLanguage) ? I18n.getLanguage() : 'de';
         if (isNaN(date.getTime())) return dateStr;
+        const lang = (typeof I18n !== 'undefined' && I18n.getLanguage) ? I18n.getLanguage() : 'de';
         const pad = (n) => String(n).padStart(2, '0');
+        if (lang === 'de') {
+            return `${pad(date.getDate())}.${pad(date.getMonth() + 1)}.${date.getFullYear()}`;
+        }
         return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
     }
 
@@ -36,9 +39,12 @@ export default class Format {
     static dateTime(dateStr) {
         if (!dateStr) return '';
         const date = new Date(dateStr);
-        const lang = (typeof I18n !== 'undefined' && I18n.getLanguage) ? I18n.getLanguage() : 'de';
         if (isNaN(date.getTime())) return dateStr;
+        const lang = (typeof I18n !== 'undefined' && I18n.getLanguage) ? I18n.getLanguage() : 'de';
         const pad = (n) => String(n).padStart(2, '0');
+        if (lang === 'de') {
+            return `${pad(date.getDate())}.${pad(date.getMonth() + 1)}.${date.getFullYear()} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
+        }
         return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
     }
 
