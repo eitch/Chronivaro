@@ -163,21 +163,13 @@ The following foundational areas are verified as fully implemented in the reposi
 - **Modal Dialog Scrolling & Viewport Overflow Handling for All Dialogs (Section 12.2):** Configured modal dialog containers (`.modal-content` with `max-height: 90vh; overflow-y: auto;` in `style.css` and `.notification-dialog-body` with `overflow-y: auto;`) ensuring all input dialogs (such as Add Employee, Edit Schedule, and all administration/time-tracking modals) scroll vertically within short browser viewports while keeping all form controls and action buttons accessible; verified with automated UI tests in `WebModalDialogsUiTest.java`.
 - **Presence Dashboard – Forgotten Timer Indicator, Uniform Card Width, and Name Truncation (Sections 8, 12.1 #5):** Added backend detection of forgotten timers from previous days (`isPreviousDayTimer`, `timerStartDate`) in `PresenceService` and `PresenceDto`; updated `PresenceView.js` to render warning indicators (`.timer-warning-icon`, `status-danger`) with interactive notification tooltips consistent with the personal dashboard; styled all presence cards with fixed, uniform width (`flex: 0 0 280px; width: 280px; max-width: 280px;`) and added text ellipsis truncation with tooltip title attributes for long employee names; verified with unit tests in `PresenceServiceTest` and UI tests in `WebPresenceUiTest`.
 - **Supervisor and HR Work Time Editing – Midnight / Next-Day End Option & Automatic Splitting (Sections 3.2, 3.3, 6.4, 9.3, 12.1 #2, 13.2, 20):** Core services (`AddWorkEntryService`, `CorrectWorkEntryService`) and helper validations (`WorkEntryHelper`) updated to support overnight work entries ending on the next day, automatically splitting entries at midnight 24:00 across respective `WorkDay` records and verifying non-overlap and location rules on both days; work time dialogs in `MyTimesView.js` enhanced with "Worked past midnight (next day)" checkbox displaying end date on the next day and allowing next-day end times; complete Swiss German and English translations with 100% key parity; verified with comprehensive unit and integration tests across core, rest, and web modules.
+- **Date Formatting – DD.MM.YYYY / YYYY-MM-DD Locale Consistency (Sections 4.2, 12.1, 18.5):** Updated `Format.date` and `Format.dateTime` in `Format.js` to format dates as European/Swiss standard `dd.MM.yyyy` (e.g. `28.08.2026`) when active language is German (`de`) and ISO `yyyy-MM-dd` for English (`en`), preventing US `MM-DD-YYYY` formats across table columns, cards, and modal dialogs; verified with automated UI tests in `WebLocalizationUiTest.java`.
 
 ---
 
 ## Prioritized Implementation Backlog
 
-### Task 1: Date Format Setting to DD-MM-YYYY
-- **Priority:** Medium / Bug Fix
-- **Scope:** `chronivaro-web` (and report generators where applicable)
-- **Description:**
-  - Ensure date formatting in the UI is consistently set to `DD-MM-YYYY` (e.g. European/Swiss standard display) rather than `MM-DD-YYYY`.
-  - Verify that date inputs, table columns, card displays, and tooltips follow `DD-MM-YYYY`.
-
----
-
-### Task 2: Vacation Recalculation Comments and Enrollment Guard
+### Task 1: Vacation Recalculation Comments and Enrollment Guard
 - **Priority:** High / Bug Fix & Investigation
 - **Scope:** `chronivaro-core`, `chronivaro-rest`, `chronivaro-web`
 - **Description:**
@@ -187,7 +179,7 @@ The following foundational areas are verified as fully implemented in the reposi
 
 ---
 
-### Task 3: Vacation Journal Created Date Column
+### Task 2: Vacation Journal Created Date Column
 - **Priority:** Medium / Bug Fix
 - **Scope:** `chronivaro-core`, `chronivaro-rest`, `chronivaro-web`
 - **Description:**
@@ -196,7 +188,7 @@ The following foundational areas are verified as fully implemented in the reposi
 
 ---
 
-### Task 4: Manual Vacation Correction Entry for HR and Supervisors
+### Task 3: Manual Vacation Correction Entry for HR and Supervisors
 - **Priority:** High / Feature / Bug Fix
 - **Scope:** `chronivaro-core`, `chronivaro-rest`, `chronivaro-web`
 - **Description:**
@@ -206,7 +198,7 @@ The following foundational areas are verified as fully implemented in the reposi
 
 ---
 
-### Task 5: On-Call Periods Management & Office Hours (Rufbereitschaft / Pikettdienst)
+### Task 4: On-Call Periods Management & Office Hours (Rufbereitschaft / Pikettdienst)
 - **Priority:** High / New Feature Request
 - **Scope:** `chronivaro-core`, `chronivaro-rest`, `chronivaro-web`
 - **Description:**
