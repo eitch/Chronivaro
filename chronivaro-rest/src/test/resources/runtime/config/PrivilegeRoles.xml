@@ -160,6 +160,7 @@
             <Allow>ch.eitchnet.chronivaro.core.search.AbsenceSearch</Allow>
             <Allow>ch.eitchnet.chronivaro.core.search.TimePeriodSearch</Allow>
             <Allow>ch.eitchnet.chronivaro.core.search.VacationAccountEntrySearch</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.search.OnCallPeriodSearch</Allow>
         </Privilege>
         <Privilege name="PrivilegeSetUserPassword" policy="DefaultPrivilege">
             <AllAllowed>true</AllAllowed>
@@ -197,11 +198,15 @@
             <Allow>ch.eitchnet.chronivaro.core.service.MonthSummaryService</Allow>
             <Allow>ch.eitchnet.chronivaro.core.service.TeamReportService</Allow>
             <Allow>ch.eitchnet.chronivaro.core.service.AbsenceReportService</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.service.CreateOnCallPeriodService</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.service.UpdateOnCallPeriodService</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.service.RemoveOnCallPeriodService</Allow>
         </Privilege>
         <Privilege name="li.strolch.search.StrolchSearch" policy="DefaultPrivilege">
             <Allow>ch.eitchnet.chronivaro.core.search.AbsenceSearch</Allow>
             <Allow>ch.eitchnet.chronivaro.core.search.TimePeriodSearch</Allow>
             <Allow>ch.eitchnet.chronivaro.core.search.VacationAccountEntrySearch</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.search.OnCallPeriodSearch</Allow>
         </Privilege>
         <Privilege name="PrivilegeSetUserPassword" policy="DefaultPrivilege">
             <AllAllowed>true</AllAllowed>
@@ -238,11 +243,15 @@
             <Allow>ch.eitchnet.chronivaro.core.service.GetVacationAccountSummaryService</Allow>
             <Allow>ch.eitchnet.chronivaro.core.service.TeamReportService</Allow>
             <Allow>ch.eitchnet.chronivaro.core.service.AbsenceReportService</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.service.CreateOnCallPeriodService</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.service.UpdateOnCallPeriodService</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.service.RemoveOnCallPeriodService</Allow>
         </Privilege>
         <Privilege name="li.strolch.search.StrolchSearch" policy="DefaultPrivilege">
             <Allow>ch.eitchnet.chronivaro.core.search.AbsenceSearch</Allow>
             <Allow>ch.eitchnet.chronivaro.core.search.TimePeriodSearch</Allow>
             <Allow>ch.eitchnet.chronivaro.core.search.VacationAccountEntrySearch</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.search.OnCallPeriodSearch</Allow>
         </Privilege>
         <Privilege name="PrivilegeSetUserPassword" policy="DefaultPrivilege">
             <AllAllowed>true</AllAllowed>
