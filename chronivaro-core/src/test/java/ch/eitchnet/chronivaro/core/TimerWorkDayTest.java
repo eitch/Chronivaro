@@ -134,4 +134,26 @@ public class TimerWorkDayTest {
 					.equals(entry.getString(PARAM_WORKING_LOCATION))));
 		}
 	}
+
+	@Test
+	public void shouldStartTimerWithOptionalComment() {
+		String employeeId = "timer-comment-test";
+
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
+			createEmployee(tx, employeeId, "Timer Comment Test");
+			tx.commitOnClose();
+		}
+
+		ServiceHandler serviceHandler = runtimeMock.getServiceHandler();
+		StartTimerService.Argument startArgument = new StartTimerService.Argument(employeeId, WorkingLocation.OFFICE,
+				null, false, "Working on project tasks");
+		ServiceResult startResult = serviceHandler.doService(certificate, new StartTimerService(), startArgument);
+		assertTrue(startResult.getMessage(), startResult.isOk());
+
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
+			Resource workEntry = WorkEntryHelper.findActiveWorkEntry(tx, employeeId).orElseThrow();
+			assertTrue(workEntry.hasParameter(PARAM_COMMENT));
+			assertEquals("Working on project tasks", workEntry.getString(PARAM_COMMENT));
+		}
+	}
 }

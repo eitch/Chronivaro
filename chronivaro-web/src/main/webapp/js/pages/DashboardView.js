@@ -296,7 +296,9 @@ export default class DashboardView {
 					return;
 				}
 				const isOnCall = timerIsOnCallCheckbox ? timerIsOnCallCheckbox.checked : false;
-				await WorkEntryApi.startTimer(workingLocation.value, isOnCall);
+				const comment = timerCommentInput ? timerCommentInput.value.trim() : null;
+				await WorkEntryApi.startTimer(workingLocation.value, isOnCall, comment);
+				if (timerCommentInput) timerCommentInput.value = '';
                 await refresh();
             } catch (err) {
                 NotificationDialog.error(err.message);

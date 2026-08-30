@@ -703,12 +703,13 @@ public class ChronivaroResource {
 		}
 		if (dataObject != null) {
 			arg.isOnCall = dataObject.isOnCall;
+			arg.comment = dataObject.comment;
 		}
 		ServiceResult result = serviceHandler.doService(cert, new StartTimerService(), arg);
 		return ChronivaroRestHelper.toResponse(result);
 	}
 
-	private record TimerStartDto(String workingLocation, Boolean isOnCall) {
+	private record TimerStartDto(String workingLocation, Boolean isOnCall, String comment) {
 	}
 
 	@POST

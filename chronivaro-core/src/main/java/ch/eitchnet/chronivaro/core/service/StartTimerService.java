@@ -49,6 +49,9 @@ public class StartTimerService extends AbstractService<StartTimerService.Argumen
 			workEntry.setString(PARAM_CREATED_BY, username);
 			workEntry.setString(PARAM_WORKING_LOCATION, arg.workingLocation == null ? "" : arg.workingLocation.name());
 			workEntry.setBoolean(PARAM_IS_ON_CALL, Boolean.TRUE.equals(arg.isOnCall));
+			if (arg.comment != null && !arg.comment.isBlank()) {
+				workEntry.setString(PARAM_COMMENT, arg.comment.trim());
+			}
 
 			Resource scheduleVersion = tx.getResourceBy(TYPE_EMPLOYMENT_SCHEDULE, workDay.getRelationId(PARAM_SCHEDULE),
 					true);
@@ -88,6 +91,7 @@ public class StartTimerService extends AbstractService<StartTimerService.Argumen
 		public WorkingLocation workingLocation;
 		public ZonedDateTime time;
 		public Boolean isOnCall;
+		public String comment;
 
 		public Argument() {
 
@@ -109,6 +113,14 @@ public class StartTimerService extends AbstractService<StartTimerService.Argumen
 			this.workingLocation = workingLocation;
 			this.time = time;
 			this.isOnCall = isOnCall;
+		}
+
+		public Argument(String employeeId, WorkingLocation workingLocation, ZonedDateTime time, Boolean isOnCall, String comment) {
+			this.employeeId = employeeId;
+			this.workingLocation = workingLocation;
+			this.time = time;
+			this.isOnCall = isOnCall;
+			this.comment = comment;
 		}
 	}
 }
