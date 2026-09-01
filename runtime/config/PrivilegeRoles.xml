@@ -175,27 +175,30 @@
     </Role>
 
     <Role name="agent">
+        <Privilege name="li.strolch.job.StrolchJobsHandler" policy="DefaultPrivilege">
+            <AllAllowed>true</AllAllowed>
+        </Privilege>
         <Privilege name="PrivilegeAction" policy="DefaultPrivilege">
             <Allow>GetCertificates</Allow>
             <Allow>Persist</Allow>
             <Allow>PersistSessions</Allow>
         </Privilege>
-        <Privilege name="PrivilegeAddUser" policy="DefaultPrivilege">
+        <Privilege name="PrivilegeAddUser" policy="UserAccessPrivilege">
             <AllAllowed>true</AllAllowed>
         </Privilege>
-        <Privilege name="PrivilegeGetUser" policy="DefaultPrivilege">
+        <Privilege name="PrivilegeGetUser" policy="UserAccessPrivilege">
             <AllAllowed>true</AllAllowed>
         </Privilege>
-        <Privilege name="PrivilegeGetUserPrivileges" policy="DefaultPrivilege">
+        <Privilege name="PrivilegeGetUserPrivileges" policy="UserAccessPrivilege">
             <AllAllowed>true</AllAllowed>
         </Privilege>
-        <Privilege name="PrivilegeGetGroupPrivileges" policy="DefaultPrivilege">
+        <Privilege name="PrivilegeGetGroupPrivileges" policy="UserAccessPrivilege">
             <AllAllowed>true</AllAllowed>
         </Privilege>
-        <Privilege name="PrivilegeModifyUser" policy="DefaultPrivilege">
+        <Privilege name="PrivilegeModifyUser" policy="UserAccessPrivilege">
             <AllAllowed>true</AllAllowed>
         </Privilege>
-        <Privilege name="PrivilegeRemoveUser" policy="DefaultPrivilege">
+        <Privilege name="PrivilegeRemoveUser" policy="UserAccessPrivilege">
             <AllAllowed>true</AllAllowed>
         </Privilege>
         <Privilege name="li.strolch.privilege.handler.SystemAction" policy="DefaultPrivilege">
