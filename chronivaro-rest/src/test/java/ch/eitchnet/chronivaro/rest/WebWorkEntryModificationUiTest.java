@@ -13,6 +13,9 @@ import org.junit.Test;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -148,9 +151,12 @@ public class WebWorkEntryModificationUiTest extends AbstractChronivaroRestfulTes
 
 		// 3. Employee queries own work entries
 		String entryId;
+		LocalDate today = LocalDate.now();
+		String fromDate = today.minusMonths(1).withDayOfMonth(1).toString();
+		String toDate = today.plusMonths(1).withDayOfMonth(today.plusMonths(1).lengthOfMonth()).toString();
 		try (Response entriesRes = target().path("/chronivaro/v1/me/work-entries")
-				.queryParam("from", "2026-08-01")
-				.queryParam("to", "2026-08-31")
+				.queryParam("from", fromDate)
+				.queryParam("to", toDate)
 				.request(MediaType.APPLICATION_JSON)
 				.header("Authorization", employeeToken)
 				.get()) {
@@ -166,14 +172,16 @@ public class WebWorkEntryModificationUiTest extends AbstractChronivaroRestfulTes
 		}
 
 		// 4. Employee modifies their own work entry: adjusting start time, end time, location, comment
+		String updateStart = today.atTime(8, 0).atZone(ZoneId.systemDefault()).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+		String updateEnd = today.atTime(17, 0).atZone(ZoneId.systemDefault()).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
 		String updateJson = """
 				{
-				  "start": "2026-08-24T08:00:00+02:00",
-				  "end": "2026-08-24T17:00:00+02:00",
+				  "start": "%s",
+				  "end": "%s",
 				  "workingLocation": "HOME_OFFICE",
 				  "comment": "Adjusted by employee directly"
 				}
-				""";
+				""".formatted(updateStart, updateEnd);
 		try (Response updateRes = target().path("/chronivaro/v1/me/work-entries/" + entryId)
 				.request(MediaType.APPLICATION_JSON)
 				.header("Authorization", employeeToken)
@@ -198,8 +206,8 @@ public class WebWorkEntryModificationUiTest extends AbstractChronivaroRestfulTes
 
 		// 6. Verify work entry is gone
 		try (Response entriesRes = target().path("/chronivaro/v1/me/work-entries")
-				.queryParam("from", "2026-08-01")
-				.queryParam("to", "2026-08-31")
+				.queryParam("from", fromDate)
+				.queryParam("to", toDate)
 				.request(MediaType.APPLICATION_JSON)
 				.header("Authorization", employeeToken)
 				.get()) {
