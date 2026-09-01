@@ -1064,6 +1064,93 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
 
+  /chronivaro/v1/reports/on-call:
+    get:
+      summary: Get on-call service report
+      description: Returns filtered on-call service report (periods, deployments/work entries, total duration) in JSON, CSV, or PDF format.
+      operationId: getOnCallReport
+      tags:
+        - Reports
+      security:
+        - CookieAuth: []
+        - BearerAuth: []
+      parameters:
+        - name: teamId
+          in: query
+          description: Filter by team ID
+          required: false
+          schema:
+            type: string
+        - name: employeeId
+          in: query
+          description: Filter by employee ID
+          required: false
+          schema:
+            type: string
+        - name: from
+          in: query
+          description: Start of date range (YYYY-MM-DD)
+          required: false
+          schema:
+            type: string
+            format: date
+        - name: to
+          in: query
+          description: End of date range (YYYY-MM-DD)
+          required: false
+          schema:
+            type: string
+            format: date
+        - name: yearMonth
+          in: query
+          description: Target year and month (YYYY-MM)
+          required: false
+          schema:
+            type: string
+        - name: format
+          in: query
+          description: Output format (json, csv, or pdf)
+          required: false
+          schema:
+            type: string
+            enum: [json, csv, pdf]
+            default: json
+        - name: lang
+          in: query
+          description: Language for PDF export (de or en)
+          required: false
+          schema:
+            type: string
+            enum: [de, en]
+            default: de
+      responses:
+        '200':
+          description: On-call report retrieved successfully
+          headers:
+            X-Correlation-Id:
+              $ref: '#/components/headers/X-Correlation-Id'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OnCallReportDto'
+            text/csv:
+              schema:
+                type: string
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
   # ==========================================
   # Absences
   # ==========================================
@@ -4668,6 +4755,85 @@ components:
           type: string
           nullable: true
           example: 'supervisor_user'
+
+    OnCallReportDto:
+      type: object
+      properties:
+        context:
+          type: string
+        from:
+          type: string
+          format: date
+        to:
+          type: string
+          format: date
+        periods:
+          type: array
+          items:
+            $ref: '#/components/schemas/OnCallPeriodItemDto'
+        workEntries:
+          type: array
+          items:
+            $ref: '#/components/schemas/OnCallWorkEntryItemDto'
+        totalPeriodsCount:
+          type: integer
+        totalWorkEntriesCount:
+          type: integer
+        totalWorkEntryMinutes:
+          type: integer
+
+    OnCallPeriodItemDto:
+      type: object
+      properties:
+        id:
+          type: string
+        employeeId:
+          type: string
+        employeeName:
+          type: string
+        startDate:
+          type: string
+          format: date
+        startTime:
+          type: string
+        endDate:
+          type: string
+          format: date
+        endTime:
+          type: string
+        comment:
+          type: string
+        createdBy:
+          type: string
+
+    OnCallWorkEntryItemDto:
+      type: object
+      properties:
+        id:
+          type: string
+        employeeId:
+          type: string
+        employeeName:
+          type: string
+        date:
+          type: string
+          format: date
+        start:
+          type: string
+          format: date-time
+        end:
+          type: string
+          format: date-time
+        durationMinutes:
+          type: integer
+        source:
+          type: string
+        comment:
+          type: string
+        createdBy:
+          type: string
+        modified:
+          type: boolean
 
     AbsenceReportDto:
       type: object
