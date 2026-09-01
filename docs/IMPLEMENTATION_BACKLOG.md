@@ -172,32 +172,11 @@ The following foundational areas are verified as fully implemented in the reposi
 - **Running Timer Start Time Correction (Issue Fix):** Extended `CorrectWorkEntryService` and `ChronivaroResource` to permit correcting the start time, working location, comment, and on-call flag of an active/running timer without requiring an end time to be set (`end = null`); updated `MyTimesView.js` edit modal to omit required end time when modifying running entries; verified with unit and integration test suites in `WorkEntryServiceTest`.
 - **On-Call Reports & Period Summaries (Backlog Task 4.3):** Extended `DaySummary`, `MonthSummary`, and `WorkEntryRange` with on-call durations and tagging (`isOnCall`); implemented `OnCallReport` and `OnCallReportService` with role-based scoping (Admin/HR, Supervisor, Employee); added JSON, CSV (UTF-8 BOM), and PDF export capabilities with Swiss German and English localization in `ReportsResource`, `CsvExportHelper`, `PdfExportHelper`, and `ReportApi.js`; updated `ReportsView.js` with dedicated On-Call Service report tab and monthly summary grid on-call KPI cards; covered by comprehensive tests in `ReportServiceTest`, `ReportsResourceTest`, and `WebReportsUiTest`.
 - **Add Absences on Behalf of Employees by HR & Supervisors (Backlog Task 1):** Extended `RequestAbsenceService` to allow supervisors (for assigned team members via `assertCanManageEmployee`) and HR/Administrators (organization-wide) to create absences on behalf of employees in either `SUBMITTED` or directly `APPROVED` state with automated vacation deduction (`USAGE`) and balance validation; prevented direct self-approval by employees/supervisors for their own requests; added `createdBy` parameter to `Absence` model, templates, and `AbsenceDto`; added REST endpoints `GET /employees/{id}/absences` and `POST /employees/{id}/absences` in `ChronivaroResource`; updated `AbsenceApi.js` and `MyAbsencesView.js` with team/employee filtering controls and an "Add Absence for Employee" workflow with direct approval toggle; covered by comprehensive unit tests in `AbsenceServiceTest` and REST integration tests in `AbsenceResourceTest`.
+- **Employee Absence Calendar & Direct Absence Creation (Backlog Task 2, Section 2.3, 12.1):** Implemented interactive Absence Calendar (`AbsenceCalendarView.js`, `#absence-calendar`) providing multi-employee matrix timeline view and 7-column month grid view; team, location, employee, and absence type filtering; direct absence creation by clicking on dates/cells with pre-filled employee and date parameters; manager direct approval vs submission workflows; absence type and status color badges; detail inspection dialogs; integrated into main navigation; full German (Swiss German) and English translations with 100% key parity; covered by automated UI tests (`WebAbsenceCalendarUiTest`).
 
 ---
 
 ## Prioritized Implementation Backlog
-
-### Task 2: Employee Absence Calendar & Direct Absence Creation
-- **Priority:** High / UI & Feature
-- **Scope:** `chronivaro-web`, `chronivaro-rest`
-- **Description:**
-  - Implement a dedicated interactive calendar component/view to visualize employee absences across teams, locations, and departments.
-  - Enable filtering by team, location, and employee.
-  - Provide direct absence creation from the calendar UI (e.g. clicking on dates/date ranges or employee timeline rows) for selected employees.
-  - Maintain full internationalization support (German/Swiss German and English) with responsive design and accessibility.
-
----
-
-### Task 3: Calendar On-Call Status & Period Management
-- **Priority:** High / UI & Feature
-- **Scope:** `chronivaro-web`, `chronivaro-rest`
-- **Description:**
-  - Implement a dedicated interactive calendar component/view to visualize employee absences across teams, locations, and departments.
-  - Enable filtering by team, location, and employee.
-  - Provide direct absence creation from the calendar UI (e.g. clicking on dates/date ranges or employee timeline rows) for selected employees.
-  - Maintain full internationalization support (German/Swiss German and English) with responsive design and accessibility.
-
----
 
 ### Task 3: Calendar On-Call Status & Period Management
 - **Priority:** High / UI & Feature
