@@ -107,5 +107,12 @@
             <impl>li.strolch.job.StrolchJobsHandler</impl>
             <depends>RealmHandler</depends>
         </Component>
+
+        <Component>
+            <name>PostInitializer</name>
+            <api>li.strolch.agent.api.PostInitializer</api>
+            <impl>ch.eitchnet.chronivaro.core.handler.PostInitializer</impl>
+            <depends>StrolchJobsHandler</depends>
+        </Component>
     </env>
 </StrolchConfiguration>
