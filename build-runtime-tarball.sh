@@ -149,6 +149,27 @@ tree.write('${PRIVILEGE_USERS}', encoding='UTF-8', xml_declaration=True)
   fi
 fi
 
+# Filter Model.xml to exclude StrolchJob resources if present
+MODEL_XML="${TMP_DIR}/runtime/data/Model.xml"
+if [[ -f "${MODEL_XML}" ]]; then
+  info "Filtering ${MODEL_XML} to remove StrolchJob resources..."
+
+  if which xmlstarlet >/dev/null; then
+    xmlstarlet ed -L -d "/StrolchModel/Resource[@Type='StrolchJob']" "${MODEL_XML}" || fail "Failed to filter Model.xml with xmlstarlet"
+  elif which python3 >/dev/null; then
+    python3 -c "
+import xml.etree.ElementTree as ET
+
+tree = ET.parse('${MODEL_XML}')
+root = tree.getroot()
+for res in list(root.findall('Resource')):
+    if res.get('Type') == 'StrolchJob':
+        root.remove(res)
+tree.write('${MODEL_XML}', encoding='UTF-8', xml_declaration=True)
+" || fail "Failed to filter Model.xml with python3"
+  fi
+fi
+
 # Ensure target directory exists for output file
 OUTPUT_DIR="$(dirname "${OUTPUT_FILE}")"
 mkdir -p "${OUTPUT_DIR}"
