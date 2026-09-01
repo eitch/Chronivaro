@@ -74,12 +74,14 @@ public class ChronivaroMapper {
 		String absenceTypeName = type != null && type.hasParameter(PARAM_NAME) ? type.getString(PARAM_NAME) :
 				(type != null ? type.getName() : null);
 
+		String createdBy = absence.hasParameter(PARAM_CREATED_BY) ? absence.getString(PARAM_CREATED_BY) : null;
+
 		return new AbsenceDto(absence.getId(), employeeId, employeeName, personalNumber, teamName, absenceTypeCode,
 				absenceTypeName, absence.getDate(PARAM_START), absence.getDate(PARAM_END),
 				absence.getString(PARAM_DURATION_TYPE),
 				absence.hasParameter(PARAM_DAY_PART) ? absence.getString(PARAM_DAY_PART) : null,
 				absence.hasParameter(PARAM_MINUTES) ? absence.getInteger(PARAM_MINUTES) : null,
-				absence.getString(PARAM_COMMENT), absence.getString(PARAM_STATE));
+				absence.getString(PARAM_COMMENT), absence.getString(PARAM_STATE), createdBy);
 	}
 
 	public static AbsenceDto toDto(StrolchTransaction tx, Resource absence) {
@@ -88,11 +90,12 @@ public class ChronivaroMapper {
 	}
 
 	public static AbsenceDto toDto(Resource absence, String absenceTypeCode) {
+		String createdBy = absence.hasParameter(PARAM_CREATED_BY) ? absence.getString(PARAM_CREATED_BY) : null;
 		return new AbsenceDto(absence.getId(), absence.getRelationId(PARAM_EMPLOYEE), null, null, null, absenceTypeCode,
 				null, absence.getDate(PARAM_START), absence.getDate(PARAM_END), absence.getString(PARAM_DURATION_TYPE),
 				absence.hasParameter(PARAM_DAY_PART) ? absence.getString(PARAM_DAY_PART) : null,
 				absence.hasParameter(PARAM_MINUTES) ? absence.getInteger(PARAM_MINUTES) : null,
-				absence.getString(PARAM_COMMENT), absence.getString(PARAM_STATE));
+				absence.getString(PARAM_COMMENT), absence.getString(PARAM_STATE), createdBy);
 	}
 
 	public static DaySummaryDto toDto(DaySummary summary) {

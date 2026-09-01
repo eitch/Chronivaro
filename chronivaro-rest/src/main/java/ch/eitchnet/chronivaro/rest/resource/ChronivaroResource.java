@@ -534,6 +534,100 @@ public class ChronivaroResource {
 		}
 	}
 
+	@GET
+	@Path("employees/{id}/absences")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response getEmployeeAbsences(@Context HttpServletRequest request, @PathParam("id") String employeeId,
+			@QueryParam("from") String fromStr, @QueryParam("to") String toStr,
+			@QueryParam("status") String status, @QueryParam("absenceTypeCode") String absenceTypeCode,
+			@QueryParam("offset") Integer offset, @QueryParam("limit") Integer limit) {
+
+		Certificate cert = (Certificate) request.getAttribute(STROLCH_CERTIFICATE);
+
+		LocalDate fromDate = null;
+		if (isNotEmpty(fromStr)) {
+			try {
+				fromDate = fromStr.contains("T") ? ZonedDateTime.parse(fromStr).toLocalDate() : LocalDate.parse(fromStr);
+			} catch (Exception e) {
+				return ChronivaroRestHelper.toErrorResponse(Response.Status.BAD_REQUEST, "INVALID_PARAMETER",
+						"Invalid 'from' date format: " + fromStr);
+			}
+		}
+
+		LocalDate toDate = null;
+		if (isNotEmpty(toStr)) {
+			try {
+				toDate = toStr.contains("T") ? ZonedDateTime.parse(toStr).toLocalDate() : LocalDate.parse(toStr);
+			} catch (Exception e) {
+				return ChronivaroRestHelper.toErrorResponse(Response.Status.BAD_REQUEST, "INVALID_PARAMETER",
+						"Invalid 'to' date format: " + toStr);
+			}
+		}
+
+		final LocalDate fFrom = fromDate;
+		final LocalDate fTo = toDate;
+
+		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
+			assertCanAccessEmployeeWorkEntries(tx, cert, employeeId);
+			List<Resource> absences = tx
+					.streamResources(TYPE_ABSENCE)
+					.filter(a -> a.getRelationId(PARAM_EMPLOYEE).equals(employeeId))
+					.filter(a -> {
+						if (fFrom != null && a.getDate(PARAM_END).toLocalDate().isBefore(fFrom))
+							return false;
+						if (fTo != null && a.getDate(PARAM_START).toLocalDate().isAfter(fTo))
+							return false;
+						if (isNotEmpty(status) && !a.getString(PARAM_STATE).equalsIgnoreCase(status))
+							return false;
+						if (isNotEmpty(absenceTypeCode)) {
+							Resource type = tx.getResourceByRelation(a, PARAM_ABSENCE_TYPE, false);
+							if (type == null || !type.getString(PARAM_CODE).equalsIgnoreCase(absenceTypeCode))
+								return false;
+						}
+						return true;
+					})
+					.sorted(java.util.Comparator.comparing(a -> a.getDate(PARAM_START)))
+					.toList();
+			return PaginationHelper.toPagedOrListResponse(absences, offset, limit, a -> {
+				Resource type = tx.getResourceByRelation(a, PARAM_ABSENCE_TYPE, true);
+				return ChronivaroMapper.toDto(tx, a, type);
+			});
+		}
+	}
+
+	@POST
+	@Path("employees/{id}/absences")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response createEmployeeAbsence(@Context HttpServletRequest request, @PathParam("id") String employeeId,
+			String data) {
+		Certificate cert = (Certificate) request.getAttribute(STROLCH_CERTIFICATE);
+		ServiceHandler serviceHandler = ChronivaroRestHelper.getServiceHandler();
+		AbsenceDto dto = ChronivaroRestHelper.createGson().fromJson(data, AbsenceDto.class);
+
+		RequestAbsenceService.RequestAbsenceArgument arg = new RequestAbsenceService.RequestAbsenceArgument();
+		arg.employeeId = employeeId;
+		arg.absenceTypeCode = dto.absenceTypeCode();
+		arg.start = dto.start();
+		arg.end = dto.end();
+		arg.durationType = dto.durationType();
+		arg.dayPart = dto.dayPart();
+		arg.minutes = dto.minutes() == null ? 0 : dto.minutes();
+		arg.comment = dto.comment();
+		arg.state = dto.state();
+		arg.directApprove = STATE_APPROVED.equalsIgnoreCase(dto.state());
+
+		StringResult result = serviceHandler.doService(cert, new RequestAbsenceService(), arg);
+		if (result.isOk()) {
+			try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
+				Resource absence = tx.getResourceBy(TYPE_ABSENCE, result.getValue(), true);
+				Resource type = tx.getResourceByRelation(absence, PARAM_ABSENCE_TYPE, true);
+				return ConcurrencyHelper.toResponseWithETag(absence, ChronivaroMapper.toDto(tx, absence, type));
+			}
+		}
+		return ChronivaroRestHelper.toResponse(result);
+	}
+
 	@POST
 	@Path("me/absences")
 	@Consumes(MediaType.APPLICATION_JSON)

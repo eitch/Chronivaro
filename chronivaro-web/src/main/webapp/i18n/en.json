@@ -251,7 +251,13 @@
   },
   "absences": {
     "title": "Absences & Vacation",
+    "employeeAbsencesTitle": "Employee Absences & Vacation",
     "requestAbsence": "Request Absence",
+    "addAbsenceForEmployee": "Add Absence for Employee",
+    "createDirectlyApproved": "Approve directly (immediately active)",
+    "submitForEmployee": "Submit for approval",
+    "absenceCreatedDirectlyApproved": "Absence successfully created and approved.",
+    "absenceCreatedSubmitted": "Absence successfully submitted for employee.",
     "absenceType": "Absence Type",
     "startDate": "Start Date",
     "endDate": "End Date",

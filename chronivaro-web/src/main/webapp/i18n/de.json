@@ -251,7 +251,13 @@
   },
   "absences": {
     "title": "Abwesenheiten & Ferien",
+    "employeeAbsencesTitle": "Mitarbeiter-Abwesenheiten & Ferien",
     "requestAbsence": "Abwesenheit beantragen",
+    "addAbsenceForEmployee": "Abwesenheit für Mitarbeiter erfassen",
+    "createDirectlyApproved": "Direkt genehmigen (sofort aktiv)",
+    "submitForEmployee": "Zur Genehmigung einreichen",
+    "absenceCreatedDirectlyApproved": "Abwesenheit erfolgreich erstellt und genehmigt.",
+    "absenceCreatedSubmitted": "Abwesenheit erfolgreich für Mitarbeiter eingereicht.",
     "absenceType": "Abwesenheitsart",
     "startDate": "Startdatum",
     "endDate": "Enddatum",

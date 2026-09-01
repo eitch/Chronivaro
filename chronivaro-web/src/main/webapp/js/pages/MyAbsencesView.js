@@ -1,5 +1,8 @@
 import AbsenceApi from '../api/AbsenceApi.js';
 import VacationAccountApi from '../api/VacationAccountApi.js';
+import TeamApi from '../api/TeamApi.js';
+import EmployeeApi from '../api/EmployeeApi.js';
+import AuthApi from '../api/AuthApi.js';
 import NotificationDialog from '../utils/NotificationDialog.js';
 import Format from '../utils/Format.js';
 import I18n from '../i18n/I18n.js';
@@ -9,18 +12,47 @@ export default class MyAbsencesView {
         this.app = app;
         this.absenceTypes = [];
         this.selectedYear = new Date().getFullYear();
+        this.teams = [];
+        this.employees = [];
+        this.selectedTeamId = '';
+        this.selectedEmployeeId = '';
+        this.currentUserEmployeeId = null;
+        this.canManage = AuthApi.hasRole('Supervisor') || AuthApi.hasRole('HR')
+                || AuthApi.hasRole('Administrator') || AuthApi.hasRole('StrolchAdmin');
     }
 
     async render() {
         const container = document.createElement('div');
         container.id = 'my-absences-view';
         container.innerHTML = `
-            <div class="view-header">
-                <h2>${I18n.t('absences.title')}</h2>
+            <div class="view-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h2 id="absences-view-title">${I18n.t('absences.title')}</h2>
                 <div class="actions">
-                    <button id="request-absence-btn" class="primary-btn">+ ${I18n.t('absences.requestAbsence')}</button>
+                    <button id="request-absence-btn" class="primary-btn">
+                        <span class="icon">➕</span> ${I18n.t('absences.requestAbsence')}
+                    </button>
                 </div>
             </div>
+
+            ${this.canManage ? `
+            <!-- Supervisor / HR Filter Controls -->
+            <section class="card" style="margin-bottom: 1.5rem; padding: 1rem 1.25rem;">
+                <div class="filter-bar" id="absences-manager-filter-bar" style="display: flex; flex-wrap: wrap; gap: 1rem; align-items: flex-end;">
+                    <div class="filter-group">
+                        <label for="absences-team-filter">${I18n.t('common.team')}:</label>
+                        <select id="absences-team-filter" style="min-width: 160px;">
+                            <option value="">${I18n.t('common.allTeams')}</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="absences-employee-filter">${I18n.t('common.employee')}:</label>
+                        <select id="absences-employee-filter" style="min-width: 200px;">
+                            <option value="">${I18n.t('common.loading')}</option>
+                        </select>
+                    </div>
+                </div>
+            </section>
+            ` : ''}
 
             <!-- Vacation Account Summary Section -->
             <section class="vacation-summary-section card">
@@ -122,21 +154,26 @@ export default class MyAbsencesView {
                             <th>${I18n.t('common.duration')}</th>
                             <th>${I18n.t('common.status')}</th>
                             <th>${I18n.t('common.comment')}</th>
+                            <th>${I18n.t('common.createdBy')}</th>
                             <th>${I18n.t('common.actions')}</th>
                         </tr>
                     </thead>
                     <tbody id="absences-tbody">
-                        <tr><td colspan="7">${I18n.t('absences.loadingAbsences')}</td></tr>
+                        <tr><td colspan="8">${I18n.t('absences.loadingAbsences')}</td></tr>
                     </tbody>
                 </table>
             </section>
 
-            <!-- Request Absence Modal -->
+            <!-- Request / Add Absence Modal -->
             <div id="absence-modal" class="modal">
                 <div class="modal-content">
                     <h3 id="absence-modal-title">${I18n.t('absences.requestAbsence')}</h3>
                     <form id="absence-form">
                         <div class="form-grid">
+                            <div class="form-group full-width" id="modal-employee-group" style="display: none;">
+                                <label for="modal-target-employee">${I18n.t('common.employee')}:</label>
+                                <input type="text" id="modal-target-employee" readonly disabled style="background-color: var(--input-disabled-bg, #f1f5f9);">
+                            </div>
                             <div class="form-group full-width">
                                 <label for="modal-absence-type">${I18n.t('absences.absenceType')}:</label>
                                 <select id="modal-absence-type" required>
@@ -174,9 +211,15 @@ export default class MyAbsencesView {
                                 <label for="modal-comment" id="modal-comment-label">${I18n.t('common.comment')}:</label>
                                 <textarea id="modal-comment" rows="3" placeholder="${I18n.t('common.comment')}..."></textarea>
                             </div>
+                            <div class="form-group full-width" id="modal-approval-mode-group" style="display: none;">
+                                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                    <input type="checkbox" id="modal-direct-approve" checked>
+                                    <span>${I18n.t('absences.createDirectlyApproved')}</span>
+                                </label>
+                            </div>
                         </div>
                         <div class="modal-actions">
-                            <button type="submit" class="primary-btn">${I18n.t('absences.submitDraft')}</button>
+                            <button type="submit" id="modal-submit-btn" class="primary-btn">${I18n.t('absences.submitDraft')}</button>
                             <button type="button" id="save-draft-btn" class="secondary-btn">${I18n.t('absences.saveDraft')}</button>
                             <button type="button" id="close-absence-modal-btn" class="secondary-btn">${I18n.t('common.cancel')}</button>
                         </div>
@@ -186,6 +229,10 @@ export default class MyAbsencesView {
         `;
 
         // References
+        const titleEl = container.querySelector('#absences-view-title');
+        const teamFilter = container.querySelector('#absences-team-filter');
+        const employeeFilter = container.querySelector('#absences-employee-filter');
+
         const yearSelect = container.querySelector('#vacation-year-select');
         const journalYearLabel = container.querySelector('#journal-year-label');
         const cardEntitlement = container.querySelector('#card-entitlement');
@@ -205,6 +252,12 @@ export default class MyAbsencesView {
 
         const modal = container.querySelector('#absence-modal');
         const modalTitle = container.querySelector('#absence-modal-title');
+        const modalEmployeeGroup = container.querySelector('#modal-employee-group');
+        const modalTargetEmployee = container.querySelector('#modal-target-employee');
+        const modalApprovalModeGroup = container.querySelector('#modal-approval-mode-group');
+        const modalDirectApprove = container.querySelector('#modal-direct-approve');
+        const modalSubmitBtn = container.querySelector('#modal-submit-btn');
+
         const requestAbsenceBtn = container.querySelector('#request-absence-btn');
         const saveDraftBtn = container.querySelector('#save-draft-btn');
         const closeAbsenceModalBtn = container.querySelector('#close-absence-modal-btn');
@@ -235,6 +288,27 @@ export default class MyAbsencesView {
         // Set default filter date range (Jan 1 of current year to Dec 31 of current year)
         filterFrom.value = `${currentYear}-01-01`;
         filterTo.value = `${currentYear}-12-31`;
+
+        const isManagingOther = () => {
+            return this.canManage && this.selectedEmployeeId && this.selectedEmployeeId !== this.currentUserEmployeeId;
+        };
+
+        const updateViewTitle = () => {
+            if (titleEl) {
+                if (isManagingOther()) {
+                    titleEl.textContent = I18n.t('absences.employeeAbsencesTitle');
+                } else {
+                    titleEl.textContent = I18n.t('absences.title');
+                }
+            }
+            if (requestAbsenceBtn) {
+                if (isManagingOther()) {
+                    requestAbsenceBtn.innerHTML = `<span class="icon">➕</span> ${I18n.t('absences.addAbsenceForEmployee')}`;
+                } else {
+                    requestAbsenceBtn.innerHTML = `<span class="icon">➕</span> ${I18n.t('absences.requestAbsence')}`;
+                }
+            }
+        };
 
         // Load Absence Types
         const loadAbsenceTypes = async () => {
@@ -268,7 +342,12 @@ export default class MyAbsencesView {
             if (journalYearLabel) journalYearLabel.textContent = year;
             journalTbody.innerHTML = `<tr><td colspan="6">${I18n.t('absences.loadingJournal')}</td></tr>`;
             try {
-                const response = await VacationAccountApi.getMyVacationAccount(year);
+                let response;
+                if (isManagingOther()) {
+                    response = await VacationAccountApi.getEmployeeVacationAccount(this.selectedEmployeeId, year);
+                } else {
+                    response = await VacationAccountApi.getMyVacationAccount(year);
+                }
                 const summary = (response && response.summary) ? response.summary : (response || {});
                 const entries = response.entries || [];
 
@@ -345,9 +424,9 @@ export default class MyAbsencesView {
             }
         };
 
-        // Load Personal Absences
+        // Load Absences
         const loadAbsences = async () => {
-            absencesTbody.innerHTML = `<tr><td colspan="7">${I18n.t('absences.loadingAbsences')}</td></tr>`;
+            absencesTbody.innerHTML = `<tr><td colspan="8">${I18n.t('absences.loadingAbsences')}</td></tr>`;
             try {
                 const params = {
                     from: filterFrom.value || undefined,
@@ -356,11 +435,17 @@ export default class MyAbsencesView {
                     absenceTypeCode: filterType.value || undefined
                 };
 
-                const absences = await AbsenceApi.getMyAbsences(params);
+                let absences;
+                if (isManagingOther()) {
+                    absences = await AbsenceApi.getEmployeeAbsences(this.selectedEmployeeId, params);
+                } else {
+                    absences = await AbsenceApi.getMyAbsences(params);
+                }
+
                 absencesTbody.innerHTML = '';
 
                 if (absences.length === 0) {
-                    absencesTbody.innerHTML = `<tr><td colspan="7" class="empty-state">${I18n.t('absences.noAbsenceRequests')}</td></tr>`;
+                    absencesTbody.innerHTML = `<tr><td colspan="8" class="empty-state">${I18n.t('absences.noAbsenceRequests')}</td></tr>`;
                     return;
                 }
 
@@ -401,15 +486,19 @@ export default class MyAbsencesView {
 
                     // Actions
                     let actionsHtml = '--';
-                    if (absenceState === 'DRAFT') {
+                    if (absenceState === 'DRAFT' && !isManagingOther()) {
                         actionsHtml = `
                             <button class="action-btn edit-btn" data-id="${absence.id}" data-version="${absence.version || 0}">${I18n.t('common.edit')}</button>
                             <button class="action-btn submit-btn" data-id="${absence.id}" data-version="${absence.version || 0}">${I18n.t('common.submit')}</button>
                             <button class="action-btn cancel-btn" data-id="${absence.id}" data-version="${absence.version || 0}">${I18n.t('common.cancel')}</button>
                         `;
                     } else if (absenceState === 'SUBMITTED' || absenceState === 'APPROVED') {
-                        actionsHtml = `<button class="action-btn cancel-btn" data-id="${absence.id}" data-version="${absence.version || 0}">${I18n.t('common.cancel')}</button>`;
+                        if (!isManagingOther()) {
+                            actionsHtml = `<button class="action-btn cancel-btn" data-id="${absence.id}" data-version="${absence.version || 0}">${I18n.t('common.cancel')}</button>`;
+                        }
                     }
+
+                    const createdByDisplay = absence.createdBy || '--';
 
                     row.innerHTML = `
                         <td><strong>${absence.absenceTypeName || absence.absenceTypeCode || absence.absenceTypeId}</strong></td>
@@ -418,6 +507,7 @@ export default class MyAbsencesView {
                         <td>${durationLabel}</td>
                         <td><span class="badge ${statusClass}">${statusLabel}</span></td>
                         <td>${notes || '--'}</td>
+                        <td>${createdByDisplay}</td>
                         <td>${actionsHtml}</td>
                     `;
 
@@ -451,6 +541,11 @@ export default class MyAbsencesView {
                             }
 
                             modalComment.value = absence.comment || '';
+                            if (modalEmployeeGroup) modalEmployeeGroup.style.display = 'none';
+                            if (modalApprovalModeGroup) modalApprovalModeGroup.style.display = 'none';
+                            if (saveDraftBtn) saveDraftBtn.style.display = 'inline-block';
+                            if (modalSubmitBtn) modalSubmitBtn.textContent = I18n.t('absences.submitDraft');
+
                             modal.style.display = 'block';
                         });
                     }
@@ -495,7 +590,7 @@ export default class MyAbsencesView {
                 });
             } catch (err) {
                 console.error('Failed to load absences', err);
-                absencesTbody.innerHTML = `<tr><td colspan="7" class="error">${err.message || I18n.t('app.error')}</td></tr>`;
+                absencesTbody.innerHTML = `<tr><td colspan="8" class="error">${err.message || I18n.t('app.error')}</td></tr>`;
             }
         };
 
@@ -573,7 +668,37 @@ export default class MyAbsencesView {
 
         requestAbsenceBtn.addEventListener('click', () => {
             currentEditingAbsence = null;
-            if (modalTitle) modalTitle.textContent = I18n.t('absences.requestAbsence');
+            const managingOther = isManagingOther();
+
+            if (modalTitle) {
+                modalTitle.textContent = managingOther 
+                    ? I18n.t('absences.addAbsenceForEmployee')
+                    : I18n.t('absences.requestAbsence');
+            }
+
+            if (modalEmployeeGroup) {
+                if (managingOther) {
+                    const empObj = this.employees.find(e => e.id === this.selectedEmployeeId);
+                    modalTargetEmployee.value = empObj ? `${empObj.firstname || ''} ${empObj.lastname || ''}`.trim() || empObj.name : this.selectedEmployeeId;
+                    modalEmployeeGroup.style.display = 'block';
+                } else {
+                    modalEmployeeGroup.style.display = 'none';
+                }
+            }
+
+            if (modalApprovalModeGroup) {
+                modalApprovalModeGroup.style.display = managingOther ? 'block' : 'none';
+                if (modalDirectApprove) modalDirectApprove.checked = true;
+            }
+
+            if (saveDraftBtn) {
+                saveDraftBtn.style.display = managingOther ? 'none' : 'inline-block';
+            }
+
+            if (modalSubmitBtn) {
+                modalSubmitBtn.textContent = managingOther ? I18n.t('common.save') : I18n.t('absences.submitDraft');
+            }
+
             const todayStr = new Date().toISOString().split('T')[0];
             modalStartDate.value = todayStr;
             modalEndDate.value = todayStr;
@@ -652,6 +777,9 @@ export default class MyAbsencesView {
                 return;
             }
 
+            const managingOther = isManagingOther();
+            const directApprove = managingOther && modalDirectApprove && modalDirectApprove.checked;
+
             const payload = {
                 absenceTypeCode,
                 start: startDate + 'T00:00:00.000+01:00',
@@ -661,7 +789,8 @@ export default class MyAbsencesView {
                 halfDayPart: modalDurationType.value === 'HALF_DAY' ? modalHalfDayPart.value : undefined,
                 hours: modalDurationType.value === 'HOURS' ? parseFloat(modalHours.value) : undefined,
                 minutes: modalDurationType.value === 'HOURS' ? Math.round(parseFloat(modalHours.value) * 60) : undefined,
-                comment: modalComment.value.trim() || undefined
+                comment: modalComment.value.trim() || undefined,
+                state: directApprove ? 'APPROVED' : (managingOther ? 'SUBMITTED' : undefined)
             };
 
             try {
@@ -669,12 +798,19 @@ export default class MyAbsencesView {
                     const updateRes = await AbsenceApi.updateAbsence(currentEditingAbsence.id, payload, currentEditingAbsence.version);
                     const updatedVersion = (updateRes && updateRes.version !== undefined) ? updateRes.version : currentEditingAbsence.version;
                     await AbsenceApi.submitAbsence(currentEditingAbsence.id, updatedVersion);
+                    await NotificationDialog.info(I18n.t('absences.requestSubmitted'));
+                } else if (managingOther) {
+                    await AbsenceApi.createEmployeeAbsence(this.selectedEmployeeId, payload);
+                    const msg = directApprove 
+                        ? I18n.t('absences.absenceCreatedDirectlyApproved')
+                        : I18n.t('absences.absenceCreatedSubmitted');
+                    await NotificationDialog.info(msg);
                 } else {
                     await AbsenceApi.requestAbsence(payload);
+                    await NotificationDialog.info(I18n.t('absences.requestSubmitted'));
                 }
                 modal.style.display = 'none';
                 currentEditingAbsence = null;
-                await NotificationDialog.info(I18n.t('absences.requestSubmitted'));
                 await loadAbsences();
                 await loadVacationAccount();
             } catch (err) {
@@ -682,8 +818,103 @@ export default class MyAbsencesView {
             }
         });
 
+        // Initialize Manager Dropdowns if applicable
+        const initManagerControls = async () => {
+            if (!this.canManage) return;
+
+            try {
+                const [teamsRes, employeesRes] = await Promise.all([
+                    TeamApi.getTeams().catch(() => []),
+                    EmployeeApi.getEmployees().catch(() => [])
+                ]);
+
+                this.teams = Array.isArray(teamsRes) ? teamsRes : (teamsRes.data || []);
+                this.employees = Array.isArray(employeesRes) ? employeesRes : (employeesRes.data || []);
+
+                // Determine current user's linked employee
+                const user = AuthApi.getCurrentUser();
+                if (user) {
+                    const matchedEmp = this.employees.find(e =>
+                        (e.userId && e.userId === user.username) ||
+                        (e.username && e.username === user.username) ||
+                        (e.name && e.name.toLowerCase() === user.username.toLowerCase())
+                    );
+                    if (matchedEmp) {
+                        this.currentUserEmployeeId = matchedEmp.id;
+                    }
+                }
+
+                if (teamFilter) {
+                    teamFilter.innerHTML = `<option value="">${I18n.t('common.allTeams')}</option>`;
+                    this.teams.forEach(t => {
+                        const opt = document.createElement('option');
+                        opt.value = t.id;
+                        opt.textContent = t.name;
+                        teamFilter.appendChild(opt);
+                    });
+
+                    teamFilter.addEventListener('change', () => {
+                        this.selectedTeamId = teamFilter.value;
+                        updateEmployeeDropdown();
+                    });
+                }
+
+                const updateEmployeeDropdown = () => {
+                    if (!employeeFilter) return;
+                    employeeFilter.innerHTML = '';
+
+                    let filtered = this.employees;
+                    if (this.selectedTeamId) {
+                        filtered = this.employees.filter(e => e.primaryTeamId === this.selectedTeamId || e.teamId === this.selectedTeamId);
+                    }
+
+                    if (filtered.length === 0) {
+                        employeeFilter.innerHTML = `<option value="">${I18n.t('common.noData')}</option>`;
+                        this.selectedEmployeeId = '';
+                        return;
+                    }
+
+                    filtered.forEach(e => {
+                        const opt = document.createElement('option');
+                        opt.value = e.id;
+                        const name = `${e.firstname || ''} ${e.lastname || ''}`.trim() || e.name || e.id;
+                        opt.textContent = e.personalNumber ? `${name} (${e.personalNumber})` : name;
+                        if (this.currentUserEmployeeId && e.id === this.currentUserEmployeeId) {
+                            opt.textContent += ` [${I18n.t('common.self') || 'Self'}]`;
+                        }
+                        employeeFilter.appendChild(opt);
+                    });
+
+                    if (this.currentUserEmployeeId && filtered.some(e => e.id === this.currentUserEmployeeId)) {
+                        employeeFilter.value = this.currentUserEmployeeId;
+                        this.selectedEmployeeId = this.currentUserEmployeeId;
+                    } else if (filtered.length > 0) {
+                        employeeFilter.value = filtered[0].id;
+                        this.selectedEmployeeId = filtered[0].id;
+                    }
+
+                    updateViewTitle();
+                };
+
+                updateEmployeeDropdown();
+
+                if (employeeFilter) {
+                    employeeFilter.addEventListener('change', () => {
+                        this.selectedEmployeeId = employeeFilter.value;
+                        updateViewTitle();
+                        loadVacationAccount();
+                        loadAbsences();
+                    });
+                }
+            } catch (err) {
+                console.error('Failed to init manager controls', err);
+            }
+        };
+
         // Initial Load
         await loadAbsenceTypes();
+        await initManagerControls();
+        updateViewTitle();
         await loadVacationAccount();
         await loadAbsences();
 

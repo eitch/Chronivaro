@@ -31,10 +31,16 @@ public class ChronivaroModelHelper {
 	}
 
 	public static Optional<Resource> findEmployeeByUser(StrolchTransaction tx, String userId) {
+		if (userId == null)
+			return Optional.empty();
 		return tx
 				.streamResources(TYPE_EMPLOYEE)
-				.filter(e -> (e.hasParameter(PARAM_USER_ID) && e.getString(PARAM_USER_ID).equals(userId))
-						|| (e.hasParameter(PARAM_USERNAME) && e.getString(PARAM_USERNAME).equals(userId)))
+				.filter(e -> (e.hasParameter(PARAM_USER_ID) && userId.equals(e.getString(PARAM_USER_ID)))
+						|| (e.hasParameter(PARAM_USERNAME) && userId.equals(e.getString(PARAM_USERNAME)))
+						|| (tx.getCertificate() != null && tx.getCertificate().getUsername() != null && (
+								(e.hasParameter(PARAM_USER_ID) && tx.getCertificate().getUsername().equals(e.getString(PARAM_USER_ID)))
+								|| (e.hasParameter(PARAM_USERNAME) && tx.getCertificate().getUsername().equals(e.getString(PARAM_USERNAME)))
+						)))
 				.findFirst();
 	}
 

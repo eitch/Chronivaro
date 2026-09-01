@@ -481,4 +481,90 @@ public class AbsenceServiceTest {
 		assertTrue("Overlapping absence must fail",
 				serviceHandler.doService(certificate, new RequestAbsenceService(), req2).isNok());
 	}
+
+	@Test
+	public void shouldAllowManagerToCreateAndDirectApproveAbsenceForEmployee() {
+		String employeeId = "emp-manager-abs-test";
+		String supervisorId = "supervisor-abs-test";
+		String supervisorUserId = "sup-user-abs";
+		Certificate supervisorCert;
+
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
+			Resource supervisor = createEmployee(tx, supervisorId, "Supervisor User");
+			supervisor.setString(PARAM_USER_ID, supervisorUserId);
+			supervisor.setString(PARAM_USERNAME, "sup-user-abs");
+			tx.update(supervisor);
+
+			Resource employee = createEmployee(tx, employeeId, "Subordinate Employee");
+
+			Resource team = tx.getResourceTemplate(TYPE_TEAM, true);
+			team.setId("team-abs-mgmt");
+			team.setName("Absence Management Team");
+			team.setRelation(PARAM_LEADER, supervisor);
+			tx.add(team);
+
+			supervisor.setRelation(PARAM_PRIMARY_TEAM, team);
+			tx.update(supervisor);
+			employee.setRelation(PARAM_PRIMARY_TEAM, team);
+			tx.update(employee);
+
+			// Add schedule and vacation entitlement for employee
+			Resource schedule = tx.getResourceByRelation(employee, PARAM_CURRENT_SCHEDULE, true);
+			schedule.setInteger(PARAM_DAILY_TARGET_MINUTES + "Thursday", 480);
+			tx.update(schedule);
+
+			Resource entry = tx.getResourceTemplate(TYPE_VACATION_ACCOUNT_ENTRY, true);
+			entry.setName("Initial Entitlement");
+			entry.setRelation(PARAM_EMPLOYEE, employee);
+			entry.setDate(PARAM_DATE, ZonedDateTime.parse("2026-01-01T00:00:00Z"));
+			entry.setString(PARAM_VACATION_TYPE, VACATION_ENTITLEMENT);
+			entry.setInteger(PARAM_VALUE, 10 * 480);
+			tx.add(entry);
+
+			tx.commitOnClose();
+
+			UserRep userRep = new UserRep(null, supervisorUserId, "Sup", "User", UserState.ENABLED, emptySet(),
+					Set.of(ROLE_SUPERVISOR, ROLE_EMPLOYEE, ROLE_MODEL_ACCESSOR), Locale.of("de", "CH"), emptyMap(), null);
+			runtimeMock.getPrivilegeHandler().getPrivilegeHandler().addUser(certificate, userRep, supervisorUserId.toCharArray());
+			supervisorCert = runtimeMock.login(supervisorUserId, supervisorUserId);
+		}
+
+		ServiceHandler serviceHandler = runtimeMock.getServiceHandler();
+
+		// 1. Supervisor creates direct-approved absence for subordinate
+		RequestAbsenceService.RequestAbsenceArgument reqArg = new RequestAbsenceService.RequestAbsenceArgument();
+		reqArg.employeeId = employeeId;
+		reqArg.absenceTypeCode = "VACATION";
+		reqArg.start = ZonedDateTime.parse("2026-07-02T00:00:00+02:00[Europe/Zurich]"); // Thursday
+		reqArg.end = ZonedDateTime.parse("2026-07-02T23:59:59+02:00[Europe/Zurich]");
+		reqArg.durationType = DURATION_FULL_DAY;
+		reqArg.directApprove = true;
+		reqArg.comment = "Approved directly by supervisor";
+
+		li.strolch.service.StringResult result = serviceHandler.doService(supervisorCert, new RequestAbsenceService(), reqArg);
+		assertTrue(result.getMessage(), result.isOk());
+		String absenceId = result.getValue();
+
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
+			Resource absence = tx.getResourceBy(TYPE_ABSENCE, absenceId, true);
+			assertEquals(STATE_APPROVED, absence.getString(PARAM_STATE));
+			assertEquals("sup-user-abs", absence.getString(PARAM_CREATED_BY));
+
+			// Verify vacation account usage entry was booked
+			int balance = VacationHelper.getVacationBalance(tx, employeeId, ZonedDateTime.now());
+			assertEquals("Vacation balance should be deducted by 1 day (480 mins)", 9 * 480, balance);
+		}
+
+		// 2. Supervisor cannot self-approve own absence directly
+		RequestAbsenceService.RequestAbsenceArgument selfArg = new RequestAbsenceService.RequestAbsenceArgument();
+		selfArg.employeeId = supervisorId;
+		selfArg.absenceTypeCode = "VACATION";
+		selfArg.start = ZonedDateTime.parse("2026-07-09T00:00:00+02:00[Europe/Zurich]");
+		selfArg.end = ZonedDateTime.parse("2026-07-09T23:59:59+02:00[Europe/Zurich]");
+		selfArg.durationType = DURATION_FULL_DAY;
+		selfArg.directApprove = true;
+
+		li.strolch.service.StringResult selfResult = serviceHandler.doService(supervisorCert, new RequestAbsenceService(), selfArg);
+		assertTrue("Supervisor cannot direct self-approve", selfResult.isNok());
+	}
 }
