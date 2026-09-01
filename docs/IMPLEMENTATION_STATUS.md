@@ -44,19 +44,17 @@ Audit date: 2026-08-28. `IMPLEMENTATION_SPECIFICATION.md` is authoritative; the 
 - **Office Hours Configuration & OnCallPeriod Management (Backlog Task 4.1):** Added `officeHoursStart` and `officeHoursEnd` parameters (with format validation `HH:mm`) to `GlobalConfiguration`, `UpdateConfigurationService`, `ConfigurationDto`, `ConfigurationResource`, and `ConfigurationView` UI with Swiss German and English translations; defined `OnCallPeriod` resource template; implemented `CreateOnCallPeriodService`, `UpdateOnCallPeriodService`, `RemoveOnCallPeriodService`, and `OnCallPeriodSearch` with supervisor team scoping and admin permissions; exposed REST endpoints `GET /admin/on-call-periods`, `POST /admin/on-call-periods`, `PUT /admin/on-call-periods/{id}`, `DELETE /admin/on-call-periods/{id}`, `GET /me/on-call-periods`, `GET /employees/{id}/on-call-periods`; documented in `openapi.yaml`; covered by unit tests in `OnCallPeriodServiceTest`, `ConfigurationServiceTest`, and REST integration tests in `OnCallPeriodResourceTest` and `ConfigurationResourceTest`.
 - **Timer & Work Entry On-Call Tagging (Backlog Task 4.2):** Extended `WorkEntry` model, templates, and DTOs with `isOnCall` parameter; supported on-call tagging across start/stop timer, manual additions, and corrections in `StartTimerService`, `StopTimerService`, `AddWorkEntryService`, `CorrectWorkEntryService`, `ChronivaroResource`, `WorkEntryApi.js`, `DashboardView.js`, and `MyTimesView.js`; added on-call confirmation/prompt workflows when stopping timer or creating/editing work entries outside configured office hours during active on-call periods; complete Swiss German and English translations; verified with comprehensive unit and integration test suites.
 - **On-Call Reports & Period Summaries (Backlog Task 4.3):** Extended `DaySummary`, `MonthSummary`, and `WorkEntryRange` with on-call durations and tagging (`isOnCall`); implemented `OnCallReport` and `OnCallReportService` with role-based scoping (Admin/HR, Supervisor, Employee); added JSON, CSV (UTF-8 BOM), and PDF export capabilities with Swiss German and English localization in `ReportsResource`, `CsvExportHelper`, `PdfExportHelper`, and `ReportApi.js`; updated `ReportsView.js` with dedicated On-Call Service report tab and monthly summary grid on-call KPI cards; covered by comprehensive tests in `ReportServiceTest`, `ReportsResourceTest`, and `WebReportsUiTest`.
+- **Add Absences on Behalf of Employees by HR & Supervisors (Backlog Task 1):** Extended `RequestAbsenceService` to allow supervisors (for assigned team members via `assertCanManageEmployee`) and HR/Administrators (organization-wide) to create absences on behalf of employees in either `SUBMITTED` or directly `APPROVED` state with automated vacation deduction (`USAGE`) and balance validation; prevented direct self-approval by employees/supervisors for their own requests; added `createdBy` parameter to `Absence` model, templates, and `AbsenceDto`; added REST endpoints `GET /employees/{id}/absences` and `POST /employees/{id}/absences` in `ChronivaroResource`; updated `AbsenceApi.js` and `MyAbsencesView.js` with team/employee filtering controls and an "Add Absence for Employee" workflow with direct approval toggle; covered by comprehensive unit tests in `AbsenceServiceTest` and REST integration tests in `AbsenceResourceTest`.
 
 ---
 
 ## Incomplete Requirements / Active Backlog Tasks
 
 ### Missing / New Feature Requests
-1. **Absences on Behalf of Employees by HR & Supervisors (Backlog Task 1):**
-   - Allow HR and Supervisors to add absences on behalf of employees (either submitted for approval or directly approved).
-   - Ensure proper role-based scoping (Supervisors for team members, HR/Admin globally) and creator attribution (`createdBy`).
-2. **Employee Absence Calendar & Direct Absence Creation (Backlog Task 2):**
+1. **Employee Absence Calendar & Direct Absence Creation (Backlog Task 2):**
    - Dedicated calendar UI component/view to display employee absences across teams/departments.
    - Capability to add absences for an employee directly within the calendar view (e.g. clicking on dates/date ranges).
-3. **Calendar On-Call Status & Period Configuration (Backlog Task 3):**
+2. **Calendar On-Call Status & Period Configuration (Backlog Task 3):**
    - Calendar UI integration allowing HR/Supervisors to set and manage the on-call status / `OnCallPeriod` for an employee for a given period (e.g. a week or n-days).
 
 ---
