@@ -645,6 +645,8 @@
     "officeHoursEnd": "Office Hours End",
     "officeHoursEndHint": "End time of regular office hours (e.g. 18:00).",
     "officeHoursEmpty": "Office hours start and end must be specified.",
+    "invalidOfficeHoursStart": "Office hours start must be in HH:mm format (e.g. 07:00).",
+    "invalidOfficeHoursEnd": "Office hours end must be in HH:mm format (e.g. 18:00).",
     "langDe": "Deutsch (German)",
     "langEn": "English",
     "weeklyTargetMinutes": "Standard Weekly Target (Minutes)",

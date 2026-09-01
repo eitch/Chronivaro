@@ -645,6 +645,8 @@
     "officeHoursEnd": "Bürozeiten Ende",
     "officeHoursEndHint": "Endzeit der regulären Bürozeiten (z. B. 18:00).",
     "officeHoursEmpty": "Bürozeiten Beginn und Ende müssen angegeben werden.",
+    "invalidOfficeHoursStart": "Bürozeiten Beginn muss im Format HH:mm sein (z. B. 07:00).",
+    "invalidOfficeHoursEnd": "Bürozeiten Ende muss im Format HH:mm sein (z. B. 18:00).",
     "langDe": "Deutsch (German)",
     "langEn": "English",
     "weeklyTargetMinutes": "Standard-Wochensollzeit (Minuten)",

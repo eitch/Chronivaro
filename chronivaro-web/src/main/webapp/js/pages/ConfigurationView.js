@@ -1,5 +1,6 @@
 import ConfigurationApi from '../api/ConfigurationApi.js';
 import NotificationDialog from '../utils/NotificationDialog.js';
+import Format from '../utils/Format.js';
 import I18n from '../i18n/I18n.js';
 
 export default class ConfigurationView {
@@ -72,14 +73,14 @@ export default class ConfigurationView {
 						</div>
 
 						<div class="form-group">
-							<label for="config-office-hours-start">${I18n.t('configuration.officeHoursStart')} *:</label>
-							<input type="time" id="config-office-hours-start" required>
+							<label for="config-office-hours-start">${I18n.t('configuration.officeHoursStart')} * (24h):</label>
+							<input type="text" id="config-office-hours-start" placeholder="07:00" maxlength="5" pattern="^([01]?[0-9]|2[0-3]):[0-5][0-9]$" required>
 							<small class="form-hint">${I18n.t('configuration.officeHoursStartHint')}</small>
 						</div>
 
 						<div class="form-group">
-							<label for="config-office-hours-end">${I18n.t('configuration.officeHoursEnd')} *:</label>
-							<input type="time" id="config-office-hours-end" required>
+							<label for="config-office-hours-end">${I18n.t('configuration.officeHoursEnd')} * (24h):</label>
+							<input type="text" id="config-office-hours-end" placeholder="18:00" maxlength="5" pattern="^([01]?[0-9]|2[0-3]):[0-5][0-9]$" required>
 							<small class="form-hint">${I18n.t('configuration.officeHoursEndHint')}</small>
 						</div>
 
@@ -145,6 +146,14 @@ export default class ConfigurationView {
 
 		this.weeklyTargetInput.addEventListener('input', () => this.updateHints());
 		this.dayMinutesInput.addEventListener('input', () => this.updateHints());
+
+		[this.officeHoursStartInput, this.officeHoursEndInput].forEach(inp => {
+			if (inp) {
+				inp.addEventListener('blur', () => {
+					if (inp.value) inp.value = Format.normalizeTime(inp.value);
+				});
+			}
+		});
 
 		this.form.addEventListener('submit', (e) => this.handleSave(e));
 		this.reloadBtn.addEventListener('click', () => this.loadConfiguration());
@@ -266,8 +275,8 @@ export default class ConfigurationView {
 		const companyLogo = this.companyLogoInput.value.trim();
 		const defaultLanguage = this.defaultLanguageSelect.value;
 		const serverBaseUrl = this.serverBaseUrlInput.value.trim();
-		const officeHoursStart = this.officeHoursStartInput.value.trim();
-		const officeHoursEnd = this.officeHoursEndInput.value.trim();
+		const officeHoursStart = Format.normalizeTime(this.officeHoursStartInput.value);
+		const officeHoursEnd = Format.normalizeTime(this.officeHoursEndInput.value);
 		const weeklyTargetMinutes = parseInt(this.weeklyTargetInput.value, 10);
 		const annualVacationDays = parseInt(this.vacationDaysInput.value, 10);
 		const minutesPerVacationDay = parseInt(this.dayMinutesInput.value, 10);
@@ -290,6 +299,16 @@ export default class ConfigurationView {
 
 		if (!officeHoursStart || !officeHoursEnd) {
 			NotificationDialog.error(I18n.t('configuration.officeHoursEmpty'));
+			return;
+		}
+
+		if (!Format.isValidTime(officeHoursStart)) {
+			NotificationDialog.error(I18n.t('configuration.invalidOfficeHoursStart'));
+			return;
+		}
+
+		if (!Format.isValidTime(officeHoursEnd)) {
+			NotificationDialog.error(I18n.t('configuration.invalidOfficeHoursEnd'));
 			return;
 		}
 
