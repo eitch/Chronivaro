@@ -2506,3 +2506,141 @@ tr.inactive-row:hover {
 .profile-notice p {
     margin: 0 0 0.5rem 0;
 }
+
+/* Absence Calendar Styles */
+.absence-calendar-container {
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.25rem;
+}
+
+.calendar-timeline-scroll-wrapper {
+    overflow-x: auto;
+    max-width: 100%;
+}
+
+.calendar-timeline-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+}
+
+.calendar-timeline-table th.cal-col-emp,
+.calendar-timeline-table td.cal-emp-cell {
+    position: sticky;
+    left: 0;
+    z-index: 5;
+    background: var(--card-bg, #ffffff);
+    box-shadow: 2px 0 4px rgba(0, 0, 0, 0.04);
+}
+
+.calendar-timeline-table th.cal-day-header {
+    min-width: 32px;
+    padding: 0.4rem 0.2rem;
+    text-align: center;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.calendar-timeline-table td.cal-day-cell {
+    min-width: 32px;
+    height: 48px;
+    padding: 2px;
+    vertical-align: top;
+    text-align: center;
+    border-bottom: 1px solid var(--border-color);
+    border-right: 1px solid var(--border-color);
+    transition: background-color 0.15s ease;
+}
+
+.calendar-timeline-table td.cal-day-cell:hover {
+    background-color: rgba(37, 99, 235, 0.06);
+}
+
+.calendar-timeline-table td.cal-cell-weekend,
+.calendar-month-grid .calendar-grid-cell.cal-cell-weekend {
+    background-color: rgba(0, 0, 0, 0.025);
+}
+
+.calendar-timeline-table td.cal-cell-today,
+.calendar-month-grid .calendar-grid-cell.cal-cell-today {
+    background-color: rgba(37, 99, 235, 0.05);
+}
+
+/* Calendar Badges */
+.cal-badge, .cal-grid-badge {
+    display: block;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.72rem;
+    font-weight: 500;
+    line-height: 1.25;
+    text-align: center;
+    cursor: pointer;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+.cal-badge:hover, .cal-grid-badge:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.12);
+}
+
+/* Absence Type Colors */
+.type-vacation {
+    background-color: #dbeafe;
+    color: #1e40af;
+    border: 1px solid #bfdbfe;
+}
+
+.type-illness {
+    background-color: #fef3c7;
+    color: #92400e;
+    border: 1px solid #fde68a;
+}
+
+.type-accident {
+    background-color: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
+}
+
+.type-training {
+    background-color: #f3e8ff;
+    color: #6b21a8;
+    border: 1px solid #e9d5ff;
+}
+
+.type-military {
+    background-color: #e0e7ff;
+    color: #3730a3;
+    border: 1px solid #c7d2fe;
+}
+
+.type-overtime {
+    background-color: #ccfbf1;
+    color: #115e59;
+    border: 1px solid #99f6e4;
+}
+
+.type-other {
+    background-color: #f1f5f9;
+    color: #334155;
+    border: 1px solid #e2e8f0;
+}
+
+/* Status variants */
+.cal-badge.badge-submitted, .cal-grid-badge.badge-submitted {
+    background-image: repeating-linear-gradient(45deg, transparent, transparent 4px, rgba(0, 0, 0, 0.04) 4px, rgba(0, 0, 0, 0.04) 8px);
+    border-style: dashed;
+}
+
+.cal-badge.badge-draft, .cal-grid-badge.badge-draft {
+    opacity: 0.75;
+    border-style: dotted;
+}

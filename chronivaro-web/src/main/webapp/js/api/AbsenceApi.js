@@ -63,4 +63,18 @@ export default class AbsenceApi {
         const headers = version !== undefined && version !== null ? { 'If-Match': `"${version}"` } : {};
         return await Rest.post(`rest/chronivaro/v1/me/absences/${id}/cancel`, { reason }, headers);
     }
+
+    static async getAbsencesReport({from, to, employeeId, teamId, type, state} = {}) {
+        let queryParts = ['format=json'];
+        if (from) queryParts.push(`from=${encodeURIComponent(from)}`);
+        if (to) queryParts.push(`to=${encodeURIComponent(to)}`);
+        if (employeeId && employeeId.trim()) queryParts.push(`employeeId=${encodeURIComponent(employeeId.trim())}`);
+        if (teamId && teamId.trim()) queryParts.push(`teamId=${encodeURIComponent(teamId.trim())}`);
+        if (type && type.trim()) queryParts.push(`absenceTypeCode=${encodeURIComponent(type.trim())}`);
+        if (state && state.trim()) queryParts.push(`status=${encodeURIComponent(state.trim())}`);
+
+        const url = `rest/chronivaro/v1/reports/absences?${queryParts.join('&')}`;
+        const response = await Rest.get(url);
+        return Array.isArray(response) ? response : (response.items || []);
+    }
 }

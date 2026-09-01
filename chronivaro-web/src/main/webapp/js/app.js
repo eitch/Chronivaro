@@ -3,6 +3,7 @@ import LoginView from './pages/LoginView.js';
 import DashboardView from './pages/DashboardView.js';
 import PresenceView from './pages/PresenceView.js';
 import MyTimesView from './pages/MyTimesView.js';
+import AbsenceCalendarView from './pages/AbsenceCalendarView.js';
 import MyAbsencesView from './pages/MyAbsencesView.js';
 import MyPeriodsView from './pages/MyPeriodsView.js';
 import ApprovalsView from './pages/ApprovalsView.js';
@@ -459,6 +460,10 @@ class ChronivaroApp {
                 break;
             case 'presence':
                 view = new PresenceView(this);
+                break;
+            case 'absence-calendar':
+            case 'calendar':
+                view = new AbsenceCalendarView(this);
                 break;
             case 'my-times':
             case 'employee-times':
