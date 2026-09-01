@@ -30,9 +30,11 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.Set;
 
 import static ch.eitchnet.chronivaro.core.ChronivaroTestHelper.createEmployee;
@@ -804,5 +806,232 @@ public class WorkEntryServiceTest {
 
 		ServiceResult delResLocked = serviceHandler.doService(emp1Cert, new RemoveWorkEntryService(), new StringArgument(entryAugId));
 		assertFalse("Deleting work entry in locked/submitted period must fail", delResLocked.isOk());
+	}
+
+	@Test
+	public void shouldAllowCorrectingStartTimeOfRunningTimerWithoutSettingEndTime() {
+		String employeeId = "emp-fix-running-timer";
+		String username = "emp_fix_running_user";
+
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
+			Resource employee = createEmployee(tx, employeeId, "Fix Running Timer Employee");
+			UserRep userRep = new UserRep(null, username, "FixRunning", "Employee", UserState.ENABLED, emptySet(),
+					Set.of(ROLE_EMPLOYEE, ROLE_MODEL_ACCESSOR), Locale.of("de", "CH"), emptyMap(), null);
+			UserRep addedUser = runtimeMock.getPrivilegeHandler().getPrivilegeHandler().addUser(certificate, userRep, username.toCharArray());
+
+			employee.setString(PARAM_USERNAME, addedUser.getUsername());
+			employee.setString(PARAM_USER_ID, addedUser.getUserId());
+			tx.update(employee);
+			tx.commitOnClose();
+		}
+
+		Certificate empCert = runtimeMock.login(username, username);
+		ServiceHandler serviceHandler = runtimeMock.getServiceHandler();
+
+		ZoneId zone = ZoneId.of("Europe/Zurich");
+		ZonedDateTime now = ZonedDateTime.now(zone);
+		ZonedDateTime initialStart = now.minusHours(2).withNano(0);
+
+		// 1. Start timer 2 hours ago
+		StartTimerService.Argument startArg = new StartTimerService.Argument(
+				employeeId, WorkingLocation.OFFICE, initialStart, false, "Initial start");
+		ServiceResult startRes = serviceHandler.doService(empCert, new StartTimerService(), startArg);
+		assertTrue(startRes.getMessage(), startRes.isOk());
+
+		String workEntryId;
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
+			Optional<Resource> activeEntryOpt = WorkEntryHelper.findActiveWorkEntry(tx, employeeId);
+			assertTrue(activeEntryOpt.isPresent());
+			Resource activeEntry = activeEntryOpt.get();
+			workEntryId = activeEntry.getId();
+			assertEquals(initialStart, activeEntry.getDate(PARAM_START));
+			assertEquals(1970, activeEntry.getDate(PARAM_END).getYear());
+		}
+
+		// 2. Correct start time to 3 hours ago without setting end time
+		ZonedDateTime correctedStart = now.minusHours(3).withNano(0);
+		CorrectWorkEntryService.CorrectWorkEntryArgument correctArg = new CorrectWorkEntryService.CorrectWorkEntryArgument();
+		correctArg.workEntryId = workEntryId;
+		correctArg.start = correctedStart;
+		correctArg.end = null;
+		correctArg.comment = "Actually started earlier";
+		correctArg.workingLocation = WorkingLocation.HOME_OFFICE;
+		correctArg.isOnCall = true;
+
+		ServiceResult correctRes = serviceHandler.doService(empCert, new CorrectWorkEntryService(), correctArg);
+		assertTrue(correctRes.getMessage(), correctRes.isOk());
+
+		// Verify work entry is updated and still running
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
+			Optional<Resource> activeEntryOpt = WorkEntryHelper.findActiveWorkEntry(tx, employeeId);
+			assertTrue(activeEntryOpt.isPresent());
+			Resource activeEntry = activeEntryOpt.get();
+			assertEquals(workEntryId, activeEntry.getId());
+			assertEquals(correctedStart, activeEntry.getDate(PARAM_START));
+			assertEquals(1970, activeEntry.getDate(PARAM_END).getYear());
+			assertEquals("Actually started earlier", activeEntry.getString(PARAM_COMMENT));
+			assertEquals(WorkingLocation.HOME_OFFICE.name(), activeEntry.getString(PARAM_WORKING_LOCATION));
+			assertTrue(activeEntry.getBoolean(PARAM_IS_ON_CALL));
+			assertTrue(ChronivaroVersionHelper.getVersion(activeEntry) > 0);
+		}
+
+		// 3. Stop timer and verify stopped entry keeps corrected start time
+		StopTimerService.StopTimerArgument stopArg = new StopTimerService.StopTimerArgument(employeeId, now.withNano(0), "Finished day");
+		ServiceResult stopRes = serviceHandler.doService(empCert, new StopTimerService(), stopArg);
+		assertTrue(stopRes.getMessage(), stopRes.isOk());
+
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
+			assertTrue(WorkEntryHelper.findActiveWorkEntry(tx, employeeId).isEmpty());
+			Resource stoppedEntry = tx.getResourceBy(TYPE_WORK_ENTRY, workEntryId, true);
+			assertEquals(correctedStart, stoppedEntry.getDate(PARAM_START));
+			assertEquals(now.withNano(0), stoppedEntry.getDate(PARAM_END));
+		}
+	}
+
+	@Test
+	public void shouldRejectCorrectingCompletedWorkEntryWithoutEndTime() {
+		String employeeId = "emp-fix-completed-entry";
+		String username = "emp_fix_comp_user";
+
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
+			Resource employee = createEmployee(tx, employeeId, "Completed Entry Employee");
+			UserRep userRep = new UserRep(null, username, "FixComp", "Employee", UserState.ENABLED, emptySet(),
+					Set.of(ROLE_EMPLOYEE, ROLE_MODEL_ACCESSOR), Locale.of("de", "CH"), emptyMap(), null);
+			UserRep addedUser = runtimeMock.getPrivilegeHandler().getPrivilegeHandler().addUser(certificate, userRep, username.toCharArray());
+
+			employee.setString(PARAM_USERNAME, addedUser.getUsername());
+			employee.setString(PARAM_USER_ID, addedUser.getUserId());
+			tx.update(employee);
+			tx.commitOnClose();
+		}
+
+		Certificate empCert = runtimeMock.login(username, username);
+		ServiceHandler serviceHandler = runtimeMock.getServiceHandler();
+
+		ZonedDateTime start = ZonedDateTime.parse("2026-03-15T08:00:00+01:00[Europe/Zurich]");
+		ZonedDateTime end = ZonedDateTime.parse("2026-03-15T16:00:00+01:00[Europe/Zurich]");
+
+		AddWorkEntryService.AddWorkEntryArgument addArg = new AddWorkEntryService.AddWorkEntryArgument();
+		addArg.employeeId = employeeId;
+		addArg.start = start;
+		addArg.end = end;
+		addArg.workingLocation = WorkingLocation.OFFICE;
+		ServiceResult addRes = serviceHandler.doService(certificate, new AddWorkEntryService(), addArg);
+		assertTrue(addRes.getMessage(), addRes.isOk());
+
+		String workEntryId;
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
+			workEntryId = tx.streamResources(TYPE_WORK_ENTRY)
+					.filter(e -> e.getRelationId(PARAM_EMPLOYEE).equals(employeeId))
+					.findFirst().orElseThrow().getId();
+		}
+
+		CorrectWorkEntryService.CorrectWorkEntryArgument correctArg = new CorrectWorkEntryService.CorrectWorkEntryArgument();
+		correctArg.workEntryId = workEntryId;
+		correctArg.start = start.plusMinutes(30);
+		correctArg.end = null;
+
+		ServiceResult correctRes = serviceHandler.doService(empCert, new CorrectWorkEntryService(), correctArg);
+		assertFalse("Correcting completed entry without end time must fail", correctRes.isOk());
+	}
+
+	@Test
+	public void shouldRejectSettingStartTimeOfRunningTimerInFuture() {
+		String employeeId = "emp-future-running-timer";
+		String username = "emp_future_run_user";
+
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
+			Resource employee = createEmployee(tx, employeeId, "Future Running Timer Employee");
+			UserRep userRep = new UserRep(null, username, "FutureRun", "Employee", UserState.ENABLED, emptySet(),
+					Set.of(ROLE_EMPLOYEE, ROLE_MODEL_ACCESSOR), Locale.of("de", "CH"), emptyMap(), null);
+			UserRep addedUser = runtimeMock.getPrivilegeHandler().getPrivilegeHandler().addUser(certificate, userRep, username.toCharArray());
+
+			employee.setString(PARAM_USERNAME, addedUser.getUsername());
+			employee.setString(PARAM_USER_ID, addedUser.getUserId());
+			tx.update(employee);
+			tx.commitOnClose();
+		}
+
+		Certificate empCert = runtimeMock.login(username, username);
+		ServiceHandler serviceHandler = runtimeMock.getServiceHandler();
+
+		ZoneId zone = ZoneId.of("Europe/Zurich");
+		ZonedDateTime now = ZonedDateTime.now(zone);
+		ZonedDateTime initialStart = now.minusHours(1).withNano(0);
+
+		StartTimerService.Argument startArg = new StartTimerService.Argument(
+				employeeId, WorkingLocation.OFFICE, initialStart, false, "Initial start");
+		ServiceResult startRes = serviceHandler.doService(empCert, new StartTimerService(), startArg);
+		assertTrue(startRes.getMessage(), startRes.isOk());
+
+		String workEntryId;
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
+			workEntryId = WorkEntryHelper.findActiveWorkEntry(tx, employeeId).orElseThrow().getId();
+		}
+
+		// Attempt to set start time into the future
+		CorrectWorkEntryService.CorrectWorkEntryArgument correctArg = new CorrectWorkEntryService.CorrectWorkEntryArgument();
+		correctArg.workEntryId = workEntryId;
+		correctArg.start = now.plusHours(1).withNano(0);
+		correctArg.end = null;
+
+		ServiceResult correctRes = serviceHandler.doService(empCert, new CorrectWorkEntryService(), correctArg);
+		assertFalse("Setting start time in future must fail", correctRes.isOk());
+	}
+
+	@Test
+	public void shouldRejectSettingRunningTimerStartTimeToOverlapWithExistingEntry() {
+		String employeeId = "emp-overlap-running-timer";
+		String username = "emp_overlap_run_user";
+
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
+			Resource employee = createEmployee(tx, employeeId, "Overlap Running Timer Employee");
+			UserRep userRep = new UserRep(null, username, "OverlapRun", "Employee", UserState.ENABLED, emptySet(),
+					Set.of(ROLE_EMPLOYEE, ROLE_MODEL_ACCESSOR), Locale.of("de", "CH"), emptyMap(), null);
+			UserRep addedUser = runtimeMock.getPrivilegeHandler().getPrivilegeHandler().addUser(certificate, userRep, username.toCharArray());
+
+			employee.setString(PARAM_USERNAME, addedUser.getUsername());
+			employee.setString(PARAM_USER_ID, addedUser.getUserId());
+			tx.update(employee);
+			tx.commitOnClose();
+		}
+
+		Certificate empCert = runtimeMock.login(username, username);
+		ServiceHandler serviceHandler = runtimeMock.getServiceHandler();
+
+		ZoneId zone = ZoneId.of("Europe/Zurich");
+		ZonedDateTime now = ZonedDateTime.now(zone);
+		ZonedDateTime pastStart = now.minusHours(4).withNano(0);
+		ZonedDateTime pastEnd = now.minusHours(2).withNano(0);
+
+		// Add completed entry from 4 hours ago to 2 hours ago
+		AddWorkEntryService.AddWorkEntryArgument addArg = new AddWorkEntryService.AddWorkEntryArgument();
+		addArg.employeeId = employeeId;
+		addArg.start = pastStart;
+		addArg.end = pastEnd;
+		addArg.workingLocation = WorkingLocation.OFFICE;
+		ServiceResult addRes = serviceHandler.doService(certificate, new AddWorkEntryService(), addArg);
+		assertTrue(addRes.getMessage(), addRes.isOk());
+
+		// Start timer 1 hour ago
+		ZonedDateTime initialStart = now.minusHours(1).withNano(0);
+		StartTimerService.Argument startArg = new StartTimerService.Argument(
+				employeeId, WorkingLocation.OFFICE, initialStart, false, "Initial start");
+		ServiceResult startRes = serviceHandler.doService(empCert, new StartTimerService(), startArg);
+		assertTrue(startRes.getMessage(), startRes.isOk());
+
+		String workEntryId;
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
+			workEntryId = WorkEntryHelper.findActiveWorkEntry(tx, employeeId).orElseThrow().getId();
+		}
+
+		// Attempt to move start time to 3 hours ago (which overlaps with pastStart -> pastEnd)
+		CorrectWorkEntryService.CorrectWorkEntryArgument correctArg = new CorrectWorkEntryService.CorrectWorkEntryArgument();
+		correctArg.workEntryId = workEntryId;
+		correctArg.start = now.minusHours(3).withNano(0);
+		correctArg.end = null;
+
+		ServiceResult correctRes = serviceHandler.doService(empCert, new CorrectWorkEntryService(), correctArg);
+		assertFalse("Moving start time to overlap with existing entry must fail", correctRes.isOk());
 	}
 }

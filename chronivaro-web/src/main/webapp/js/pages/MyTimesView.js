@@ -453,9 +453,9 @@ export default class MyTimesView {
 						editBtn.addEventListener('click', () => {
 							this.currentEditingEntry = entry;
 
+							const isRunning = !entry.end;
 							editModalTitle.textContent = I18n.t('times.editDialogTitle');
 							editHelpText.textContent = I18n.t('times.editHelpText');
-							editEndLabel.textContent = `${I18n.t('times.endTime')} * (24h):`;
 
 							const startDate = new Date(entry.start);
 							const pad = (n) => String(n).padStart(2, '0');
@@ -472,21 +472,34 @@ export default class MyTimesView {
 							editStartInput.removeAttribute('disabled');
 							editStartInput.style.background = '';
 
-							const endIso = entry.end || new Date().toISOString();
-							const endDate = new Date(endIso);
-							const endTimeStr = !isNaN(endDate.getTime())
-									? `${pad(endDate.getHours())}:${pad(endDate.getMinutes())}`
-									: '';
-							editEndInput.value = endTimeStr;
+							if (isRunning) {
+								editEndLabel.textContent = `${I18n.t('times.endTime')} (24h):`;
+								editEndInput.removeAttribute('required');
+								editEndInput.value = '';
+								if (editPastMidnightCheckbox) {
+									editPastMidnightCheckbox.checked = false;
+									updateEditEndDateDisplay();
+								}
+							} else {
+								editEndLabel.textContent = `${I18n.t('times.endTime')} * (24h):`;
+								editEndInput.setAttribute('required', 'required');
 
-							const isEntryPastMidnight = !isNaN(startDate.getTime()) && !isNaN(endDate.getTime()) && (
-									endDate.getFullYear() > startDate.getFullYear() ||
-									endDate.getMonth() > startDate.getMonth() ||
-									endDate.getDate() > startDate.getDate()
-							);
-							if (editPastMidnightCheckbox) {
-								editPastMidnightCheckbox.checked = isEntryPastMidnight;
-								updateEditEndDateDisplay();
+								const endIso = entry.end;
+								const endDate = new Date(endIso);
+								const endTimeStr = !isNaN(endDate.getTime())
+										? `${pad(endDate.getHours())}:${pad(endDate.getMinutes())}`
+										: '';
+								editEndInput.value = endTimeStr;
+
+								const isEntryPastMidnight = !isNaN(startDate.getTime()) && !isNaN(endDate.getTime()) && (
+										endDate.getFullYear() > startDate.getFullYear() ||
+										endDate.getMonth() > startDate.getMonth() ||
+										endDate.getDate() > startDate.getDate()
+								);
+								if (editPastMidnightCheckbox) {
+									editPastMidnightCheckbox.checked = isEntryPastMidnight;
+									updateEditEndDateDisplay();
+								}
 							}
 
 							editLocationSelect.value = entry.workingLocation || '';
@@ -617,20 +630,40 @@ export default class MyTimesView {
 
 				const dateVal = editDateInput.value;
 				const startVal = Format.normalizeTime(editStartInput.value);
-				const endVal = Format.normalizeTime(editEndInput.value);
+				const endVal = editEndInput.value ? Format.normalizeTime(editEndInput.value) : '';
 
-				if (!Format.isValidTime(startVal) || !Format.isValidTime(endVal)) {
+				if (!Format.isValidTime(startVal)) {
 					NotificationDialog.error(I18n.t('times.invalidDuration'));
 					return;
 				}
 
-				const isPastMidnight = editPastMidnightCheckbox && editPastMidnightCheckbox.checked;
-				const endDateVal = isPastMidnight ? getNextDayString(dateVal) : dateVal;
-				const startDate = new Date(`${dateVal}T${startVal}:00`);
-				const endDate = new Date(`${endDateVal}T${endVal}:00`);
-				if (isNaN(startDate.getTime()) || isNaN(endDate.getTime()) || endDate <= startDate) {
+				const isRunning = !this.currentEditingEntry.end;
+
+				if (!isRunning && (!endVal || !Format.isValidTime(endVal))) {
 					NotificationDialog.error(I18n.t('times.invalidDuration'));
 					return;
+				}
+
+				if (isRunning && endVal && !Format.isValidTime(endVal)) {
+					NotificationDialog.error(I18n.t('times.invalidDuration'));
+					return;
+				}
+
+				const startDate = new Date(`${dateVal}T${startVal}:00`);
+				if (isNaN(startDate.getTime())) {
+					NotificationDialog.error(I18n.t('times.invalidDuration'));
+					return;
+				}
+
+				let endDate = null;
+				if (endVal) {
+					const isPastMidnight = editPastMidnightCheckbox && editPastMidnightCheckbox.checked;
+					const endDateVal = isPastMidnight ? getNextDayString(dateVal) : dateVal;
+					endDate = new Date(`${endDateVal}T${endVal}:00`);
+					if (isNaN(endDate.getTime()) || endDate <= startDate) {
+						NotificationDialog.error(I18n.t('times.invalidDuration'));
+						return;
+					}
 				}
 
 				const isManagerEdit = this.canManage;
@@ -639,7 +672,7 @@ export default class MyTimesView {
 					id: this.currentEditingEntry.id,
 					employeeId: this.currentEditingEntry.employeeId,
 					start: startDate.toISOString(),
-					end: endDate.toISOString(),
+					end: endDate ? endDate.toISOString() : null,
 					workingLocation: editLocationSelect.value || undefined,
 					comment: editCommentInput.value.trim() || undefined,
 					isOnCall: editIsOnCallCheckbox ? editIsOnCallCheckbox.checked : false
