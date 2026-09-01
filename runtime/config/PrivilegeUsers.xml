@@ -7,6 +7,7 @@
         <Locale>de</Locale>
         <Roles>
             <Role>agent</Role>
+            <Role>Administrator</Role>
         </Roles>
         <Properties>
             <Property name="organisation" value="MyCompany"/>
