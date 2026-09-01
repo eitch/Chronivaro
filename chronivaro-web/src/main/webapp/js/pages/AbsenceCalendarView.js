@@ -4,6 +4,7 @@ import TeamApi from '../api/TeamApi.js';
 import LocationApi from '../api/LocationApi.js';
 import AbsenceApi from '../api/AbsenceApi.js';
 import AbsenceTypeApi from '../api/AbsenceTypeApi.js';
+import OnCallPeriodApi from '../api/OnCallPeriodApi.js';
 import ReportApi from '../api/ReportApi.js';
 import NotificationDialog from '../utils/NotificationDialog.js';
 import MonthPicker from '../utils/MonthPicker.js';
@@ -22,11 +23,13 @@ export default class AbsenceCalendarView {
         this.employees = [];
         this.absenceTypes = [];
         this.absences = [];
+        this.onCallPeriods = [];
 
         this.filterTeamId = '';
         this.filterLocationId = '';
         this.filterEmployeeId = '';
         this.filterAbsenceTypeCode = '';
+        this.showOnCall = true;
 
         this.currentUserEmployeeId = null;
         this.isManager = AuthApi.hasRole('Supervisor') || AuthApi.hasRole('HR')
@@ -48,8 +51,13 @@ export default class AbsenceCalendarView {
                     <h2 id="calendar-title">${I18n.t('calendar.title')}</h2>
                     <p class="text-muted" style="margin: 0.25rem 0 0 0; font-size: 0.9rem;">${I18n.t('calendar.subtitle')}</p>
                 </div>
-                <div class="actions calendar-top-actions">
-                    <button type="button" id="calendar-new-absence-btn" class="primary-btn">
+                <div class="actions calendar-top-actions" style="display: flex; gap: 0.5rem;">
+                    ${this.isManager ? `
+                    <button type="button" id="calendar-new-oncall-btn" class="secondary-btn" style="display: inline-flex; align-items: center; gap: 0.35rem;">
+                        <span class="icon" aria-hidden="true">📞</span> ${I18n.t('calendar.newOnCallPeriod')}
+                    </button>
+                    ` : ''}
+                    <button type="button" id="calendar-new-absence-btn" class="primary-btn" style="display: inline-flex; align-items: center; gap: 0.35rem;">
                         <span class="icon" aria-hidden="true">➕</span> ${I18n.t('calendar.newAbsence')}
                     </button>
                 </div>
@@ -66,8 +74,12 @@ export default class AbsenceCalendarView {
                         <button type="button" id="cal-today-btn" class="secondary-btn" style="margin-left: 0.25rem;">${I18n.t('calendar.today')}</button>
                     </div>
 
-                    <!-- View Mode Toggle -->
-                    <div class="calendar-view-toggle">
+                    <!-- View Mode Toggle & On-Call Toggle -->
+                    <div class="calendar-view-toggle" style="display: flex; align-items: center; gap: 1rem;">
+                        <label style="display: flex; align-items: center; gap: 0.4rem; font-size: 0.85rem; cursor: pointer; font-weight: 500;">
+                            <input type="checkbox" id="cal-toggle-oncall" ${this.showOnCall ? 'checked' : ''}>
+                            <span>${I18n.t('calendar.showOnCall')}</span>
+                        </label>
                         <div class="btn-group" role="group" aria-label="Calendar view switcher">
                             <button type="button" id="view-mode-timeline" class="btn ${this.viewMode === 'timeline' ? 'btn-active' : 'secondary-btn'}">${I18n.t('calendar.timelineView')}</button>
                             <button type="button" id="view-mode-month" class="btn ${this.viewMode === 'monthGrid' ? 'btn-active' : 'secondary-btn'}">${I18n.t('calendar.monthGridView')}</button>
@@ -129,6 +141,10 @@ export default class AbsenceCalendarView {
                         <span>${I18n.t('calendar.draft')}</span>
                     </div>
                     <div style="display: flex; align-items: center; gap: 0.4rem;">
+                        <span class="legend-badge badge-oncall" style="display: inline-block; width: 12px; height: 12px; border-radius: 3px; background-color: #fef08a; border: 1px solid #eab308;"></span>
+                        <span>${I18n.t('calendar.onCallBadge')}</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 0.4rem;">
                         <span class="legend-badge badge-weekend" style="display: inline-block; width: 12px; height: 12px; border-radius: 3px; background-color: rgba(0,0,0,0.06);"></span>
                         <span>${I18n.t('calendar.weekend')}</span>
                     </div>
@@ -151,6 +167,22 @@ export default class AbsenceCalendarView {
         if (newAbsenceBtn) {
             newAbsenceBtn.addEventListener('click', () => {
                 this.openCreateAbsenceModal(container);
+            });
+        }
+
+        const newOnCallBtn = container.querySelector('#calendar-new-oncall-btn');
+        if (newOnCallBtn) {
+            newOnCallBtn.addEventListener('click', () => {
+                this.openCreateOnCallModal(container);
+            });
+        }
+
+        // On-Call Toggle
+        const onCallToggle = container.querySelector('#cal-toggle-oncall');
+        if (onCallToggle) {
+            onCallToggle.addEventListener('change', (e) => {
+                this.showOnCall = e.target.checked;
+                this.renderCalendarContent(container);
             });
         }
 
@@ -390,23 +422,18 @@ export default class AbsenceCalendarView {
         const to = `${this.currentYear}-${String(this.currentMonth).padStart(2, '0')}-${String(daysInMonth).padStart(2, '0')}`;
 
         try {
-            const absences = await ReportApi.getAbsenceReport({
+            // Load absences and on-call periods concurrently
+            const absencePromise = ReportApi.getAbsenceReport({
                 from,
                 to,
                 teamId: this.filterTeamId,
                 employeeId: this.filterEmployeeId,
                 type: this.filterAbsenceTypeCode
-            });
-
-            this.absences = Array.isArray(absences) ? absences : (absences.items || []);
-            this.renderCalendarContent(container);
-        } catch (err) {
-            console.error('Failed to load absence report for calendar:', err);
-            // If report call fails (e.g. standard employee without team), fallback to personal absences
-            if (!this.isManager) {
-                try {
+            }).catch(async (err) => {
+                // If report call fails (e.g. standard employee without team), fallback to personal absences
+                if (!this.isManager) {
                     const myAbs = await AbsenceApi.getMyAbsences({ from, to });
-                    this.absences = (Array.isArray(myAbs) ? myAbs : (myAbs.data || [])).map(a => ({
+                    return (Array.isArray(myAbs) ? myAbs : (myAbs.data || [])).map(a => ({
                         id: a.id,
                         employeeId: this.currentUserEmployeeId,
                         employeeName: 'Me',
@@ -421,13 +448,35 @@ export default class AbsenceCalendarView {
                         comment: a.comment,
                         paid: a.paid
                     }));
-                    this.renderCalendarContent(container);
-                    return;
-                } catch (fallbackErr) {
-                    console.error('Fallback personal absences failed:', fallbackErr);
                 }
-            }
+                throw err;
+            });
 
+            const onCallPromise = (async () => {
+                try {
+                    if (this.isManager) {
+                        return await OnCallPeriodApi.getAdminOnCallPeriods({
+                            from,
+                            to,
+                            employeeId: this.filterEmployeeId || undefined
+                        });
+                    } else {
+                        return await OnCallPeriodApi.getMyOnCallPeriods({ from, to });
+                    }
+                } catch (e) {
+                    console.warn('Could not load on-call periods:', e);
+                    return [];
+                }
+            })();
+
+            const [absences, onCallList] = await Promise.all([absencePromise, onCallPromise]);
+
+            this.absences = Array.isArray(absences) ? absences : (absences.items || []);
+            this.onCallPeriods = Array.isArray(onCallList) ? onCallList : (onCallList.data || []);
+
+            this.renderCalendarContent(container);
+        } catch (err) {
+            console.error('Failed to load absence report for calendar:', err);
             if (content) {
                 content.innerHTML = `<div class="error-banner">${I18n.t('common.error')}: ${err.message || err}</div>`;
             }
@@ -483,8 +532,12 @@ export default class AbsenceCalendarView {
 
         // Map absences: empId -> dayNumber -> list of absences
         const absenceMap = new Map();
+        // Map on-call periods: empId -> dayNumber -> list of on-call periods
+        const onCallMap = new Map();
+
         for (const emp of employees) {
             absenceMap.set(emp.id, new Map());
+            onCallMap.set(emp.id, new Map());
         }
 
         for (const abs of this.absences) {
@@ -495,18 +548,34 @@ export default class AbsenceCalendarView {
                 absenceMap.set(empId, empDays);
             }
 
-            const startDate = new Date(abs.start);
-            const endDate = new Date(abs.end);
-
             for (let d = 1; d <= daysInMonth; d++) {
-                const curDate = new Date(this.currentYear, this.currentMonth - 1, d);
-                // Compare YYYY-MM-DD
                 const curStr = `${this.currentYear}-${String(this.currentMonth).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
                 if (curStr >= abs.start && curStr <= abs.end) {
                     if (!empDays.has(d)) {
                         empDays.set(d, []);
                     }
                     empDays.get(d).push(abs);
+                }
+            }
+        }
+
+        if (this.showOnCall) {
+            for (const oc of this.onCallPeriods) {
+                const empId = oc.employeeId;
+                let empDays = onCallMap.get(empId);
+                if (!empDays) {
+                    empDays = new Map();
+                    onCallMap.set(empId, empDays);
+                }
+
+                for (let d = 1; d <= daysInMonth; d++) {
+                    const curStr = `${this.currentYear}-${String(this.currentMonth).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+                    if (curStr >= oc.startDate && curStr <= oc.endDate) {
+                        if (!empDays.has(d)) {
+                            empDays.set(d, []);
+                        }
+                        empDays.get(d).push(oc);
+                    }
                 }
             }
         }
@@ -548,6 +617,7 @@ export default class AbsenceCalendarView {
             const team = this.teams.find(t => t.id === emp.primaryTeamId);
             const teamName = team ? team.name : '';
             const empDays = absenceMap.get(emp.id) || new Map();
+            const empOnCallDays = onCallMap.get(emp.id) || new Map();
 
             tableHtml += `
                 <tr class="cal-emp-row" data-emp-id="${emp.id}">
@@ -564,8 +634,11 @@ export default class AbsenceCalendarView {
                 const isToday = (d === todayDay);
                 const dateStr = `${this.currentYear}-${String(this.currentMonth).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
                 const absencesOnDay = empDays.get(d) || [];
+                const onCallOnDay = empOnCallDays.get(d) || [];
 
                 let cellContent = '';
+
+                // Render Absences
                 if (absencesOnDay.length > 0) {
                     for (const abs of absencesOnDay) {
                         const statusClass = this.getStatusClass(abs.state || abs.status);
@@ -579,11 +652,25 @@ export default class AbsenceCalendarView {
                     }
                 }
 
+                // Render On-Call Periods
+                if (this.showOnCall && onCallOnDay.length > 0) {
+                    for (const oc of onCallOnDay) {
+                        const timeInfo = (oc.startTime || oc.endTime) ? ` (${oc.startTime || ''}-${oc.endTime || ''})` : '';
+                        cellContent += `
+                            <div class="cal-badge type-oncall" data-oncall-id="${oc.id}" style="padding: 2px 4px; border-radius: 3px; font-size: 0.7rem; font-weight: 600; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 2px;" title="📞 ${I18n.t('calendar.onCallBadge')}${timeInfo}: ${oc.startDate} - ${oc.endDate} ${oc.comment ? ' - ' + oc.comment : ''}">
+                                📞 ${I18n.t('calendar.onCallBadge')}${oc.startTime ? ' ' + oc.startTime : ''}
+                            </div>
+                        `;
+                    }
+                }
+
+                const hasEntries = absencesOnDay.length > 0 || (this.showOnCall && onCallOnDay.length > 0);
+
                 tableHtml += `
-                    <td class="cal-day-cell ${isWeekend ? 'cal-cell-weekend' : ''} ${isToday ? 'cal-cell-today' : ''}" data-emp-id="${emp.id}" data-date="${dateStr}" style="padding: 2px; text-align: center; vertical-align: top; border-bottom: 1px solid var(--border-color); border-right: 1px solid var(--border-color); height: 44px; position: relative; ${isWeekend ? 'background-color: rgba(0,0,0,0.02);' : ''} ${isToday ? 'background-color: rgba(37,99,235,0.04);' : ''}">
+                    <td class="cal-day-cell ${isWeekend ? 'cal-cell-weekend' : ''} ${isToday ? 'cal-cell-today' : ''}" data-emp-id="${emp.id}" data-date="${dateStr}" style="padding: 2px; text-align: center; vertical-align: top; border-bottom: 1px solid var(--border-color); border-right: 1px solid var(--border-color); min-height: 44px; height: 44px; position: relative; ${isWeekend ? 'background-color: rgba(0,0,0,0.02);' : ''} ${isToday ? 'background-color: rgba(37,99,235,0.04);' : ''}">
                         <div class="cal-cell-inner" style="height: 100%; display: flex; flex-direction: column; justify-content: center;">
                             ${cellContent}
-                            ${absencesOnDay.length === 0 ? `<button type="button" class="cal-cell-add-btn" title="${I18n.t('calendar.createAbsencePrompt', { name: empName, date: dateStr })}" style="display: none; background: none; border: none; font-size: 0.8rem; cursor: pointer; color: var(--primary-color, #2563eb);">+</button>` : ''}
+                            ${!hasEntries ? `<button type="button" class="cal-cell-add-btn" title="${I18n.t('calendar.createAbsencePrompt', { name: empName, date: dateStr })}" style="display: none; background: none; border: none; font-size: 0.8rem; cursor: pointer; color: var(--primary-color, #2563eb);">+</button>` : ''}
                         </div>
                     </td>
                 `;
@@ -602,14 +689,26 @@ export default class AbsenceCalendarView {
 
         content.innerHTML = tableHtml;
 
-        // Attach interactivity
-        content.querySelectorAll('.cal-badge').forEach(badge => {
+        // Attach interactivity for Absences
+        content.querySelectorAll('.cal-badge[data-abs-id]').forEach(badge => {
             badge.addEventListener('click', (e) => {
                 e.stopPropagation();
                 const absId = badge.getAttribute('data-abs-id');
                 const abs = this.absences.find(a => a.id === absId);
                 if (abs) {
                     this.openAbsenceDetailsModal(container, abs);
+                }
+            });
+        });
+
+        // Attach interactivity for On-Call Periods
+        content.querySelectorAll('.cal-badge[data-oncall-id]').forEach(badge => {
+            badge.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const ocId = badge.getAttribute('data-oncall-id');
+                const oc = this.onCallPeriods.find(o => o.id === ocId);
+                if (oc) {
+                    this.openOnCallDetailsModal(container, oc);
                 }
             });
         });
@@ -654,6 +753,20 @@ export default class AbsenceCalendarView {
             }
         }
 
+        // Map on-call: dayNumber -> list of on-call
+        const onCallDayMap = new Map();
+        if (this.showOnCall) {
+            for (const oc of this.onCallPeriods) {
+                for (let d = 1; d <= daysInMonth; d++) {
+                    const curStr = `${this.currentYear}-${String(this.currentMonth).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+                    if (curStr >= oc.startDate && curStr <= oc.endDate) {
+                        if (!onCallDayMap.has(d)) onCallDayMap.set(d, []);
+                        onCallDayMap.get(d).push(oc);
+                    }
+                }
+            }
+        }
+
         let gridHtml = `
             <div class="calendar-month-grid" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background-color: var(--border-color); border: 1px solid var(--border-color); border-radius: 6px; overflow: hidden;">
         `;
@@ -682,8 +795,11 @@ export default class AbsenceCalendarView {
             const isToday = (d === todayDay);
             const dateStr = `${this.currentYear}-${String(this.currentMonth).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
             const absencesOnDay = dayMap.get(d) || [];
+            const onCallsOnDay = onCallDayMap.get(d) || [];
 
             let badgesHtml = '';
+
+            // Absences
             for (const abs of absencesOnDay) {
                 const statusClass = this.getStatusClass(abs.state || abs.status);
                 const typeClass = this.getAbsenceTypeClass(abs.absenceTypeCode);
@@ -697,11 +813,26 @@ export default class AbsenceCalendarView {
                 `;
             }
 
+            // On-Call Periods
+            if (this.showOnCall) {
+                for (const oc of onCallsOnDay) {
+                    const empName = oc.employeeName || oc.employeeId;
+                    const timeInfo = oc.startTime ? ` (${oc.startTime})` : '';
+                    badgesHtml += `
+                        <div class="cal-grid-badge type-oncall" data-oncall-id="${oc.id}" style="padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; margin-bottom: 3px; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="📞 ${empName} - ${I18n.t('calendar.onCallBadge')}${timeInfo}">
+                            📞 ${empName}: ${I18n.t('calendar.onCallBadge')}${timeInfo}
+                        </div>
+                    `;
+                }
+            }
+
+            const totalCount = absencesOnDay.length + (this.showOnCall ? onCallsOnDay.length : 0);
+
             gridHtml += `
                 <div class="calendar-grid-cell ${isWeekend ? 'cal-cell-weekend' : ''} ${isToday ? 'cal-cell-today' : ''}" data-date="${dateStr}" style="background-color: var(--card-bg, #fff); min-height: 110px; padding: 0.4rem; position: relative; cursor: pointer; ${isWeekend ? 'background-color: rgba(0,0,0,0.02);' : ''} ${isToday ? 'border: 2px solid var(--primary-color, #2563eb);' : ''}">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
                         <span class="cal-grid-day-number" style="font-weight: 700; font-size: 0.85rem; ${isToday ? 'color: var(--primary-color, #2563eb);' : ''}">${d}</span>
-                        ${absencesOnDay.length > 0 ? `<span class="badge" style="font-size: 0.65rem; padding: 1px 4px; background: rgba(0,0,0,0.08); border-radius: 10px;">${absencesOnDay.length}</span>` : ''}
+                        ${totalCount > 0 ? `<span class="badge" style="font-size: 0.65rem; padding: 1px 4px; background: rgba(0,0,0,0.08); border-radius: 10px;">${totalCount}</span>` : ''}
                     </div>
                     <div class="cal-grid-badges-container" style="max-height: 80px; overflow-y: auto;">
                         ${badgesHtml}
@@ -725,14 +856,26 @@ export default class AbsenceCalendarView {
 
         content.innerHTML = gridHtml;
 
-        // Click events on grid badges
-        content.querySelectorAll('.cal-grid-badge').forEach(badge => {
+        // Click events on grid badges for absences
+        content.querySelectorAll('.cal-grid-badge[data-abs-id]').forEach(badge => {
             badge.addEventListener('click', (e) => {
                 e.stopPropagation();
                 const absId = badge.getAttribute('data-abs-id');
                 const abs = this.absences.find(a => a.id === absId);
                 if (abs) {
                     this.openAbsenceDetailsModal(container, abs);
+                }
+            });
+        });
+
+        // Click events on grid badges for on-call
+        content.querySelectorAll('.cal-grid-badge[data-oncall-id]').forEach(badge => {
+            badge.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const ocId = badge.getAttribute('data-oncall-id');
+                const oc = this.onCallPeriods.find(o => o.id === ocId);
+                if (oc) {
+                    this.openOnCallDetailsModal(container, oc);
                 }
             });
         });
@@ -853,6 +996,313 @@ export default class AbsenceCalendarView {
         });
     }
 
+    openOnCallDetailsModal(container, oc) {
+        const modalsContainer = container.querySelector('#calendar-modals');
+        if (!modalsContainer) return;
+
+        const modal = document.createElement('div');
+        modal.className = 'modal-backdrop active';
+        modal.innerHTML = `
+            <div class="modal-dialog" style="max-width: 500px; width: 90%; background: var(--card-bg, #fff); border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); overflow: hidden;">
+                <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border-color);">
+                    <h3 style="margin: 0; font-size: 1.15rem;">${I18n.t('calendar.onCallDetails')}</h3>
+                    <button type="button" class="modal-close-btn" style="background: none; border: none; font-size: 1.25rem; cursor: pointer;">&times;</button>
+                </div>
+                <div class="modal-body" style="padding: 1.25rem 1.5rem; font-size: 0.9rem;">
+                    <div style="margin-bottom: 0.75rem;">
+                        <span style="font-weight: 600; color: var(--text-muted); display: block; font-size: 0.75rem;">${I18n.t('calendar.employee')}:</span>
+                        <span style="font-weight: 600; font-size: 1rem;">${oc.employeeName || oc.employeeId}</span>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 0.75rem;">
+                        <div>
+                            <span style="font-weight: 600; color: var(--text-muted); display: block; font-size: 0.75rem;">${I18n.t('common.from')}:</span>
+                            <span style="font-weight: 500;">${oc.startDate} ${oc.startTime ? `(${oc.startTime})` : ''}</span>
+                        </div>
+                        <div>
+                            <span style="font-weight: 600; color: var(--text-muted); display: block; font-size: 0.75rem;">${I18n.t('common.to')}:</span>
+                            <span style="font-weight: 500;">${oc.endDate} ${oc.endTime ? `(${oc.endTime})` : ''}</span>
+                        </div>
+                    </div>
+                    ${oc.comment ? `
+                    <div style="margin-bottom: 0.75rem;">
+                        <span style="font-weight: 600; color: var(--text-muted); display: block; font-size: 0.75rem;">${I18n.t('common.comment')}:</span>
+                        <div style="padding: 0.5rem; background: rgba(0,0,0,0.03); border-radius: 4px; font-style: italic;">${oc.comment}</div>
+                    </div>
+                    ` : ''}
+                    ${oc.createdBy ? `
+                    <div style="margin-bottom: 0.75rem; font-size: 0.8rem; color: var(--text-muted);">
+                        <span>${I18n.t('common.createdBy')}: ${oc.createdBy}</span>
+                    </div>
+                    ` : ''}
+                </div>
+                <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.5rem; border-top: 1px solid var(--border-color); background: var(--surface-bg, #f8fafc);">
+                    <div>
+                        ${this.isManager ? `
+                        <button type="button" class="danger-btn modal-delete-oc-btn" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;">${I18n.t('common.delete')}</button>
+                        ` : ''}
+                    </div>
+                    <div style="display: flex; gap: 0.5rem;">
+                        ${this.isManager ? `
+                        <button type="button" class="secondary-btn modal-edit-oc-btn">${I18n.t('common.edit')}</button>
+                        ` : ''}
+                        <button type="button" class="primary-btn modal-ok-btn">${I18n.t('common.close')}</button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        modalsContainer.appendChild(modal);
+
+        const close = () => {
+            if (modal.parentElement) modal.parentElement.removeChild(modal);
+        };
+
+        modal.querySelector('.modal-close-btn').addEventListener('click', close);
+        modal.querySelector('.modal-ok-btn').addEventListener('click', close);
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) close();
+        });
+
+        const editBtn = modal.querySelector('.modal-edit-oc-btn');
+        if (editBtn) {
+            editBtn.addEventListener('click', () => {
+                close();
+                this.openEditOnCallModal(container, oc);
+            });
+        }
+
+        const deleteBtn = modal.querySelector('.modal-delete-oc-btn');
+        if (deleteBtn) {
+            deleteBtn.addEventListener('click', async () => {
+                const confirmed = confirm(I18n.t('calendar.deleteOnCallConfirm', {
+                    name: oc.employeeName || oc.employeeId,
+                    from: oc.startDate,
+                    to: oc.endDate
+                }));
+                if (!confirmed) return;
+
+                try {
+                    await OnCallPeriodApi.deleteOnCallPeriod(oc.id, oc.version);
+                    close();
+                    NotificationDialog.show(I18n.t('calendar.onCallDeleteSuccess'), I18n.t('common.success'));
+                    await this.loadCalendarData(container);
+                } catch (err) {
+                    console.error('Failed to delete on-call period:', err);
+                    NotificationDialog.show(err.message || I18n.t('errors.unexpected'), I18n.t('common.error'));
+                }
+            });
+        }
+    }
+
+    openCreateOnCallModal(container, initialData = {}) {
+        this.openOnCallFormModal(container, null, initialData);
+    }
+
+    openEditOnCallModal(container, oc) {
+        this.openOnCallFormModal(container, oc);
+    }
+
+    openOnCallFormModal(container, existingOc = null, initialData = {}) {
+        const modalsContainer = container.querySelector('#calendar-modals');
+        if (!modalsContainer) return;
+
+        const isEdit = !!existingOc;
+        const modal = document.createElement('div');
+        modal.className = 'modal-backdrop active';
+
+        const employees = this.employees.length > 0 ? this.employees : [{
+            id: this.currentUserEmployeeId || 'me',
+            name: 'Me',
+            firstname: 'Me',
+            lastname: ''
+        }];
+
+        const defaultStart = existingOc ? existingOc.startDate : (initialData.startDate || `${this.currentYear}-${String(this.currentMonth).padStart(2, '0')}-01`);
+        const defaultEnd = existingOc ? existingOc.endDate : (initialData.endDate || defaultStart);
+        const defaultStartTime = existingOc ? (existingOc.startTime || '') : '08:00';
+        const defaultEndTime = existingOc ? (existingOc.endTime || '') : '17:00';
+        const defaultComment = existingOc ? (existingOc.comment || '') : '';
+        const selectedEmpId = existingOc ? existingOc.employeeId : (initialData.employeeId || this.currentUserEmployeeId || employees[0].id);
+
+        modal.innerHTML = `
+            <div class="modal-dialog" style="max-width: 550px; width: 90%; background: var(--card-bg, #fff); border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); overflow: hidden;">
+                <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border-color);">
+                    <h3 style="margin: 0; font-size: 1.15rem;">${isEdit ? I18n.t('calendar.editOnCallTitle') : I18n.t('calendar.createOnCallTitle')}</h3>
+                    <button type="button" class="modal-close-btn" style="background: none; border: none; font-size: 1.25rem; cursor: pointer;">&times;</button>
+                </div>
+                <form id="oncall-form">
+                    <div class="modal-body" style="padding: 1.25rem 1.5rem; display: flex; flex-direction: column; gap: 1rem;">
+                        <div id="oncall-error" class="error-banner" style="display: none;"></div>
+
+                        <!-- Employee Selection -->
+                        <div class="form-group">
+                            <label for="modal-oncall-emp" style="display: block; font-weight: 500; font-size: 0.85rem; margin-bottom: 0.25rem;">${I18n.t('calendar.employee')} *</label>
+                            <select id="modal-oncall-emp" ${isEdit ? 'disabled' : 'required'} style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 4px;">
+                                ${employees.map(e => `
+                                    <option value="${e.id}" ${e.id === selectedEmpId ? 'selected' : ''}>
+                                        ${`${e.firstname || ''} ${e.lastname || ''}`.trim() || e.name || e.id}
+                                    </option>
+                                `).join('')}
+                            </select>
+                        </div>
+
+                        <!-- Quick Presets -->
+                        <div class="form-group" style="padding: 0.75rem; background: var(--surface-bg, #f8fafc); border: 1px solid var(--border-color); border-radius: 4px;">
+                            <label for="modal-oncall-preset" style="display: block; font-weight: 600; font-size: 0.8rem; margin-bottom: 0.35rem; color: var(--text-color);">${I18n.t('calendar.onCallPreset')}</label>
+                            <select id="modal-oncall-preset" style="width: 100%; padding: 0.4rem; border: 1px solid var(--border-color); border-radius: 4px; font-size: 0.85rem;">
+                                <option value="custom">${I18n.t('calendar.presetCustom')}</option>
+                                <option value="standard_week">${I18n.t('calendar.presetStandardWeek')}</option>
+                                <option value="weekend">${I18n.t('calendar.presetWeekend')}</option>
+                                <option value="workweek">${I18n.t('calendar.presetWorkweek')}</option>
+                            </select>
+                        </div>
+
+                        <!-- Dates Row -->
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                            <div class="form-group">
+                                <label for="modal-oncall-start" style="display: block; font-weight: 500; font-size: 0.85rem; margin-bottom: 0.25rem;">${I18n.t('common.from')} *</label>
+                                <input type="date" id="modal-oncall-start" value="${defaultStart}" required style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 4px;">
+                            </div>
+                            <div class="form-group">
+                                <label for="modal-oncall-end" style="display: block; font-weight: 500; font-size: 0.85rem; margin-bottom: 0.25rem;">${I18n.t('common.to')} *</label>
+                                <input type="date" id="modal-oncall-end" value="${defaultEnd}" required style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 4px;">
+                            </div>
+                        </div>
+
+                        <!-- Times Row -->
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                            <div class="form-group">
+                                <label for="modal-oncall-starttime" style="display: block; font-weight: 500; font-size: 0.85rem; margin-bottom: 0.25rem;">${I18n.t('onCall.startTime')}</label>
+                                <input type="time" id="modal-oncall-starttime" value="${defaultStartTime}" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 4px;">
+                            </div>
+                            <div class="form-group">
+                                <label for="modal-oncall-endtime" style="display: block; font-weight: 500; font-size: 0.85rem; margin-bottom: 0.25rem;">${I18n.t('onCall.endTime')}</label>
+                                <input type="time" id="modal-oncall-endtime" value="${defaultEndTime}" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 4px;">
+                            </div>
+                        </div>
+
+                        <!-- Comment / Reason -->
+                        <div class="form-group">
+                            <label for="modal-oncall-comment" style="display: block; font-weight: 500; font-size: 0.85rem; margin-bottom: 0.25rem;">
+                                ${I18n.t('common.comment')}
+                            </label>
+                            <textarea id="modal-oncall-comment" rows="2" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 4px; box-sizing: border-box;">${defaultComment}</textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer" style="display: flex; justify-content: flex-end; gap: 0.5rem; padding: 1rem 1.5rem; border-top: 1px solid var(--border-color); background: var(--surface-bg, #f8fafc);">
+                        <button type="button" class="secondary-btn modal-cancel-btn">${I18n.t('common.cancel')}</button>
+                        <button type="submit" class="primary-btn">${I18n.t('common.save')}</button>
+                    </div>
+                </form>
+            </div>
+        `;
+
+        modalsContainer.appendChild(modal);
+
+        const form = modal.querySelector('#oncall-form');
+        const errorBanner = modal.querySelector('#oncall-error');
+        const startInput = modal.querySelector('#modal-oncall-start');
+        const endInput = modal.querySelector('#modal-oncall-end');
+        const presetSelect = modal.querySelector('#modal-oncall-preset');
+
+        // Preset calculation helper
+        const applyPreset = () => {
+            const val = presetSelect.value;
+            if (val === 'custom') return;
+
+            const baseDate = startInput.value ? new Date(startInput.value) : new Date(this.currentYear, this.currentMonth - 1, 1);
+            if (isNaN(baseDate.getTime())) return;
+
+            if (val === 'standard_week') {
+                // Find Monday of that week
+                const day = (baseDate.getDay() + 6) % 7; // 0=Mon, 6=Sun
+                const monday = new Date(baseDate);
+                monday.setDate(baseDate.getDate() - day);
+                const sunday = new Date(monday);
+                sunday.setDate(monday.getDate() + 6);
+
+                startInput.value = monday.toISOString().split('T')[0];
+                endInput.value = sunday.toISOString().split('T')[0];
+            } else if (val === 'weekend') {
+                // Find Saturday of that week
+                const day = (baseDate.getDay() + 6) % 7;
+                const saturday = new Date(baseDate);
+                saturday.setDate(baseDate.getDate() - day + 5);
+                const sunday = new Date(saturday);
+                sunday.setDate(saturday.getDate() + 1);
+
+                startInput.value = saturday.toISOString().split('T')[0];
+                endInput.value = sunday.toISOString().split('T')[0];
+            } else if (val === 'workweek') {
+                // Find Monday to Friday
+                const day = (baseDate.getDay() + 6) % 7;
+                const monday = new Date(baseDate);
+                monday.setDate(baseDate.getDate() - day);
+                const friday = new Date(monday);
+                friday.setDate(monday.getDate() + 4);
+
+                startInput.value = monday.toISOString().split('T')[0];
+                endInput.value = friday.toISOString().split('T')[0];
+            }
+        };
+
+        presetSelect.addEventListener('change', applyPreset);
+
+        const close = () => {
+            if (modal.parentElement) modal.parentElement.removeChild(modal);
+        };
+
+        modal.querySelector('.modal-close-btn').addEventListener('click', close);
+        modal.querySelector('.modal-cancel-btn').addEventListener('click', close);
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) close();
+        });
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            errorBanner.style.display = 'none';
+            errorBanner.textContent = '';
+
+            const empId = modal.querySelector('#modal-oncall-emp').value;
+            const startDate = startInput.value;
+            const endDate = endInput.value;
+            const startTime = modal.querySelector('#modal-oncall-starttime').value.trim() || undefined;
+            const endTime = modal.querySelector('#modal-oncall-endtime').value.trim() || undefined;
+            const comment = modal.querySelector('#modal-oncall-comment').value.trim() || undefined;
+
+            if (startDate > endDate) {
+                errorBanner.textContent = I18n.t('absences.invalidDateRange');
+                errorBanner.style.display = 'block';
+                return;
+            }
+
+            const payload = {
+                employeeId: empId,
+                startDate,
+                startTime,
+                endDate,
+                endTime,
+                comment
+            };
+
+            try {
+                if (isEdit) {
+                    await OnCallPeriodApi.updateOnCallPeriod(existingOc.id, payload, existingOc.version);
+                } else {
+                    await OnCallPeriodApi.createOnCallPeriod(payload);
+                }
+
+                close();
+                NotificationDialog.show(I18n.t('calendar.onCallSaveSuccess'), I18n.t('common.success'));
+                await this.loadCalendarData(container);
+            } catch (err) {
+                console.error('Failed to save on-call period:', err);
+                errorBanner.textContent = err.message || I18n.t('errors.unexpected');
+                errorBanner.style.display = 'block';
+            }
+        });
+    }
+
     openCreateAbsenceModal(container, initialData = {}) {
         const modalsContainer = container.querySelector('#calendar-modals');
         if (!modalsContainer) return;
@@ -881,10 +1331,10 @@ export default class AbsenceCalendarView {
                     <div class="modal-body" style="padding: 1.25rem 1.5rem; display: flex; flex-direction: column; gap: 1rem;">
                         <div id="create-absence-error" class="error-banner" style="display: none;"></div>
 
-                        <!-- Employee selector -->
+                        <!-- Employee Selection (for Manager) -->
                         <div class="form-group">
                             <label for="modal-absence-emp" style="display: block; font-weight: 500; font-size: 0.85rem; margin-bottom: 0.25rem;">${I18n.t('calendar.employee')} *</label>
-                            <select id="modal-absence-emp" required style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 4px;" ${!this.isManager && this.currentUserEmployeeId ? 'disabled' : ''}>
+                            <select id="modal-absence-emp" ${!this.isManager ? 'disabled' : 'required'} style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 4px;">
                                 ${employees.map(e => `
                                     <option value="${e.id}" ${e.id === selectedEmpId ? 'selected' : ''}>
                                         ${`${e.firstname || ''} ${e.lastname || ''}`.trim() || e.name || e.id}

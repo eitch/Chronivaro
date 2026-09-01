@@ -2634,6 +2634,12 @@ tr.inactive-row:hover {
     border: 1px solid #e2e8f0;
 }
 
+.type-oncall, .badge-oncall {
+    background-color: #fef08a;
+    color: #854d0e;
+    border: 1px solid #facc15;
+}
+
 /* Status variants */
 .cal-badge.badge-submitted, .cal-grid-badge.badge-submitted {
     background-image: repeating-linear-gradient(45deg, transparent, transparent 4px, rgba(0, 0, 0, 0.04) 4px, rgba(0, 0, 0, 0.04) 8px);
@@ -2643,4 +2649,10 @@ tr.inactive-row:hover {
 .cal-badge.badge-draft, .cal-grid-badge.badge-draft {
     opacity: 0.75;
     border-style: dotted;
+}
+
+.cal-badge.type-oncall, .cal-grid-badge.type-oncall {
+    background-color: #fef08a;
+    color: #854d0e;
+    border: 1px solid #eab308;
 }
