@@ -90,6 +90,7 @@
             <Parameter Id="minutes" Name="Minutes" Type="Integer" Value="0"/>
             <Parameter Id="comment" Name="Comment" Type="String" Value=""/>
             <Parameter Id="state" Name="State" Type="String" Value="DRAFT"/>
+            <Parameter Id="createdBy" Name="Created By" Type="String" Value=""/>
         </ParameterBag>
         <ParameterBag Id="relations" Name="Relations" Type="Relations">
             <Parameter Id="employee" Name="Employee" Type="String" Interpretation="Resource-Ref" Uom="Employee" Value=""/>
