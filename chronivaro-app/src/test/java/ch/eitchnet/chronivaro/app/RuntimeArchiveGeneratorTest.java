@@ -44,6 +44,30 @@ public class RuntimeArchiveGeneratorTest {
 	}
 
 	@Test
+	public void shouldFilterModelXml() throws Exception {
+		String testXml = """
+				<?xml version="1.0" encoding="UTF-8"?>
+				<StrolchModel xmlns="https://strolch.li/schema/StrolchModel.xsd">
+				    <Resource Id="Standard-8h-Mon-Fri" Name="Standard Monday-Friday 8h" Type="EmploymentScheduleTemplate">
+				    </Resource>
+				    <Resource Id="GenerateSampleDataJob" Name="GenerateSampleDataJob" Type="StrolchJob">
+				        <ParameterBag Id="parameters" Name="Parameters" Type="Parameters">
+				            <Parameter Id="className" Name="Class Name" Type="String" Value="ch.eitchnet.chronivaro.core.jobs.GenerateSampleDataJob"/>
+				            <Parameter Id="mode" Name="Job Mode" Type="String" Interpretation="Enumeration" Uom="JobMode" Value="Manual"/>
+				        </ParameterBag>
+				    </Resource>
+				</StrolchModel>
+				""";
+
+		byte[] filteredBytes = RuntimeArchiveGenerator.filterModelXml(
+				new ByteArrayInputStream(testXml.getBytes(StandardCharsets.UTF_8)));
+		String filteredXml = new String(filteredBytes, StandardCharsets.UTF_8);
+
+		assertTrue("Filtered XML must contain EmploymentScheduleTemplate", filteredXml.contains("Standard-8h-Mon-Fri"));
+		assertFalse("Filtered XML must NOT contain StrolchJob", filteredXml.contains("GenerateSampleDataJob"));
+	}
+
+	@Test
 	public void shouldFilterPrivilegeUsersXml() throws Exception {
 		String testXml = """
 				<?xml version="1.0" encoding="UTF-8"?>

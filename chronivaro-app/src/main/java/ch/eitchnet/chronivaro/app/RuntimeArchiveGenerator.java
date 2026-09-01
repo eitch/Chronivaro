@@ -33,6 +33,7 @@ public class RuntimeArchiveGenerator {
 	public static final String DEFAULT_SOURCE_DIR = "runtime";
 	public static final String DEFAULT_OUTPUT_FILE = "runtime.tar.gz";
 	public static final String PRIVILEGE_USERS_FILENAME = "PrivilegeUsers.xml";
+	public static final String MODEL_XML_FILENAME = "Model.xml";
 	public static final String ADMIN_USERNAME = "admin";
 	public static final String SYSTEM_STATE = "SYSTEM";
 
@@ -150,6 +151,9 @@ public class RuntimeArchiveGenerator {
 					if (path.getFileName().toString().equals(PRIVILEGE_USERS_FILENAME)) {
 						logger.info("Filtering {} to keep only SYSTEM state and admin users...", relPathStr);
 						fileBytes = filterPrivilegeUsersXml(path.toFile());
+					} else if (path.getFileName().toString().equals(MODEL_XML_FILENAME)) {
+						logger.info("Filtering {} to remove StrolchJob resources...", relPathStr);
+						fileBytes = filterModelXml(path.toFile());
 					} else {
 						fileBytes = Files.readAllBytes(path);
 					}
@@ -199,6 +203,49 @@ public class RuntimeArchiveGenerator {
 		}
 
 		return false;
+	}
+
+	public static byte[] filterModelXml(File xmlFile) throws Exception {
+		try (InputStream in = new FileInputStream(xmlFile)) {
+			return filterModelXml(in);
+		}
+	}
+
+	public static byte[] filterModelXml(InputStream xmlInputStream) throws Exception {
+		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+		dbf.setNamespaceAware(false);
+		dbf.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+		DocumentBuilder db = dbf.newDocumentBuilder();
+		Document doc = db.parse(xmlInputStream);
+
+		Element root = doc.getDocumentElement();
+		if (!"StrolchModel".equalsIgnoreCase(root.getTagName()) && !"Model".equalsIgnoreCase(root.getTagName())) {
+			throw new IllegalArgumentException("Root element must be <StrolchModel> or <Model> but was: <" + root.getTagName() + ">");
+		}
+
+		NodeList resourceNodes = root.getElementsByTagName("Resource");
+		List<Node> toRemove = new ArrayList<>();
+		for (int i = 0; i < resourceNodes.getLength(); i++) {
+			Element resElem = (Element) resourceNodes.item(i);
+			String type = resElem.getAttribute("Type");
+			if ("StrolchJob".equalsIgnoreCase(type)) {
+				toRemove.add(resElem);
+			}
+		}
+
+		for (Node node : toRemove) {
+			root.removeChild(node);
+		}
+
+		TransformerFactory tf = TransformerFactory.newInstance();
+		Transformer transformer = tf.newTransformer();
+		transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+		transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
+		transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "4");
+
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		transformer.transform(new DOMSource(doc), new StreamResult(baos));
+		return baos.toByteArray();
 	}
 
 	public static byte[] filterPrivilegeUsersXml(File xmlFile) throws Exception {
