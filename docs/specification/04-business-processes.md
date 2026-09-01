@@ -88,7 +88,8 @@ Dieses Dokument beschreibt alle fachlichen und administrativen Interaktions- und
    - **Genehmigung (`APPROVED`):** Der Antrag wird genehmigt. Handelt es sich um den Typ `VACATION`, wird sofort ein `USAGE`-Journaleintrag auf dem Ferienkonto erstellt.
    - **Ablehnung (`REJECTED`):** Der Vorgesetzte lehnt den Antrag mit verpflichtendem Begründungskommentar ab.
 6. **Stornierung genehmigter Abwesenheiten:** Die Stornierung einer bereits genehmigten Abwesenheit erzeugt eine `CORRECTION`-Gegenbuchung im Ferienkonto; historische Einträge werden nicht gelöscht.
-7. **Fremderfassung durch Vorgesetzte und HR:** Vorgesetzte und HR/Administratoren können Abwesenheiten im Namen von Mitarbeitenden erfassen (wahlweise direkt `APPROVED` oder als `SUBMITTED`). Bei direkt genehmigten Ferien wird die Ferienabbuchung unmittelbar ausgelöst. Der Ersteller (`createdBy`) wird transparent dokumentiert.
+7. **Fremderfassung durch Vorgesetzte und HR:** Vorgesetzte (für zugeordnete Teams) und HR/Administratoren (unternehmensweit) können Abwesenheiten im Namen von Mitarbeitenden erfassen (wahlweise direkt als `APPROVED` genehmigt oder regulär als `SUBMITTED` eingereicht). Bei direkt genehmigten Ferien wird die Ferienabbuchung unmittelbar ausgelöst. Der Ersteller (`createdBy`) wird transparent dokumentiert.
+8. **Abwesenheits- und Pikettkalender:** Über eine zentrale Kalenderansicht können Vorgesetzte, HR und Mitarbeitende Abwesenheiten visualisieren, direkt neue Abwesenheiten für Mitarbeitende eintragen sowie Pikettbereitschaften (`OnCallPeriod`) für definierte Zeitspannen (z. B. Wochenblöcke oder n-Tage) festlegen.
 
 ---
 

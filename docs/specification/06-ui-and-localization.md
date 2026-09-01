@@ -58,13 +58,17 @@ chronivaro-web/src/main/webapp/
 - **Visuelle Kennzeichnung:** Modifizierte und manuell erstellte Buchungen werden optisch hervorgehoben (Badges).
 - **Ersteller-Ausweisung:** Bei Fremderfassung wird transparent ausgewiesen, von wem (`createdBy`) der Eintrag erstellt wurde.
 
-### 2.3 Abwesenheiten
+### 2.3 Abwesenheiten & Abwesenheitskalender
 
 - Erfassung von Abwesenheitsanträgen (als Entwurf speichern oder direkt einreichen).
 - Verwaltung von Entwürfen (`DRAFT`): Bearbeiten, Einreichen (`Submit`) oder Verwerfen (`Cancel`).
-- Genehmigungshistorie und Kalenderdarstellung.
+- Genehmigungshistorie und tabellarische/kartenbasierte Übersicht.
+- **Fremderfassung von Abwesenheiten:** Vorgesetzte (für zugeordnete Teammitglieder) und HR/Administratoren (unternehmensweit) können Abwesenheiten im Namen von Mitarbeitenden erfassen (wahlweise direkt genehmigt `APPROVED` oder als Antrag eingereicht `SUBMITTED`).
+- **Abwesenheitskalender (Team-/Mitarbeiter-Kalenderansicht):**
+  - Dedizierte interaktive Kalenderansicht zur visuellen Darstellung aller Abwesenheiten von Mitarbeitenden (Monats-, Wochen- oder Mehrwochenansicht mit Filterung nach Team/Standort/Mitarbeiter).
+  - Direkte Erfassung von Abwesenheiten aus dem Kalender heraus per Klick auf Kalendertage/Zeitspannen für ausgewählte Mitarbeitende.
+  - **Pikettstatus im Kalender:** Möglichkeit, im Kalender direkt den Pikettstatus / die Pikettperiode (`OnCallPeriod`) für einen Mitarbeiter über einen gewünschten Zeitraum (z. B. eine Woche oder n-Tage) einzutragen und zu verwalten.
 - Hohe visuelle Kontraste für alle Aktionsschaltflächen gemäss Barrierefreiheitsstandard (WCAG AA).
-- Fremderfassung durch Vorgesetzte und HR im Namen von Mitarbeitenden.
 
 ### 2.4 Ferien
 

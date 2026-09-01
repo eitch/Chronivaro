@@ -176,7 +176,35 @@ The following foundational areas are verified as fully implemented in the reposi
 
 ## Prioritized Implementation Backlog
 
-### All core backlog items and enhancements are complete!
+### Task 1: Add Absences on Behalf of Employees by HR & Supervisors
+- **Priority:** High / Feature & Workflow
+- **Scope:** `chronivaro-core`, `chronivaro-rest`, `chronivaro-web`
+- **Description:**
+  - Enable HR / Administrators (organization-wide) and Supervisors (for assigned team members) to submit or directly create approved absences on behalf of employees.
+  - Support setting status to `SUBMITTED` or `APPROVED` with automatic vacation deductions (`USAGE`) if applicable.
+  - Record the creator (`createdBy`) transparently in absence records and audit logs.
+  - Provide intuitive UI controls and modals in the Absence management / Calendar views.
+
+---
+
+### Task 2: Employee Absence Calendar & Direct Absence Creation
+- **Priority:** High / UI & Feature
+- **Scope:** `chronivaro-web`, `chronivaro-rest`
+- **Description:**
+  - Implement a dedicated interactive calendar component/view to visualize employee absences across teams, locations, and departments.
+  - Enable filtering by team, location, and employee.
+  - Provide direct absence creation from the calendar UI (e.g. clicking on dates/date ranges or employee timeline rows) for selected employees.
+  - Maintain full internationalization support (German/Swiss German and English) with responsive design and accessibility.
+
+---
+
+### Task 3: Calendar On-Call Status & Period Management
+- **Priority:** High / UI & Feature
+- **Scope:** `chronivaro-web`, `chronivaro-rest`
+- **Description:**
+  - Enhance the calendar UI to allow HR and Supervisors to set and manage on-call status / `OnCallPeriod` for employees directly within the calendar.
+  - Support configuring on-call periods for flexible durations (e.g. standard week blocks, weekends, or arbitrary n-days spans).
+  - Visually display active on-call periods alongside or within the calendar timeline with clear badges/indicators.
 
 ---
 

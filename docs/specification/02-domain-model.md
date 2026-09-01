@@ -254,7 +254,8 @@ Repräsentiert einen konkreten Abwesenheitsantrag oder eine erfasste Abwesenheit
 - **Keine Überschneidungen:** Sich überschneidende Abwesenheiten sind unzulässig.
 - **Entwurfsstatus (`DRAFT`):** Abwesenheiten können als Entwurf gespeichert, vor dem Einreichen beliebig bearbeitet oder verworfen (`CANCELLED`) werden. Das Verwerfen eines Entwurfs löst keine Ferienkontobuchung aus.
 - **Einreichung (`SUBMITTED`):** Überführt den Antrag in den Genehmigungsworkflow für Vorgesetzte.
-- **Fremderfassung:** Vorgesetzte und HR/Administration können Abwesenheiten im Namen von Mitarbeitenden erfassen (wahlweise direkt `APPROVED` oder regulär `SUBMITTED`). Der Ersteller (`createdBy`) wird transparent protokolliert.
+- **Fremderfassung:** Vorgesetzte (für zugeordnete Teams) und HR/Administration (unternehmensweit) können Abwesenheiten im Namen von Mitarbeitenden erfassen (wahlweise direkt `APPROVED` oder regulär `SUBMITTED`). Der Ersteller (`createdBy`) wird transparent protokolliert.
+- **Abwesenheits- und Pikettkalender:** Abwesenheiten sowie Pikettperioden (`OnCallPeriod`) können in einer gemeinsamen Kalenderansicht visualisiert und direkt für Mitarbeitende erfasst/zugewiesen werden (z. B. Wochen- oder n-Tage-Blöcke).
 
 ---
 

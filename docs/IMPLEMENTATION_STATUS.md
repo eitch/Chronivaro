@@ -49,7 +49,15 @@ Audit date: 2026-08-28. `IMPLEMENTATION_SPECIFICATION.md` is authoritative; the 
 
 ## Incomplete Requirements / Active Backlog Tasks
 
-All prioritized backlog tasks and requirements are currently completed and fully verified across all layers!
+### Missing / New Feature Requests
+1. **Absences on Behalf of Employees by HR & Supervisors (Backlog Task 1):**
+   - Allow HR and Supervisors to add absences on behalf of employees (either submitted for approval or directly approved).
+   - Ensure proper role-based scoping (Supervisors for team members, HR/Admin globally) and creator attribution (`createdBy`).
+2. **Employee Absence Calendar & Direct Absence Creation (Backlog Task 2):**
+   - Dedicated calendar UI component/view to display employee absences across teams/departments.
+   - Capability to add absences for an employee directly within the calendar view (e.g. clicking on dates/date ranges).
+3. **Calendar On-Call Status & Period Configuration (Backlog Task 3):**
+   - Calendar UI integration allowing HR/Supervisors to set and manage the on-call status / `OnCallPeriod` for an employee for a given period (e.g. a week or n-days).
 
 ---
 
