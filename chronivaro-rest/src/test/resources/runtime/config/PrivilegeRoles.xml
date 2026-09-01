@@ -155,6 +155,7 @@
             <Allow>ch.eitchnet.chronivaro.core.service.GetVacationAccountSummaryService</Allow>
             <Allow>ch.eitchnet.chronivaro.core.service.PresenceService</Allow>
             <Allow>ch.eitchnet.chronivaro.core.service.AbsenceReportService</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.service.OnCallReportService</Allow>
         </Privilege>
         <Privilege name="li.strolch.search.StrolchSearch" policy="DefaultPrivilege">
             <Allow>ch.eitchnet.chronivaro.core.search.AbsenceSearch</Allow>
@@ -198,6 +199,7 @@
             <Allow>ch.eitchnet.chronivaro.core.service.MonthSummaryService</Allow>
             <Allow>ch.eitchnet.chronivaro.core.service.TeamReportService</Allow>
             <Allow>ch.eitchnet.chronivaro.core.service.AbsenceReportService</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.service.OnCallReportService</Allow>
             <Allow>ch.eitchnet.chronivaro.core.service.CreateOnCallPeriodService</Allow>
             <Allow>ch.eitchnet.chronivaro.core.service.UpdateOnCallPeriodService</Allow>
             <Allow>ch.eitchnet.chronivaro.core.service.RemoveOnCallPeriodService</Allow>
@@ -243,6 +245,7 @@
             <Allow>ch.eitchnet.chronivaro.core.service.GetVacationAccountSummaryService</Allow>
             <Allow>ch.eitchnet.chronivaro.core.service.TeamReportService</Allow>
             <Allow>ch.eitchnet.chronivaro.core.service.AbsenceReportService</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.service.OnCallReportService</Allow>
             <Allow>ch.eitchnet.chronivaro.core.service.CreateOnCallPeriodService</Allow>
             <Allow>ch.eitchnet.chronivaro.core.service.UpdateOnCallPeriodService</Allow>
             <Allow>ch.eitchnet.chronivaro.core.service.RemoveOnCallPeriodService</Allow>
