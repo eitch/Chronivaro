@@ -349,6 +349,90 @@ MASTODON_VISIBILITY="public"
 
 ---
 
+### 2.4 Upgrading & Runtime Migration
+
+When deploying a newer version of Chronivaro, existing installations often require incremental updates to the `runtime/` configuration and data templates:
+- **`runtime/config/PrivilegeRoles.xml`**: Access rights for newly added Strolch services, searches, and operations.
+- **`runtime/data/Templates.xml`**: Schema definitions for new resource types, order types, or parameter additions on existing templates.
+- **`runtime/data/Model.xml`**: Global configuration parameters or default master data objects.
+
+To simplify migration without overwriting tenant-specific configurations, user accounts (`PrivilegeUsers.xml`), or runtime persistence databases (`runtime/data/dbStore/`), Chronivaro releases include unified diff patch files.
+
+#### 2.4.1 Release Upgrade Artifacts
+Each GitHub release provides:
+1. `runtime-upgrade-<prev_tag>-to-<new_tag>.patch`: Standard unified diff patch representing changes to `runtime/`.
+2. `runtime-upgrade-<prev_tag>-to-<new_tag>.patch.asc`: GPG ASCII-armored detached signature.
+3. `RELEASE_NOTES.md`: Human-readable summary of changed runtime files with embedded diff blocks.
+
+#### 2.4.2 Upgrading a Standalone (Systemd) Installation
+
+1. **Create a Backup**:
+   ```bash
+   sudo systemctl stop chronivaro
+   tar -czf /opt/chronivaro-backup-$(date +%Y%m%d%H%M%S).tar.gz -C /opt chronivaro
+   ```
+
+2. **Download New Release & Patch**:
+   ```bash
+   cd /opt/chronivaro
+   wget https://github.com/eitch/Chronivaro/releases/download/v0.3.0/chronivaro-0.3.0.tar.gz
+   wget https://github.com/eitch/Chronivaro/releases/download/v0.3.0/runtime-upgrade-v0.2.0-to-v0.3.0.patch
+   wget https://github.com/eitch/Chronivaro/releases/download/v0.3.0/SHA256SUMS.txt
+   sha256sum --check SHA256SUMS.txt
+   ```
+
+3. **Dry-Run and Apply the Patch**:
+   ```bash
+   # Dry-run patch check
+   patch --dry-run -p1 < runtime-upgrade-v0.2.0-to-v0.3.0.patch
+
+   # Apply patch to runtime/
+   patch -p1 < runtime-upgrade-v0.2.0-to-v0.3.0.patch
+   ```
+
+4. **Extract Updated Binaries & Start Service**:
+   ```bash
+   tar -xzf chronivaro-0.3.0.tar.gz
+   sudo systemctl start chronivaro
+   sudo systemctl status chronivaro
+   ```
+
+#### 2.4.3 Upgrading a Docker Deployment
+
+1. **Stop Container & Backup Runtime Directory**:
+   ```bash
+   docker compose down
+   tar -czf "runtime-backup-$(date +%Y%m%d%H%M%S).tar.gz" runtime/
+   ```
+
+2. **Apply Upgrade Patch**:
+   ```bash
+   # Test and apply the patch to the mounted host runtime directory
+   patch --dry-run -p1 < runtime-upgrade-v0.2.0-to-v0.3.0.patch
+   patch -p1 < runtime-upgrade-v0.2.0-to-v0.3.0.patch
+   ```
+
+3. **Pull New Docker Image & Restart**:
+   Update the image tag in `docker-compose.yml` (e.g. `repo.strolch.li/docker/chronivaro:0.3.0`) and launch:
+   ```bash
+   docker compose pull
+   docker compose up -d
+   docker compose logs -f
+   ```
+
+#### 2.4.4 Generating Upgrade Instructions Manually
+Administrators or developers can generate migration notes and diffs between any two arbitrary revisions using `generate-upgrade-instructions.sh`:
+
+```bash
+# Display upgrade diff and instructions between v0.2.0 and HEAD
+./generate-upgrade-instructions.sh -f v0.2.0 -t HEAD
+
+# Export to a markdown file
+./generate-upgrade-instructions.sh -f v0.2.0 -t v0.3.0 -o UPGRADE.md
+```
+
+---
+
 ## 3. Initial System Access & Tenant Onboarding
 
 After starting Chronivaro for the first time, perform initial administrator setup and prepare the tenant before onboarding employees.

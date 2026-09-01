@@ -248,6 +248,76 @@ Configuration can be provided via flags, environment variables (`GITHUB_TOKEN`, 
 
 ---
 
+## 🔄 Upgrading & Runtime Migration Guide
+
+When upgrading Chronivaro to a newer version, new features may introduce updated templates (`runtime/data/Templates.xml`), new service or search privileges (`runtime/config/PrivilegeRoles.xml`), or new configuration parameters (`runtime/data/Model.xml`).
+
+Every GitHub release includes:
+- **`runtime-upgrade-<prev_tag>-to-<new_tag>.patch`**: A unified diff patch file that can be applied directly to an existing deployment's `runtime/` directory.
+- **`RELEASE_NOTES.md`**: Markdown release notes with detailed explanations of changed runtime files and diff snippets.
+
+### Step-by-Step Upgrade Procedure
+
+1. **Backup Existing Runtime Directory**:
+   ```bash
+   # Always take a backup before upgrading
+   tar -czf "runtime-backup-$(date +%Y%m%d%H%M%S).tar.gz" runtime/
+   ```
+
+2. **Download Release Assets & Patch**:
+   Download the new application distribution archive (`chronivaro-<version>.tar.gz`), the patch file (`runtime-upgrade-<from>-to-<to>.patch`), and checksums (`SHA256SUMS.txt`). Verify integrity:
+   ```bash
+   sha256sum --check SHA256SUMS.txt
+   ```
+
+3. **Dry-Run / Test Patch Application**:
+   From your installation root directory (containing `runtime/`):
+   ```bash
+   # Test with patch utility:
+   patch --dry-run -p1 < runtime-upgrade-v0.2.0-to-v0.3.0.patch
+
+   # Or test with git (if your runtime directory is version-controlled):
+   git apply --check runtime-upgrade-v0.2.0-to-v0.3.0.patch
+   ```
+
+4. **Apply the Patch**:
+   ```bash
+   # Using patch:
+   patch -p1 < runtime-upgrade-v0.2.0-to-v0.3.0.patch
+
+   # Or using git:
+   git apply runtime-upgrade-v0.2.0-to-v0.3.0.patch
+   ```
+
+5. **Review Custom Configurations**:
+   If your deployment has customized users (`PrivilegeUsers.xml`) or custom tenant data (`Model.xml`), review any modified sections to ensure your settings are preserved.
+
+6. **Update Application Binaries & Restart**:
+   - **Standalone Deployments**: Extract the new `chronivaro.jar` and `lib/` directory, then restart the service:
+     ```bash
+     tar -xzf chronivaro-<version>.tar.gz
+     sudo systemctl restart chronivaro
+     ```
+   - **Docker Deployments**: Update the image tag in `docker-compose.yml` and restart the container:
+     ```bash
+     docker compose pull
+     docker compose up -d
+     ```
+
+### Generating Custom Upgrade Instructions & Diffs
+
+You can also use the bundled CLI tool to generate markdown upgrade instructions or unified diffs between any two git tags/revisions:
+
+```bash
+# Print markdown upgrade instructions to stdout
+./generate-upgrade-instructions.sh -f v0.2.0 -t HEAD
+
+# Save upgrade instructions to a file
+./generate-upgrade-instructions.sh -f v0.2.0 -t v0.3.0 -o UPGRADE.md
+```
+
+---
+
 ## ✉️ Email Delivery & User Challenge Configuration (MailHandler)
 
 Chronivaro uses Strolch's `li.strolch.privilege.handler.MailUserChallengeHandler` in `runtime/config/PrivilegeConfig.xml` to deliver user registration challenges and password reset tokens.
