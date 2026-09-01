@@ -431,6 +431,21 @@ RELEASE_RUNTIME_TARBALL="${RELEASE_DIR}/runtime-${VERSION}.tar.gz"
 RELEASE_CHECKSUMS="${RELEASE_DIR}/SHA256SUMS.txt"
 RELEASE_NOTES_FILE="${RELEASE_DIR}/RELEASE_NOTES.md"
 
+# Auto-detect previous tag if not provided
+if [[ -z "${PREV_TAG}" ]]; then
+  PREV_TAG="$(git describe --tags --abbrev=0 2>/dev/null || git tag --sort=-v:refname 2>/dev/null | grep -v "^${TAG}$" | head -n 1 || true)"
+fi
+
+RELEASE_PATCH_NAME=""
+RELEASE_PATCH_FILE=""
+if [[ -n "${PREV_TAG}" ]]; then
+  RELEASE_PATCH_NAME="runtime-upgrade-${PREV_TAG}-to-${TAG}.patch"
+  # Check if there are changes in runtime/ between PREV_TAG and HEAD
+  if ! git diff --quiet "${PREV_TAG}..HEAD" -- runtime 2>/dev/null; then
+    RELEASE_PATCH_FILE="${RELEASE_DIR}/${RELEASE_PATCH_NAME}"
+  fi
+fi
+
 mkdir -p "${RELEASE_DIR}"
 
 info "Staging release artifacts in ${RELEASE_DIR}..."
@@ -440,11 +455,21 @@ cp -f "${TARBALL_SOURCE}" "${RELEASE_APP_TARBALL}"
 info "Packaging sanitized runtime tarball..."
 ./build-runtime-tarball.sh -s runtime -o "${RELEASE_RUNTIME_TARBALL}" >/dev/null || fail "Failed to generate runtime tarball!"
 
+# Generate runtime upgrade patch if changes exist
+if [[ -n "${RELEASE_PATCH_FILE}" ]]; then
+  info "Generating runtime upgrade patch ${RELEASE_PATCH_NAME}..."
+  git diff -u "${PREV_TAG}..HEAD" -- runtime > "${RELEASE_PATCH_FILE}" || fail "Failed to generate runtime upgrade patch!"
+fi
+
 # Compute SHA-256 Checksums
 info "Computing SHA-256 checksums..."
 (
   cd "${RELEASE_DIR}"
-  sha256sum "chronivaro-${VERSION}.tar.gz" "runtime-${VERSION}.tar.gz" > "SHA256SUMS.txt"
+  CHECKSUM_TARGETS=("chronivaro-${VERSION}.tar.gz" "runtime-${VERSION}.tar.gz")
+  if [[ -n "${RELEASE_PATCH_NAME}" && -f "${RELEASE_PATCH_NAME}" ]]; then
+    CHECKSUM_TARGETS+=("${RELEASE_PATCH_NAME}")
+  fi
+  sha256sum "${CHECKSUM_TARGETS[@]}" > "SHA256SUMS.txt"
 )
 
 # GPG Sign Release Assets
@@ -460,6 +485,9 @@ fi
 
 "${GPG_SIGN_CMD[@]}" "${RELEASE_APP_TARBALL}" || fail "Failed to GPG-sign ${RELEASE_APP_TARBALL}"
 "${GPG_SIGN_CMD[@]}" "${RELEASE_RUNTIME_TARBALL}" || fail "Failed to GPG-sign ${RELEASE_RUNTIME_TARBALL}"
+if [[ -n "${RELEASE_PATCH_FILE}" && -f "${RELEASE_PATCH_FILE}" ]]; then
+  "${GPG_SIGN_CMD[@]}" "${RELEASE_PATCH_FILE}" || fail "Failed to GPG-sign ${RELEASE_PATCH_FILE}"
+fi
 "${GPG_SIGN_CMD[@]}" "${RELEASE_CHECKSUMS}" || fail "Failed to GPG-sign ${RELEASE_CHECKSUMS}"
 
 # ------------------------------------------------------------------------------
@@ -469,11 +497,6 @@ if [[ -n "${CUSTOM_CHANGELOG}" && -f "${CUSTOM_CHANGELOG}" ]]; then
   info "Using custom changelog from ${CUSTOM_CHANGELOG}..."
   cp -f "${CUSTOM_CHANGELOG}" "${RELEASE_NOTES_FILE}"
 else
-  # Auto-detect previous tag if not provided
-  if [[ -z "${PREV_TAG}" ]]; then
-    PREV_TAG="$(git describe --tags --abbrev=0 2>/dev/null || git tag --sort=-v:refname 2>/dev/null | grep -v "^${TAG}$" | head -n 1 || true)"
-  fi
-
   if [[ -z "${PREV_TAG}" || "${VERSION}" == "0.1.0" || "${TAG}" == "v0.1.0" ]]; then
     info "Generating initial MVP release notes for version ${VERSION}..."
     cat > "${RELEASE_NOTES_FILE}" <<'EOF'
@@ -559,6 +582,13 @@ Open `http://localhost:8080` in your browser and log in with `admin` / `admin`.
 EOF
   else
     info "Generating changelog diff against previous tag ${PREV_TAG}..."
+
+    # Generate runtime upgrade instructions if changes exist
+    UPGRADE_INSTRUCTIONS=""
+    if [[ -x "./generate-upgrade-instructions.sh" ]]; then
+      UPGRADE_INSTRUCTIONS="$(./generate-upgrade-instructions.sh -f "${PREV_TAG}" -t HEAD 2>/dev/null || true)"
+    fi
+
     cat > "${RELEASE_NOTES_FILE}" <<EOF
 ## Chronivaro ${VERSION}
 
@@ -566,6 +596,18 @@ EOF
 
 $(git log "${PREV_TAG}..HEAD" --pretty=format:"* %s (%h)" --no-merges)
 
+EOF
+
+    if [[ -n "${UPGRADE_INSTRUCTIONS}" ]]; then
+      cat >> "${RELEASE_NOTES_FILE}" <<EOF
+---
+
+${UPGRADE_INSTRUCTIONS}
+
+EOF
+    fi
+
+    cat >> "${RELEASE_NOTES_FILE}" <<EOF
 ---
 
 ### 📦 Distribution Artifacts
@@ -576,11 +618,39 @@ $(git log "${PREV_TAG}..HEAD" --pretty=format:"* %s (%h)" --no-merges)
 | \`chronivaro-${VERSION}.tar.gz.asc\` | GPG ASCII-armored detached signature |
 | \`runtime-${VERSION}.tar.gz\` | Sanitized Strolch runtime distribution archive |
 | \`runtime-${VERSION}.tar.gz.asc\` | GPG ASCII-armored detached signature |
+EOF
+
+    if [[ -n "${RELEASE_PATCH_NAME}" && -f "${RELEASE_DIR}/${RELEASE_PATCH_NAME}" ]]; then
+      cat >> "${RELEASE_NOTES_FILE}" <<EOF
+| \`${RELEASE_PATCH_NAME}\` | Unified diff patch to upgrade \`runtime/\` configuration and templates from ${PREV_TAG} |
+| \`${RELEASE_PATCH_NAME}.asc\` | GPG ASCII-armored detached signature |
+EOF
+    fi
+
+    cat >> "${RELEASE_NOTES_FILE}" <<EOF
 | \`SHA256SUMS.txt\` | SHA-256 verification checksums |
 | \`SHA256SUMS.txt.asc\` | GPG ASCII-armored detached signature |
 EOF
   fi
 fi
+
+# Prepare Asset Files list
+ASSET_FILES=(
+  "${RELEASE_APP_TARBALL}"
+  "${RELEASE_APP_TARBALL}.asc"
+  "${RELEASE_RUNTIME_TARBALL}"
+  "${RELEASE_RUNTIME_TARBALL}.asc"
+)
+if [[ -n "${RELEASE_PATCH_FILE}" && -f "${RELEASE_PATCH_FILE}" ]]; then
+  ASSET_FILES+=(
+    "${RELEASE_PATCH_FILE}"
+    "${RELEASE_PATCH_FILE}.asc"
+  )
+fi
+ASSET_FILES+=(
+  "${RELEASE_CHECKSUMS}"
+  "${RELEASE_CHECKSUMS}.asc"
+)
 
 # ------------------------------------------------------------------------------
 # Mastodon Message Preparation
@@ -644,7 +714,7 @@ if [[ "${SIMULATE}" == "true" ]]; then
   echo "--------------------------------------------------------------------------------"
   (
     cd "${RELEASE_DIR}"
-    ls -lh "chronivaro-${VERSION}.tar.gz" "chronivaro-${VERSION}.tar.gz.asc" "runtime-${VERSION}.tar.gz" "runtime-${VERSION}.tar.gz.asc" "SHA256SUMS.txt" "SHA256SUMS.txt.asc"
+    ls -lh "${ASSET_FILES[@]}"
   )
   echo
   echo "Checksums (SHA-256):"
@@ -695,11 +765,11 @@ if [[ "${SIMULATE}" == "true" ]]; then
     echo "      --repo \"${GITHUB_REPO}\" \\"
     echo "      --title \"${RELEASE_TITLE}\" \\"
     echo "      --notes-file \"${RELEASE_NOTES_FILE}\" \\"
-    echo "      \"${RELEASE_APP_TARBALL}\" \"${RELEASE_APP_TARBALL}.asc\" \"${RELEASE_RUNTIME_TARBALL}\" \"${RELEASE_RUNTIME_TARBALL}.asc\" \"${RELEASE_CHECKSUMS}\" \"${RELEASE_CHECKSUMS}.asc\""
+    echo "      $(printf '"%s" ' "${ASSET_FILES[@]}")"
   else
     info "GitHub REST API would be called via curl using GITHUB_TOKEN:"
     echo "   POST https://api.github.com/repos/${GITHUB_REPO}/releases"
-    echo "   Upload assets: chronivaro-${VERSION}.tar.gz, chronivaro-${VERSION}.tar.gz.asc, runtime-${VERSION}.tar.gz, runtime-${VERSION}.tar.gz.asc, SHA256SUMS.txt, SHA256SUMS.txt.asc"
+    echo "   Upload assets: $(printf '%s ' "${ASSET_FILES[@]##*/}")"
   fi
   echo
   echo "--------------------------------------------------------------------------------"
@@ -774,15 +844,6 @@ else
 fi
 
 # 2. Publish to GitHub Releases
-ASSET_FILES=(
-  "${RELEASE_APP_TARBALL}"
-  "${RELEASE_APP_TARBALL}.asc"
-  "${RELEASE_RUNTIME_TARBALL}"
-  "${RELEASE_RUNTIME_TARBALL}.asc"
-  "${RELEASE_CHECKSUMS}"
-  "${RELEASE_CHECKSUMS}.asc"
-)
-
 RELEASE_CREATED=false
 
 if which gh >/dev/null 2>&1 && gh auth status >/dev/null 2>&1; then
