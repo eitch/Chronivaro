@@ -1,15 +1,43 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Users>
+    <User userId="668338713749" username="alice.smith">
+        <Firstname>Alice</Firstname>
+        <Lastname>Smith</Lastname>
+        <State>ENABLED</State>
+        <Locale>de</Locale>
+        <Roles>
+            <Role>Employee</Role>
+            <Role>ModelAccessor</Role>
+        </Roles>
+        <Properties>
+            <Property name="email" value="alice@example.com"/>
+            <Property name="organisation" value="MyCompany"/>
+        </Properties>
+    </User>
     <User userId="agent" username="agent">
         <Firstname>Strolch Agent</Firstname>
         <Lastname>System User</Lastname>
         <State>SYSTEM</State>
         <Locale>de</Locale>
         <Roles>
-            <Role>agent</Role>
             <Role>Administrator</Role>
+            <Role>agent</Role>
         </Roles>
         <Properties>
+            <Property name="organisation" value="MyCompany"/>
+        </Properties>
+    </User>
+    <User userId="668338713763" username="carol.white">
+        <Firstname>Carol</Firstname>
+        <Lastname>White</Lastname>
+        <State>ENABLED</State>
+        <Locale>de</Locale>
+        <Roles>
+            <Role>Employee</Role>
+            <Role>ModelAccessor</Role>
+        </Roles>
+        <Properties>
+            <Property name="email" value="carol@example.com"/>
             <Property name="organisation" value="MyCompany"/>
         </Properties>
     </User>
@@ -32,6 +60,20 @@
             <LastPasswordChange>2026-08-22T17:52:57.068+02:00</LastPasswordChange>
         </History>
     </User>
+    <User userId="668338713770" username="david.miller">
+        <Firstname>David</Firstname>
+        <Lastname>Miller</Lastname>
+        <State>ENABLED</State>
+        <Locale>de</Locale>
+        <Roles>
+            <Role>Employee</Role>
+            <Role>ModelAccessor</Role>
+        </Roles>
+        <Properties>
+            <Property name="email" value="david@example.com"/>
+            <Property name="organisation" value="MyCompany"/>
+        </Properties>
+    </User>
     <User userId="1" username="admin" password="$PBKDF2WithHmacSHA512,10000,256$c295b976cb1ff44b92b0e7f3e2851dbd5c396bed28ae1b9ec6f7cd0aa678b51e$c32469792e77aa52b5c18b279c344ce1c692edb2eb8153a3fa295b333eeafe64">
         <Firstname>Admin</Firstname>
         <Lastname>Admin</Lastname>
@@ -52,6 +94,20 @@
             <LastPasswordChange>2026-08-22T17:49:00.631+02:00</LastPasswordChange>
         </History>
     </User>
+    <User userId="668338713777" username="emma.watson">
+        <Firstname>Emma</Firstname>
+        <Lastname>Watson</Lastname>
+        <State>ENABLED</State>
+        <Locale>de</Locale>
+        <Roles>
+            <Role>Employee</Role>
+            <Role>ModelAccessor</Role>
+        </Roles>
+        <Properties>
+            <Property name="email" value="emma@example.com"/>
+            <Property name="organisation" value="MyCompany"/>
+        </Properties>
+    </User>
     <User userId="666872618952" username="jill" password="$PBKDF2WithHmacSHA512,10000,256$269f324b259059d1fb867ac13b9a9c7de9c5f3bfad4ea9784f65a2ea6a53395e$deb672b37e251022a575c651f2538e943e7a6e9979ddcb1b4ddd01043713ff53">
         <Firstname>Jill</Firstname>
         <Lastname>Someone</Lastname>
@@ -70,5 +126,19 @@
             <LastLogin>2026-08-29T21:58:06.549+02:00</LastLogin>
             <LastPasswordChange>2026-08-22T17:51:20.305+02:00</LastPasswordChange>
         </History>
+    </User>
+    <User userId="668338713756" username="bob.jones">
+        <Firstname>Bob</Firstname>
+        <Lastname>Jones</Lastname>
+        <State>ENABLED</State>
+        <Locale>de</Locale>
+        <Roles>
+            <Role>Employee</Role>
+            <Role>ModelAccessor</Role>
+        </Roles>
+        <Properties>
+            <Property name="email" value="bob@example.com"/>
+            <Property name="organisation" value="MyCompany"/>
+        </Properties>
     </User>
 </Users>
