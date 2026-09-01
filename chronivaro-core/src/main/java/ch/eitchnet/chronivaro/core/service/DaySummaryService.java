@@ -114,9 +114,10 @@ public class DaySummaryService
 				String source = entry.hasParameter(PARAM_SOURCE) ? entry.getString(PARAM_SOURCE) : null;
 				String createdBy = entry.hasParameter(PARAM_CREATED_BY) ? entry.getString(PARAM_CREATED_BY) : null;
 				boolean modified = getVersion(entry) > 0;
+				boolean isOnCall = entry.hasParameter(PARAM_IS_ON_CALL) && entry.getBoolean(PARAM_IS_ON_CALL);
 
 				ranges.add(new WorkEntryRange(entry.getId(), effectiveStart.format(timeFormatter),
-						isActive ? "..." : effectiveEnd.format(timeFormatter), duration, source, createdBy, modified));
+						isActive ? "..." : effectiveEnd.format(timeFormatter), duration, source, createdBy, modified, isOnCall));
 
 				if (lastEnd != null && start.isAfter(lastEnd)) {
 					int breakDuration = (int) Duration.between(lastEnd, start).toMinutes();

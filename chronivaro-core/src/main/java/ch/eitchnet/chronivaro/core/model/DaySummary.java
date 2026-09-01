@@ -24,6 +24,12 @@ public record DaySummary(LocalDate date, DayState state, String stateLabel, int 
 		return actualMinutes + holidayMinutes + absenceMinutes - targetMinutes;
 	}
 
+	public int getOnCallMinutes() {
+		if (workEntries == null || workEntries.isEmpty())
+			return 0;
+		return workEntries.stream().filter(WorkEntryRange::isOnCall).mapToInt(WorkEntryRange::durationMinutes).sum();
+	}
+
 	public record ActiveTimer(String id, ZonedDateTime start, WorkingLocation workingLocation, boolean isPreviousDay) {
 	}
 }

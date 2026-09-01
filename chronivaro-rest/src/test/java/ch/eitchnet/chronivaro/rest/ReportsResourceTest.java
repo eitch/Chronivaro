@@ -664,5 +664,40 @@ public class ReportsResourceTest extends AbstractChronivaroRestfulTest {
 			assertNotNull(pdfBytes);
 			assertTrue(new String(pdfBytes, 0, 5).startsWith("%PDF-"));
 		}
+
+		// 9. On-Call Report PDF via ?format=pdf
+		try (Response res = target()
+				.path("chronivaro/v1/reports/on-call")
+				.queryParam("from", "2026-08-01")
+				.queryParam("to", "2026-08-31")
+				.queryParam("format", "pdf")
+				.queryParam("lang", "de")
+				.request()
+				.header("Authorization", employeeToken)
+				.get()) {
+
+			assertEquals(200, res.getStatus());
+			assertTrue(res.getMediaType().toString().startsWith("application/pdf"));
+			assertTrue(res.getHeaderString("Content-Disposition").contains("on-call-report"));
+			byte[] pdfBytes = res.readEntity(byte[].class);
+			assertNotNull(pdfBytes);
+			assertTrue(new String(pdfBytes, 0, 5).startsWith("%PDF-"));
+		}
+
+		// 10. On-Call Report PDF via /on-call.pdf alias
+		try (Response res = target()
+				.path("chronivaro/v1/reports/on-call.pdf")
+				.queryParam("from", "2026-08-01")
+				.queryParam("to", "2026-08-31")
+				.request()
+				.header("Authorization", employeeToken)
+				.get()) {
+
+			assertEquals(200, res.getStatus());
+			assertTrue(res.getMediaType().toString().startsWith("application/pdf"));
+			byte[] pdfBytes = res.readEntity(byte[].class);
+			assertNotNull(pdfBytes);
+			assertTrue(new String(pdfBytes, 0, 5).startsWith("%PDF-"));
+		}
 	}
 }

@@ -239,4 +239,61 @@ public class CsvExportHelper {
 
 		return sb.toString();
 	}
+
+	public static String exportOnCallReportToCsv(OnCallReport report) {
+		StringBuilder sb = new StringBuilder();
+		sb.append(UTF8_BOM);
+
+		// Summary section
+		sb.append("Context,From,To,TotalPeriodsCount,TotalWorkEntriesCount,TotalWorkEntryMinutes,FormattedTotalDuration\n");
+		if (report != null) {
+			sb.append(escapeCsv(report.context())).append(",");
+			sb.append(escapeCsv(report.from() != null ? report.from().format(DATE_FORMATTER) : "")).append(",");
+			sb.append(escapeCsv(report.to() != null ? report.to().format(DATE_FORMATTER) : "")).append(",");
+			sb.append(report.totalPeriodsCount()).append(",");
+			sb.append(report.totalWorkEntriesCount()).append(",");
+			sb.append(report.totalWorkEntryMinutes()).append(",");
+			sb.append(escapeCsv(formatDuration(report.totalWorkEntryMinutes()))).append("\n\n");
+
+			// Periods section
+			sb.append("OnCallPeriods:\n");
+			sb.append("PeriodId,EmployeeId,EmployeeName,StartDate,StartTime,EndDate,EndTime,Comment,CreatedBy\n");
+			if (report.periods() != null) {
+				for (OnCallReport.OnCallPeriodItem p : report.periods()) {
+					sb.append(escapeCsv(p.id())).append(",");
+					sb.append(escapeCsv(p.employeeId())).append(",");
+					sb.append(escapeCsv(p.employeeName())).append(",");
+					sb.append(escapeCsv(p.startDate() != null ? p.startDate().format(DATE_FORMATTER) : "")).append(",");
+					sb.append(escapeCsv(p.startTime())).append(",");
+					sb.append(escapeCsv(p.endDate() != null ? p.endDate().format(DATE_FORMATTER) : "")).append(",");
+					sb.append(escapeCsv(p.endTime())).append(",");
+					sb.append(escapeCsv(p.comment())).append(",");
+					sb.append(escapeCsv(p.createdBy())).append("\n");
+				}
+			}
+			sb.append("\n");
+
+			// Work entries section
+			sb.append("OnCallWorkEntries:\n");
+			sb.append("WorkEntryId,EmployeeId,EmployeeName,Date,StartTime,EndTime,DurationMinutes,FormattedDuration,Source,Comment,CreatedBy,Modified\n");
+			if (report.workEntries() != null) {
+				for (OnCallReport.OnCallWorkEntryItem w : report.workEntries()) {
+					sb.append(escapeCsv(w.id())).append(",");
+					sb.append(escapeCsv(w.employeeId())).append(",");
+					sb.append(escapeCsv(w.employeeName())).append(",");
+					sb.append(escapeCsv(w.date() != null ? w.date().format(DATE_FORMATTER) : "")).append(",");
+					sb.append(escapeCsv(w.start() != null ? w.start().format(DATE_TIME_FORMATTER) : "")).append(",");
+					sb.append(escapeCsv(w.end() != null ? w.end().format(DATE_TIME_FORMATTER) : "")).append(",");
+					sb.append(w.durationMinutes()).append(",");
+					sb.append(escapeCsv(formatDuration(w.durationMinutes()))).append(",");
+					sb.append(escapeCsv(w.source())).append(",");
+					sb.append(escapeCsv(w.comment())).append(",");
+					sb.append(escapeCsv(w.createdBy())).append(",");
+					sb.append(w.modified()).append("\n");
+				}
+			}
+		}
+
+		return sb.toString();
+	}
 }

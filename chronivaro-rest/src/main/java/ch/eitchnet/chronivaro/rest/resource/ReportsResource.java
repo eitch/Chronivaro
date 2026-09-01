@@ -395,6 +395,76 @@ public class ReportsResource {
 		return getAbsencesReport(teamId, employeeId, fromStr, toStr, absenceTypeCode, statusStr, "pdf", lang, "application/pdf");
 	}
 
+	@GET
+	@Path("/on-call")
+	@Produces({MediaType.APPLICATION_JSON, "text/csv", "application/pdf"})
+	public Response getOnCallReport(@QueryParam("teamId") String teamId,
+									@QueryParam("employeeId") String employeeId,
+									@QueryParam("from") String fromStr,
+									@QueryParam("to") String toStr,
+									@QueryParam("yearMonth") String yearMonthStr,
+									@QueryParam("format") String format,
+									@QueryParam("lang") String lang,
+									@HeaderParam("Accept") String acceptHeader) {
+		Certificate cert = getCertificate();
+
+		OnCallReportService.OnCallReportArgument arg = new OnCallReportService.OnCallReportArgument();
+		if (teamId != null && !teamId.trim().isEmpty()) {
+			arg.teamId = teamId.trim();
+		}
+		if (employeeId != null && !employeeId.trim().isEmpty()) {
+			arg.employeeId = employeeId.trim();
+		}
+		if (fromStr != null && !fromStr.trim().isEmpty()) {
+			arg.from = LocalDate.parse(fromStr.trim());
+		}
+		if (toStr != null && !toStr.trim().isEmpty()) {
+			arg.to = LocalDate.parse(toStr.trim());
+		}
+		if (yearMonthStr != null && !yearMonthStr.trim().isEmpty()) {
+			arg.yearMonth = YearMonth.parse(yearMonthStr.trim());
+		}
+
+		OnCallReportService.OnCallReportResult result = getServiceHandler().doService(cert, new OnCallReportService(), arg);
+		if (!result.isOk()) {
+			return handleServiceError(result);
+		}
+
+		if (isPdf(format, acceptHeader)) {
+			Resource companyConfig;
+			try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
+				companyConfig = tx.getResourceBy(TYPE_GLOBAL_CONFIGURATION, "configuration", false);
+			}
+
+			byte[] pdf = PdfExportHelper.exportOnCallReportToPdf(result.report, companyConfig, lang);
+			String filename = PdfExportHelper.getOnCallReportPdfFileName(result.report.context(), result.report.from(), result.report.to());
+			return Response.ok(pdf, "application/pdf")
+					.header("Content-Disposition", "attachment; filename=\"" + filename + "\"")
+					.build();
+		}
+
+		if (isCsv(format, acceptHeader)) {
+			String csv = CsvExportHelper.exportOnCallReportToCsv(result.report);
+			return Response.ok(csv, "text/csv; charset=utf-8")
+					.header("Content-Disposition", "attachment; filename=\"on-call-report.csv\"")
+					.build();
+		}
+
+		return Response.ok(ChronivaroRestHelper.createGson().toJson(ChronivaroMapper.onCallReportToDto(result.report)), MediaType.APPLICATION_JSON).build();
+	}
+
+	@GET
+	@Path("/on-call.pdf")
+	@Produces("application/pdf")
+	public Response getOnCallReportPdfAlias(@QueryParam("teamId") String teamId,
+											@QueryParam("employeeId") String employeeId,
+											@QueryParam("from") String fromStr,
+											@QueryParam("to") String toStr,
+											@QueryParam("yearMonth") String yearMonthStr,
+											@QueryParam("lang") String lang) {
+		return getOnCallReport(teamId, employeeId, fromStr, toStr, yearMonthStr, "pdf", lang, "application/pdf");
+	}
+
 	private Response handleServiceError(ServiceResult result) {
 		if (result.getRootCause() instanceof AccessDeniedException) {
 			throw (AccessDeniedException) result.getRootCause();

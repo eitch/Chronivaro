@@ -562,5 +562,23 @@ public class WebReportsUiTest extends AbstractChronivaroRestfulTest {
 			assertNotNull(pdfBytes);
 			assertTrue(new String(pdfBytes, 0, 5).startsWith("%PDF-"));
 		}
+
+		// 3. On-Call Report PDF download
+		try (Response onCallPdfResp = target()
+				.path("/chronivaro/v1/reports/on-call")
+				.queryParam("from", "2026-08-01")
+				.queryParam("to", "2026-08-31")
+				.queryParam("format", "pdf")
+				.queryParam("lang", "de")
+				.request("application/pdf")
+				.header(HttpHeaders.AUTHORIZATION, employeeToken)
+				.get()) {
+
+			assertEquals(200, onCallPdfResp.getStatus());
+			assertTrue(onCallPdfResp.getMediaType().toString().startsWith("application/pdf"));
+			byte[] pdfBytes = onCallPdfResp.readEntity(byte[].class);
+			assertNotNull(pdfBytes);
+			assertTrue(new String(pdfBytes, 0, 5).startsWith("%PDF-"));
+		}
 	}
 }

@@ -1,6 +1,7 @@
 package ch.eitchnet.chronivaro.core;
 
 import ch.eitchnet.chronivaro.core.model.ChronivaroModelHelper;
+import ch.eitchnet.chronivaro.core.model.WorkEntryHelper;
 import ch.eitchnet.chronivaro.core.report.AbsenceReportItem;
 import ch.eitchnet.chronivaro.core.report.CsvExportHelper;
 import ch.eitchnet.chronivaro.core.report.TeamReport;
@@ -187,6 +188,81 @@ public class ReportServiceTest {
 		assertTrue("CSV should start with UTF-8 BOM", csv.startsWith(CsvExportHelper.UTF8_BOM));
 		assertTrue("CSV should contain header", csv.contains("AbsenceId,EmployeeId,EmployeeName,AbsenceTypeCode"));
 		assertTrue("CSV should contain escaped comment", csv.contains("\"Summer holidays, with comma and \"\"quotes\"\"\""));
+	}
+
+	@Test
+	public void shouldGenerateOnCallReportAndSummaries() {
+		String empId = "report-emp-oncall";
+		LocalDate start = LocalDate.of(2026, 8, 17);
+		LocalDate end = LocalDate.of(2026, 8, 23);
+
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
+			Resource emp = createEmployee(tx, empId, "David OnCall");
+
+			// Create OnCallPeriod
+			Resource period = tx.getResourceTemplate(TYPE_ON_CALL_PERIOD, true);
+			period.setId("oncall-rep-1");
+			period.setName("Weekly On-Call Shift");
+			period.setRelation(PARAM_EMPLOYEE, emp);
+			period.setDate(PARAM_START, start.atStartOfDay(ChronivaroModelHelper.getEmployeeTimezone(emp)));
+			period.setDate(PARAM_END, end.atTime(23, 59, 59).atZone(ChronivaroModelHelper.getEmployeeTimezone(emp)));
+			period.setString(PARAM_START_TIME, "17:00");
+			period.setString(PARAM_END_TIME, "08:00");
+			period.setString(PARAM_COMMENT, "Primary on-call emergency duty");
+			period.setString(PARAM_CREATED_BY, "admin");
+			tx.add(period);
+
+			// Add On-Call Work Entry
+			Resource workEntry = createWorkEntry(tx, emp,
+					ZonedDateTime.parse("2026-08-18T22:00:00+02:00[Europe/Zurich]"),
+					ZonedDateTime.parse("2026-08-18T23:30:00+02:00[Europe/Zurich]"));
+			workEntry.setBoolean(PARAM_IS_ON_CALL, true);
+			workEntry.setString(PARAM_COMMENT, "Server outage fix");
+			tx.update(workEntry);
+
+			tx.commitOnClose();
+		}
+
+		ServiceHandler serviceHandler = runtimeMock.getServiceHandler();
+		ch.eitchnet.chronivaro.core.service.OnCallReportService.OnCallReportArgument arg =
+				new ch.eitchnet.chronivaro.core.service.OnCallReportService.OnCallReportArgument();
+		arg.employeeId = empId;
+		arg.from = LocalDate.of(2026, 8, 1);
+		arg.to = LocalDate.of(2026, 8, 31);
+
+		ch.eitchnet.chronivaro.core.service.OnCallReportService.OnCallReportResult result =
+				serviceHandler.doService(certificate, new ch.eitchnet.chronivaro.core.service.OnCallReportService(), arg);
+		assertEquals(ServiceResult.success().getState(), result.getState());
+
+		ch.eitchnet.chronivaro.core.report.OnCallReport report = result.report;
+		assertNotNull(report);
+		assertEquals(1, report.totalPeriodsCount());
+		assertEquals(1, report.totalWorkEntriesCount());
+		assertEquals(90, report.totalWorkEntryMinutes()); // 22:00 to 23:30 = 1.5h = 90m
+
+		// Test MonthSummary on-call calculation
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
+			ch.eitchnet.chronivaro.core.model.MonthSummary monthSummary =
+					ch.eitchnet.chronivaro.core.service.MonthSummaryService.calculateMonthSummary(tx, empId, YearMonth.of(2026, 8));
+			assertTrue("Total on call minutes in month should be 90", monthSummary.totalOnCallMinutes() == 90);
+		}
+
+		// Verify CSV export
+		String csv = CsvExportHelper.exportOnCallReportToCsv(report);
+		assertTrue("CSV should start with UTF-8 BOM", csv.startsWith(CsvExportHelper.UTF8_BOM));
+		assertTrue("CSV should contain OnCallPeriods section", csv.contains("OnCallPeriods:"));
+		assertTrue("CSV should contain OnCallWorkEntries section", csv.contains("OnCallWorkEntries:"));
+		assertTrue("CSV should contain employee name", csv.contains("David OnCall"));
+		assertTrue("CSV should contain duration 90", csv.contains("90,01:30"));
+
+		// Verify PDF export
+		Resource companyConfig;
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
+			companyConfig = tx.getResourceBy(TYPE_GLOBAL_CONFIGURATION, "configuration", false);
+		}
+		byte[] pdf = ch.eitchnet.chronivaro.core.report.PdfExportHelper.exportOnCallReportToPdf(report, companyConfig, "de");
+		assertNotNull(pdf);
+		assertTrue("PDF byte array should not be empty", pdf.length > 0);
 	}
 
 	@Test

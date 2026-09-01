@@ -101,10 +101,10 @@ public class ChronivaroMapper {
 						summary.activeTimer().workingLocation(), summary.activeTimer().isPreviousDay()) : null;
 		return new DaySummaryDto(summary.date(), summary.state(), summary.stateLabel(), summary.targetMinutes(),
 				summary.actualMinutes(), summary.holidayMinutes(), summary.absenceMinutes(), summary.isOff(),
-				summary.getBalance(), summary.workingLocation(), summary
+				summary.getBalance(), summary.getOnCallMinutes(), summary.workingLocation(), summary
 				.workEntries()
 				.stream()
-				.map(e -> new WorkEntryRangeDto(e.id(), e.start(), e.end(), e.durationMinutes(), e.source(), e.createdBy(), e.modified()))
+				.map(e -> new WorkEntryRangeDto(e.id(), e.start(), e.end(), e.durationMinutes(), e.source(), e.createdBy(), e.modified(), e.isOnCall()))
 				.toList(), summary
 				.breaks()
 				.stream()
@@ -118,7 +118,7 @@ public class ChronivaroMapper {
 				summary.totalActualMinutes(), summary.paidAbsenceMinutes(), summary.unpaidAbsenceMinutes(),
 				summary.vacationMinutes(), summary.totalHolidayMinutes(), summary.totalAbsenceMinutes(),
 				summary.initialBalanceMinutes(), summary.getPeriodBalance(), summary.manualCorrectionsMinutes(),
-				summary.getEndBalance(),
+				summary.totalOnCallMinutes(), summary.getEndBalance(),
 				summary.daySummaries() != null ? summary.daySummaries().stream().map(ChronivaroMapper::toDto).toList() :
 						List.of());
 	}
@@ -480,5 +480,21 @@ public class ChronivaroMapper {
 				period.hasParameter(PARAM_CREATED_BY) ? period.getString(PARAM_CREATED_BY) : "",
 				ch.eitchnet.chronivaro.core.model.ChronivaroVersionHelper.getVersion(period)
 		);
+	}
+	public static OnCallReportDto onCallReportToDto(ch.eitchnet.chronivaro.core.report.OnCallReport report) {
+		if (report == null)
+			return null;
+		List<OnCallReportDto.OnCallPeriodItemDto> periodDtos = report.periods() != null
+				? report.periods().stream().map(p -> new OnCallReportDto.OnCallPeriodItemDto(
+						p.id(), p.employeeId(), p.employeeName(), p.startDate(), p.startTime(), p.endDate(), p.endTime(), p.comment(), p.createdBy())).toList()
+				: List.of();
+
+		List<OnCallReportDto.OnCallWorkEntryItemDto> entryDtos = report.workEntries() != null
+				? report.workEntries().stream().map(w -> new OnCallReportDto.OnCallWorkEntryItemDto(
+						w.id(), w.employeeId(), w.employeeName(), w.date(), w.start(), w.end(), w.durationMinutes(), w.source(), w.comment(), w.createdBy(), w.modified())).toList()
+				: List.of();
+
+		return new OnCallReportDto(report.context(), report.from(), report.to(), periodDtos, entryDtos,
+				report.totalPeriodsCount(), report.totalWorkEntriesCount(), report.totalWorkEntryMinutes());
 	}
 }

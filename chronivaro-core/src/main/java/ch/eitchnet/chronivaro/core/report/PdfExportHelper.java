@@ -80,6 +80,12 @@ public class PdfExportHelper {
 		return "absence-report-" + ctx + "-" + range + ".pdf";
 	}
 
+	public static String getOnCallReportPdfFileName(String context, LocalDate from, LocalDate to) {
+		String ctx = context != null && !context.isBlank() ? context : "summary";
+		String range = (from != null ? from.toString() : "start") + "_" + (to != null ? to.toString() : "end");
+		return "on-call-report-" + ctx + "-" + range + ".pdf";
+	}
+
 	// -------------------------------------------------------------------------
 	// 1. Month Report PDF
 	// -------------------------------------------------------------------------
@@ -493,6 +499,140 @@ public class PdfExportHelper {
 	}
 
 	// -------------------------------------------------------------------------
+	// 4. On-Call Report PDF
+	// -------------------------------------------------------------------------
+
+	public static byte[] exportOnCallReportToPdf(OnCallReport report,
+												 Resource companyConfig,
+												 String language) {
+		I18nTexts i18n = getI18n(language);
+		String companyName = resolveCompanyName(companyConfig);
+		String companyLogo = resolveCompanyLogo(companyConfig);
+
+		String fromStr = report.from() != null ? report.from().format(DATE_FORMATTER) : "-";
+		String toStr = report.to() != null ? report.to().format(DATE_FORMATTER) : "-";
+		String subtitle = i18n.from + " " + fromStr + " " + i18n.to + " " + toStr;
+
+		try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+			Document document = new Document(PageSize.A4, 36, 36, 40, 40);
+			PdfWriter writer = PdfWriter.getInstance(document, out);
+			PdfHeaderFooterEvent event = new PdfHeaderFooterEvent(companyName, i18n.onCallReportTitle, i18n);
+			writer.setPageEvent(event);
+
+			document.open();
+
+			// Header
+			addReportHeader(document, companyName, companyLogo, i18n.onCallReportTitle, subtitle);
+
+			// Summary KPIs
+			Paragraph kpiHeading = new Paragraph(i18n.summary, FONT_SECTION);
+			kpiHeading.setSpacingBefore(8f);
+			kpiHeading.setSpacingAfter(4f);
+			document.add(kpiHeading);
+
+			PdfPTable kpiTable = new PdfPTable(3);
+			kpiTable.setWidthPercentage(100);
+			kpiTable.setWidths(new float[]{33.3f, 33.3f, 33.4f});
+			kpiTable.setSpacingAfter(10f);
+
+			addKpiCell(kpiTable, i18n.totalOnCallPeriods, String.valueOf(report.totalPeriodsCount()), false);
+			addKpiCell(kpiTable, i18n.totalOnCallDeployments, String.valueOf(report.totalWorkEntriesCount()), false);
+			addKpiCell(kpiTable, i18n.totalOnCallDuration, formatDuration(report.totalWorkEntryMinutes()), false);
+			document.add(kpiTable);
+
+			// On-Call Periods Section
+			Paragraph periodsHeading = new Paragraph(i18n.onCallPeriods, FONT_SECTION);
+			periodsHeading.setSpacingBefore(4f);
+			periodsHeading.setSpacingAfter(4f);
+			document.add(periodsHeading);
+
+			PdfPTable periodsTable = new PdfPTable(6);
+			periodsTable.setWidthPercentage(100);
+			periodsTable.setWidths(new float[]{20, 16, 12, 16, 12, 24});
+			periodsTable.setHeaderRows(1);
+			periodsTable.setSpacingAfter(10f);
+
+			addTh(periodsTable, i18n.employee, Element.ALIGN_LEFT);
+			addTh(periodsTable, i18n.from, Element.ALIGN_LEFT);
+			addTh(periodsTable, i18n.startTime, Element.ALIGN_CENTER);
+			addTh(periodsTable, i18n.to, Element.ALIGN_LEFT);
+			addTh(periodsTable, i18n.endTime, Element.ALIGN_CENTER);
+			addTh(periodsTable, i18n.comment, Element.ALIGN_LEFT);
+
+			if (report.periods() != null && !report.periods().isEmpty()) {
+				int rowIdx = 0;
+				for (OnCallReport.OnCallPeriodItem p : report.periods()) {
+					Color bg = rowIdx % 2 == 1 ? COLOR_ALT_ROW : Color.WHITE;
+					addTd(periodsTable, p.employeeName(), Element.ALIGN_LEFT, bg);
+					addTd(periodsTable, p.startDate() != null ? p.startDate().format(DATE_FORMATTER) : "", Element.ALIGN_LEFT, bg);
+					addTd(periodsTable, p.startTime(), Element.ALIGN_CENTER, bg);
+					addTd(periodsTable, p.endDate() != null ? p.endDate().format(DATE_FORMATTER) : "", Element.ALIGN_LEFT, bg);
+					addTd(periodsTable, p.endTime(), Element.ALIGN_CENTER, bg);
+					addTd(periodsTable, p.comment(), Element.ALIGN_LEFT, bg);
+					rowIdx++;
+				}
+			} else {
+				for (int i = 0; i < 6; i++) {
+					addTd(periodsTable, "-", Element.ALIGN_CENTER, Color.WHITE);
+				}
+			}
+			document.add(periodsTable);
+
+			// On-Call Deployments / Work Entries Section
+			Paragraph entriesHeading = new Paragraph(i18n.onCallDeployments, FONT_SECTION);
+			entriesHeading.setSpacingBefore(4f);
+			entriesHeading.setSpacingAfter(4f);
+			document.add(entriesHeading);
+
+			PdfPTable entriesTable = new PdfPTable(6);
+			entriesTable.setWidthPercentage(100);
+			entriesTable.setWidths(new float[]{20, 14, 16, 16, 12, 22});
+			entriesTable.setHeaderRows(1);
+			entriesTable.setSpacingAfter(8f);
+
+			addTh(entriesTable, i18n.employee, Element.ALIGN_LEFT);
+			addTh(entriesTable, i18n.date, Element.ALIGN_LEFT);
+			addTh(entriesTable, i18n.startTime, Element.ALIGN_CENTER);
+			addTh(entriesTable, i18n.endTime, Element.ALIGN_CENTER);
+			addTh(entriesTable, i18n.duration, Element.ALIGN_RIGHT);
+			addTh(entriesTable, i18n.comment, Element.ALIGN_LEFT);
+
+			if (report.workEntries() != null && !report.workEntries().isEmpty()) {
+				int rowIdx = 0;
+				for (OnCallReport.OnCallWorkEntryItem w : report.workEntries()) {
+					Color bg = rowIdx % 2 == 1 ? COLOR_ALT_ROW : Color.WHITE;
+					addTd(entriesTable, w.employeeName(), Element.ALIGN_LEFT, bg);
+					addTd(entriesTable, w.date() != null ? w.date().format(DATE_FORMATTER) : "", Element.ALIGN_LEFT, bg);
+					addTd(entriesTable, w.start() != null ? w.start().format(DATE_TIME_FORMATTER) : "", Element.ALIGN_CENTER, bg);
+					addTd(entriesTable, w.end() != null ? w.end().format(DATE_TIME_FORMATTER) : "...", Element.ALIGN_CENTER, bg);
+					addTd(entriesTable, formatDuration(w.durationMinutes()), Element.ALIGN_RIGHT, bg);
+					addTd(entriesTable, w.comment() != null ? w.comment() : "", Element.ALIGN_LEFT, bg);
+					rowIdx++;
+				}
+
+				// Total Row
+				addTdCustom(entriesTable, i18n.total, Element.ALIGN_LEFT, COLOR_HEADER_BG, FONT_TD_BOLD);
+				addTdCustom(entriesTable, "", Element.ALIGN_LEFT, COLOR_HEADER_BG, FONT_TD_BOLD);
+				addTdCustom(entriesTable, "", Element.ALIGN_CENTER, COLOR_HEADER_BG, FONT_TD_BOLD);
+				addTdCustom(entriesTable, "", Element.ALIGN_CENTER, COLOR_HEADER_BG, FONT_TD_BOLD);
+				addTdCustom(entriesTable, formatDuration(report.totalWorkEntryMinutes()), Element.ALIGN_RIGHT, COLOR_HEADER_BG, FONT_TD_BOLD);
+				addTdCustom(entriesTable, "", Element.ALIGN_LEFT, COLOR_HEADER_BG, FONT_TD_BOLD);
+			} else {
+				for (int i = 0; i < 6; i++) {
+					addTd(entriesTable, "-", Element.ALIGN_CENTER, Color.WHITE);
+				}
+			}
+			document.add(entriesTable);
+
+			document.close();
+			return out.toByteArray();
+		} catch (Exception e) {
+			logger.error("Failed to generate On-Call Report PDF: {}", e.getMessage(), e);
+			throw new RuntimeException("Failed to generate On-Call Report PDF: " + e.getMessage(), e);
+		}
+	}
+
+	// -------------------------------------------------------------------------
 	// Layout & Rendering Helpers
 	// -------------------------------------------------------------------------
 
@@ -797,6 +937,14 @@ public class PdfExportHelper {
 		public String paid;
 		public String all;
 		public String totalEntries;
+		public String onCallReportTitle;
+		public String onCallPeriods;
+		public String onCallDeployments;
+		public String totalOnCallPeriods;
+		public String totalOnCallDeployments;
+		public String totalOnCallDuration;
+		public String startTime;
+		public String endTime;
 		public String yes;
 		public String no;
 		public String page;
@@ -812,6 +960,7 @@ public class PdfExportHelper {
 			texts.monthReportTitle = "Monthly Time Report";
 			texts.vacationReportTitle = "Vacation Summary";
 			texts.absenceReportTitle = "Absence Report";
+			texts.onCallReportTitle = "On-Call Service Report";
 			texts.period = "Period";
 			texts.year = "Year";
 			texts.employee = "Employee";
@@ -864,6 +1013,13 @@ public class PdfExportHelper {
 			texts.paid = "Paid";
 			texts.all = "All";
 			texts.totalEntries = "Total Entries";
+			texts.onCallPeriods = "On-Call Periods";
+			texts.onCallDeployments = "On-Call Deployments / Work Entries";
+			texts.totalOnCallPeriods = "On-Call Periods";
+			texts.totalOnCallDeployments = "Deployments";
+			texts.totalOnCallDuration = "On-Call Time";
+			texts.startTime = "Start Time";
+			texts.endTime = "End Time";
 			texts.yes = "Yes";
 			texts.no = "No";
 			texts.page = "Page";
@@ -874,6 +1030,7 @@ public class PdfExportHelper {
 			texts.monthReportTitle = "Monatsreport";
 			texts.vacationReportTitle = "Ferienübersicht";
 			texts.absenceReportTitle = "Abwesenheitsreport";
+			texts.onCallReportTitle = "Pikettdienst-Report";
 			texts.period = "Periode";
 			texts.year = "Jahr";
 			texts.employee = "Mitarbeiter";
@@ -926,6 +1083,13 @@ public class PdfExportHelper {
 			texts.paid = "Bezahlt";
 			texts.all = "Alle";
 			texts.totalEntries = "Einträge Total";
+			texts.onCallPeriods = "Pikett-Perioden";
+			texts.onCallDeployments = "Pikett-Einsätze / Arbeitszeiten";
+			texts.totalOnCallPeriods = "Pikett-Perioden";
+			texts.totalOnCallDeployments = "Einsätze";
+			texts.totalOnCallDuration = "Pikett-Arbeitszeit";
+			texts.startTime = "Startzeit";
+			texts.endTime = "Endzeit";
 			texts.yes = "Ja";
 			texts.no = "Nein";
 			texts.page = "Seite";

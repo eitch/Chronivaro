@@ -402,6 +402,7 @@
     "absenceReport": "Abwesenheitsübersicht",
     "teamReport": "Team-Monatsübersicht",
     "absencesReport": "Abwesenheitsbericht",
+    "onCallReport": "Pikettdienstbericht",
     "generateReport": "Bericht erstellen",
     "generatingReport": "Bericht wird erstellt...",
     "reportsAndExport": "Berichte & CSV-Export",
@@ -838,5 +839,18 @@
     "10": "Okt",
     "11": "Nov",
     "12": "Dez"
+  },
+  "onCall": {
+    "title": "Pikettdienst",
+    "periods": "Pikett-Perioden",
+    "deployments": "Pikett-Einsätze",
+    "totalOnCallPeriods": "Pikett-Perioden",
+    "totalDeployments": "Einsätze",
+    "totalOnCallTime": "Pikett-Arbeitszeit",
+    "configuredPeriods": "Konfigurierte Perioden",
+    "onCallDeployments": "Erfasste Piketteinsätze",
+    "startTime": "Startzeit",
+    "endTime": "Endzeit",
+    "noPeriodsFound": "Keine Pikett-Perioden gefunden."
   }
 }

@@ -146,6 +146,47 @@ export default class ReportApi {
 		ReportApi.triggerBlobDownload(blob, filename);
 	}
 
+	static async getOnCallReport({from, to, yearMonth, employeeId, teamId}) {
+		let queryParts = ['format=json'];
+		if (from) queryParts.push(`from=${encodeURIComponent(from)}`);
+		if (to) queryParts.push(`to=${encodeURIComponent(to)}`);
+		if (yearMonth) queryParts.push(`yearMonth=${encodeURIComponent(yearMonth)}`);
+		if (employeeId && employeeId.trim()) queryParts.push(`employeeId=${encodeURIComponent(employeeId.trim())}`);
+		if (teamId && teamId.trim()) queryParts.push(`teamId=${encodeURIComponent(teamId.trim())}`);
+
+		const url = `rest/chronivaro/v1/reports/on-call?${queryParts.join('&')}`;
+		return Rest.get(url);
+	}
+
+	static async downloadOnCallReportCsv({from, to, yearMonth, employeeId, teamId}) {
+		let queryParts = ['format=csv'];
+		if (from) queryParts.push(`from=${encodeURIComponent(from)}`);
+		if (to) queryParts.push(`to=${encodeURIComponent(to)}`);
+		if (yearMonth) queryParts.push(`yearMonth=${encodeURIComponent(yearMonth)}`);
+		if (employeeId && employeeId.trim()) queryParts.push(`employeeId=${encodeURIComponent(employeeId.trim())}`);
+		if (teamId && teamId.trim()) queryParts.push(`teamId=${encodeURIComponent(teamId.trim())}`);
+
+		const url = `rest/chronivaro/v1/reports/on-call?${queryParts.join('&')}`;
+		const blob = await Rest.getBlob(url, {'Accept': 'text/csv'});
+		const filename = `on-call-report-${from || 'all'}-to-${to || 'all'}.csv`;
+		ReportApi.triggerBlobDownload(blob, filename);
+	}
+
+	static async downloadOnCallReportPdf({from, to, yearMonth, employeeId, teamId, lang}) {
+		let queryParts = ['format=pdf'];
+		if (from) queryParts.push(`from=${encodeURIComponent(from)}`);
+		if (to) queryParts.push(`to=${encodeURIComponent(to)}`);
+		if (yearMonth) queryParts.push(`yearMonth=${encodeURIComponent(yearMonth)}`);
+		if (employeeId && employeeId.trim()) queryParts.push(`employeeId=${encodeURIComponent(employeeId.trim())}`);
+		if (teamId && teamId.trim()) queryParts.push(`teamId=${encodeURIComponent(teamId.trim())}`);
+		if (lang && lang.trim()) queryParts.push(`lang=${encodeURIComponent(lang.trim())}`);
+
+		const url = `rest/chronivaro/v1/reports/on-call?${queryParts.join('&')}`;
+		const blob = await Rest.getBlob(url, {'Accept': 'application/pdf'});
+		const filename = `on-call-report-${from || 'all'}-to-${to || 'all'}.pdf`;
+		ReportApi.triggerBlobDownload(blob, filename);
+	}
+
 	static triggerBlobDownload(blob, filename) {
 		const url = window.URL.createObjectURL(blob);
 		const a = document.createElement('a');

@@ -12,7 +12,7 @@ export default class ReportsView {
 
 	constructor(app) {
 		this.app = app;
-		this.activeReportType = 'day'; // 'day', 'month', 'vacation', 'team', 'absences'
+		this.activeReportType = 'day'; // 'day', 'month', 'vacation', 'team', 'absences', 'on-call'
 
 		const now = new Date();
 		const year = now.getFullYear();
@@ -46,6 +46,12 @@ export default class ReportsView {
 				employeeId: '',
 				type: '',
 				state: ''
+			},
+			onCall: {
+				from: `${year}-${month}-01`,
+				to: `${year}-${month}-${day}`,
+				teamId: '',
+				employeeId: ''
 			}
 		};
 
@@ -88,6 +94,9 @@ export default class ReportsView {
 					` : ''}
 					<button id="report-type-absences-btn" class="tab-btn ${this.activeReportType === 'absences' ? 'active' : ''}">
 						${I18n.t('reports.absencesReport')}
+					</button>
+					<button id="report-type-on-call-btn" class="tab-btn ${this.activeReportType === 'on-call' ? 'active' : ''}">
+						${I18n.t('reports.onCallReport')}
 					</button>
 				</div>
 			</div>
@@ -146,7 +155,7 @@ export default class ReportsView {
 		const isAdmin = AuthApi.hasRole('Administrator') || AuthApi.hasRole('StrolchAdmin');
 		const employeeId = this.filters[this.activeReportType]?.employeeId?.trim();
 		const teamId = this.filters.team.teamId?.trim();
-		const hasExplicitTarget = Boolean(employeeId || (this.activeReportType === 'team' && teamId) || this.activeReportType === 'absences');
+		const hasExplicitTarget = Boolean(employeeId || (this.activeReportType === 'team' && teamId) || this.activeReportType === 'absences' || this.activeReportType === 'on-call');
 		const disabled = isAdmin && !hasExplicitTarget;
 
 		[this.runBtn, this.exportBtn, this.exportPdfBtn].forEach(button => {
@@ -155,7 +164,7 @@ export default class ReportsView {
 	}
 
 	setupTabs(container) {
-		const types = ['day', 'month', 'vacation', 'team', 'absences'];
+		const types = ['day', 'month', 'vacation', 'team', 'absences', 'on-call'];
 		types.forEach(type => {
 			const btn = container.querySelector(`#report-type-${type}-btn`);
 			if (btn) {
@@ -535,6 +544,53 @@ export default class ReportsView {
 					this.updateActionButtons();
 				});
 			}
+		} else if (this.activeReportType === 'on-call') {
+			this.filterBar.innerHTML = `
+				<div class="filter-group">
+					<label for="filter-on-call-from">${I18n.t('common.from')}:</label>
+					<input type="date" id="filter-on-call-from" value="${this.filters.onCall.from}">
+				</div>
+				<div class="filter-group">
+					<label for="filter-on-call-to">${I18n.t('common.to')}:</label>
+					<input type="date" id="filter-on-call-to" value="${this.filters.onCall.to}">
+				</div>
+				${canSelectEmp ? `
+				<div class="filter-group">
+					<label for="filter-on-call-team">${I18n.t('common.team')}:</label>
+					<select id="filter-on-call-team">
+						<option value="">${I18n.t('common.allTeams')}</option>
+					</select>
+				</div>
+				<div class="filter-group">
+					<label for="filter-on-call-emp">${I18n.t('common.employee')}:</label>
+					<select id="filter-on-call-emp">
+						<option value="">${I18n.t('common.allEmployees')}</option>
+					</select>
+				</div>
+				` : ''}
+			`;
+			const fromInput = this.filterBar.querySelector('#filter-on-call-from');
+			const toInput = this.filterBar.querySelector('#filter-on-call-to');
+
+			fromInput.addEventListener('change', () => { this.filters.onCall.from = fromInput.value; });
+			toInput.addEventListener('change', () => { this.filters.onCall.to = toInput.value; });
+
+			if (canSelectEmp) {
+				const teamSelect = this.filterBar.querySelector('#filter-on-call-team');
+				const empSelect = this.filterBar.querySelector('#filter-on-call-emp');
+				this.populateTeamSelect('onCall');
+				this.populateEmployeeSelect('onCall');
+
+				teamSelect.addEventListener('change', () => {
+					this.filters.onCall.teamId = teamSelect.value;
+					this.populateEmployeeSelect('onCall');
+					this.updateActionButtons();
+				});
+				empSelect.addEventListener('change', () => {
+					this.filters.onCall.employeeId = empSelect.value;
+					this.updateActionButtons();
+				});
+			}
 		}
 
 		this.filterBar.querySelectorAll('input, select').forEach(input => {
@@ -597,6 +653,10 @@ export default class ReportsView {
 			} else if (this.activeReportType === 'absences') {
 				const data = await ReportApi.getAbsenceReport(this.filters.absences);
 				this.renderAbsenceReport(data);
+
+			} else if (this.activeReportType === 'on-call') {
+				const data = await ReportApi.getOnCallReport(this.filters.onCall);
+				this.renderOnCallReport(data);
 			}
 		} catch (err) {
 			console.error('Error generating report', err);
@@ -640,6 +700,9 @@ export default class ReportsView {
 
 			} else if (this.activeReportType === 'absences') {
 				await ReportApi.downloadAbsenceReportCsv(this.filters.absences);
+
+			} else if (this.activeReportType === 'on-call') {
+				await ReportApi.downloadOnCallReportCsv(this.filters.onCall);
 			}
 		} catch (err) {
 			console.error('Error exporting CSV', err);
@@ -665,8 +728,12 @@ export default class ReportsView {
 				const params = { ...this.filters.absences, lang };
 				await ReportApi.downloadAbsenceReportPdf(params);
 
+			} else if (this.activeReportType === 'on-call') {
+				const params = { ...this.filters.onCall, lang };
+				await ReportApi.downloadOnCallReportPdf(params);
+
 			} else {
-				NotificationDialog.error(I18n.t('reports.pdfOnlySupportedForMonthVacationAbsence') || 'PDF export is available for Month, Vacation, and Absence reports.');
+				NotificationDialog.error(I18n.t('reports.pdfOnlySupportedForMonthVacationAbsence') || 'PDF export is available for Month, Vacation, Absence, and On-Call reports.');
 			}
 		} catch (err) {
 			console.error('Error exporting PDF', err);
@@ -834,10 +901,13 @@ export default class ReportsView {
 				const dayBalSign = day.balance > 0 ? '+' : '';
 				const isWeekend = day.isOff && day.targetMinutes === 0;
 				const dayStateText = I18n.t(`enums.dayState.${day.state}`, {}, day.stateLabel || day.state);
+				const onCallTag = day.onCallMinutes > 0
+						? `<span class="badge badge-on-call" style="background: #e0f2fe; color: #0369a1; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: 500; margin-left: 4px;">${I18n.t('times.onCallBadge')} (${Format.duration(day.onCallMinutes)})</span>`
+						: '';
 
 				return `
 					<tr class="${isWeekend ? 'row-off' : ''}">
-						<td><strong>${day.date}</strong></td>
+						<td><strong>${day.date}</strong>${onCallTag}</td>
 						<td>${Format.duration(day.targetMinutes)}</td>
 						<td>${Format.duration(day.actualMinutes)}</td>
 						<td>${day.holidayMinutes > 0 ? Format.duration(day.holidayMinutes) : '-'}</td>
@@ -880,6 +950,11 @@ export default class ReportsView {
 					<div class="card-title">${I18n.t('periods.paidAbsence')}</div>
 					<div class="card-value">${Format.duration(data.paidAbsenceMinutes ?? data.totalPaidAbsenceMinutes ?? data.totalAbsenceMinutes ?? 0)}</div>
 					<div class="card-sub">${data.paidAbsenceMinutes ?? data.totalPaidAbsenceMinutes ?? data.totalAbsenceMinutes ?? 0} min</div>
+				</div>
+				<div class="summary-card">
+					<div class="card-title">${I18n.t('onCall.totalOnCallTime')}</div>
+					<div class="card-value">${Format.duration(data.totalOnCallMinutes || 0)}</div>
+					<div class="card-sub">${data.totalOnCallMinutes || 0} min</div>
 				</div>
 				<div class="summary-card">
 					<div class="card-title">${I18n.t('reports.initialBalance')}</div>
@@ -1239,6 +1314,127 @@ export default class ReportsView {
 						</thead>
 						<tbody>
 							${rowsHtml}
+						</tbody>
+					</table>
+				</div>
+			</div>
+		`;
+	}
+
+	renderOnCallReport(data) {
+		const periods = data && data.periods ? data.periods : [];
+		const workEntries = data && data.workEntries ? data.workEntries : [];
+		const totalPeriods = data && data.totalPeriodsCount != null ? data.totalPeriodsCount : periods.length;
+		const totalEntries = data && data.totalWorkEntriesCount != null ? data.totalWorkEntriesCount : workEntries.length;
+		const totalMinutes = data && data.totalWorkEntryMinutes != null ? data.totalWorkEntryMinutes : 0;
+
+		let periodsRowsHtml = '';
+		if (periods.length === 0) {
+			periodsRowsHtml = `<tr><td colspan="6" class="empty-cell">${I18n.t('onCall.noPeriodsFound') || I18n.t('common.noData')}</td></tr>`;
+		} else {
+			periodsRowsHtml = periods.map(p => `
+				<tr>
+					<td><strong>${p.employeeName || p.employeeId}</strong><br><small class="text-muted">${p.employeeId}</small></td>
+					<td>${Format.date(p.startDate)}</td>
+					<td>${p.startTime || '00:00'}</td>
+					<td>${Format.date(p.endDate)}</td>
+					<td>${p.endTime || '23:59'}</td>
+					<td>${p.comment || '-'}</td>
+				</tr>
+			`).join('');
+		}
+
+		let workEntriesRowsHtml = '';
+		if (workEntries.length === 0) {
+			workEntriesRowsHtml = `<tr><td colspan="7" class="empty-cell">${I18n.t('times.noEntries')}</td></tr>`;
+		} else {
+			workEntriesRowsHtml = workEntries.map(w => {
+				const sourceBadge = w.source === 'MANUAL'
+					? `<span class="badge badge-manual" style="background: #fef3c7; color: #92400e; padding: 2px 6px; border-radius: 4px; font-size: 0.8rem; font-weight: 500;">${I18n.t('times.manualBadge')}</span>`
+					: `<span class="badge badge-timer" style="background: #e0e7ff; color: #3730a3; padding: 2px 6px; border-radius: 4px; font-size: 0.8rem; font-weight: 500;">${I18n.t('times.timerBadge')}</span>`;
+				const modifiedBadge = w.modified
+					? `<span class="badge badge-modified" style="background: #fed7aa; color: #9a3412; padding: 2px 6px; border-radius: 4px; font-size: 0.8rem; font-weight: 500;">${I18n.t('times.modifiedBadge')}</span>`
+					: '-';
+
+				return `
+					<tr>
+						<td><strong>${w.employeeName || w.employeeId}</strong><br><small class="text-muted">${w.employeeId}</small></td>
+						<td>${Format.date(w.date)}</td>
+						<td>${Format.dateTime(w.start)}</td>
+						<td>${w.end ? Format.dateTime(w.end) : `<span class="status-badge state-open">${I18n.t('reports.inProgress')}</span>`}</td>
+						<td><strong>${Format.duration(w.durationMinutes)}</strong> (${w.durationMinutes}m)</td>
+						<td>${sourceBadge} ${modifiedBadge}</td>
+						<td>${w.comment || '-'}</td>
+					</tr>
+				`;
+			}).join('');
+		}
+
+		this.resultsContainer.innerHTML = `
+			<div class="report-result-header">
+				<h3>${I18n.t('reports.onCallReport')}</h3>
+				<span class="report-emp-tag">${totalPeriods} ${I18n.t('onCall.periods')}, ${totalEntries} ${I18n.t('onCall.deployments')}</span>
+			</div>
+
+			<!-- Summary Cards Grid -->
+			<div class="summary-grid report-summary-grid">
+				<div class="summary-card">
+					<div class="card-title">${I18n.t('onCall.totalOnCallPeriods')}</div>
+					<div class="card-value">${totalPeriods}</div>
+					<div class="card-sub">${I18n.t('onCall.configuredPeriods')}</div>
+				</div>
+				<div class="summary-card">
+					<div class="card-title">${I18n.t('onCall.totalDeployments')}</div>
+					<div class="card-value">${totalEntries}</div>
+					<div class="card-sub">${I18n.t('onCall.onCallDeployments')}</div>
+				</div>
+				<div class="summary-card highlight-card">
+					<div class="card-title">${I18n.t('onCall.totalOnCallTime')}</div>
+					<div class="card-value">${Format.duration(totalMinutes)}</div>
+					<div class="card-sub">${totalMinutes} min</div>
+				</div>
+			</div>
+
+			<!-- On-Call Periods Section -->
+			<div class="report-section card">
+				<h4>${I18n.t('onCall.periods')}</h4>
+				<div class="table-container">
+					<table class="data-table">
+						<thead>
+							<tr>
+								<th>${I18n.t('common.employee')}</th>
+								<th>${I18n.t('common.startDate')}</th>
+								<th>${I18n.t('onCall.startTime')}</th>
+								<th>${I18n.t('common.endDate')}</th>
+								<th>${I18n.t('onCall.endTime')}</th>
+								<th>${I18n.t('common.comment')}</th>
+							</tr>
+						</thead>
+						<tbody>
+							${periodsRowsHtml}
+						</tbody>
+					</table>
+				</div>
+			</div>
+
+			<!-- On-Call Work Entries Section -->
+			<div class="report-section card">
+				<h4>${I18n.t('onCall.deployments')}</h4>
+				<div class="table-container">
+					<table class="data-table">
+						<thead>
+							<tr>
+								<th>${I18n.t('common.employee')}</th>
+								<th>${I18n.t('common.date')}</th>
+								<th>${I18n.t('times.startTime')}</th>
+								<th>${I18n.t('times.endTime')}</th>
+								<th>${I18n.t('common.duration')}</th>
+								<th>${I18n.t('times.source')}</th>
+								<th>${I18n.t('common.comment')}</th>
+							</tr>
+						</thead>
+						<tbody>
+							${workEntriesRowsHtml}
 						</tbody>
 					</table>
 				</div>

@@ -74,6 +74,7 @@ public class MonthSummaryService
 		int totalUnpaidAbsence = 0;
 		int totalVacationAbsence = 0;
 		int totalHoliday = 0;
+		int totalOnCall = 0;
 		List<DaySummary> daySummaries = new ArrayList<>();
 
 		Resource employee = ChronivaroModelHelper.getEmployee(tx, employeeId);
@@ -118,8 +119,12 @@ public class MonthSummaryService
 					String source = entry.hasParameter(PARAM_SOURCE) ? entry.getString(PARAM_SOURCE) : null;
 					String createdBy = entry.hasParameter(PARAM_CREATED_BY) ? entry.getString(PARAM_CREATED_BY) : null;
 					boolean modified = getVersion(entry) > 0;
+					boolean isOnCall = entry.hasParameter(PARAM_IS_ON_CALL) && entry.getBoolean(PARAM_IS_ON_CALL);
+					if (isOnCall) {
+						totalOnCall += duration;
+					}
 					ranges.add(new WorkEntryRange(entry.getId(), effectiveStart.format(timeFormatter),
-							isActive ? "..." : effectiveEnd.format(timeFormatter), duration, source, createdBy, modified));
+							isActive ? "..." : effectiveEnd.format(timeFormatter), duration, source, createdBy, modified, isOnCall));
 					if (lastEnd != null && start.isAfter(lastEnd)) {
 						int breakDuration = (int) java.time.Duration.between(lastEnd, start).toMinutes();
 						if (breakDuration > 0) {
@@ -154,7 +159,7 @@ public class MonthSummaryService
 		int manualCorrections = 0;
 
 		return new MonthSummary(employeeId, yearMonth, totalTarget, totalActual, totalPaidAbsence, totalUnpaidAbsence,
-				totalVacationAbsence, totalHoliday, totalCreditedAbsence, initialBalance, manualCorrections, daySummaries);
+				totalVacationAbsence, totalHoliday, totalCreditedAbsence, initialBalance, manualCorrections, totalOnCall, daySummaries);
 	}
 
 	public static int calculateInitialBalance(StrolchTransaction tx, String employeeId, YearMonth targetYearMonth) {

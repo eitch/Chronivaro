@@ -102,6 +102,7 @@ public class PeriodHelper {
 		json.addProperty("vacationMinutes", summary.vacationMinutes());
 		json.addProperty("totalHolidayMinutes", summary.totalHolidayMinutes());
 		json.addProperty("totalAbsenceMinutes", summary.totalAbsenceMinutes());
+		json.addProperty("totalOnCallMinutes", summary.totalOnCallMinutes());
 		json.addProperty("periodBalanceMinutes", summary.getPeriodBalance());
 		json.addProperty("initialBalanceMinutes", summary.initialBalanceMinutes());
 		json.addProperty("manualCorrectionsMinutes", summary.manualCorrectionsMinutes());
@@ -137,6 +138,7 @@ public class PeriodHelper {
 						if (we.createdBy() != null)
 							weObj.addProperty("createdBy", we.createdBy());
 						weObj.addProperty("modified", we.modified());
+						weObj.addProperty("isOnCall", we.isOnCall());
 						weArray.add(weObj);
 					}
 					dayJson.add("workEntries", weArray);
@@ -173,6 +175,7 @@ public class PeriodHelper {
 		int vacationMinutes = json.has("vacationMinutes") ? json.get("vacationMinutes").getAsInt() : 0;
 		int initialBalance = json.has("initialBalanceMinutes") ? json.get("initialBalanceMinutes").getAsInt() : 0;
 		int manualCorrections = json.has("manualCorrectionsMinutes") ? json.get("manualCorrectionsMinutes").getAsInt() : 0;
+		int totalOnCall = json.has("totalOnCallMinutes") ? json.get("totalOnCallMinutes").getAsInt() : 0;
 
 		List<DaySummary> daySummaries = new ArrayList<>();
 		if (json.has("daySummaries") && json.get("daySummaries").isJsonArray()) {
@@ -202,7 +205,8 @@ public class PeriodHelper {
 										weObj.has("durationMinutes") ? weObj.get("durationMinutes").getAsInt() : 0,
 										weObj.has("source") ? weObj.get("source").getAsString() : null,
 										weObj.has("createdBy") ? weObj.get("createdBy").getAsString() : null,
-										weObj.has("modified") && weObj.get("modified").getAsBoolean()
+										weObj.has("modified") && weObj.get("modified").getAsBoolean(),
+										weObj.has("isOnCall") && weObj.get("isOnCall").getAsBoolean()
 								));
 							}
 						}
@@ -226,6 +230,6 @@ public class PeriodHelper {
 		}
 
 		return new MonthSummary(employeeId, yearMonth, totalTarget, totalActual, paidAbsence, unpaidAbsence,
-				vacationMinutes, totalHoliday, totalAbsence, initialBalance, manualCorrections, daySummaries);
+				vacationMinutes, totalHoliday, totalAbsence, initialBalance, manualCorrections, totalOnCall, daySummaries);
 	}
 }

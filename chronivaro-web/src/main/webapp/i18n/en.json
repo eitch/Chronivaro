@@ -402,6 +402,7 @@
     "absenceReport": "Absence Summary",
     "teamReport": "Team Monthly Overview",
     "absencesReport": "Absences Report",
+    "onCallReport": "On-Call Report",
     "generateReport": "Generate Report",
     "generatingReport": "Generating report...",
     "reportsAndExport": "Reports & CSV Export",
@@ -838,5 +839,18 @@
     "10": "Oct",
     "11": "Nov",
     "12": "Dec"
+  },
+  "onCall": {
+    "title": "On-Call Service",
+    "periods": "On-Call Periods",
+    "deployments": "On-Call Deployments",
+    "totalOnCallPeriods": "On-Call Periods",
+    "totalDeployments": "Deployments",
+    "totalOnCallTime": "On-Call Time",
+    "configuredPeriods": "Configured Periods",
+    "onCallDeployments": "Recorded On-Call Deployments",
+    "startTime": "Start Time",
+    "endTime": "End Time",
+    "noPeriodsFound": "No on-call periods found."
   }
 }

@@ -14,6 +14,7 @@ import static ch.eitchnet.chronivaro.core.model.ChronivaroConstants.*;
 public class OnCallPeriodSearch extends ResourceSearch {
 
 	private String employeeId;
+	private List<String> employeeIds;
 	private LocalDate from;
 	private LocalDate to;
 
@@ -23,6 +24,11 @@ public class OnCallPeriodSearch extends ResourceSearch {
 
 	public OnCallPeriodSearch forEmployee(String employeeId) {
 		this.employeeId = employeeId;
+		return this;
+	}
+
+	public OnCallPeriodSearch forEmployees(List<String> employeeIds) {
+		this.employeeIds = employeeIds;
 		return this;
 	}
 
@@ -46,6 +52,9 @@ public class OnCallPeriodSearch extends ResourceSearch {
 					if (this.employeeId != null && !this.employeeId.equals(empId)) {
 						return false;
 					}
+					if (this.employeeIds != null && !this.employeeIds.contains(empId)) {
+						return false;
+					}
 
 					// Privilege filter
 					if (!isHrOrAdmin) {
@@ -59,8 +68,8 @@ public class OnCallPeriodSearch extends ResourceSearch {
 					}
 
 					if (from != null || to != null) {
-						LocalDate start = period.getDate(PARAM_START_DATE).toLocalDate();
-						LocalDate end = period.getDate(PARAM_END_DATE).toLocalDate();
+						LocalDate start = period.getDate(PARAM_START).toLocalDate();
+						LocalDate end = period.getDate(PARAM_END).toLocalDate();
 						if (from != null && end.isBefore(from)) {
 							return false;
 						}
@@ -72,8 +81,8 @@ public class OnCallPeriodSearch extends ResourceSearch {
 					return true;
 				})
 				.sorted((p1, p2) -> {
-					ZonedDateTime d1 = p1.getDate(PARAM_START_DATE);
-					ZonedDateTime d2 = p2.getDate(PARAM_START_DATE);
+					ZonedDateTime d1 = p1.getDate(PARAM_START);
+					ZonedDateTime d2 = p2.getDate(PARAM_START);
 					return d1.compareTo(d2);
 				})
 				.toList();
