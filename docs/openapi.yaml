@@ -4903,6 +4903,10 @@ components:
           type: string
           enum: [REQUESTED, APPROVED, REJECTED, CANCELLED]
           example: 'APPROVED'
+        createdBy:
+          type: string
+          nullable: true
+          example: 'admin'
 
     AbsenceCreateDto:
       type: object
