@@ -181,4 +181,11 @@
         </ParameterBag>
     </Resource>
 
+    <Resource Id="GenerateSampleDataJob" Name="GenerateSampleDataJob" Type="StrolchJob">
+        <ParameterBag Id="parameters" Name="Parameters" Type="Parameters">
+            <Parameter Id="className" Name="Class Name" Type="String" Value="ch.eitchnet.chronivaro.core.jobs.GenerateSampleDataJob"/>
+            <Parameter Id="mode" Name="Job Mode" Type="String" Interpretation="Enumeration" Uom="JobMode" Value="Manual"/>
+        </ParameterBag>
+    </Resource>
+
 </StrolchModel>
