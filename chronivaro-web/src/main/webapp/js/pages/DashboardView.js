@@ -61,7 +61,7 @@ export default class DashboardView {
 						<div class="form-grid" style="display: grid; gap: 1rem;">
 							<div class="form-group">
 								<label style="display: block; margin-bottom: 0.25rem; font-weight: 500;">${I18n.t('dashboard.startDate')}:</label>
-								<input type="date" id="fix-stop-start-date" readonly disabled style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color, #e2e8f0); border-radius: 4px; box-sizing: border-box; background: var(--bg-disabled, #f1f5f9);">
+								<input type="text" id="fix-stop-start-date" readonly disabled placeholder="DD.MM.YYYY" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color, #e2e8f0); border-radius: 4px; box-sizing: border-box; background: var(--bg-disabled, #f1f5f9);">
 							</div>
 							<div class="form-group">
 								<label style="display: block; margin-bottom: 0.25rem; font-weight: 500;">${I18n.t('times.startTime')}:</label>
@@ -121,11 +121,12 @@ export default class DashboardView {
 		const openFixStopModal = (activeTimer) => {
 			const startStr = activeTimer.start;
 			const startDateStr = startStr.substring(0, 10);
+			const formattedStartDate = Format.date(startDateStr);
 			const timeMatch = startStr.match(/T(\d{2}:\d{2})/);
 			const startTimeStr = timeMatch ? timeMatch[1] : '';
 
-			fixStopHelpText.textContent = I18n.t('dashboard.fixStopHelpText', { date: startDateStr });
-			fixStopStartDate.value = startDateStr;
+			fixStopHelpText.textContent = I18n.t('dashboard.fixStopHelpText', { date: formattedStartDate });
+			fixStopStartDate.value = formattedStartDate;
 			fixStopStartTime.value = startTimeStr;
 			if (fixStopPastMidnight) {
 				fixStopPastMidnight.checked = false;
@@ -237,7 +238,7 @@ export default class DashboardView {
                 if (isWorking) {
 					if (isPreviousDayTimer) {
 						const startDate = summary.activeTimer.start.substring(0, 10);
-						const infoMsg = I18n.t('dashboard.timerRunningSince', {date: startDate});
+						const infoMsg = I18n.t('dashboard.timerRunningSince', {date: Format.date(startDate)});
 						statusSpan.innerHTML = `${I18n.t('presence.working')} <span id="timer-warning-icon" class="timer-warning-icon" role="button" tabindex="0" title="${infoMsg}">!</span>`;
 						statusSpan.className = 'status-danger';
 						const warningIcon = statusSpan.querySelector('#timer-warning-icon');

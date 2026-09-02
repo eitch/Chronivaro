@@ -86,11 +86,11 @@ export default class ApprovalsView {
 					</div>
 					<div class="filter-group">
 						<label for="absence-from-filter">${I18n.t('common.from')}:</label>
-						<input type="date" id="absence-from-filter" value="${this.absenceFilters.from}">
+						<input type="text" id="absence-from-filter" value="${Format.date(this.absenceFilters.from)}" placeholder="DD.MM.YYYY" maxlength="10">
 					</div>
 					<div class="filter-group">
 						<label for="absence-to-filter">${I18n.t('common.to')}:</label>
-						<input type="date" id="absence-to-filter" value="${this.absenceFilters.to}">
+						<input type="text" id="absence-to-filter" value="${Format.date(this.absenceFilters.to)}" placeholder="DD.MM.YYYY" maxlength="10">
 					</div>
 					<div class="filter-actions">
 						<button id="absence-apply-filter-btn" class="primary-btn">${I18n.t('common.filter')}</button>
@@ -295,12 +295,20 @@ export default class ApprovalsView {
 		const absencePrevBtn = container.querySelector('#absence-prev-btn');
 		const absenceNextBtn = container.querySelector('#absence-next-btn');
 
+		[absenceFromFilter, absenceToFilter].forEach(inp => {
+			if (inp) {
+				inp.addEventListener('blur', () => {
+					if (inp.value) inp.value = Format.normalizeDate(inp.value);
+				});
+			}
+		});
+
 		absenceApplyBtn.addEventListener('click', () => {
 			this.absenceFilters.teamId = absenceTeamFilter.value.trim();
 			this.absenceFilters.employeeId = absenceEmpFilter.value.trim();
 			this.absenceFilters.absenceTypeCode = absenceTypeFilter.value;
-			this.absenceFilters.from = absenceFromFilter.value;
-			this.absenceFilters.to = absenceToFilter.value;
+			this.absenceFilters.from = Format.toIsoDate(absenceFromFilter.value);
+			this.absenceFilters.to = Format.toIsoDate(absenceToFilter.value);
 			this.absenceFilters.offset = 0;
 			this.loadAbsences(container);
 		});

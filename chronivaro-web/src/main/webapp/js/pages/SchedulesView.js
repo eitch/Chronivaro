@@ -61,12 +61,12 @@ export default class SchedulesView {
 						</div>
 						<hr>
 						<div class="form-group">
-							<label for="sched-valid-from">${I18n.t('schedules.validFrom')}:</label>
-							<input type="date" id="sched-valid-from" required>
+							<label for="sched-valid-from">${I18n.t('schedules.validFrom')} * (DD.MM.YYYY):</label>
+							<input type="text" id="sched-valid-from" required placeholder="DD.MM.YYYY" maxlength="10">
 						</div>
 						<div class="form-group">
-							<label for="sched-valid-to">${I18n.t('schedules.validTo')}:</label>
-							<input type="date" id="sched-valid-to">
+							<label for="sched-valid-to">${I18n.t('schedules.validTo')} (DD.MM.YYYY):</label>
+							<input type="text" id="sched-valid-to" placeholder="DD.MM.YYYY" maxlength="10">
 						</div>
 						<div class="form-group">
 							<label for="sched-mon">${I18n.t('scheduleTemplates.monday')}:</label>
@@ -121,7 +121,7 @@ export default class SchedulesView {
 
         const formatDate = (isoDate) => {
             if (!isoDate) return '';
-            return isoDate.split('T')[0];
+            return Format.date(isoDate);
         };
 
         const formatTime = (minutes) => {
@@ -137,6 +137,16 @@ export default class SchedulesView {
             if (parts.length !== 2) return 0;
             return parseInt(parts[0], 10) * 60 + parseInt(parts[1], 10);
         };
+
+        const schedDateInputs = ['#sched-valid-from', '#sched-valid-to']
+            .map(sel => container.querySelector(sel));
+        schedDateInputs.forEach(inp => {
+            if (inp) {
+                inp.addEventListener('blur', () => {
+                    if (inp.value) inp.value = Format.normalizeDate(inp.value);
+                });
+            }
+        });
 
         const schedDayInputs = ['#sched-mon', '#sched-tue', '#sched-wed', '#sched-thu', '#sched-fri', '#sched-sat', '#sched-sun']
             .map(sel => container.querySelector(sel));
@@ -263,6 +273,7 @@ export default class SchedulesView {
             editingId = null;
             modalTitle.innerText = I18n.t('schedules.addSchedule');
             form.reset();
+            container.querySelector('#sched-valid-from').value = Format.date(new Date());
             modal.style.display = 'block';
         });
 
@@ -276,9 +287,29 @@ export default class SchedulesView {
 
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
+            const validFromRaw = container.querySelector('#sched-valid-from').value;
+            const validToRaw = container.querySelector('#sched-valid-to').value;
+
+            if (!Format.isValidDate(validFromRaw)) {
+                NotificationDialog.error(I18n.t('absences.invalidDateRange'));
+                return;
+            }
+            if (validToRaw && !Format.isValidDate(validToRaw)) {
+                NotificationDialog.error(I18n.t('absences.invalidDateRange'));
+                return;
+            }
+
+            const validFromIso = Format.toIsoDate(validFromRaw);
+            const validToIso = validToRaw ? Format.toIsoDate(validToRaw) : null;
+
+            if (validToIso && validFromIso > validToIso) {
+                NotificationDialog.error(I18n.t('absences.invalidDateRange'));
+                return;
+            }
+
             const sched = {
-                validFrom: container.querySelector('#sched-valid-from').value + 'T00:00:00Z',
-                validTo: container.querySelector('#sched-valid-to').value ? container.querySelector('#sched-valid-to').value + 'T23:59:59Z' : null,
+                validFrom: validFromIso ? validFromIso + 'T00:00:00Z' : null,
+                validTo: validToIso ? validToIso + 'T23:59:59Z' : null,
                 monday: parseTime(container.querySelector('#sched-mon').value),
                 tuesday: parseTime(container.querySelector('#sched-tue').value),
                 wednesday: parseTime(container.querySelector('#sched-wed').value),

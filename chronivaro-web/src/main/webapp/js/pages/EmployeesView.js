@@ -4,6 +4,7 @@ import LocationApi from '../api/LocationApi.js';
 import ScheduleApi from '../api/ScheduleApi.js';
 import ScheduleTemplateApi from '../api/ScheduleTemplateApi.js';
 import NotificationDialog from '../utils/NotificationDialog.js';
+import Format from '../utils/Format.js';
 import I18n from '../i18n/I18n.js';
 
 export default class EmployeesView {
@@ -98,8 +99,8 @@ export default class EmployeesView {
 								<input type="text" id="emp-lastname" required>
 							</div>
 							<div class="form-group">
-								<label for="emp-birthdate">${I18n.t('employees.birthdate')}:</label>
-								<input type="date" id="emp-birthdate">
+								<label for="emp-birthdate">${I18n.t('employees.birthdate')} (DD.MM.YYYY):</label>
+								<input type="text" id="emp-birthdate" placeholder="DD.MM.YYYY" maxlength="10">
 							</div>
 							<div class="form-group">
 								<label for="emp-team">${I18n.t('common.team')}:</label>
@@ -114,12 +115,12 @@ export default class EmployeesView {
 								<input type="text" id="emp-timezone" required placeholder="Europe/Zurich">
 							</div>
 							<div class="form-group">
-								<label for="emp-join-date">${I18n.t('employees.joinDate')}:</label>
-								<input type="date" id="emp-join-date" required>
+								<label for="emp-join-date">${I18n.t('employees.joinDate')} * (DD.MM.YYYY):</label>
+								<input type="text" id="emp-join-date" required placeholder="DD.MM.YYYY" maxlength="10">
 							</div>
 							<div class="form-group">
-								<label for="emp-exit-date">${I18n.t('employees.exitDate')}:</label>
-								<input type="date" id="emp-exit-date">
+								<label for="emp-exit-date">${I18n.t('employees.exitDate')} (DD.MM.YYYY):</label>
+								<input type="text" id="emp-exit-date" placeholder="DD.MM.YYYY" maxlength="10">
 							</div>
 							<div class="form-group full-width">
 								<label><input type="checkbox" id="emp-active" checked> ${I18n.t('common.active')}</label>
@@ -155,8 +156,8 @@ export default class EmployeesView {
 							<input type="text" id="vacation-adjust-emp-name" disabled>
 						</div>
 						<div class="form-group">
-							<label for="vacation-adjust-date">${I18n.t('common.effectiveDate')}:</label>
-							<input type="date" id="vacation-adjust-date" required>
+							<label for="vacation-adjust-date">${I18n.t('common.effectiveDate')} * (DD.MM.YYYY):</label>
+							<input type="text" id="vacation-adjust-date" required placeholder="DD.MM.YYYY" maxlength="10">
 						</div>
 						<div class="form-grid" style="grid-template-columns: 2fr 1fr; gap: 1rem;">
 							<div class="form-group">
@@ -297,7 +298,7 @@ export default class EmployeesView {
 					<td>${emp.personalNumber}</td>
 					<td>${emp.firstname}</td>
 					<td>${emp.lastname}</td>
-					<td>${emp.birthdate || ''}</td>
+					<td>${Format.date(emp.birthdate)}</td>
 					<td>${emp.teamName || ''}</td>
 					<td>${emp.locationName || ''}</td>
 					<td>${statusBadge}</td>
@@ -372,12 +373,12 @@ export default class EmployeesView {
                     container.querySelector('#emp-pers-nr').value = emp.personalNumber;
                     container.querySelector('#emp-firstname').value = emp.firstname;
                     container.querySelector('#emp-lastname').value = emp.lastname;
-                    container.querySelector('#emp-birthdate').value = emp.birthdate || '';
+                    container.querySelector('#emp-birthdate').value = Format.date(emp.birthdate);
                     container.querySelector('#emp-team').value = emp.teamId;
                     container.querySelector('#emp-location').value = emp.locationId;
                     container.querySelector('#emp-timezone').value = emp.timezone;
-                    container.querySelector('#emp-join-date').value = emp.joinDate;
-                    container.querySelector('#emp-exit-date').value = emp.exitDate || '';
+                    container.querySelector('#emp-join-date').value = Format.date(emp.joinDate);
+                    container.querySelector('#emp-exit-date').value = Format.date(emp.exitDate);
                     container.querySelector('#emp-username').value = emp.username;
                     container.querySelector('#emp-email').value = emp.email || '';
                     container.querySelector('#emp-active').checked = emp.active;
@@ -437,8 +438,7 @@ export default class EmployeesView {
             adjustingVacationEmpId = id;
             const empName = getEmployeeName(id);
             container.querySelector('#vacation-adjust-emp-name').value = `${empName} (${id})`;
-            const today = new Date().toISOString().split('T')[0];
-            container.querySelector('#vacation-adjust-date').value = today;
+            container.querySelector('#vacation-adjust-date').value = Format.date(new Date());
             container.querySelector('#vacation-adjust-value').value = '';
             container.querySelector('#vacation-adjust-unit').value = 'days';
             container.querySelector('#vacation-adjust-comment').value = '';
@@ -448,6 +448,20 @@ export default class EmployeesView {
         closeVacationAdjustBtn.addEventListener('click', () => {
             vacationAdjustModal.style.display = 'none';
             adjustingVacationEmpId = null;
+        });
+
+        const dateInputs = [
+            container.querySelector('#emp-birthdate'),
+            container.querySelector('#emp-join-date'),
+            container.querySelector('#emp-exit-date'),
+            container.querySelector('#vacation-adjust-date')
+        ];
+        dateInputs.forEach(inp => {
+            if (inp) {
+                inp.addEventListener('blur', () => {
+                    if (inp.value) inp.value = Format.normalizeDate(inp.value);
+                });
+            }
         });
 
         vacationAdjustForm.addEventListener('submit', async (e) => {
@@ -464,6 +478,13 @@ export default class EmployeesView {
                 return;
             }
 
+            if (dateStr && !Format.isValidDate(dateStr)) {
+                NotificationDialog.error(I18n.t('absences.invalidDateRange'));
+                return;
+            }
+
+            const dateIso = Format.toIsoDate(dateStr);
+
             let valueMinutes = 0;
             if (unit === 'days') {
                 valueMinutes = Math.round(valRaw * 480);
@@ -477,7 +498,7 @@ export default class EmployeesView {
                 const payload = {
                     value: valueMinutes,
                     comment: comment,
-                    date: dateStr ? `${dateStr}T00:00:00Z` : undefined
+                    date: dateIso ? `${dateIso}T00:00:00Z` : undefined
                 };
                 await EmployeeApi.addVacationCorrection(adjustingVacationEmpId, payload);
                 NotificationDialog.info(I18n.t('employees.adjustmentSuccess'));
@@ -499,6 +520,7 @@ export default class EmployeesView {
             container.querySelector('#emp-username').required = true;
             container.querySelector('#emp-username').value = '';
             container.querySelector('#emp-timezone').value = Intl.DateTimeFormat().resolvedOptions().timeZone || 'Europe/Zurich';
+            container.querySelector('#emp-join-date').value = Format.date(new Date());
             container.querySelector('#emp-active').checked = true;
             container.querySelector('#schedule-section').style.display = 'block';
             modal.style.display = 'block';
@@ -511,16 +533,37 @@ export default class EmployeesView {
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
 
+            const birthdateRaw = container.querySelector('#emp-birthdate').value;
+            const joinDateRaw = container.querySelector('#emp-join-date').value;
+            const exitDateRaw = container.querySelector('#emp-exit-date').value;
+
+            if (birthdateRaw && !Format.isValidDate(birthdateRaw)) {
+                NotificationDialog.error(I18n.t('absences.invalidDateRange'));
+                return;
+            }
+            if (!Format.isValidDate(joinDateRaw)) {
+                NotificationDialog.error(I18n.t('absences.invalidDateRange'));
+                return;
+            }
+            if (exitDateRaw && !Format.isValidDate(exitDateRaw)) {
+                NotificationDialog.error(I18n.t('absences.invalidDateRange'));
+                return;
+            }
+
+            const birthdateIso = birthdateRaw ? Format.toIsoDate(birthdateRaw) : null;
+            const joinDateIso = Format.toIsoDate(joinDateRaw);
+            const exitDateIso = exitDateRaw ? Format.toIsoDate(exitDateRaw) : null;
+
             const emp = {
                 personalNumber: container.querySelector('#emp-pers-nr').value,
                 firstname: container.querySelector('#emp-firstname').value,
                 lastname: container.querySelector('#emp-lastname').value,
-                birthdate: container.querySelector('#emp-birthdate').value,
+                birthdate: birthdateIso || null,
                 teamId: container.querySelector('#emp-team').value,
                 locationId: container.querySelector('#emp-location').value,
                 timezone: container.querySelector('#emp-timezone').value,
-                joinDate: container.querySelector('#emp-join-date').value,
-                exitDate: container.querySelector('#emp-exit-date').value || null,
+                joinDate: joinDateIso,
+                exitDate: exitDateIso,
                 username: container.querySelector('#emp-username').value,
                 email: container.querySelector('#emp-email').value,
                 active: container.querySelector('#emp-active').checked,

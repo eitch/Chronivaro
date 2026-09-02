@@ -119,11 +119,11 @@ export default class MyAbsencesView {
                 <div class="filter-controls">
                     <div class="filter-group">
                         <label for="absence-filter-from">${I18n.t('common.from')}:</label>
-                        <input type="date" id="absence-filter-from">
+                        <input type="text" id="absence-filter-from" placeholder="DD.MM.YYYY" maxlength="10">
                     </div>
                     <div class="filter-group">
                         <label for="absence-filter-to">${I18n.t('common.to')}:</label>
-                        <input type="date" id="absence-filter-to">
+                        <input type="text" id="absence-filter-to" placeholder="DD.MM.YYYY" maxlength="10">
                     </div>
                     <div class="filter-group">
                         <label for="absence-filter-status">${I18n.t('common.status')}:</label>
@@ -181,12 +181,12 @@ export default class MyAbsencesView {
                                 </select>
                             </div>
                             <div class="form-group">
-                                <label for="modal-start-date">${I18n.t('absences.startDate')}:</label>
-                                <input type="date" id="modal-start-date" required>
+                                <label for="modal-start-date">${I18n.t('absences.startDate')} * (DD.MM.YYYY):</label>
+                                <input type="text" id="modal-start-date" required placeholder="DD.MM.YYYY" maxlength="10">
                             </div>
                             <div class="form-group">
-                                <label for="modal-end-date">${I18n.t('absences.endDate')}:</label>
-                                <input type="date" id="modal-end-date" required>
+                                <label for="modal-end-date">${I18n.t('absences.endDate')} * (DD.MM.YYYY):</label>
+                                <input type="text" id="modal-end-date" required placeholder="DD.MM.YYYY" maxlength="10">
                             </div>
                             <div class="form-group">
                                 <label for="modal-duration-type">${I18n.t('absences.durationType')}:</label>
@@ -429,8 +429,8 @@ export default class MyAbsencesView {
             absencesTbody.innerHTML = `<tr><td colspan="8">${I18n.t('absences.loadingAbsences')}</td></tr>`;
             try {
                 const params = {
-                    from: filterFrom.value || undefined,
-                    to: filterTo.value || undefined,
+                    from: Format.toIsoDate(filterFrom.value) || undefined,
+                    to: Format.toIsoDate(filterTo.value) || undefined,
                     status: filterStatus.value || undefined,
                     absenceTypeCode: filterType.value || undefined
                 };
@@ -526,8 +526,8 @@ export default class MyAbsencesView {
 
                             const startStr = (absence.start || absence.startDate || '').substring(0, 10);
                             const endStr = (absence.end || absence.endDate || '').substring(0, 10);
-                            modalStartDate.value = startStr || new Date().toISOString().split('T')[0];
-                            modalEndDate.value = endStr || modalStartDate.value;
+                            modalStartDate.value = Format.date(startStr) || Format.date(new Date());
+                            modalEndDate.value = Format.date(endStr) || modalStartDate.value;
 
                             const duration = absence.durationType || 'FULL_DAY';
                             modalDurationType.value = duration;
@@ -664,6 +664,14 @@ export default class MyAbsencesView {
             loadVacationAccount();
         });
 
+        [filterFrom, filterTo, modalStartDate, modalEndDate].forEach(inp => {
+            if (inp) {
+                inp.addEventListener('blur', () => {
+                    if (inp.value) inp.value = Format.normalizeDate(inp.value);
+                });
+            }
+        });
+
         refreshAbsencesBtn.addEventListener('click', loadAbsences);
 
         requestAbsenceBtn.addEventListener('click', () => {
@@ -699,7 +707,7 @@ export default class MyAbsencesView {
                 modalSubmitBtn.textContent = managingOther ? I18n.t('common.save') : I18n.t('absences.submitDraft');
             }
 
-            const todayStr = new Date().toISOString().split('T')[0];
+            const todayStr = Format.date(new Date());
             modalStartDate.value = todayStr;
             modalEndDate.value = todayStr;
             modalEndDate.disabled = false;
@@ -721,8 +729,13 @@ export default class MyAbsencesView {
                 return;
             }
 
-            const startDate = modalStartDate.value;
-            const endDate = modalDurationType.value === 'FULL_DAY' ? modalEndDate.value : startDate;
+            if (!Format.isValidDate(modalStartDate.value) || (modalDurationType.value === 'FULL_DAY' && !Format.isValidDate(modalEndDate.value))) {
+                NotificationDialog.error(I18n.t('absences.invalidDateRange'));
+                return;
+            }
+
+            const startDate = Format.toIsoDate(modalStartDate.value);
+            const endDate = modalDurationType.value === 'FULL_DAY' ? Format.toIsoDate(modalEndDate.value) : startDate;
             if (startDate > endDate) {
                 NotificationDialog.error(I18n.t('absences.invalidDateRange'));
                 return;
@@ -770,8 +783,13 @@ export default class MyAbsencesView {
                 return;
             }
 
-            const startDate = modalStartDate.value;
-            const endDate = modalDurationType.value === 'FULL_DAY' ? modalEndDate.value : startDate;
+            if (!Format.isValidDate(modalStartDate.value) || (modalDurationType.value === 'FULL_DAY' && !Format.isValidDate(modalEndDate.value))) {
+                NotificationDialog.error(I18n.t('absences.invalidDateRange'));
+                return;
+            }
+
+            const startDate = Format.toIsoDate(modalStartDate.value);
+            const endDate = modalDurationType.value === 'FULL_DAY' ? Format.toIsoDate(modalEndDate.value) : startDate;
             if (startDate > endDate) {
                 NotificationDialog.error(I18n.t('absences.invalidDateRange'));
                 return;

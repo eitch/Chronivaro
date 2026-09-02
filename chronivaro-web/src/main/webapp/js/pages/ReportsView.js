@@ -323,8 +323,8 @@ export default class ReportsView {
 		if (this.activeReportType === 'day') {
 			this.filterBar.innerHTML = `
 				<div class="filter-group">
-					<label for="filter-day-date">${I18n.t('common.date')} *:</label>
-					<input type="date" id="filter-day-date" value="${this.filters.day.date}" required>
+					<label for="filter-day-date">${I18n.t('common.date')} * (DD.MM.YYYY):</label>
+					<input type="text" id="filter-day-date" value="${Format.date(this.filters.day.date)}" placeholder="DD.MM.YYYY" maxlength="10" required>
 				</div>
 				${canSelectEmp ? `
 				<div class="filter-group">
@@ -342,7 +342,10 @@ export default class ReportsView {
 				` : ''}
 			`;
 			const dateInput = this.filterBar.querySelector('#filter-day-date');
-			dateInput.addEventListener('change', () => { this.filters.day.date = dateInput.value; });
+			dateInput.addEventListener('blur', () => {
+				if (dateInput.value) dateInput.value = Format.normalizeDate(dateInput.value);
+			});
+			dateInput.addEventListener('change', () => { this.filters.day.date = Format.toIsoDate(dateInput.value); });
 
 			if (canSelectEmp) {
 				const teamSelect = this.filterBar.querySelector('#filter-day-team');
@@ -476,12 +479,12 @@ export default class ReportsView {
 		} else if (this.activeReportType === 'absences') {
 			this.filterBar.innerHTML = `
 				<div class="filter-group">
-					<label for="filter-absences-from">${I18n.t('common.from')}:</label>
-					<input type="date" id="filter-absences-from" value="${this.filters.absences.from}">
+					<label for="filter-absences-from">${I18n.t('common.from')} (DD.MM.YYYY):</label>
+					<input type="text" id="filter-absences-from" value="${Format.date(this.filters.absences.from)}" placeholder="DD.MM.YYYY" maxlength="10">
 				</div>
 				<div class="filter-group">
-					<label for="filter-absences-to">${I18n.t('common.to')}:</label>
-					<input type="date" id="filter-absences-to" value="${this.filters.absences.to}">
+					<label for="filter-absences-to">${I18n.t('common.to')} (DD.MM.YYYY):</label>
+					<input type="text" id="filter-absences-to" value="${Format.date(this.filters.absences.to)}" placeholder="DD.MM.YYYY" maxlength="10">
 				</div>
 				${canSelectEmp ? `
 				<div class="filter-group">
@@ -519,8 +522,16 @@ export default class ReportsView {
 			const typeSelect = this.filterBar.querySelector('#filter-absence-type');
 			const stateSelect = this.filterBar.querySelector('#filter-absence-state');
 
-			fromInput.addEventListener('change', () => { this.filters.absences.from = fromInput.value; });
-			toInput.addEventListener('change', () => { this.filters.absences.to = toInput.value; });
+			[fromInput, toInput].forEach(inp => {
+				if (inp) {
+					inp.addEventListener('blur', () => {
+						if (inp.value) inp.value = Format.normalizeDate(inp.value);
+					});
+				}
+			});
+
+			fromInput.addEventListener('change', () => { this.filters.absences.from = Format.toIsoDate(fromInput.value); });
+			toInput.addEventListener('change', () => { this.filters.absences.to = Format.toIsoDate(toInput.value); });
 			typeSelect.addEventListener('change', () => { this.filters.absences.type = typeSelect.value; });
 			stateSelect.addEventListener('change', () => { this.filters.absences.state = stateSelect.value; });
 
@@ -547,12 +558,12 @@ export default class ReportsView {
 		} else if (this.activeReportType === 'on-call') {
 			this.filterBar.innerHTML = `
 				<div class="filter-group">
-					<label for="filter-on-call-from">${I18n.t('common.from')}:</label>
-					<input type="date" id="filter-on-call-from" value="${this.filters.onCall.from}">
+					<label for="filter-on-call-from">${I18n.t('common.from')} (DD.MM.YYYY):</label>
+					<input type="text" id="filter-on-call-from" value="${Format.date(this.filters.onCall.from)}" placeholder="DD.MM.YYYY" maxlength="10">
 				</div>
 				<div class="filter-group">
-					<label for="filter-on-call-to">${I18n.t('common.to')}:</label>
-					<input type="date" id="filter-on-call-to" value="${this.filters.onCall.to}">
+					<label for="filter-on-call-to">${I18n.t('common.to')} (DD.MM.YYYY):</label>
+					<input type="text" id="filter-on-call-to" value="${Format.date(this.filters.onCall.to)}" placeholder="DD.MM.YYYY" maxlength="10">
 				</div>
 				${canSelectEmp ? `
 				<div class="filter-group">
@@ -572,8 +583,16 @@ export default class ReportsView {
 			const fromInput = this.filterBar.querySelector('#filter-on-call-from');
 			const toInput = this.filterBar.querySelector('#filter-on-call-to');
 
-			fromInput.addEventListener('change', () => { this.filters.onCall.from = fromInput.value; });
-			toInput.addEventListener('change', () => { this.filters.onCall.to = toInput.value; });
+			[fromInput, toInput].forEach(inp => {
+				if (inp) {
+					inp.addEventListener('blur', () => {
+						if (inp.value) inp.value = Format.normalizeDate(inp.value);
+					});
+				}
+			});
+
+			fromInput.addEventListener('change', () => { this.filters.onCall.from = Format.toIsoDate(fromInput.value); });
+			toInput.addEventListener('change', () => { this.filters.onCall.to = Format.toIsoDate(toInput.value); });
 
 			if (canSelectEmp) {
 				const teamSelect = this.filterBar.querySelector('#filter-on-call-team');

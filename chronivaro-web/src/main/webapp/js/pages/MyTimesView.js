@@ -60,11 +60,11 @@ export default class MyTimesView {
 					` : ''}
 					<div class="filter-group">
 						<label for="date-from">${I18n.t('common.from')}:</label>
-						<input type="date" id="date-from" value="${defaultFromStr}">
+						<input type="text" id="date-from" value="${Format.date(defaultFromStr)}" placeholder="DD.MM.YYYY" maxlength="10">
 					</div>
 					<div class="filter-group">
 						<label for="date-to">${I18n.t('common.to')}:</label>
-						<input type="date" id="date-to" value="${defaultToStr}">
+						<input type="text" id="date-to" value="${Format.date(defaultToStr)}" placeholder="DD.MM.YYYY" maxlength="10">
 					</div>
 					<div class="filter-actions" style="margin-left: auto;">
 						<button id="refresh-times" class="secondary-btn">${I18n.t('common.refresh')}</button>
@@ -114,8 +114,8 @@ export default class MyTimesView {
 					<form id="add-work-entry-form">
 						<div class="form-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
 							<div class="form-group" style="grid-column: span 2;">
-								<label for="add-entry-date" style="display: block; margin-bottom: 0.25rem; font-weight: 500;">${I18n.t('common.date')} *:</label>
-								<input type="date" id="add-entry-date" required style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color, #e2e8f0); border-radius: 4px; box-sizing: border-box;">
+								<label for="add-entry-date" style="display: block; margin-bottom: 0.25rem; font-weight: 500;">${I18n.t('common.date')} * (DD.MM.YYYY):</label>
+								<input type="text" id="add-entry-date" required placeholder="DD.MM.YYYY" maxlength="10" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color, #e2e8f0); border-radius: 4px; box-sizing: border-box;">
 							</div>
 							<div class="form-group">
 								<label for="add-start-time" style="display: block; margin-bottom: 0.25rem; font-weight: 500;">${I18n.t('times.startTime')} * (24h):</label>
@@ -176,8 +176,8 @@ export default class MyTimesView {
 					<form id="work-entry-form">
 						<div class="form-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
 							<div class="form-group" id="edit-date-group" style="grid-column: span 2;">
-								<label for="modal-entry-date" style="display: block; margin-bottom: 0.25rem; font-weight: 500;">${I18n.t('common.date')} *:</label>
-								<input type="date" id="modal-entry-date" required style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color, #e2e8f0); border-radius: 4px; box-sizing: border-box;">
+								<label for="modal-entry-date" style="display: block; margin-bottom: 0.25rem; font-weight: 500;">${I18n.t('common.date')} * (DD.MM.YYYY):</label>
+								<input type="text" id="modal-entry-date" required placeholder="DD.MM.YYYY" maxlength="10" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color, #e2e8f0); border-radius: 4px; box-sizing: border-box;">
 							</div>
 							<div class="form-group" id="edit-start-group">
 								<label for="modal-start-time" style="display: block; margin-bottom: 0.25rem; font-weight: 500;">${I18n.t('times.startTime')} * (24h):</label>
@@ -270,11 +270,12 @@ export default class MyTimesView {
 
 		const getNextDayString = (dateStr) => {
 			if (!dateStr) return '';
-			const [y, m, d] = dateStr.split('-').map(Number);
+			const iso = Format.toIsoDate(dateStr);
+			if (!iso) return '';
+			const [y, m, d] = iso.split('-').map(Number);
 			const date = new Date(y, m - 1, d);
 			date.setDate(date.getDate() + 1);
-			const pad = (n) => String(n).padStart(2, '0');
-			return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+			return Format.date(date);
 		};
 
 		const updateAddEndDateDisplay = () => {
@@ -311,6 +312,14 @@ export default class MyTimesView {
 		if (editDateInput) {
 			editDateInput.addEventListener('change', updateEditEndDateDisplay);
 		}
+
+		[fromInput, toInput, addDateInput, editDateInput].forEach(inp => {
+			if (inp) {
+				inp.addEventListener('blur', () => {
+					if (inp.value) inp.value = Format.normalizeDate(inp.value);
+				});
+			}
+		});
 
 		[addStartInput, addEndInput, editStartInput, editEndInput].forEach(inp => {
 			if (inp) {
@@ -379,9 +388,10 @@ export default class MyTimesView {
 			try {
 				tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 2rem;">${I18n.t('common.loading')}</td></tr>`;
 
-				const from = new Date(fromInput.value);
-				const to = new Date(toInput.value);
-				to.setHours(23, 59, 59, 999);
+				const fromIso = Format.toIsoDate(fromInput.value);
+				const toIso = Format.toIsoDate(toInput.value);
+				const from = new Date(`${fromIso}T00:00:00`);
+				const to = new Date(`${toIso}T23:59:59.999`);
 
 				let entries = [];
 				const isViewingOther = this.canManage && this.selectedEmployeeId && (this.selectedEmployeeId !== this.currentUserEmployeeId);
@@ -459,14 +469,14 @@ export default class MyTimesView {
 
 							const startDate = new Date(entry.start);
 							const pad = (n) => String(n).padStart(2, '0');
-							const dateStr = !isNaN(startDate.getTime())
-									? `${startDate.getFullYear()}-${pad(startDate.getMonth() + 1)}-${pad(startDate.getDate())}`
+							const dateFormatted = !isNaN(startDate.getTime())
+									? Format.date(startDate)
 									: '';
 							const startTimeStr = !isNaN(startDate.getTime())
 									? `${pad(startDate.getHours())}:${pad(startDate.getMinutes())}`
 									: '';
 
-							editDateInput.value = dateStr;
+							editDateInput.value = dateFormatted;
 							editStartInput.value = startTimeStr;
 							editStartInput.removeAttribute('readonly');
 							editStartInput.removeAttribute('disabled');
@@ -546,11 +556,7 @@ export default class MyTimesView {
 		// Event handlers for Add Modal
 		if (btnAddEntry) {
 			btnAddEntry.addEventListener('click', () => {
-				const nowD = new Date();
-				const pad = (n) => String(n).padStart(2, '0');
-				const todayDate = `${nowD.getFullYear()}-${pad(nowD.getMonth() + 1)}-${pad(nowD.getDate())}`;
-
-				addDateInput.value = todayDate;
+				addDateInput.value = Format.date(new Date());
 				addStartInput.value = '08:00';
 				addEndInput.value = '17:00';
 				if (addPastMidnightCheckbox) addPastMidnightCheckbox.checked = false;
@@ -581,15 +587,27 @@ export default class MyTimesView {
 				const startVal = Format.normalizeTime(addStartInput.value);
 				const endVal = Format.normalizeTime(addEndInput.value);
 
+				if (!Format.isValidDate(dateVal)) {
+					NotificationDialog.error(I18n.t('absences.invalidDateRange'));
+					return;
+				}
+
 				if (!Format.isValidTime(startVal) || !Format.isValidTime(endVal)) {
 					NotificationDialog.error(I18n.t('times.invalidDuration'));
 					return;
 				}
 
 				const isPastMidnight = addPastMidnightCheckbox && addPastMidnightCheckbox.checked;
-				const endDateVal = isPastMidnight ? getNextDayString(dateVal) : dateVal;
-				const startDate = new Date(`${dateVal}T${startVal}:00`);
-				const endDate = new Date(`${endDateVal}T${endVal}:00`);
+				const dateIso = Format.toIsoDate(dateVal);
+				let endDateIso = dateIso;
+				if (isPastMidnight) {
+					const [y, m, d] = dateIso.split('-').map(Number);
+					const nextD = new Date(y, m - 1, d + 1);
+					endDateIso = Format.toIsoDate(nextD);
+				}
+
+				const startDate = new Date(`${dateIso}T${startVal}:00`);
+				const endDate = new Date(`${endDateIso}T${endVal}:00`);
 				if (isNaN(startDate.getTime()) || isNaN(endDate.getTime()) || endDate <= startDate) {
 					NotificationDialog.error(I18n.t('times.invalidDuration'));
 					return;
@@ -632,6 +650,11 @@ export default class MyTimesView {
 				const startVal = Format.normalizeTime(editStartInput.value);
 				const endVal = editEndInput.value ? Format.normalizeTime(editEndInput.value) : '';
 
+				if (!Format.isValidDate(dateVal)) {
+					NotificationDialog.error(I18n.t('absences.invalidDateRange'));
+					return;
+				}
+
 				if (!Format.isValidTime(startVal)) {
 					NotificationDialog.error(I18n.t('times.invalidDuration'));
 					return;
@@ -649,7 +672,8 @@ export default class MyTimesView {
 					return;
 				}
 
-				const startDate = new Date(`${dateVal}T${startVal}:00`);
+				const dateIso = Format.toIsoDate(dateVal);
+				const startDate = new Date(`${dateIso}T${startVal}:00`);
 				if (isNaN(startDate.getTime())) {
 					NotificationDialog.error(I18n.t('times.invalidDuration'));
 					return;
@@ -658,8 +682,13 @@ export default class MyTimesView {
 				let endDate = null;
 				if (endVal) {
 					const isPastMidnight = editPastMidnightCheckbox && editPastMidnightCheckbox.checked;
-					const endDateVal = isPastMidnight ? getNextDayString(dateVal) : dateVal;
-					endDate = new Date(`${endDateVal}T${endVal}:00`);
+					let endDateIso = dateIso;
+					if (isPastMidnight) {
+						const [y, m, d] = dateIso.split('-').map(Number);
+						const nextD = new Date(y, m - 1, d + 1);
+						endDateIso = Format.toIsoDate(nextD);
+					}
+					endDate = new Date(`${endDateIso}T${endVal}:00`);
 					if (isNaN(endDate.getTime()) || endDate <= startDate) {
 						NotificationDialog.error(I18n.t('times.invalidDuration'));
 						return;

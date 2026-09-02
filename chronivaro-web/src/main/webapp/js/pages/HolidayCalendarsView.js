@@ -1,5 +1,6 @@
 import HolidayCalendarApi from '../api/HolidayCalendarApi.js';
 import NotificationDialog from '../utils/NotificationDialog.js';
+import Format from '../utils/Format.js';
 import I18n from '../i18n/I18n.js';
 
 export default class HolidayCalendarsView {
@@ -81,8 +82,8 @@ export default class HolidayCalendarsView {
 							<input type="text" id="hol-name" required>
 						</div>
 						<div class="form-group">
-							<label for="hol-date">${I18n.t('holidayCalendars.holidayDate')}:</label>
-							<input type="date" id="hol-date" required>
+							<label for="hol-date">${I18n.t('holidayCalendars.holidayDate')} * (DD.MM.YYYY):</label>
+							<input type="text" id="hol-date" required placeholder="DD.MM.YYYY" maxlength="10">
 						</div>
 						<div class="form-group">
 							<label for="hol-credit">${I18n.t('holidayCalendars.creditFactor')}:</label>
@@ -140,11 +141,23 @@ export default class HolidayCalendarsView {
             }
         });
 
+        const holDateInput = container.querySelector('#hol-date');
+        if (holDateInput) {
+            holDateInput.addEventListener('blur', () => {
+                if (holDateInput.value) holDateInput.value = Format.normalizeDate(holDateInput.value);
+            });
+        }
+
         this.holForm.addEventListener('submit', async (e) => {
             e.preventDefault();
+            const holDateVal = container.querySelector('#hol-date').value;
+            if (!Format.isValidDate(holDateVal)) {
+                NotificationDialog.error(I18n.t('absences.invalidDateRange'));
+                return;
+            }
             const holiday = {
                 name: container.querySelector('#hol-name').value,
-                date: container.querySelector('#hol-date').value,
+                date: Format.toIsoDate(holDateVal),
                 creditFactor: parseFloat(container.querySelector('#hol-credit').value) || 1.0
             };
             try {
@@ -214,7 +227,7 @@ export default class HolidayCalendarsView {
             holidays.sort((a, b) => a.date.localeCompare(b.date)).forEach(hol => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-					<td>${hol.date}</td>
+					<td>${Format.date(hol.date)}</td>
 					<td>${hol.name}</td>
 					<td>${hol.creditFactor}</td>
 					<td><button class="secondary delete-hol" data-id="${hol.id}">${I18n.t('common.delete')}</button></td>

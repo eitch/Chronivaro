@@ -37,11 +37,11 @@ export default class AuditLogView {
 			<div class="filter-bar card" style="display: flex; flex-wrap: wrap; gap: 1rem; align-items: flex-end; padding: 1rem; margin-bottom: 1.5rem;">
 				<div class="filter-group" style="display: flex; flex-direction: column; gap: 0.25rem;">
 					<label for="audit-from" style="font-weight: 500; font-size: 0.875rem;">${I18n.t('common.from')}:</label>
-					<input type="date" id="audit-from" value="${this.filters.from}" style="padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 4px;">
+					<input type="text" id="audit-from" value="${Format.date(this.filters.from)}" placeholder="DD.MM.YYYY" maxlength="10" style="padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 4px;">
 				</div>
 				<div class="filter-group" style="display: flex; flex-direction: column; gap: 0.25rem;">
 					<label for="audit-to" style="font-weight: 500; font-size: 0.875rem;">${I18n.t('common.to')}:</label>
-					<input type="date" id="audit-to" value="${this.filters.to}" style="padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 4px;">
+					<input type="text" id="audit-to" value="${Format.date(this.filters.to)}" placeholder="DD.MM.YYYY" maxlength="10" style="padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 4px;">
 				</div>
 				<div class="filter-group" style="display: flex; flex-direction: column; gap: 0.25rem;">
 					<label for="audit-entity-type" style="font-weight: 500; font-size: 0.875rem;">${I18n.t('auditLog.entityType')}:</label>
@@ -161,9 +161,17 @@ export default class AuditLogView {
         const prevBtn = container.querySelector('#audit-prev-btn');
         const nextBtn = container.querySelector('#audit-next-btn');
 
+        [fromInput, toInput].forEach(inp => {
+            if (inp) {
+                inp.addEventListener('blur', () => {
+                    if (inp.value) inp.value = Format.normalizeDate(inp.value);
+                });
+            }
+        });
+
         applyBtn.addEventListener('click', () => {
-            this.filters.from = fromInput.value;
-            this.filters.to = toInput.value;
+            this.filters.from = Format.toIsoDate(fromInput.value);
+            this.filters.to = Format.toIsoDate(toInput.value);
             this.filters.entityType = entityTypeSelect.value;
             this.filters.entityId = entityIdInput.value.trim();
             this.filters.username = usernameInput.value.trim();

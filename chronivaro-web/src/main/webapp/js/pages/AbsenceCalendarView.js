@@ -8,6 +8,7 @@ import OnCallPeriodApi from '../api/OnCallPeriodApi.js';
 import ReportApi from '../api/ReportApi.js';
 import NotificationDialog from '../utils/NotificationDialog.js';
 import MonthPicker from '../utils/MonthPicker.js';
+import Format from '../utils/Format.js';
 import I18n from '../i18n/I18n.js';
 
 export default class AbsenceCalendarView {
@@ -960,11 +961,11 @@ export default class AbsenceCalendarView {
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 0.75rem;">
                         <div>
                             <span style="font-weight: 600; color: var(--text-muted); display: block; font-size: 0.75rem;">${I18n.t('common.from')}:</span>
-                            <span>${abs.start}</span>
+                            <span>${Format.date(abs.start)}</span>
                         </div>
                         <div>
                             <span style="font-weight: 600; color: var(--text-muted); display: block; font-size: 0.75rem;">${I18n.t('common.to')}:</span>
-                            <span>${abs.end}</span>
+                            <span>${Format.date(abs.end)}</span>
                         </div>
                     </div>
                     <div style="margin-bottom: 0.75rem;">
@@ -1022,11 +1023,11 @@ export default class AbsenceCalendarView {
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 0.75rem;">
                         <div>
                             <span style="font-weight: 600; color: var(--text-muted); display: block; font-size: 0.75rem;">${I18n.t('common.from')}:</span>
-                            <span style="font-weight: 500;">${oc.startDate} ${oc.startTime ? `(${oc.startTime})` : ''}</span>
+                            <span style="font-weight: 500;">${Format.date(oc.startDate)} ${oc.startTime ? `(${oc.startTime})` : ''}</span>
                         </div>
                         <div>
                             <span style="font-weight: 600; color: var(--text-muted); display: block; font-size: 0.75rem;">${I18n.t('common.to')}:</span>
-                            <span style="font-weight: 500;">${oc.endDate} ${oc.endTime ? `(${oc.endTime})` : ''}</span>
+                            <span style="font-weight: 500;">${Format.date(oc.endDate)} ${oc.endTime ? `(${oc.endTime})` : ''}</span>
                         </div>
                     </div>
                     ${oc.comment ? `
@@ -1166,24 +1167,24 @@ export default class AbsenceCalendarView {
                         <!-- Dates Row -->
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                             <div class="form-group">
-                                <label for="modal-oncall-start" style="display: block; font-weight: 500; font-size: 0.85rem; margin-bottom: 0.25rem;">${I18n.t('common.from')} *</label>
-                                <input type="date" id="modal-oncall-start" value="${defaultStart}" required style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 4px;">
+                                <label for="modal-oncall-start" style="display: block; font-weight: 500; font-size: 0.85rem; margin-bottom: 0.25rem;">${I18n.t('common.from')} * (DD.MM.YYYY)</label>
+                                <input type="text" id="modal-oncall-start" value="${Format.date(defaultStart)}" required placeholder="DD.MM.YYYY" maxlength="10" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 4px; box-sizing: border-box;">
                             </div>
                             <div class="form-group">
-                                <label for="modal-oncall-end" style="display: block; font-weight: 500; font-size: 0.85rem; margin-bottom: 0.25rem;">${I18n.t('common.to')} *</label>
-                                <input type="date" id="modal-oncall-end" value="${defaultEnd}" required style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 4px;">
+                                <label for="modal-oncall-end" style="display: block; font-weight: 500; font-size: 0.85rem; margin-bottom: 0.25rem;">${I18n.t('common.to')} * (DD.MM.YYYY)</label>
+                                <input type="text" id="modal-oncall-end" value="${Format.date(defaultEnd)}" required placeholder="DD.MM.YYYY" maxlength="10" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 4px; box-sizing: border-box;">
                             </div>
                         </div>
 
                         <!-- Times Row -->
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                             <div class="form-group">
-                                <label for="modal-oncall-starttime" style="display: block; font-weight: 500; font-size: 0.85rem; margin-bottom: 0.25rem;">${I18n.t('onCall.startTime')}</label>
-                                <input type="time" id="modal-oncall-starttime" value="${defaultStartTime}" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 4px;">
+                                <label for="modal-oncall-starttime" style="display: block; font-weight: 500; font-size: 0.85rem; margin-bottom: 0.25rem;">${I18n.t('onCall.startTime')} (24h)</label>
+                                <input type="text" id="modal-oncall-starttime" value="${defaultStartTime}" placeholder="08:00" maxlength="5" pattern="^([01]?[0-9]|2[0-3]):[0-5][0-9]$" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 4px; box-sizing: border-box;">
                             </div>
                             <div class="form-group">
-                                <label for="modal-oncall-endtime" style="display: block; font-weight: 500; font-size: 0.85rem; margin-bottom: 0.25rem;">${I18n.t('onCall.endTime')}</label>
-                                <input type="time" id="modal-oncall-endtime" value="${defaultEndTime}" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 4px;">
+                                <label for="modal-oncall-endtime" style="display: block; font-weight: 500; font-size: 0.85rem; margin-bottom: 0.25rem;">${I18n.t('onCall.endTime')} (24h)</label>
+                                <input type="text" id="modal-oncall-endtime" value="${defaultEndTime}" placeholder="17:00" maxlength="5" pattern="^([01]?[0-9]|2[0-3]):[0-5][0-9]$" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 4px; box-sizing: border-box;">
                             </div>
                         </div>
 
@@ -1209,14 +1210,33 @@ export default class AbsenceCalendarView {
         const errorBanner = modal.querySelector('#oncall-error');
         const startInput = modal.querySelector('#modal-oncall-start');
         const endInput = modal.querySelector('#modal-oncall-end');
+        const startTimeInput = modal.querySelector('#modal-oncall-starttime');
+        const endTimeInput = modal.querySelector('#modal-oncall-endtime');
         const presetSelect = modal.querySelector('#modal-oncall-preset');
+
+        [startInput, endInput].forEach(inp => {
+            if (inp) {
+                inp.addEventListener('blur', () => {
+                    if (inp.value) inp.value = Format.normalizeDate(inp.value);
+                });
+            }
+        });
+
+        [startTimeInput, endTimeInput].forEach(inp => {
+            if (inp) {
+                inp.addEventListener('blur', () => {
+                    if (inp.value) inp.value = Format.normalizeTime(inp.value);
+                });
+            }
+        });
 
         // Preset calculation helper
         const applyPreset = () => {
             const val = presetSelect.value;
             if (val === 'custom') return;
 
-            const baseDate = startInput.value ? new Date(startInput.value) : new Date(this.currentYear, this.currentMonth - 1, 1);
+            const baseIso = Format.toIsoDate(startInput.value);
+            const baseDate = baseIso ? new Date(baseIso) : new Date(this.currentYear, this.currentMonth - 1, 1);
             if (isNaN(baseDate.getTime())) return;
 
             if (val === 'standard_week') {
@@ -1227,8 +1247,8 @@ export default class AbsenceCalendarView {
                 const sunday = new Date(monday);
                 sunday.setDate(monday.getDate() + 6);
 
-                startInput.value = monday.toISOString().split('T')[0];
-                endInput.value = sunday.toISOString().split('T')[0];
+                startInput.value = Format.date(monday);
+                endInput.value = Format.date(sunday);
             } else if (val === 'weekend') {
                 // Find Saturday of that week
                 const day = (baseDate.getDay() + 6) % 7;
@@ -1237,8 +1257,8 @@ export default class AbsenceCalendarView {
                 const sunday = new Date(saturday);
                 sunday.setDate(saturday.getDate() + 1);
 
-                startInput.value = saturday.toISOString().split('T')[0];
-                endInput.value = sunday.toISOString().split('T')[0];
+                startInput.value = Format.date(saturday);
+                endInput.value = Format.date(sunday);
             } else if (val === 'workweek') {
                 // Find Monday to Friday
                 const day = (baseDate.getDay() + 6) % 7;
@@ -1247,8 +1267,8 @@ export default class AbsenceCalendarView {
                 const friday = new Date(monday);
                 friday.setDate(monday.getDate() + 4);
 
-                startInput.value = monday.toISOString().split('T')[0];
-                endInput.value = friday.toISOString().split('T')[0];
+                startInput.value = Format.date(monday);
+                endInput.value = Format.date(friday);
             }
         };
 
@@ -1270,11 +1290,30 @@ export default class AbsenceCalendarView {
             errorBanner.textContent = '';
 
             const empId = modal.querySelector('#modal-oncall-emp').value;
-            const startDate = startInput.value;
-            const endDate = endInput.value;
-            const startTime = modal.querySelector('#modal-oncall-starttime').value.trim() || undefined;
-            const endTime = modal.querySelector('#modal-oncall-endtime').value.trim() || undefined;
+            const startDate = Format.toIsoDate(startInput.value);
+            const endDate = Format.toIsoDate(endInput.value);
+            const rawStartTime = startTimeInput.value.trim();
+            const rawEndTime = endTimeInput.value.trim();
+            const startTime = rawStartTime ? Format.normalizeTime(rawStartTime) : undefined;
+            const endTime = rawEndTime ? Format.normalizeTime(rawEndTime) : undefined;
             const comment = modal.querySelector('#modal-oncall-comment').value.trim() || undefined;
+
+            if (!Format.isValidDate(startInput.value) || !Format.isValidDate(endInput.value)) {
+                errorBanner.textContent = I18n.t('absences.invalidDateRange');
+                errorBanner.style.display = 'block';
+                return;
+            }
+
+            if (startTime && !Format.isValidTime(startTime)) {
+                errorBanner.textContent = I18n.t('times.invalidFormat');
+                errorBanner.style.display = 'block';
+                return;
+            }
+            if (endTime && !Format.isValidTime(endTime)) {
+                errorBanner.textContent = I18n.t('times.invalidFormat');
+                errorBanner.style.display = 'block';
+                return;
+            }
 
             if (startDate > endDate) {
                 errorBanner.textContent = I18n.t('absences.invalidDateRange');
@@ -1363,12 +1402,12 @@ export default class AbsenceCalendarView {
                         <!-- Dates Row -->
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                             <div class="form-group">
-                                <label for="modal-absence-start" style="display: block; font-weight: 500; font-size: 0.85rem; margin-bottom: 0.25rem;">${I18n.t('common.from')} *</label>
-                                <input type="date" id="modal-absence-start" value="${defaultStart}" required style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 4px;">
+                                <label for="modal-absence-start" style="display: block; font-weight: 500; font-size: 0.85rem; margin-bottom: 0.25rem;">${I18n.t('common.from')} * (DD.MM.YYYY)</label>
+                                <input type="text" id="modal-absence-start" value="${Format.date(defaultStart)}" required placeholder="DD.MM.YYYY" maxlength="10" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 4px; box-sizing: border-box;">
                             </div>
                             <div class="form-group">
-                                <label for="modal-absence-end" style="display: block; font-weight: 500; font-size: 0.85rem; margin-bottom: 0.25rem;">${I18n.t('common.to')} *</label>
-                                <input type="date" id="modal-absence-end" value="${defaultEnd}" required style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 4px;">
+                                <label for="modal-absence-end" style="display: block; font-weight: 500; font-size: 0.85rem; margin-bottom: 0.25rem;">${I18n.t('common.to')} * (DD.MM.YYYY)</label>
+                                <input type="text" id="modal-absence-end" value="${Format.date(defaultEnd)}" required placeholder="DD.MM.YYYY" maxlength="10" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 4px; box-sizing: border-box;">
                             </div>
                         </div>
 
@@ -1422,12 +1461,22 @@ export default class AbsenceCalendarView {
         modalsContainer.appendChild(modal);
 
         const form = modal.querySelector('#create-absence-form');
+        const startInput = modal.querySelector('#modal-absence-start');
+        const endInput = modal.querySelector('#modal-absence-end');
         const durationSelect = modal.querySelector('#modal-absence-duration-type');
         const hoursContainer = modal.querySelector('#modal-hours-container');
         const typeSelect = modal.querySelector('#modal-absence-type');
         const commentReqIndicator = modal.querySelector('#modal-comment-required-indicator');
         const commentInput = modal.querySelector('#modal-absence-comment');
         const errorBanner = modal.querySelector('#create-absence-error');
+
+        [startInput, endInput].forEach(inp => {
+            if (inp) {
+                inp.addEventListener('blur', () => {
+                    if (inp.value) inp.value = Format.normalizeDate(inp.value);
+                });
+            }
+        });
 
         // Dynamic hours visibility
         durationSelect.addEventListener('change', () => {
@@ -1466,10 +1515,16 @@ export default class AbsenceCalendarView {
 
             const empId = modal.querySelector('#modal-absence-emp').value;
             const absenceTypeCode = typeSelect.value;
-            const start = modal.querySelector('#modal-absence-start').value;
-            const end = modal.querySelector('#modal-absence-end').value;
+            const start = Format.toIsoDate(startInput.value);
+            const end = Format.toIsoDate(endInput.value);
             const durationValue = durationSelect.value;
             const comment = commentInput.value.trim();
+
+            if (!Format.isValidDate(startInput.value) || !Format.isValidDate(endInput.value)) {
+                errorBanner.textContent = I18n.t('absences.invalidDateRange');
+                errorBanner.style.display = 'block';
+                return;
+            }
 
             if (!absenceTypeCode) {
                 errorBanner.textContent = I18n.t('absences.selectAbsenceTypeError');
