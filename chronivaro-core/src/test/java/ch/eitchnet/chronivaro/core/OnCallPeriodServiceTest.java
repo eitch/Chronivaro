@@ -62,11 +62,20 @@ public class OnCallPeriodServiceTest {
 
 		String periodId;
 		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
-			List<Resource> periods = new OnCallPeriodSearch().forEmployee(employeeId).searchPeriods(tx);
+			List<Resource> periods = new OnCallPeriodSearch()
+					.forEmployee(employeeId)
+					.between(LocalDate.of(2026, 9, 1), LocalDate.of(2026, 9, 30))
+					.searchPeriods(tx);
 			assertFalse("Should find created period", periods.isEmpty());
 			Resource period = periods.get(0);
 			periodId = period.getId();
 			assertEquals("Initial On-Call Duty", period.getString("comment"));
+
+			List<Resource> outOfRangePeriods = new OnCallPeriodSearch()
+					.forEmployee(employeeId)
+					.between(LocalDate.of(2026, 10, 1), LocalDate.of(2026, 10, 31))
+					.searchPeriods(tx);
+			assertTrue("Should not find period outside date range", outOfRangePeriods.isEmpty());
 		}
 
 		UpdateOnCallPeriodService updateService = new UpdateOnCallPeriodService();

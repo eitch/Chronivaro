@@ -204,8 +204,8 @@ public class ReportServiceTest {
 			period.setId("oncall-rep-1");
 			period.setName("Weekly On-Call Shift");
 			period.setRelation(PARAM_EMPLOYEE, emp);
-			period.setDate(PARAM_START, start.atStartOfDay(ChronivaroModelHelper.getEmployeeTimezone(emp)));
-			period.setDate(PARAM_END, end.atTime(23, 59, 59).atZone(ChronivaroModelHelper.getEmployeeTimezone(emp)));
+			period.setDate(PARAM_START_DATE, start.atStartOfDay(ChronivaroModelHelper.getEmployeeTimezone(emp)));
+			period.setDate(PARAM_END_DATE, end.atTime(23, 59, 59).atZone(ChronivaroModelHelper.getEmployeeTimezone(emp)));
 			period.setString(PARAM_START_TIME, "17:00");
 			period.setString(PARAM_END_TIME, "08:00");
 			period.setString(PARAM_COMMENT, "Primary on-call emergency duty");

@@ -64,8 +64,8 @@ public class OnCallReportService extends AbstractService<OnCallReportService.OnC
 
 			List<OnCallPeriodItem> periodItems = new ArrayList<>();
 			for (Resource period : periods) {
-				LocalDate start = period.getDate(PARAM_START).toLocalDate();
-				LocalDate end = period.getDate(PARAM_END).toLocalDate();
+				LocalDate start = period.getDate(PARAM_START_DATE).toLocalDate();
+				LocalDate end = period.getDate(PARAM_END_DATE).toLocalDate();
 
 				if (fromDate != null && end.isBefore(fromDate))
 					continue;

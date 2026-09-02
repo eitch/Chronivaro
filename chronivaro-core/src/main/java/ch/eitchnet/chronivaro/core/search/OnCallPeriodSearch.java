@@ -68,8 +68,8 @@ public class OnCallPeriodSearch extends ResourceSearch {
 					}
 
 					if (from != null || to != null) {
-						LocalDate start = period.getDate(PARAM_START).toLocalDate();
-						LocalDate end = period.getDate(PARAM_END).toLocalDate();
+						LocalDate start = period.getDate(PARAM_START_DATE).toLocalDate();
+						LocalDate end = period.getDate(PARAM_END_DATE).toLocalDate();
 						if (from != null && end.isBefore(from)) {
 							return false;
 						}
@@ -81,8 +81,8 @@ public class OnCallPeriodSearch extends ResourceSearch {
 					return true;
 				})
 				.sorted((p1, p2) -> {
-					ZonedDateTime d1 = p1.getDate(PARAM_START);
-					ZonedDateTime d2 = p2.getDate(PARAM_START);
+					ZonedDateTime d1 = p1.getDate(PARAM_START_DATE);
+					ZonedDateTime d2 = p2.getDate(PARAM_START_DATE);
 					return d1.compareTo(d2);
 				})
 				.toList();

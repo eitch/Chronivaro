@@ -40,11 +40,13 @@ public class OnCallPeriodResourceTest extends AbstractChronivaroRestfulTest {
 			assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
 		}
 
-		// 2. Query admin on-call periods
+		// 2. Query admin on-call periods with date range
 		String periodId;
 		try (Response response = target()
 				.path("chronivaro/v1/admin/on-call-periods")
 				.queryParam("employeeId", "admin_emp")
+				.queryParam("from", "2026-09-01")
+				.queryParam("to", "2026-09-30")
 				.request(MediaType.APPLICATION_JSON)
 				.header("Authorization", adminToken)
 				.get()) {
@@ -59,6 +61,22 @@ public class OnCallPeriodResourceTest extends AbstractChronivaroRestfulTest {
 			assertEquals(LocalDate.of(2026, 9, 1), dto.startDate());
 			assertEquals("08:00", dto.startTime());
 			assertEquals("Weekend & Week Pikett", dto.comment());
+		}
+
+		// Verify out of range query returns empty
+		try (Response response = target()
+				.path("chronivaro/v1/admin/on-call-periods")
+				.queryParam("employeeId", "admin_emp")
+				.queryParam("from", "2026-10-01")
+				.queryParam("to", "2026-10-31")
+				.request(MediaType.APPLICATION_JSON)
+				.header("Authorization", adminToken)
+				.get()) {
+			assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+			String body = response.readEntity(String.class);
+			Type listType = new TypeToken<List<OnCallPeriodDto>>() {}.getType();
+			List<OnCallPeriodDto> list = ChronivaroRestHelper.createGson().fromJson(body, listType);
+			assertTrue("Should return empty for out of range query", list.isEmpty());
 		}
 
 		// 3. Update on-call period
