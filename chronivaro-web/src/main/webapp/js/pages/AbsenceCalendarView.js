@@ -1081,7 +1081,7 @@ export default class AbsenceCalendarView {
         const deleteBtn = modal.querySelector('.modal-delete-oc-btn');
         if (deleteBtn) {
             deleteBtn.addEventListener('click', async () => {
-                const confirmed = confirm(I18n.t('calendar.deleteOnCallConfirm', {
+                const confirmed = await NotificationDialog.confirm(I18n.t('calendar.deleteOnCallConfirm', {
                     name: oc.employeeName || oc.employeeId,
                     from: oc.startDate,
                     to: oc.endDate
@@ -1126,8 +1126,8 @@ export default class AbsenceCalendarView {
 
         const defaultStart = existingOc ? existingOc.startDate : (initialData.startDate || `${this.currentYear}-${String(this.currentMonth).padStart(2, '0')}-01`);
         const defaultEnd = existingOc ? existingOc.endDate : (initialData.endDate || defaultStart);
-        const defaultStartTime = existingOc ? (existingOc.startTime || '') : '08:00';
-        const defaultEndTime = existingOc ? (existingOc.endTime || '') : '17:00';
+        const defaultStartTime = existingOc ? (existingOc.startTime || '') : '18:00';
+        const defaultEndTime = existingOc ? (existingOc.endTime || '') : '07:00';
         const defaultComment = existingOc ? (existingOc.comment || '') : '';
         const selectedEmpId = existingOc ? existingOc.employeeId : (initialData.employeeId || this.currentUserEmployeeId || employees[0].id);
 
@@ -1180,11 +1180,11 @@ export default class AbsenceCalendarView {
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                             <div class="form-group">
                                 <label for="modal-oncall-starttime" style="display: block; font-weight: 500; font-size: 0.85rem; margin-bottom: 0.25rem;">${I18n.t('onCall.startTime')} (24h)</label>
-                                <input type="text" id="modal-oncall-starttime" value="${defaultStartTime}" placeholder="08:00" maxlength="5" pattern="^([01]?[0-9]|2[0-3]):[0-5][0-9]$" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 4px; box-sizing: border-box;">
+                                <input type="text" id="modal-oncall-starttime" value="${defaultStartTime}" placeholder="18:00" maxlength="5" pattern="^([01]?[0-9]|2[0-3]):[0-5][0-9]$" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 4px; box-sizing: border-box;">
                             </div>
                             <div class="form-group">
                                 <label for="modal-oncall-endtime" style="display: block; font-weight: 500; font-size: 0.85rem; margin-bottom: 0.25rem;">${I18n.t('onCall.endTime')} (24h)</label>
-                                <input type="text" id="modal-oncall-endtime" value="${defaultEndTime}" placeholder="17:00" maxlength="5" pattern="^([01]?[0-9]|2[0-3]):[0-5][0-9]$" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 4px; box-sizing: border-box;">
+                                <input type="text" id="modal-oncall-endtime" value="${defaultEndTime}" placeholder="07:00" maxlength="5" pattern="^([01]?[0-9]|2[0-3]):[0-5][0-9]$" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 4px; box-sizing: border-box;">
                             </div>
                         </div>
 

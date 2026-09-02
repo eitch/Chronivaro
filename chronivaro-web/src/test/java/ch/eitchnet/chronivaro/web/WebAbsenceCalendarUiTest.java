@@ -51,6 +51,12 @@ public class WebAbsenceCalendarUiTest {
 
 		// Verify modal details inspection
 		assertTrue("Must implement openAbsenceDetailsModal", js.contains("openAbsenceDetailsModal("));
+
+		// Verify on-call period modal and default times outside office hours
+		assertTrue("Must implement openOnCallFormModal", js.contains("openOnCallFormModal("));
+		assertTrue("On-call start time default must be outside office hours (18:00)", js.contains("'18:00'"));
+		assertTrue("On-call end time default must be outside office hours (07:00)", js.contains("'07:00'"));
+		assertTrue("On-call delete must use NotificationDialog.confirm", js.contains("await NotificationDialog.confirm(I18n.t('calendar.deleteOnCallConfirm'"));
 	}
 
 	@Test
