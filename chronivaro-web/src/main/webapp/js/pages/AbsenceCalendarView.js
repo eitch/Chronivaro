@@ -69,7 +69,9 @@ export default class AbsenceCalendarView {
                     <!-- Month Navigation -->
                     <div class="calendar-nav-group" style="display: flex; align-items: center; gap: 0.5rem;">
                         <button type="button" id="cal-prev-btn" class="secondary-btn" title="${I18n.t('calendar.previousMonth')}">&larr; ${I18n.t('common.prev')}</button>
-                        <div id="cal-month-picker-container"></div>
+                        <div id="cal-month-picker-container">
+                            <input type="month" id="cal-month-picker" value="${this.currentYear}-${String(this.currentMonth).padStart(2, '0')}" style="font-weight: 600; font-size: 0.95rem; text-align: center;">
+                        </div>
                         <button type="button" id="cal-next-btn" class="secondary-btn" title="${I18n.t('calendar.nextMonth')}">${I18n.t('common.next')} &rarr;</button>
                         <button type="button" id="cal-today-btn" class="secondary-btn" style="margin-left: 0.25rem;">${I18n.t('calendar.today')}</button>
                     </div>
@@ -279,6 +281,18 @@ export default class AbsenceCalendarView {
             });
         }
 
+        const monthInput = container.querySelector('#cal-month-picker');
+        if (monthInput) {
+            monthInput.addEventListener('change', () => {
+                if (monthInput.value && /^\d{4}-\d{2}$/.test(monthInput.value)) {
+                    const [yearStr, monthStr] = monthInput.value.split('-');
+                    this.currentYear = parseInt(yearStr, 10);
+                    this.currentMonth = parseInt(monthStr, 10);
+                    this.loadCalendarData(container);
+                }
+            });
+        }
+
         const resetBtn = container.querySelector('#cal-filter-reset');
         if (resetBtn) {
             resetBtn.addEventListener('click', () => {
@@ -294,23 +308,15 @@ export default class AbsenceCalendarView {
                 this.loadCalendarData(container);
             });
         }
+
+        MonthPicker.init(container);
     }
 
     refreshMonthPicker(container) {
-        const pickerContainer = container.querySelector('#cal-month-picker-container');
-        if (!pickerContainer) return;
-        pickerContainer.innerHTML = '';
-
-        const monthPicker = new MonthPicker({
-            currentYear: this.currentYear,
-            currentMonth: this.currentMonth,
-            onChange: (year, month) => {
-                this.currentYear = year;
-                this.currentMonth = month;
-                this.loadCalendarData(container);
-            }
-        });
-        pickerContainer.appendChild(monthPicker.render());
+        const monthInput = container.querySelector('#cal-month-picker');
+        if (monthInput) {
+            monthInput.value = `${this.currentYear}-${String(this.currentMonth).padStart(2, '0')}`;
+        }
     }
 
     async loadInitialData(container) {
@@ -318,17 +324,17 @@ export default class AbsenceCalendarView {
 
         try {
             // Load current user employee profile
-            const currentProfile = await EmployeeApi.getCurrentEmployee().catch(() => null);
+            const currentProfile = await EmployeeApi.getMyProfile().catch(() => null);
             if (currentProfile && currentProfile.id) {
                 this.currentUserEmployeeId = currentProfile.id;
             }
 
             // Load master data in parallel
             const [teamsRes, locsRes, empsRes, typesRes] = await Promise.all([
-                TeamApi.getTeams().catch(() => []),
-                LocationApi.getLocations().catch(() => []),
-                EmployeeApi.getEmployees().catch(() => []),
-                AbsenceTypeApi.getAbsenceTypes().catch(() => [])
+                TeamApi.getAll().catch(() => []),
+                LocationApi.getAll().catch(() => []),
+                EmployeeApi.getAll().catch(() => []),
+                AbsenceTypeApi.getAll().catch(() => [])
             ]);
 
             this.teams = Array.isArray(teamsRes) ? teamsRes : (teamsRes.data || []);

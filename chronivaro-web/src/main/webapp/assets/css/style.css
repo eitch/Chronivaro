@@ -769,6 +769,7 @@ tr:hover {
 
 /* Modal Styling */
 .modal,
+.modal-backdrop,
 .notification-dialog-overlay {
     display: none;
     position: fixed;
@@ -784,8 +785,16 @@ tr:hover {
     justify-content: center;
 }
 
+.modal-backdrop.active,
+.modal.active,
 .notification-dialog-overlay {
-    display: block;
+    display: flex;
+}
+
+.modal-dialog {
+    margin: 5% auto;
+    max-height: 90vh;
+    overflow-y: auto;
 }
 
 .modal-content,
