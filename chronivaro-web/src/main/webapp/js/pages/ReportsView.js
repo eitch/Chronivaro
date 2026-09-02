@@ -47,13 +47,18 @@ export default class ReportsView {
 				type: '',
 				state: ''
 			},
-			onCall: {
+			'on-call': {
 				from: `${year}-${month}-01`,
 				to: `${year}-${month}-${day}`,
 				teamId: '',
 				employeeId: ''
 			}
 		};
+
+		Object.defineProperty(this.filters, 'onCall', {
+			get: () => this.filters['on-call'],
+			set: (v) => { this.filters['on-call'] = v; }
+		});
 
 		this.absenceTypes = [];
 		this.teams = [];
@@ -251,7 +256,7 @@ export default class ReportsView {
 
 		const isAdmin = AuthApi.hasRole('Administrator') || AuthApi.hasRole('StrolchAdmin');
 		let defaultPrompt;
-		if (type === 'absences') {
+		if (type === 'absences' || type === 'on-call' || type === 'onCall') {
 			defaultPrompt = I18n.t('common.allEmployees');
 		} else if (isAdmin) {
 			defaultPrompt = I18n.t('reports.selectEmployeePrompt');
@@ -559,11 +564,11 @@ export default class ReportsView {
 			this.filterBar.innerHTML = `
 				<div class="filter-group">
 					<label for="filter-on-call-from">${I18n.t('common.from')} (DD.MM.YYYY):</label>
-					<input type="text" id="filter-on-call-from" value="${Format.date(this.filters.onCall.from)}" placeholder="DD.MM.YYYY" maxlength="10">
+					<input type="text" id="filter-on-call-from" value="${Format.date(this.filters['on-call'].from)}" placeholder="DD.MM.YYYY" maxlength="10">
 				</div>
 				<div class="filter-group">
 					<label for="filter-on-call-to">${I18n.t('common.to')} (DD.MM.YYYY):</label>
-					<input type="text" id="filter-on-call-to" value="${Format.date(this.filters.onCall.to)}" placeholder="DD.MM.YYYY" maxlength="10">
+					<input type="text" id="filter-on-call-to" value="${Format.date(this.filters['on-call'].to)}" placeholder="DD.MM.YYYY" maxlength="10">
 				</div>
 				${canSelectEmp ? `
 				<div class="filter-group">
@@ -591,22 +596,22 @@ export default class ReportsView {
 				}
 			});
 
-			fromInput.addEventListener('change', () => { this.filters.onCall.from = Format.toIsoDate(fromInput.value); });
-			toInput.addEventListener('change', () => { this.filters.onCall.to = Format.toIsoDate(toInput.value); });
+			fromInput.addEventListener('change', () => { this.filters['on-call'].from = Format.toIsoDate(fromInput.value); });
+			toInput.addEventListener('change', () => { this.filters['on-call'].to = Format.toIsoDate(toInput.value); });
 
 			if (canSelectEmp) {
 				const teamSelect = this.filterBar.querySelector('#filter-on-call-team');
 				const empSelect = this.filterBar.querySelector('#filter-on-call-emp');
-				this.populateTeamSelect('onCall');
-				this.populateEmployeeSelect('onCall');
+				this.populateTeamSelect('on-call');
+				this.populateEmployeeSelect('on-call');
 
 				teamSelect.addEventListener('change', () => {
-					this.filters.onCall.teamId = teamSelect.value;
-					this.populateEmployeeSelect('onCall');
+					this.filters['on-call'].teamId = teamSelect.value;
+					this.populateEmployeeSelect('on-call');
 					this.updateActionButtons();
 				});
 				empSelect.addEventListener('change', () => {
-					this.filters.onCall.employeeId = empSelect.value;
+					this.filters['on-call'].employeeId = empSelect.value;
 					this.updateActionButtons();
 				});
 			}
@@ -623,7 +628,7 @@ export default class ReportsView {
 	async generateReport() {
 		const employeeId = this.filters[this.activeReportType]?.employeeId?.trim();
 		const teamId = this.filters.team?.teamId?.trim();
-		const hasExplicitTarget = Boolean(employeeId || (this.activeReportType === 'team' && teamId) || this.activeReportType === 'absences');
+		const hasExplicitTarget = Boolean(employeeId || (this.activeReportType === 'team' && teamId) || this.activeReportType === 'absences' || this.activeReportType === 'on-call');
 		if (AuthApi.hasRole('Administrator') && !hasExplicitTarget) {
 			this.resultsContainer.innerHTML = '';
 			return;
@@ -1353,10 +1358,10 @@ export default class ReportsView {
 		} else {
 			periodsRowsHtml = periods.map(p => `
 				<tr>
-					<td><strong>${p.employeeName || p.employeeId}</strong><br><small class="text-muted">${p.employeeId}</small></td>
+					<td>${p.employeeName || p.employeeId}</td>
 					<td>${Format.date(p.startDate)}</td>
-					<td>${p.startTime || '00:00'}</td>
 					<td>${Format.date(p.endDate)}</td>
+					<td>${p.startTime || '00:00'}</td>
 					<td>${p.endTime || '23:59'}</td>
 					<td>${p.comment || '-'}</td>
 				</tr>
@@ -1377,7 +1382,7 @@ export default class ReportsView {
 
 				return `
 					<tr>
-						<td><strong>${w.employeeName || w.employeeId}</strong><br><small class="text-muted">${w.employeeId}</small></td>
+						<td>${w.employeeName || w.employeeId}</td>
 						<td>${Format.date(w.date)}</td>
 						<td>${Format.dateTime(w.start)}</td>
 						<td>${w.end ? Format.dateTime(w.end) : `<span class="status-badge state-open">${I18n.t('reports.inProgress')}</span>`}</td>
@@ -1423,8 +1428,8 @@ export default class ReportsView {
 							<tr>
 								<th>${I18n.t('common.employee')}</th>
 								<th>${I18n.t('common.startDate')}</th>
-								<th>${I18n.t('onCall.startTime')}</th>
 								<th>${I18n.t('common.endDate')}</th>
+								<th>${I18n.t('onCall.startTime')}</th>
 								<th>${I18n.t('onCall.endTime')}</th>
 								<th>${I18n.t('common.comment')}</th>
 							</tr>

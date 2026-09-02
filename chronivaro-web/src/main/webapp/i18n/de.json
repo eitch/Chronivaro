@@ -63,6 +63,8 @@
     "actions": "Aktionen",
     "status": "Status",
     "date": "Datum",
+    "startDate": "Startdatum",
+    "endDate": "Enddatum",
     "time": "Zeit",
     "duration": "Dauer",
     "minutes": "Minuten",
