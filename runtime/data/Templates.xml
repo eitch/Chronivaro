@@ -193,7 +193,7 @@
 
     <Resource Id="GlobalConfiguration" Name="Template Global Configuration" Type="Template">
         <ParameterBag Id="parameters" Name="Parameters" Type="Parameters">
-            <Parameter Id="weeklyTargetMinutes" Name="Global Weekly Target Minutes" Type="Integer" Value="2520"/>
+            <Parameter Id="weeklyTargetMinutes" Name="Global Weekly Target Minutes" Type="Integer" Value="2400"/>
             <Parameter Id="annualVacationDays" Name="Annual Vacation Days" Type="Integer" Value="25"/>
             <Parameter Id="minutesPerVacationDay" Name="Minutes Per Vacation Day" Type="Integer" Value="480"/>
             <Parameter Id="vacationAbsenceTypeCode" Name="Vacation Absence Type Code" Type="String" Value="VACATION"/>

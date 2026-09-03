@@ -105,7 +105,7 @@ public class ChronivaroConstants {
 	public static final int DEFAULT_ANNUAL_VACATION_DAYS = 25;
 	public static final int DEFAULT_MINUTES_PER_VACATION_DAY = 480;
 	public static final String DEFAULT_VACATION_ABSENCE_TYPE_CODE = "VACATION";
-	public static final int DEFAULT_WEEKLY_TARGET_MINUTES = 2520;
+	public static final int DEFAULT_WEEKLY_TARGET_MINUTES = 2400;
 	public static final String DEFAULT_COMPANY_NAME = "Chronivaro";
 	public static final String DEFAULT_LANGUAGE = "de";
 	public static final String DEFAULT_SERVER_BASE_URL = "http://localhost:9000";

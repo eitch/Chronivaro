@@ -5884,7 +5884,7 @@ components:
       properties:
         weeklyTargetMinutes:
           type: integer
-          example: 2520
+          example: 2400
         annualVacationDays:
           type: integer
           example: 25

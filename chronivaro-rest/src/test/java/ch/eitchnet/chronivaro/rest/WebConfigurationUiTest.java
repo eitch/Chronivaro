@@ -107,7 +107,7 @@ public class WebConfigurationUiTest extends AbstractChronivaroRestfulTest {
 
 			initialDto = gson.fromJson(response.readEntity(String.class), ConfigurationDto.class);
 			assertNotNull("Configuration DTO must not be null", initialDto);
-			assertEquals(Integer.valueOf(2520), initialDto.weeklyTargetMinutes());
+			assertEquals(Integer.valueOf(2400), initialDto.weeklyTargetMinutes());
 			assertEquals(Integer.valueOf(25), initialDto.annualVacationDays());
 			assertEquals(Integer.valueOf(480), initialDto.minutesPerVacationDay());
 			assertEquals("VACATION", initialDto.vacationAbsenceTypeCode());

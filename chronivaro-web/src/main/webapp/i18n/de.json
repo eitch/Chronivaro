@@ -669,7 +669,7 @@
     "langDe": "Deutsch (German)",
     "langEn": "English",
     "weeklyTargetMinutes": "Standard-Wochensollzeit (Minuten)",
-    "weeklyTargetHint": "Standard-Vollzeit-Wochenarbeitszeit in Minuten (z. B. 2520 = 42h).",
+    "weeklyTargetHint": "Standard-Vollzeit-Wochenarbeitszeit in Minuten (z. B. 2400 = 40h).",
     "weeklyTargetHintDynamic": "Standard-Vollzeit-Wochenarbeitszeit: {minutes} min ({hours}h/Woche).",
     "annualVacationDays": "Standard-Jahresferientage",
     "annualVacationDaysHint": "Standard-Jahresferienanspruch in ganzen Tagen (z. B. 25 Tage).",

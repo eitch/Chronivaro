@@ -252,7 +252,7 @@ export default class ConfigurationView {
 			this.serverBaseUrlInput.value = config.serverBaseUrl || 'http://localhost:8080';
 			this.officeHoursStartInput.value = config.officeHoursStart || '07:00';
 			this.officeHoursEndInput.value = config.officeHoursEnd || '18:00';
-			this.weeklyTargetInput.value = config.weeklyTargetMinutes != null ? config.weeklyTargetMinutes : 2520;
+			this.weeklyTargetInput.value = config.weeklyTargetMinutes != null ? config.weeklyTargetMinutes : 2400;
 			this.vacationDaysInput.value = config.annualVacationDays != null ? config.annualVacationDays : 25;
 			this.dayMinutesInput.value = config.minutesPerVacationDay != null ? config.minutesPerVacationDay : 480;
 			this.vacationCodeInput.value = config.vacationAbsenceTypeCode || 'VACATION';

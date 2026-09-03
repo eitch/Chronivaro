@@ -669,7 +669,7 @@
     "langDe": "Deutsch (German)",
     "langEn": "English",
     "weeklyTargetMinutes": "Standard Weekly Target (Minutes)",
-    "weeklyTargetHint": "Default full-time weekly working time in minutes (e.g. 2520 = 42h).",
+    "weeklyTargetHint": "Default full-time weekly working time in minutes (e.g. 2400 = 40h).",
     "weeklyTargetHintDynamic": "Default full-time weekly working time: {minutes} min ({hours}h/week).",
     "annualVacationDays": "Default Annual Vacation Days",
     "annualVacationDaysHint": "Standard annual vacation allowance in full days (e.g. 25 days).",

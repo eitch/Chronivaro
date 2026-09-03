@@ -46,7 +46,7 @@ export default class ProfileView {
                 }
             }
             if (!weeklyTargetMinutes || weeklyTargetMinutes <= 0) {
-                weeklyTargetMinutes = 2520;
+                weeklyTargetMinutes = 2400;
             }
 
             try {
@@ -76,7 +76,7 @@ export default class ProfileView {
         return container;
     }
 
-    buildProfileHtml(username, firstname, lastname, roles, employee, schedules, weeklyTargetMinutes = 2520) {
+    buildProfileHtml(username, firstname, lastname, roles, employee, schedules, weeklyTargetMinutes = 2400) {
         // Build User Account Card
         const displayRoles = roles.filter(role => role !== 'ModelAccessor' && role !== 'PrivilegeAdmin');
         const roleBadges = displayRoles.length > 0
