@@ -4,6 +4,7 @@ import TeamApi from '../api/TeamApi.js';
 import NotificationDialog from '../utils/NotificationDialog.js';
 import Format from '../utils/Format.js';
 import MonthPicker from '../utils/MonthPicker.js';
+import DatePicker from '../utils/DatePicker.js';
 import I18n from '../i18n/I18n.js';
 
 export default class ApprovalsView {
@@ -410,6 +411,7 @@ export default class ApprovalsView {
 		}
 
 		MonthPicker.init(container);
+		DatePicker.init(container);
 	}
 
 	async loadAbsences(container) {

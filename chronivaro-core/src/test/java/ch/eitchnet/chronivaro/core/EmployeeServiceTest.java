@@ -296,4 +296,59 @@ public class EmployeeServiceTest {
 		assertFalse(secondReactivateResult.isOk());
 		assertTrue(secondReactivateResult.getMessage().contains("already active"));
 	}
+
+	@Test
+	public void shouldCreateAndUpdateEmployeeWithYear9999ExitDate() {
+		ServiceHandler serviceHandler = runtimeMock.getServiceHandler();
+
+		String username = "year9999user";
+		CreateEmployeeService.EmployeeArgument createArg = new CreateEmployeeService.EmployeeArgument();
+		createArg.personalNumber = "9999";
+		createArg.firstname = "Future";
+		createArg.lastname = "Employee";
+		createArg.teamId = "team1";
+		createArg.locationId = "loc1";
+		createArg.timezone = "Europe/Zurich";
+		createArg.joinDate = LocalDate.of(2025, 1, 1);
+		createArg.exitDate = LocalDate.of(9999, 12, 31);
+		createArg.active = true;
+		createArg.username = username;
+
+		ServiceResult createResult = serviceHandler.doService(certificate, new CreateEmployeeService(), createArg);
+		assertTrue(createResult.getMessage(), createResult.isOk());
+
+		String employeeId;
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
+			Resource employee = tx.streamResources(TYPE_EMPLOYEE)
+					.filter(e -> username.equals(e.getString(PARAM_USERNAME)))
+					.findFirst()
+					.orElseThrow();
+			employeeId = employee.getId();
+			assertEquals(LocalDate.of(2025, 1, 1), employee.getDate(PARAM_JOIN_DATE).toLocalDate());
+			assertEquals(LocalDate.of(9999, 12, 31), employee.getDate(PARAM_EXIT_DATE).toLocalDate());
+		}
+
+		CreateEmployeeService.UpdateEmployeeArgument updateArg = new CreateEmployeeService.UpdateEmployeeArgument();
+		updateArg.id = employeeId;
+		updateArg.personalNumber = "9999";
+		updateArg.firstname = "Future";
+		updateArg.lastname = "Updated";
+		updateArg.teamId = "team1";
+		updateArg.locationId = "loc1";
+		updateArg.timezone = "Europe/Zurich";
+		updateArg.joinDate = LocalDate.of(2025, 1, 1);
+		updateArg.exitDate = LocalDate.of(9999, 12, 31);
+		updateArg.active = true;
+		updateArg.username = username;
+
+		ServiceResult updateResult = serviceHandler.doService(certificate, new UpdateEmployeeService(), updateArg);
+		assertTrue(updateResult.getMessage(), updateResult.isOk());
+
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
+			Resource employee = tx.getResourceBy(TYPE_EMPLOYEE, employeeId, true);
+			assertEquals("Future Updated", employee.getName());
+			assertEquals(LocalDate.of(2025, 1, 1), employee.getDate(PARAM_JOIN_DATE).toLocalDate());
+			assertEquals(LocalDate.of(9999, 12, 31), employee.getDate(PARAM_EXIT_DATE).toLocalDate());
+		}
+	}
 }

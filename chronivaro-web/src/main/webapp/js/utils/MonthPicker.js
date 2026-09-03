@@ -18,12 +18,51 @@ export function isMonthInputSupported() {
 
 let activePopover = null;
 let activeInput = null;
+let activeWrapper = null;
+let repositionHandler = null;
+
+function positionPopover(popover, targetElement) {
+	if (!popover || !targetElement) return;
+	const rect = targetElement.getBoundingClientRect();
+	const popoverRect = popover.getBoundingClientRect();
+	const popoverHeight = popoverRect.height || 220;
+	const popoverWidth = popoverRect.width || 250;
+
+	const spaceBelow = window.innerHeight - rect.bottom;
+	const spaceAbove = rect.top;
+
+	let top;
+	if (spaceBelow < popoverHeight && spaceAbove > spaceBelow) {
+		// Place above
+		top = rect.top - popoverHeight - 4;
+	} else {
+		// Place below
+		top = rect.bottom + 4;
+	}
+
+	let left = rect.left;
+	if (left + popoverWidth > window.innerWidth - 8) {
+		left = Math.max(8, window.innerWidth - popoverWidth - 8);
+	}
+	if (left < 8) {
+		left = 8;
+	}
+
+	popover.style.top = `${Math.round(top)}px`;
+	popover.style.left = `${Math.round(left)}px`;
+}
 
 function closeActivePopover() {
+	if (repositionHandler) {
+		window.removeEventListener('scroll', repositionHandler, true);
+		window.removeEventListener('resize', repositionHandler);
+		repositionHandler = null;
+	}
 	if (activePopover) {
 		activePopover.remove();
 		activePopover = null;
 		activeInput = null;
+		activeWrapper = null;
 	}
 }
 
@@ -41,7 +80,6 @@ document.addEventListener('keydown', (e) => {
 
 export function attachMonthPicker(input, options = {}) {
 	if (!input) return null;
-	if (!options.force && isMonthInputSupported()) return input;
 	if (input.dataset.monthPickerAttached === 'true') return input;
 
 	input.dataset.monthPickerAttached = 'true';
@@ -110,7 +148,7 @@ function showPickerPopover(input, wrapper) {
 		const [yStr, mStr] = val.split('-');
 		const parsedY = parseInt(yStr, 10);
 		const parsedM = parseInt(mStr, 10);
-		if (!isNaN(parsedY) && parsedY >= 1900 && parsedY <= 2100) {
+		if (!isNaN(parsedY) && parsedY >= 1900 && parsedY <= 9999) {
 			selectedYear = parsedY;
 			displayedYear = parsedY;
 		}
@@ -196,12 +234,29 @@ function showPickerPopover(input, wrapper) {
 				closeActivePopover();
 			});
 		});
+
+		positionPopover(popover, wrapper || input);
 	};
 
 	renderContent();
-	wrapper.appendChild(popover);
+	document.body.appendChild(popover);
 	activePopover = popover;
 	activeInput = input;
+	activeWrapper = wrapper;
+
+	positionPopover(popover, wrapper || input);
+
+	repositionHandler = () => {
+		if (activePopover && activeInput) {
+			if (!document.body.contains(activeInput)) {
+				closeActivePopover();
+			} else {
+				positionPopover(activePopover, activeWrapper || activeInput);
+			}
+		}
+	};
+	window.addEventListener('scroll', repositionHandler, true);
+	window.addEventListener('resize', repositionHandler);
 }
 
 function setValueAndTrigger(input, value) {
@@ -211,7 +266,6 @@ function setValueAndTrigger(input, value) {
 }
 
 export function initMonthPickers(root = document, options = {}) {
-	if (!options.force && isMonthInputSupported()) return;
 	const rootEl = (root && root.querySelectorAll) ? root : document;
 	const inputs = Array.from(rootEl.querySelectorAll('input')).filter(el => {
 		const typeAttr = el.getAttribute('type');
@@ -223,7 +277,6 @@ export function initMonthPickers(root = document, options = {}) {
 let isObserverStarted = false;
 
 export function initAllMonthPickers(options = {}) {
-	if (!options.force && isMonthInputSupported()) return;
 	initMonthPickers(document, options);
 
 	if (!isObserverStarted && typeof MutationObserver !== 'undefined' && document.body) {

@@ -78,6 +78,8 @@ public class WebMonthPickerUiTest {
 		assertTrue("style.css must contain .month-picker-wrapper", css.contains(".month-picker-wrapper"));
 		assertTrue("style.css must contain .month-picker-toggle", css.contains(".month-picker-toggle"));
 		assertTrue("style.css must contain .month-picker-popover", css.contains(".month-picker-popover"));
+		assertTrue("style.css must style .month-picker-popover with fixed positioning so modal dialogs are not resized",
+				css.contains(".month-picker-popover {\n    position: fixed;"));
 		assertTrue("style.css must contain .month-picker-month-btn", css.contains(".month-picker-month-btn"));
 		assertTrue("style.css must keep toggle transform on hover/focus/active to prevent jumping",
 				css.contains(".month-picker-toggle:hover") && css.contains("transform: translateY(-50%);"));

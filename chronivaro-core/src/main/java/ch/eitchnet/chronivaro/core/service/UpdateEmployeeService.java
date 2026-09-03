@@ -64,7 +64,7 @@ public class UpdateEmployeeService
 			years.add(oldJoinDate.getYear());
 			years.add(arg.joinDate.getYear());
 			oldExitDate.ifPresent(d -> years.add(d.getYear()));
-			if (arg.exitDate != null) {
+			if (arg.exitDate != null && arg.exitDate.getYear() != 9999) {
 				years.add(arg.exitDate.getYear());
 			}
 			tx.streamResources(TYPE_VACATION_ACCOUNT_ENTRY)

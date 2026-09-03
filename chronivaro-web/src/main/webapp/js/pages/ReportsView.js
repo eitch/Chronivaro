@@ -6,6 +6,7 @@ import AuthApi from '../api/AuthApi.js';
 import NotificationDialog from '../utils/NotificationDialog.js';
 import Format from '../utils/Format.js';
 import MonthPicker from '../utils/MonthPicker.js';
+import DatePicker from '../utils/DatePicker.js';
 import I18n from '../i18n/I18n.js';
 
 export default class ReportsView {
@@ -622,6 +623,7 @@ export default class ReportsView {
 			input.addEventListener('change', () => this.updateActionButtons());
 		});
 		MonthPicker.init(this.filterBar);
+		DatePicker.init(this.filterBar);
 		this.updateActionButtons();
 	}
 

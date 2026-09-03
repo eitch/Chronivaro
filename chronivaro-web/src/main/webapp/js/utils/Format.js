@@ -84,7 +84,7 @@ export default class Format {
         if (!iso) return false;
         const [y, m, d] = iso.split('-').map(Number);
         if (isNaN(y) || isNaN(m) || isNaN(d)) return false;
-        if (y < 1900 || y > 2100 || m < 1 || m > 12 || d < 1) return false;
+        if (y < 1900 || y > 9999 || m < 1 || m > 12 || d < 1) return false;
         const daysInMonth = new Date(y, m, 0).getDate();
         return d <= daysInMonth;
     }

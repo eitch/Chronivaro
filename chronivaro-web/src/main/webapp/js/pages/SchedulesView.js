@@ -291,11 +291,11 @@ export default class SchedulesView {
             const validToRaw = container.querySelector('#sched-valid-to').value;
 
             if (!Format.isValidDate(validFromRaw)) {
-                NotificationDialog.error(I18n.t('absences.invalidDateRange'));
+                NotificationDialog.error(I18n.t('common.invalidDate') || 'Invalid date');
                 return;
             }
             if (validToRaw && !Format.isValidDate(validToRaw)) {
-                NotificationDialog.error(I18n.t('absences.invalidDateRange'));
+                NotificationDialog.error(I18n.t('common.invalidDate') || 'Invalid date');
                 return;
             }
 
@@ -303,7 +303,7 @@ export default class SchedulesView {
             const validToIso = validToRaw ? Format.toIsoDate(validToRaw) : null;
 
             if (validToIso && validFromIso > validToIso) {
-                NotificationDialog.error(I18n.t('absences.invalidDateRange'));
+                NotificationDialog.error(I18n.t('schedules.invalidDateRange') || I18n.t('common.invalidDateRange'));
                 return;
             }
 

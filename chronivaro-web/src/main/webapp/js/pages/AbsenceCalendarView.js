@@ -8,6 +8,7 @@ import OnCallPeriodApi from '../api/OnCallPeriodApi.js';
 import ReportApi from '../api/ReportApi.js';
 import NotificationDialog from '../utils/NotificationDialog.js';
 import MonthPicker from '../utils/MonthPicker.js';
+import DatePicker from '../utils/DatePicker.js';
 import Format from '../utils/Format.js';
 import I18n from '../i18n/I18n.js';
 
@@ -311,6 +312,7 @@ export default class AbsenceCalendarView {
         }
 
         MonthPicker.init(container);
+        DatePicker.init(container);
     }
 
     refreshMonthPicker(container) {

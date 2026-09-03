@@ -588,7 +588,7 @@ export default class MyTimesView {
 				const endVal = Format.normalizeTime(addEndInput.value);
 
 				if (!Format.isValidDate(dateVal)) {
-					NotificationDialog.error(I18n.t('absences.invalidDateRange'));
+					NotificationDialog.error(I18n.t('common.invalidDate') || 'Invalid date');
 					return;
 				}
 
@@ -651,7 +651,7 @@ export default class MyTimesView {
 				const endVal = editEndInput.value ? Format.normalizeTime(editEndInput.value) : '';
 
 				if (!Format.isValidDate(dateVal)) {
-					NotificationDialog.error(I18n.t('absences.invalidDateRange'));
+					NotificationDialog.error(I18n.t('common.invalidDate') || 'Invalid date');
 					return;
 				}
 

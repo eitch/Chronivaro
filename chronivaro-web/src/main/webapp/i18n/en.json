@@ -93,7 +93,10 @@
     "clear": "Clear",
     "prevYear": "Previous Year",
     "nextYear": "Next Year",
+    "prevMonth": "Previous Month",
+    "nextMonth": "Next Month",
     "chooseMonth": "Choose Month",
+    "chooseDate": "Choose Date",
     "running": "Running...",
     "reset": "Reset",
     "prev": "Prev",
@@ -125,6 +128,8 @@
     "inactive": "Inactive",
     "page": "Page",
     "of": "of",
+    "invalidDate": "Invalid date.",
+    "invalidDateRange": "End date cannot be earlier than start date.",
     "noData": "No data found."
   },
   "auth": {
@@ -524,7 +529,11 @@
     "saveEmployee": "Save Employee",
     "deleteEmployee": "Delete Employee",
     "filterStatus": "Status Filter",
-    "searchPlaceholder": "Search employees..."
+    "searchPlaceholder": "Search employees...",
+    "invalidBirthdate": "Please enter a valid birthdate.",
+    "invalidJoinDate": "Please enter a valid join date.",
+    "invalidExitDate": "Please enter a valid exit date.",
+    "invalidDateRange": "Exit date cannot be earlier than join date."
   },
   "teams": {
     "title": "Teams",
@@ -630,6 +639,7 @@
     "weeklyTotal": "Weekly Total:",
     "applyTemplate": "Apply Template:",
     "selectTemplatePrompt": "-- Select Template --",
+    "invalidDateRange": "Valid to date cannot be earlier than valid from date.",
     "confirmDelete": "Are you sure you want to delete this schedule?"
   },
   "configuration": {
@@ -850,6 +860,24 @@
     "10": "Oct",
     "11": "Nov",
     "12": "Dec"
+  },
+  "weekdays": {
+    "1": "Monday",
+    "2": "Tuesday",
+    "3": "Wednesday",
+    "4": "Thursday",
+    "5": "Friday",
+    "6": "Saturday",
+    "7": "Sunday"
+  },
+  "shortWeekdays": {
+    "1": "Mon",
+    "2": "Tue",
+    "3": "Wed",
+    "4": "Thu",
+    "5": "Fri",
+    "6": "Sat",
+    "7": "Sun"
   },
   "onCall": {
     "title": "On-Call Service",

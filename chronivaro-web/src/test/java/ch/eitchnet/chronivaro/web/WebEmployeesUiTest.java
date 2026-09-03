@@ -102,5 +102,42 @@ public class WebEmployeesUiTest {
 				!viewJs.contains("id=\"sched-template\" required"));
 		assertTrue("emp-id input must not have required attribute",
 				!viewJs.contains("id=\"emp-id\" required"));
+
+		// Verify specific date error messages instead of generic invalidDateRange
+		assertTrue("EmployeesView must check invalidBirthdate",
+				viewJs.contains("I18n.t('employees.invalidBirthdate')"));
+		assertTrue("EmployeesView must check invalidJoinDate",
+				viewJs.contains("I18n.t('employees.invalidJoinDate')"));
+		assertTrue("EmployeesView must check invalidExitDate",
+				viewJs.contains("I18n.t('employees.invalidExitDate')"));
+		assertTrue("EmployeesView must validate date range when exit date is earlier than join date",
+				viewJs.contains("exitDateIso && joinDateIso && joinDateIso > exitDateIso"));
+	}
+
+	@Test
+	public void shouldVerifyFormatAllowsYear9999AndI18nKeysExist() throws IOException {
+		File formatFile = new File(getWebappDir(), "js/utils/Format.js");
+		assertTrue("Format.js must exist", formatFile.exists());
+		String formatJs = Files.readString(formatFile.toPath());
+		assertTrue("Format.isValidDate must allow dates with year up to 9999",
+				formatJs.contains("y > 9999"));
+
+		File enJsonFile = new File(getWebappDir(), "i18n/en.json");
+		assertTrue("en.json must exist", enJsonFile.exists());
+		String enJson = Files.readString(enJsonFile.toPath());
+		assertTrue("en.json must contain common.invalidDate", enJson.contains("\"invalidDate\":"));
+		assertTrue("en.json must contain employees.invalidBirthdate", enJson.contains("\"invalidBirthdate\":"));
+		assertTrue("en.json must contain employees.invalidJoinDate", enJson.contains("\"invalidJoinDate\":"));
+		assertTrue("en.json must contain employees.invalidExitDate", enJson.contains("\"invalidExitDate\":"));
+		assertTrue("en.json must contain employees.invalidDateRange", enJson.contains("\"invalidDateRange\":"));
+
+		File deJsonFile = new File(getWebappDir(), "i18n/de.json");
+		assertTrue("de.json must exist", deJsonFile.exists());
+		String deJson = Files.readString(deJsonFile.toPath());
+		assertTrue("de.json must contain common.invalidDate", deJson.contains("\"invalidDate\":"));
+		assertTrue("de.json must contain employees.invalidBirthdate", deJson.contains("\"invalidBirthdate\":"));
+		assertTrue("de.json must contain employees.invalidJoinDate", deJson.contains("\"invalidJoinDate\":"));
+		assertTrue("de.json must contain employees.invalidExitDate", deJson.contains("\"invalidExitDate\":"));
+		assertTrue("de.json must contain employees.invalidDateRange", deJson.contains("\"invalidDateRange\":"));
 	}
 }

@@ -152,7 +152,7 @@ export default class HolidayCalendarsView {
             e.preventDefault();
             const holDateVal = container.querySelector('#hol-date').value;
             if (!Format.isValidDate(holDateVal)) {
-                NotificationDialog.error(I18n.t('absences.invalidDateRange'));
+                NotificationDialog.error(I18n.t('common.invalidDate') || 'Invalid date');
                 return;
             }
             const holiday = {

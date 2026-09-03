@@ -479,7 +479,7 @@ export default class EmployeesView {
             }
 
             if (dateStr && !Format.isValidDate(dateStr)) {
-                NotificationDialog.error(I18n.t('absences.invalidDateRange'));
+                NotificationDialog.error(I18n.t('common.invalidDate') || 'Invalid date');
                 return;
             }
 
@@ -538,21 +538,26 @@ export default class EmployeesView {
             const exitDateRaw = container.querySelector('#emp-exit-date').value;
 
             if (birthdateRaw && !Format.isValidDate(birthdateRaw)) {
-                NotificationDialog.error(I18n.t('absences.invalidDateRange'));
+                NotificationDialog.error(I18n.t('employees.invalidBirthdate') || I18n.t('common.invalidDate'));
                 return;
             }
             if (!Format.isValidDate(joinDateRaw)) {
-                NotificationDialog.error(I18n.t('absences.invalidDateRange'));
+                NotificationDialog.error(I18n.t('employees.invalidJoinDate') || I18n.t('common.invalidDate'));
                 return;
             }
             if (exitDateRaw && !Format.isValidDate(exitDateRaw)) {
-                NotificationDialog.error(I18n.t('absences.invalidDateRange'));
+                NotificationDialog.error(I18n.t('employees.invalidExitDate') || I18n.t('common.invalidDate'));
                 return;
             }
 
             const birthdateIso = birthdateRaw ? Format.toIsoDate(birthdateRaw) : null;
             const joinDateIso = Format.toIsoDate(joinDateRaw);
             const exitDateIso = exitDateRaw ? Format.toIsoDate(exitDateRaw) : null;
+
+            if (exitDateIso && joinDateIso && joinDateIso > exitDateIso) {
+                NotificationDialog.error(I18n.t('employees.invalidDateRange') || I18n.t('common.invalidDateRange'));
+                return;
+            }
 
             const emp = {
                 personalNumber: container.querySelector('#emp-pers-nr').value,
