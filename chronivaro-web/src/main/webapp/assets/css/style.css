@@ -423,6 +423,10 @@ main {
     margin: 0 auto;
 }
 
+main:has(#audit-log-view) {
+    max-width: 100%;
+}
+
 #login-view {
     max-width: 400px;
     margin: 6rem auto;
