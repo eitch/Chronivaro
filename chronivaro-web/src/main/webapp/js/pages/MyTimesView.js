@@ -123,7 +123,7 @@ export default class MyTimesView {
 							</div>
 							<div class="form-group">
 								<label for="add-end-time" style="display: block; margin-bottom: 0.25rem; font-weight: 500;">${I18n.t('times.endTime')} * (24h):</label>
-								<input type="text" id="add-end-time" required placeholder="17:00" maxlength="5" pattern="^([01]?[0-9]|2[0-3]):[0-5][0-9]$" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color, #e2e8f0); border-radius: 4px; box-sizing: border-box;">
+								<input type="text" id="add-end-time" required placeholder="16:00" maxlength="5" pattern="^([01]?[0-9]|2[0-3]):[0-5][0-9]$" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color, #e2e8f0); border-radius: 4px; box-sizing: border-box;">
 							</div>
 							<div class="form-group" style="grid-column: span 2;">
 								<label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-weight: 500;">
@@ -558,7 +558,7 @@ export default class MyTimesView {
 			btnAddEntry.addEventListener('click', () => {
 				addDateInput.value = Format.date(new Date());
 				addStartInput.value = '08:00';
-				addEndInput.value = '17:00';
+				addEndInput.value = '16:00';
 				if (addPastMidnightCheckbox) addPastMidnightCheckbox.checked = false;
 				updateAddEndDateDisplay();
 				addLocationSelect.value = '';

@@ -48,7 +48,16 @@ public class ChronivaroRestHelper {
 								src.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)))
 				.registerTypeAdapter(ZonedDateTime.class, (JsonDeserializer<ZonedDateTime>) (json, typeOfT, context) -> {
 					String s = json.getAsString();
-					return isEmpty(s) ? null : ZonedDateTime.parse(s, DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+					if (isEmpty(s))
+						return null;
+					try {
+						return ZonedDateTime.parse(s, DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+					} catch (Exception e) {
+						if (s.length() == 10 && s.charAt(4) == '-' && s.charAt(7) == '-') {
+							return LocalDate.parse(s, DateTimeFormatter.ISO_LOCAL_DATE).atStartOfDay(java.time.ZoneId.systemDefault());
+						}
+						return ZonedDateTime.parse(s, DateTimeFormatter.ISO_DATE_TIME);
+					}
 				})
 				.create();
 	}

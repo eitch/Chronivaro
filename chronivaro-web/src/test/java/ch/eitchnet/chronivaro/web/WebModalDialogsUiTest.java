@@ -37,6 +37,10 @@ public class WebModalDialogsUiTest {
 				css.contains(".notification-dialog") && css.contains("display: flex;") && css.contains("flex-direction: column;"));
 		assertTrue("style.css must configure .notification-dialog-body with overflow-y: auto",
 				css.contains(".notification-dialog-body") && css.contains("overflow-y: auto;"));
+
+		// Verify notification dialog overlay has higher z-index than modal
+		assertTrue("style.css must define .notification-dialog-overlay with z-index: 200000",
+				css.contains(".notification-dialog-overlay") && css.contains("z-index: 200000;"));
 	}
 
 	@Test

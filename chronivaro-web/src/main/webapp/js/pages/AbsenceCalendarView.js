@@ -1561,13 +1561,15 @@ export default class AbsenceCalendarView {
 
             const payload = {
                 absenceTypeCode,
-                start,
-                end,
+                start: start + 'T00:00:00.000+01:00',
+                end: end + 'T23:59:59.999+01:00',
                 durationType,
-                dayPart,
-                minutes,
-                comment,
-                status: isDraft ? 'DRAFT' : (isDirectApproval ? 'APPROVED' : 'SUBMITTED')
+                dayPart: durationType === 'HALF_DAY' ? dayPart : undefined,
+                halfDayPart: durationType === 'HALF_DAY' ? dayPart : undefined,
+                hours: durationType === 'HOURS' ? (minutes / 60) : undefined,
+                minutes: durationType === 'HOURS' ? minutes : undefined,
+                comment: comment || undefined,
+                state: isDraft ? 'DRAFT' : (isDirectApproval ? 'APPROVED' : 'SUBMITTED')
             };
 
             try {

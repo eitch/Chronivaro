@@ -67,6 +67,26 @@ public class AbsenceResourceTest extends AbstractChronivaroRestfulTest {
 			String json = response.readEntity(String.class);
 			assertTrue(JsonParser.parseString(json).isJsonArray());
 		}
+
+		// 3. Create Absence with plain YYYY-MM-DD date strings
+		JsonObject plainDatePayload = new JsonObject();
+		plainDatePayload.addProperty("absenceTypeCode", "VACATION");
+		plainDatePayload.addProperty("start", "2026-09-09");
+		plainDatePayload.addProperty("end", "2026-09-10");
+		plainDatePayload.addProperty("durationType", "full_day");
+		plainDatePayload.addProperty("state", "APPROVED");
+		plainDatePayload.addProperty("comment", "Plain date absence");
+
+		try (Response response = target()
+				.path("chronivaro/v1/employees/" + employeeId + "/absences")
+				.request(MediaType.APPLICATION_JSON)
+				.header("Authorization", authToken)
+				.post(Entity.json(plainDatePayload.toString()))) {
+			String json = response.readEntity(String.class);
+			assertEquals("Response error: " + json, Response.Status.OK.getStatusCode(), response.getStatus());
+			JsonObject obj = JsonParser.parseString(json).getAsJsonObject();
+			assertNotNull(obj.get("id").getAsString());
+		}
 	}
 
 	@Test
