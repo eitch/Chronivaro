@@ -181,7 +181,7 @@ export default class UsersView {
 						<td>${stateBadge}</td>
 						<td>
 							<div class="dropdown">
-								<button class="ghost dropdown-toggle" data-id="${user.id}">${I18n.t('common.actions')}</button>
+								<button class="ghost dropdown-toggle" data-id="${user.id}" title="${I18n.t('common.actions')}" aria-label="${I18n.t('common.actions')}">&#8942;</button>
 								<div class="dropdown-content">
 									<button class="edit-user-btn" data-id="${user.id}">${I18n.t('common.edit')}</button>
 									<button class="invite-user-btn" data-id="${user.id}">${I18n.t('users.sendInvitation')}</button>

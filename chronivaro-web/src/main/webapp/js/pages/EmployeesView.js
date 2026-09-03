@@ -57,6 +57,8 @@ export default class EmployeesView {
 							<th>${I18n.t('employees.firstName')}</th>
 							<th>${I18n.t('employees.lastName')}</th>
 							<th>${I18n.t('employees.birthdate')}</th>
+							<th>${I18n.t('employees.joinDate')}</th>
+							<th>${I18n.t('employees.exitDate')}</th>
 							<th>${I18n.t('common.team')}</th>
 							<th>${I18n.t('common.location')}</th>
 							<th>${I18n.t('common.active')}</th>
@@ -64,7 +66,7 @@ export default class EmployeesView {
 						</tr>
 					</thead>
 					<tbody>
-						<tr><td colspan="9" class="loading-cell" style="text-align: center; padding: 2rem;">${I18n.t('common.loading')}</td></tr>
+						<tr><td colspan="11" class="loading-cell" style="text-align: center; padding: 2rem;">${I18n.t('common.loading')}</td></tr>
 					</tbody>
 				</table>
 			</div>
@@ -280,7 +282,7 @@ export default class EmployeesView {
             }
 
             if (filtered.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="9" class="empty-cell" style="text-align: center; padding: 2rem; color: var(--text-muted);">${I18n.t('common.noData')}</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="11" class="empty-cell" style="text-align: center; padding: 2rem; color: var(--text-muted);">${I18n.t('common.noData')}</td></tr>`;
                 return;
             }
 
@@ -299,12 +301,14 @@ export default class EmployeesView {
 					<td>${emp.firstname}</td>
 					<td>${emp.lastname}</td>
 					<td>${Format.date(emp.birthdate)}</td>
+					<td>${Format.date(emp.joinDate)}</td>
+					<td>${Format.date(emp.exitDate)}</td>
 					<td>${emp.teamName || ''}</td>
 					<td>${emp.locationName || ''}</td>
 					<td>${statusBadge}</td>
 					<td>
 						<div class="dropdown">
-							<button class="ghost dropdown-toggle" data-id="${emp.id}">${I18n.t('common.actions')}</button>
+							<button class="ghost dropdown-toggle" data-id="${emp.id}" title="${I18n.t('common.actions')}" aria-label="${I18n.t('common.actions')}">&#8942;</button>
 							<div class="dropdown-content">
 								<button class="edit-btn" data-id="${emp.id}">${I18n.t('common.edit')}</button>
 								${emp.active ? `<button class="register-btn" data-id="${emp.id}">${I18n.t('employees.register')}</button>` : `<button class="reactivate-btn" data-id="${emp.id}">${I18n.t('employees.reactivate')}</button>`}
@@ -350,12 +354,12 @@ export default class EmployeesView {
 
         const refresh = async () => {
             try {
-                tbody.innerHTML = `<tr><td colspan="9" class="loading-cell" style="text-align: center; padding: 2rem;">${I18n.t('common.loading')}</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="11" class="loading-cell" style="text-align: center; padding: 2rem;">${I18n.t('common.loading')}</td></tr>`;
                 this.employees = await EmployeeApi.getAll();
                 renderEmployees();
             } catch (err) {
                 console.error(err);
-                tbody.innerHTML = `<tr><td colspan="9" class="error">${err.message}</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="11" class="error">${err.message}</td></tr>`;
             }
         };
 
