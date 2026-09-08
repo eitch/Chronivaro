@@ -151,4 +151,70 @@ public class HolidayCalendarResourceTest extends AbstractChronivaroRestfulTest {
 					Response.Status.OK.getStatusCode());
 		}
 	}
+
+	@Test
+	public void shouldGetCsvFormatsAndImportHolidayCsv() {
+		String authToken = authenticate();
+
+		// Check csv formats
+		try (Response response = target()
+				.path("chronivaro/v1/admin/holiday-calendars/csv-formats")
+				.request(MediaType.APPLICATION_JSON)
+				.header("Authorization", authToken)
+				.get()) {
+			assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+			String json = response.readEntity(String.class);
+			assertTrue(json.contains("fcal.ch DE"));
+		}
+
+		// Create calendar
+		String calendarJson = """
+				{
+				  "name": "ImportCal",
+				  "active": true
+				}
+				""";
+		String calendarId;
+		try (Response response = target()
+				.path("chronivaro/v1/admin/holiday-calendars")
+				.request(MediaType.APPLICATION_JSON)
+				.header("Authorization", authToken)
+				.post(Entity.json(calendarJson))) {
+			assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+			JsonObject result = JsonParser.parseString(response.readEntity(String.class)).getAsJsonObject();
+			calendarId = result.get("value").getAsString();
+		}
+
+		// Import CSV
+		String csv = """
+				"Datum";"Bezeichnung";"Wochentag";"Kalenderwoche"
+				"01.01.2025";"Neujahr";"Mi.";"Woche 01"
+				"02.01.2025";"Berchtoldstag";"Do.";"Woche 01"
+				""";
+		JsonObject importPayload = new JsonObject();
+		importPayload.addProperty("format", "fcal.ch DE");
+		importPayload.addProperty("csvData", csv);
+
+		try (Response response = target()
+				.path("chronivaro/v1/admin/holiday-calendars/" + calendarId + "/import-csv")
+				.request(MediaType.APPLICATION_JSON)
+				.header("Authorization", authToken)
+				.post(Entity.json(importPayload.toString()))) {
+			assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+		}
+
+		// Verify 2 holidays imported
+		try (Response response = target()
+				.path("chronivaro/v1/admin/holiday-calendars/" + calendarId + "/holidays")
+				.request(MediaType.APPLICATION_JSON)
+				.header("Authorization", authToken)
+				.get()) {
+			assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+			List<HolidayDto> holidays = ChronivaroRestHelper
+					.createGson()
+					.fromJson(response.readEntity(String.class), new TypeToken<List<HolidayDto>>() {
+					}.getType());
+			assertEquals(2, holidays.size());
+		}
+	}
 }

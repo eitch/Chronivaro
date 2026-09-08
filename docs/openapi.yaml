@@ -2894,6 +2894,73 @@ paths:
   # ==========================================
   # Admin - Holiday Calendars
   # ==========================================
+  /chronivaro/v1/admin/holiday-calendars/csv-formats:
+    get:
+      summary: List supported holiday CSV formats
+      description: Returns the list of supported CSV format configurations for holiday import.
+      operationId: getHolidayCsvFormats
+      tags:
+        - Admin - Holiday Calendars
+      security:
+        - CookieAuth: []
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of supported CSV formats
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/HolidayCsvFormatDto'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /chronivaro/v1/admin/holiday-calendars/{id}/import-csv:
+    post:
+      summary: Import holidays from CSV
+      description: Imports holidays into the specified calendar from a CSV string with a chosen format.
+      operationId: importHolidayCsv
+      tags:
+        - Admin - Holiday Calendars
+      security:
+        - CookieAuth: []
+        - BearerAuth: []
+      parameters:
+        - name: id
+        in: path
+        required: true
+        description: Holiday calendar identifier
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ImportHolidayCsvRequestDto'
+      responses:
+        '200':
+          description: Import result summary
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceResultDto'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
   /chronivaro/v1/admin/holiday-calendars:
     get:
       summary: List holiday calendars
@@ -5629,6 +5696,32 @@ components:
         size:
           type: integer
           example: 6
+
+    HolidayCsvFormatDto:
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: string
+          example: "fcal.ch DE"
+        name:
+          type: string
+          example: "fcal.ch DE"
+
+    ImportHolidayCsvRequestDto:
+      type: object
+      required:
+        - format
+        - csvData
+      properties:
+        format:
+          type: string
+          example: "fcal.ch DE"
+        csvData:
+          type: string
+          description: "Raw CSV file content"
 
     HolidayCalendarDto:
       type: object

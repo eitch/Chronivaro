@@ -21,6 +21,17 @@ export default class HolidayCalendarApi {
         return await Rest.post(`rest/chronivaro/v1/admin/holiday-calendars/${calendarId}/holidays`, holiday);
     }
 
+    static async getCsvFormats() {
+        return await Rest.get('rest/chronivaro/v1/admin/holiday-calendars/csv-formats');
+    }
+
+    static async importCsv(calendarId, format, csvData) {
+        return await Rest.post(`rest/chronivaro/v1/admin/holiday-calendars/${calendarId}/import-csv`, {
+            format,
+            csvData
+        });
+    }
+
     static async deleteCalendar(id) {
         return await Rest.delete(`rest/chronivaro/v1/admin/holiday-calendars/${id}`);
     }

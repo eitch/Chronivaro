@@ -79,7 +79,7 @@ Chronivaro offers a responsive single-page web interface tailored for employees,
 - ✅ **Supervisor Approval Queues**: Dedicated approval inbox for team supervisors and HR managers with optimistic concurrency validation, team/type filters, and mandatory rejection feedback.
 - 📅 **Monthly Period Closing Workflow**: Employee period submission, calculation snapshot generation (actual vs. target hours, overtime/undertime), supervisor approval, and HR/Admin period locking.
 - 📊 **Reporting & RFC 4180 CSV Export**: Personal summaries, monthly balance histories, vacation account journals, team performance overviews, and filtered absence reports with UTF-8 BOM encoding for Excel.
-- 👥 **Tenant Administration & Self-Service**: Comprehensive master data management for employees, employment schedules, teams, locations, holiday calendars, absence types, global tenant parameters, and user self-service password management.
+- 👥 **Tenant Administration & Self-Service**: Comprehensive master data management for employees, employment schedules, teams, locations, holiday calendars (including extensible CSV holiday import for formats like "fcal.ch DE"), absence types, global tenant parameters, and user self-service password management.
 - 🔒 **Security & Audit Logging**: Role-based access control (Employee, Supervisor, HR, Administrator), immutable append-only audit trail logging all state transitions, approvals, and configuration changes.
 - 🚀 **Standalone Embedded Jetty Execution**: Executable standalone JAR (`chronivaro.jar`) with manifest classpath loading from `lib/` (and packaged distribution archive `chronivaro.tar.gz`) delivering frontend assets and REST API endpoints out-of-the-box.
 

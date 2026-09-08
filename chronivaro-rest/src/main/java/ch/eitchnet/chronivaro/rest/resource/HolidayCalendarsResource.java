@@ -1,9 +1,7 @@
 package ch.eitchnet.chronivaro.rest.resource;
 
-import ch.eitchnet.chronivaro.core.service.CreateHolidayCalendarService;
-import ch.eitchnet.chronivaro.core.service.CreateHolidayService;
-import ch.eitchnet.chronivaro.core.service.RemoveHolidayCalendarService;
-import ch.eitchnet.chronivaro.core.service.RemoveHolidayService;
+import ch.eitchnet.chronivaro.core.holiday.HolidayCsvParserRegistry;
+import ch.eitchnet.chronivaro.core.service.*;
 import ch.eitchnet.chronivaro.rest.dto.ChronivaroMapper;
 import ch.eitchnet.chronivaro.rest.dto.HolidayCalendarDto;
 import ch.eitchnet.chronivaro.rest.dto.HolidayDto;
@@ -122,6 +120,34 @@ public class HolidayCalendarsResource {
 				.fromJson(data, CreateHolidayService.HolidayArgument.class);
 		arg.holidayCalendarId = calendarId;
 		ServiceResult result = serviceHandler.doService(cert, new CreateHolidayService(), arg);
+		return ChronivaroRestHelper.toResponse(result);
+	}
+
+	@GET
+	@Path("csv-formats")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response getCsvFormats(@Context HttpServletRequest request) {
+		Certificate cert = (Certificate) request.getAttribute(STROLCH_CERTIFICATE);
+		ChronivaroRestHelper.openTx(cert).close(); // Validate authentication/session
+		List<HolidayCsvParserRegistry.HolidayCsvFormatDto> formats = HolidayCsvParserRegistry.getAvailableFormats();
+		String json = ChronivaroRestHelper.createGson().toJson(formats);
+		return Response.ok(json, MediaType.APPLICATION_JSON).build();
+	}
+
+	@POST
+	@Path("{id}/import-csv")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response importHolidayCsv(@Context HttpServletRequest request, @PathParam("id") String calendarId,
+			String data) {
+		Certificate cert = (Certificate) request.getAttribute(STROLCH_CERTIFICATE);
+		ServiceHandler serviceHandler = ChronivaroRestHelper.getServiceHandler();
+		ImportHolidayCsvService.ImportHolidayCsvArgument arg = ChronivaroRestHelper
+				.createGson()
+				.fromJson(data, ImportHolidayCsvService.ImportHolidayCsvArgument.class);
+		arg.holidayCalendarId = calendarId;
+		ImportHolidayCsvService service = new ImportHolidayCsvService();
+		ServiceResult result = serviceHandler.doService(cert, service, arg);
 		return ChronivaroRestHelper.toResponse(result);
 	}
 

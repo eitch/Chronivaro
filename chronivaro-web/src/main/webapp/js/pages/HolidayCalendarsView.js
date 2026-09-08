@@ -39,6 +39,7 @@ export default class HolidayCalendarsView {
 						<h3 id="selected-calendar-name"></h3>
 						<div class="actions">
 							<button id="add-holiday-btn">${I18n.t('holidayCalendars.addHoliday')}</button>
+							<button id="import-csv-btn" class="secondary">${I18n.t('holidayCalendars.importCsv')}</button>
 						</div>
 						<table id="holidays-table">
 							<thead>
@@ -96,12 +97,36 @@ export default class HolidayCalendarsView {
 					</form>
 				</div>
 			</div>
+
+			<div id="import-csv-modal" class="modal">
+				<div class="modal-content">
+					<h3>${I18n.t('holidayCalendars.importCsv')}</h3>
+					<form id="import-csv-form">
+						<div class="form-group">
+							<label for="csv-format-select">${I18n.t('holidayCalendars.csvFormat')}:</label>
+							<select id="csv-format-select" required></select>
+						</div>
+						<div class="form-group">
+							<label for="csv-file-input">${I18n.t('holidayCalendars.csvFile')}:</label>
+							<input type="file" id="csv-file-input" accept=".csv,text/csv,text/plain" required>
+						</div>
+						<div class="actions">
+							<button type="submit">${I18n.t('holidayCalendars.importHolidays')}</button>
+							<button type="button" class="close-modal">${I18n.t('common.cancel')}</button>
+						</div>
+					</form>
+				</div>
+			</div>
 		`;
 
         this.calModal = container.querySelector('#calendar-modal');
         this.holModal = container.querySelector('#holiday-modal');
+        this.importModal = container.querySelector('#import-csv-modal');
         this.calForm = container.querySelector('#calendar-form');
         this.holForm = container.querySelector('#holiday-form');
+        this.importForm = container.querySelector('#import-csv-form');
+        this.csvFormatSelect = container.querySelector('#csv-format-select');
+        this.csvFileInput = container.querySelector('#csv-file-input');
         this.calendarsBody = container.querySelector('#calendars-body');
         this.holidaysBody = container.querySelector('#holidays-body');
         this.detailsContent = container.querySelector('#details-content');
@@ -119,10 +144,18 @@ export default class HolidayCalendarsView {
             this.holModal.style.display = 'block';
         });
 
+        container.querySelector('#import-csv-btn').addEventListener('click', async () => {
+            if (!this.selectedCalendarId) return;
+            this.importForm.reset();
+            await this.loadCsvFormats();
+            this.importModal.style.display = 'block';
+        });
+
         container.querySelectorAll('.close-modal').forEach(btn => {
             btn.addEventListener('click', () => {
                 this.calModal.style.display = 'none';
                 this.holModal.style.display = 'none';
+                this.importModal.style.display = 'none';
             });
         });
 
@@ -167,6 +200,27 @@ export default class HolidayCalendarsView {
                 this.loadHolidays(this.selectedCalendarId);
             } catch (err) {
                 NotificationDialog.error(err.message);
+            }
+        });
+
+        this.importForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const format = this.csvFormatSelect.value;
+            const file = this.csvFileInput.files[0];
+            if (!file) {
+                NotificationDialog.error(I18n.t('holidayCalendars.noFileSelected'));
+                return;
+            }
+
+            try {
+                const csvData = await file.text();
+                const result = await HolidayCalendarApi.importCsv(this.selectedCalendarId, format, csvData);
+                this.importModal.style.display = 'none';
+                const msg = result && result.msg ? result.msg : I18n.t('holidayCalendars.importSuccess');
+                NotificationDialog.show(msg);
+                this.loadHolidays(this.selectedCalendarId);
+            } catch (err) {
+                NotificationDialog.error(err.message || I18n.t('holidayCalendars.importError'));
             }
         });
 
@@ -218,6 +272,21 @@ export default class HolidayCalendarsView {
         this.noSelectionMsg.style.display = 'none';
         this.detailsContent.style.display = 'block';
         this.loadHolidays(cal.id);
+    }
+
+    async loadCsvFormats() {
+        try {
+            const formats = await HolidayCalendarApi.getCsvFormats();
+            this.csvFormatSelect.innerHTML = '';
+            formats.forEach(fmt => {
+                const opt = document.createElement('option');
+                opt.value = fmt.id;
+                opt.textContent = fmt.name;
+                this.csvFormatSelect.appendChild(opt);
+            });
+        } catch (err) {
+            NotificationDialog.error(err.message);
+        }
     }
 
     async loadHolidays(calendarId) {
