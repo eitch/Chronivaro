@@ -3,7 +3,7 @@
     <env id="dev">
         <Runtime>
             <Properties>
-                <locale>en_CH</locale>
+                <locale>de-CH</locale>
                 <timezone>Europe/Zurich</timezone>
             </Properties>
         </Runtime>
