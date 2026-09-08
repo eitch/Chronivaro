@@ -19,6 +19,7 @@ import ConfigurationView from './pages/ConfigurationView.js';
 import UsersView from './pages/UsersView.js';
 import AuditLogView from './pages/AuditLogView.js';
 import ProfileView from './pages/ProfileView.js';
+import VersionView from './pages/VersionView.js';
 import ConfigurationApi from './api/ConfigurationApi.js';
 import CompleteRegistrationView from './pages/CompleteRegistrationView.js';
 import NotificationDialog from './utils/NotificationDialog.js';
@@ -503,6 +504,9 @@ class ChronivaroApp {
                 break;
             case 'configuration':
                 view = new ConfigurationView(this);
+                break;
+            case 'version':
+                view = new VersionView(this);
                 break;
             case 'users':
                 view = new UsersView(this);

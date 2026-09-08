@@ -1,4 +1,5 @@
 import AuthApi from '../api/AuthApi.js';
+import VersionApi from '../api/VersionApi.js';
 import I18n from '../i18n/I18n.js';
 
 export default class LoginView {
@@ -34,12 +35,22 @@ export default class LoginView {
 				<div style="margin-top: 1rem; text-align: center;">
 					<a href="#complete-registration">${I18n.t('auth.completeRegistrationTitle')}</a>
 				</div>
+				<div id="login-app-version" style="margin-top: 1.5rem; text-align: center; font-size: 0.75rem; color: var(--text-muted);"></div>
 			</form>
 		`;
 
         const form = container.querySelector('#login-form');
         const errorDiv = container.querySelector('#login-error');
         const langSelect = container.querySelector('#login-language-select');
+        const versionDiv = container.querySelector('#login-app-version');
+
+        VersionApi.getVersion().then(data => {
+            if (data && data.appVersion && data.appVersion.artifactVersion) {
+                versionDiv.textContent = `v${data.appVersion.artifactVersion}`;
+            }
+        }).catch(err => {
+            console.debug('Failed to load version for login screen:', err);
+        });
 
         if (langSelect) {
             langSelect.addEventListener('change', async (e) => {

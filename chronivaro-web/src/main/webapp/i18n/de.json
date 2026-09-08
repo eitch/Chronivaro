@@ -30,6 +30,7 @@
     "users": "Benutzer",
     "auditLog": "Audit-Log",
     "configuration": "Konfiguration",
+    "version": "Version",
     "profile": "Mein Profil",
     "logout": "Abmelden"
   },
@@ -952,5 +953,16 @@
     "hoursCount": "{count} Stunden",
     "minutesCount": "{count} Min",
     "emptyTimeline": "Keine Mitarbeiter für die ausgewählten Filter gefunden."
+  },
+  "version": {
+    "title": "Versionsinformationen",
+    "subtitle": "System-, Anwendungs- und Laufzeitversionsdetails.",
+    "appVersion": "Anwendungsversion",
+    "agentVersion": "Strolch Agent",
+    "artifact": "Artefakt-ID",
+    "version": "Version",
+    "groupId": "Gruppen-ID",
+    "environment": "Umgebung",
+    "timezone": "Zeitzone"
   }
 }
