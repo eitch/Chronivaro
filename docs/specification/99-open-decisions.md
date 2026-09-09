@@ -41,7 +41,7 @@ Bis zur formellen Entscheidung abweichender Richtlinien gelten im gesamten Syste
 - **Primäres Team:** Jeder Mitarbeiter ist genau einem Team zugeordnet.
 - **Stornierungsworkflow:** Einmal genehmigte Abwesenheiten können nicht still editiert, sondern nur storniert werden.
 - **Standardzeitzone:** `Europe/Zurich`.
-- **Arbeitsortanzeige:** `HOME_OFFICE`, `OFFICE` und `CUSTOMER` sind als Arbeitsorte verfügbar.
+- **Arbeitsortanzeige:** `HOME_OFFICE`, `OFFICE`, `FIELD` und `REMOTE` sind als Arbeitsorte verfügbar.
 
 ---
 

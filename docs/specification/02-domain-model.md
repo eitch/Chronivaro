@@ -126,16 +126,16 @@ Ein `WorkEntry` bildet ausschliesslich einen tatsächlich gearbeiteten, kontinui
 
 #### Attribute
 
-| Attribut | Typ / Format | Beschreibung |
-|---|---|---|
-| `workEntryId` | String | Eindeutige ID |
-| `workDayId` | String | Referenz auf den zugehörigen `WorkDay` |
-| `start` | ISO-8601 Timestamp | Startzeitpunkt mit Zeitzonen-Offset |
+| Attribut | Typ / Format | Beschreibung                                                  |
+|---|---|---------------------------------------------------------------|
+| `workEntryId` | String | Eindeutige ID                                                 |
+| `workDayId` | String | Referenz auf den zugehörigen `WorkDay`                        |
+| `start` | ISO-8601 Timestamp | Startzeitpunkt mit Zeitzonen-Offset                           |
 | `end` | ISO-8601 Timestamp | Endzeitpunkt mit Zeitzonen-Offset; bei laufender Buchung leer |
-| `source` | Enum | Quelle der Buchung: `TIMER`, `MANUAL`, `IMPORT`, `ADMIN` |
-| `comment` | String | Optionaler Kommentar des Erfassers |
-| `createdBy` | String | Benutzername des Erstellers |
-| `workingLocation` | Enum | Arbeitsort: `HOME_OFFICE`, `OFFICE` oder `CUSTOMER` |
+| `source` | Enum | Quelle der Buchung: `TIMER`, `MANUAL`, `IMPORT`, `ADMIN`      |
+| `comment` | String | Optionaler Kommentar des Erfassers                            |
+| `createdBy` | String | Benutzername des Erstellers                                   |
+| `workingLocation` | Enum | Arbeitsort: `HOME_OFFICE`, `OFFICE`, `FIELD` oder `REMOTE`    |
 
 #### Regeln und Invarianten
 
@@ -152,7 +152,7 @@ Ein `WorkEntry` bildet ausschliesslich einen tatsächlich gearbeiteten, kontinui
 - **Visuelle Hervorhebung und Ausweisung des Erstellers:**
   - Alle nachträglich modifizierten sowie manuell erstellten Arbeitszeitbuchungen (`source = MANUAL` oder modifizierter Status) werden in der UI und in Berichten/Exporten visuell hervorgehoben (z. B. Badge/Badge-Kennzeichnung).
   - Wurde eine Arbeitszeitbuchung nicht durch den Mitarbeiter selbst erstellt (Fremderfassung), wird transparent ausgewiesen, von wem (`createdBy`) der Eintrag erstellt wurde.
-- **Arbeitsort:** Jeder `WorkEntry` besitzt einen Arbeitsort (`HOME_OFFICE`, `OFFICE`, `CUSTOMER`). Ein Arbeitstag darf höchstens einen Arbeitsort am Vormittag und einen Arbeitsort am Nachmittag haben. Ein Wechsel des Arbeitsorts erzeugt separate Zeitblöcke.
+- **Arbeitsort:** Jeder `WorkEntry` besitzt einen Arbeitsort (`HOME_OFFICE`, `OFFICE`, `FIELD`, `REMOTE`). Ein Arbeitstag darf höchstens einen Arbeitsort am Vormittag und einen Arbeitsort am Nachmittag haben. Ein Wechsel des Arbeitsorts erzeugt separate Zeitblöcke.
 - **Dauerbereiche im Dashboard:** Für die Schnellauswahl im Dashboard werden `HALF_DAY` (`MORNING` oder `AFTERNOON`) und `FULL_DAY` unterstützt.
 
 ---
@@ -166,7 +166,7 @@ Mitarbeitende können für jeden Wochentag einen Standardarbeitsort hinterlegen,
 | Attribut | Typ / Format | Beschreibung |
 |---|---|---|
 | `weekday` | Enum | Wochentag (`MONDAY` bis `SUNDAY`) |
-| `workingLocation` | Enum | `HOME_OFFICE`, `OFFICE` oder `CUSTOMER` |
+| `workingLocation` | Enum | `HOME_OFFICE`, `OFFICE`, `FIELD`, `REMOTE` |
 | `durationType` | Enum | `HALF_DAY` oder `FULL_DAY` |
 | `halfDayPart` | Enum | `MORNING` oder `AFTERNOON` (nur bei `HALF_DAY`) |
 

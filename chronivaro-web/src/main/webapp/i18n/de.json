@@ -704,10 +704,9 @@
   "enums": {
     "workingLocation": {
       "OFFICE": "Büro",
-      "REMOTE": "Homeoffice / Remote",
-      "FIELD": "Aussendienst / Kunde",
       "HOME_OFFICE": "Homeoffice",
-      "CUSTOMER": "Kunde"
+      "FIELD": "Aussendienst / Kunde",
+      "REMOTE": "Remote"
     },
     "dayState": {
       "WORKING": "Arbeitet",

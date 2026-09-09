@@ -245,12 +245,12 @@ public class AddWorkEntryServiceTest {
 		assertTrue("Conflicting morning location should be rejected",
 				serviceHandler.doService(certificate, new AddWorkEntryService(), mConflict).isNok());
 
-		// 4. Afternoon entry with CUSTOMER (13:00 - 15:00) -> Allowed
+		// 4. Afternoon entry with FIELD (13:00 - 15:00) -> Allowed
 		AddWorkEntryService.AddWorkEntryArgument a1 = new AddWorkEntryService.AddWorkEntryArgument();
 		a1.employeeId = employeeId;
 		a1.start = ZonedDateTime.parse("2026-05-10T13:00:00+02:00[Europe/Zurich]");
 		a1.end = ZonedDateTime.parse("2026-05-10T15:00:00+02:00[Europe/Zurich]");
-		a1.workingLocation = WorkingLocation.CUSTOMER;
+		a1.workingLocation = WorkingLocation.FIELD;
 		assertTrue(serviceHandler.doService(certificate, new AddWorkEntryService(), a1).isOk());
 
 		// 5. Afternoon entry with CONFLICTING location OFFICE (15:30 - 17:00) -> Rejected

@@ -20,9 +20,10 @@ export default class DashboardView {
 				<div id="timer-controls">
 					<fieldset id="working-location-group">
 						<legend>${I18n.t('dashboard.workingLocation')}</legend>
-						<label><input type="radio" name="working-location" value="HOME_OFFICE"> ${I18n.t('enums.workingLocation.HOME_OFFICE')}</label>
 						<label><input type="radio" name="working-location" value="OFFICE"> ${I18n.t('enums.workingLocation.OFFICE')}</label>
-						<label><input type="radio" name="working-location" value="CUSTOMER"> ${I18n.t('enums.workingLocation.CUSTOMER')}</label>
+						<label><input type="radio" name="working-location" value="HOME_OFFICE"> ${I18n.t('enums.workingLocation.HOME_OFFICE')}</label>
+						<label><input type="radio" name="working-location" value="FIELD"> ${I18n.t('enums.workingLocation.FIELD')}</label>
+						<label><input type="radio" name="working-location" value="REMOTE"> ${I18n.t('enums.workingLocation.REMOTE')}</label>
 						<button id="clear-working-location" type="button">${I18n.t('dashboard.clearLocation')}</button>
 					</fieldset>
 					<div style="margin-top: 8px;">

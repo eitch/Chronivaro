@@ -120,7 +120,7 @@ public class TimerWorkDayTest {
 		StopTimerService.StopTimerArgument stopArgument = new StopTimerService.StopTimerArgument(employeeId);
 		stopArgument.time = morningEndTime;
 		assertTrue(serviceHandler.doService(certificate, new StopTimerService(), stopArgument).isOk());
-		StartTimerService.Argument afternoonArgument = new StartTimerService.Argument(employeeId, WorkingLocation.CUSTOMER, afternoonTime);
+		StartTimerService.Argument afternoonArgument = new StartTimerService.Argument(employeeId, WorkingLocation.FIELD, afternoonTime);
 		assertTrue(serviceHandler.doService(certificate, new StartTimerService(), afternoonArgument).isOk());
 
 		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
@@ -130,7 +130,7 @@ public class TimerWorkDayTest {
 			assertEquals(2, entries.size());
 			assertTrue(entries.stream().anyMatch(entry -> WorkingLocation.HOME_OFFICE.name()
 					.equals(entry.getString(PARAM_WORKING_LOCATION))));
-			assertTrue(entries.stream().anyMatch(entry -> WorkingLocation.CUSTOMER.name()
+			assertTrue(entries.stream().anyMatch(entry -> WorkingLocation.FIELD.name()
 					.equals(entry.getString(PARAM_WORKING_LOCATION))));
 		}
 	}

@@ -139,8 +139,8 @@ export default class MyTimesView {
 								<select id="add-working-location" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color, #e2e8f0); border-radius: 4px; box-sizing: border-box;">
 									<option value="">-- ${I18n.t('common.selectOption')} --</option>
 									<option value="OFFICE">${I18n.t('enums.workingLocation.OFFICE', {}, 'OFFICE')}</option>
-									<option value="HOME">${I18n.t('enums.workingLocation.HOME', {}, 'HOME')}</option>
-									<option value="CUSTOMER">${I18n.t('enums.workingLocation.CUSTOMER', {}, 'CUSTOMER')}</option>
+									<option value="HOME_OFFICE">${I18n.t('enums.workingLocation.HOME_OFFICE', {}, 'HOME_OFFICE')}</option>
+									<option value="FIELD">${I18n.t('enums.workingLocation.FIELD', {}, 'FIELD')}</option>
 									<option value="REMOTE">${I18n.t('enums.workingLocation.REMOTE', {}, 'REMOTE')}</option>
 								</select>
 							</div>
@@ -201,8 +201,8 @@ export default class MyTimesView {
 								<select id="modal-working-location" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color, #e2e8f0); border-radius: 4px; box-sizing: border-box;">
 									<option value="">-- ${I18n.t('common.selectOption')} --</option>
 									<option value="OFFICE">${I18n.t('enums.workingLocation.OFFICE', {}, 'OFFICE')}</option>
-									<option value="HOME">${I18n.t('enums.workingLocation.HOME', {}, 'HOME')}</option>
-									<option value="CUSTOMER">${I18n.t('enums.workingLocation.CUSTOMER', {}, 'CUSTOMER')}</option>
+									<option value="HOME_OFFICE">${I18n.t('enums.workingLocation.HOME_OFFICE', {}, 'HOME_OFFICE')}</option>
+									<option value="FIELD">${I18n.t('enums.workingLocation.FIELD', {}, 'FIELD')}</option>
 									<option value="REMOTE">${I18n.t('enums.workingLocation.REMOTE', {}, 'REMOTE')}</option>
 								</select>
 							</div>
