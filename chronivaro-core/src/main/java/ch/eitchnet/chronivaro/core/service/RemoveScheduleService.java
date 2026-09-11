@@ -27,6 +27,18 @@ public class RemoveScheduleService extends AbstractService<StringArgument, Servi
 			ZonedDateTime validFrom = schedule.getDate(PARAM_VALID_FROM);
 			ZonedDateTime validTo = schedule.getDate(PARAM_VALID_TO);
 
+			long workDays = tx.streamResources(TYPE_WORK_DAY)
+					.filter(wd -> wd.hasRelation(PARAM_SCHEDULE) && schedule.getId().equals(wd.getRelationId(PARAM_SCHEDULE)))
+					.count();
+
+			if (workDays > 0) {
+				throw new StrolchUserMessageException(
+						new I18nMessage("chronivaro", "chronivaro.schedule.delete.fail.workdays", null,
+								"Cannot delete schedule because it has " + workDays
+										+ " work days associated with it. Please update the schedule instead.")
+								.value("count", workDays));
+			}
+
 			long workEntries = tx.streamResources(TYPE_WORK_ENTRY)
 					.filter(e -> e.getRelationId(PARAM_EMPLOYEE).equals(employeeId))
 					.filter(e -> {

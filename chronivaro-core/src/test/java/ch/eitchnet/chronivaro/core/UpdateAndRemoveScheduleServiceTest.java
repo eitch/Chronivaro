@@ -157,7 +157,60 @@ public class UpdateAndRemoveScheduleServiceTest {
 		ServiceResult removeResult = serviceHandler.doService(certificate, new RemoveScheduleService(),
 				new StringArgument(scheduleId));
 		assertFalse(removeResult.getMessage(), removeResult.isOk());
-		assertTrue(removeResult.getMessage(), removeResult.getMessage().contains("Cannot delete schedule because it has 1 work entries associated with it"));
+		assertTrue(removeResult.getMessage(), removeResult.getMessage().contains("Cannot delete schedule because it has 1 work days associated with it"));
+	}
+
+	@Test
+	public void shouldFailToRemoveScheduleWithWorkDayWithoutWorkEntries() {
+		String employeeId = "emp-remove-fail-workday";
+
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
+			createEmployee(tx, employeeId, "Remove Fail WorkDay Emp", false);
+			tx.commitOnClose();
+		}
+
+		ServiceHandler serviceHandler = runtimeMock.getServiceHandler();
+
+		// Create Schedule
+		CreateScheduleService.CreateScheduleArgument createArg = new CreateScheduleService.CreateScheduleArgument();
+		createArg.employeeId = employeeId;
+		createArg.validFrom = ZonedDateTime.parse("2026-01-01T00:00:00+01:00[Europe/Zurich]");
+		createArg.monday = 480;
+		createArg.tuesday = 480;
+		createArg.wednesday = 480;
+		createArg.thursday = 480;
+		createArg.friday = 480;
+		createArg.saturday = 0;
+		createArg.sunday = 0;
+		serviceHandler.doService(certificate, new CreateScheduleService(), createArg);
+
+		String scheduleId;
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
+			scheduleId = tx
+					.streamResources(TYPE_EMPLOYMENT_SCHEDULE)
+					.filter(s -> s.getRelationId(PARAM_EMPLOYEE).equals(employeeId))
+					.findFirst()
+					.get()
+					.getId();
+		}
+
+		// Create empty WorkDay referencing schedule
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
+			Resource workDay = tx.getResourceTemplate(TYPE_WORK_DAY, true);
+			workDay.setId(employeeId + "-2026-01-15");
+			workDay.setName("WorkDay " + employeeId + " 2026-01-15");
+			workDay.setDate(PARAM_DATE, ZonedDateTime.parse("2026-01-15T00:00:00+01:00[Europe/Zurich]"));
+			workDay.setRelationId(PARAM_EMPLOYEE, employeeId);
+			workDay.setRelationId(PARAM_SCHEDULE, scheduleId);
+			tx.add(workDay);
+			tx.commitOnClose();
+		}
+
+		// Remove should fail
+		ServiceResult removeResult = serviceHandler.doService(certificate, new RemoveScheduleService(),
+				new StringArgument(scheduleId));
+		assertFalse(removeResult.getMessage(), removeResult.isOk());
+		assertTrue(removeResult.getMessage(), removeResult.getMessage().contains("Cannot delete schedule because it has 1 work days associated with it"));
 	}
 
 	@Test
