@@ -40,8 +40,13 @@ export default class WorkEntryApi {
 	}
 
     static async getDaySummary(date) {
-        const dateStr = date.toISOString().split('T')[0];
+        const dateStr = (date instanceof Date) ? date.toISOString().split('T')[0] : String(date);
         return await Rest.get(`rest/chronivaro/v1/me/day-summary/${dateStr}`);
+    }
+
+    static async getEmployeeDaySummary(employeeId, date) {
+        const dateStr = (date instanceof Date) ? date.toISOString().split('T')[0] : String(date);
+        return await Rest.get(`rest/chronivaro/v1/reports/day?date=${encodeURIComponent(dateStr)}&employeeId=${encodeURIComponent(employeeId)}&format=json`);
     }
 
     static async getWorkingLocationDefaults() {

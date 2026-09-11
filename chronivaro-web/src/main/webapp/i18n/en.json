@@ -246,6 +246,7 @@
     "shortenOnlyError": "As an employee you can only shorten entries and cannot modify start times.",
     "shortenTime": "Shortened End Time",
     "totalDuration": "Total Duration",
+    "todayBalance": "Today's Balance",
     "entriesCount": "Recorded Entries",
     "manualBadge": "Manual",
     "modifiedBadge": "Modified",

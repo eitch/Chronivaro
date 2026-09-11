@@ -276,7 +276,9 @@ export default class DashboardView {
 
                 workedSpan.textContent = Format.duration(summary.actualMinutes);
                 requiredSpan.textContent = Format.duration(summary.targetMinutes);
-                balanceSpan.textContent = Format.duration(summary.balance);
+                const balSign = summary.balance > 0 ? '+' : '';
+                balanceSpan.textContent = `${balSign}${Format.duration(summary.balance)}`;
+                balanceSpan.className = summary.balance > 0 ? 'positive' : (summary.balance < 0 ? 'negative' : 'neutral');
 
 				startBtn.disabled = isWorking;
 				stopBtn.disabled = !isWorking;

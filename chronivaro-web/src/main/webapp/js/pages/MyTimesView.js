@@ -82,6 +82,10 @@ export default class MyTimesView {
 					<span class="text-muted" style="font-size: 0.875rem;">${I18n.t('times.totalDuration')}:</span>
 					<strong id="stat-total-duration" style="margin-left: 0.5rem; font-size: 1.1rem; color: var(--primary-color, #6366f1);">0h 00m</strong>
 				</div>
+				<div class="stat-item">
+					<span class="text-muted" style="font-size: 0.875rem;">${I18n.t('times.todayBalance')}:</span>
+					<strong id="stat-today-balance" style="margin-left: 0.5rem; font-size: 1.1rem;">-</strong>
+				</div>
 			</section>
 
 			<!-- Work Entries Table -->
@@ -232,6 +236,7 @@ export default class MyTimesView {
 		const tbody = container.querySelector('#work-entries-tbody');
 		const statEntriesCount = container.querySelector('#stat-entries-count');
 		const statTotalDuration = container.querySelector('#stat-total-duration');
+		const statTodayBalance = container.querySelector('#stat-today-balance');
 		const titleEl = container.querySelector('#times-view-title');
 
 		// Add Modal elements
@@ -412,6 +417,25 @@ export default class MyTimesView {
 
 				statEntriesCount.textContent = String(this.workEntries.length);
 				statTotalDuration.textContent = Format.duration(totalMinutes);
+
+				try {
+					const today = new Date();
+					const daySummary = isViewingOther
+							? await WorkEntryApi.getEmployeeDaySummary(this.selectedEmployeeId, today)
+							: await WorkEntryApi.getDaySummary(today);
+					if (daySummary && typeof daySummary.balance === 'number') {
+						const balSign = daySummary.balance > 0 ? '+' : '';
+						statTodayBalance.textContent = `${balSign}${Format.duration(daySummary.balance)}`;
+						statTodayBalance.className = daySummary.balance > 0 ? 'positive' : (daySummary.balance < 0 ? 'negative' : 'neutral');
+					} else {
+						statTodayBalance.textContent = '-';
+						statTodayBalance.className = '';
+					}
+				} catch (summaryErr) {
+					console.warn('Failed to fetch today balance for times view', summaryErr);
+					statTodayBalance.textContent = '-';
+					statTodayBalance.className = '';
+				}
 
 				if (this.workEntries.length === 0) {
 					tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 2rem;">${I18n.t('times.noEntries')}</td></tr>`;

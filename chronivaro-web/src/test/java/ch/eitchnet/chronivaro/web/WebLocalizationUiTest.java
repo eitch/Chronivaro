@@ -131,6 +131,7 @@ public class WebLocalizationUiTest {
 		assertTrue("MyTimesView must localize start time header", content.contains("I18n.t('times.startTime')"));
 		assertTrue("MyTimesView must localize end time header", content.contains("I18n.t('times.endTime')"));
 		assertTrue("MyTimesView must localize duration header", content.contains("I18n.t('common.duration')"));
+		assertTrue("MyTimesView must localize today balance stat", content.contains("I18n.t('times.todayBalance')"));
 		assertTrue("MyTimesView must localize location header", content.contains("I18n.t('times.workingLocation')"));
 	}
 
