@@ -56,7 +56,7 @@ Tritt bei der Verarbeitung ein fachlicher oder Validierungsfehler auf, antwortet
 | `POST` | `/me/timer/start` | Arbeitszeiterfassung (Timer) starten | Angemeldeter Mitarbeiter |
 | `POST` | `/me/timer/stop` | Laufenden Timer stoppen (mit optionalem Kommentar) | Angemeldeter Mitarbeiter |
 | `GET` | `/me/day-summary/{date}` | Tageszusammenfassung (Soll/Ist/Saldo/Unterbrüche) | Angemeldeter Mitarbeiter |
-| `GET` | `/me/month-summary/{yearMonth}` | Monatszusammenfassung für den Mitarbeiter | Angemeldeter Mitarbeiter |
+| `GET` | `/me/month-summary/{yearMonth}` | Monatszusammenfassung für den Mitarbeiter (enthält Vollmonats-Soll/Ist sowie Saldo per Vortag `periodBalanceMinutes` / `endBalanceMinutes` und Stichtagswerte `targetMinutesToDate`, `actualMinutesToDate`, etc.) | Angemeldeter Mitarbeiter |
 | `GET` | `/employees/{id}/work-entries?from={date}&to={date}` | Arbeitszeitbuchungen eines Mitarbeiters abrufen | Supervisor (Team), HR, Admin |
 | `POST` | `/employees/{id}/work-entries` | Buchung für Mitarbeiter manuell erfassen | Supervisor (Team), HR, Admin |
 | `PUT` | `/admin/work-entries/{id}` | Zeitbuchung administrativ/supervisorisch korrigieren | Supervisor (Team), HR, Admin |

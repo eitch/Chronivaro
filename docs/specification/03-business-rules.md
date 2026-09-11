@@ -67,14 +67,35 @@ Tagessaldo = Anrechenbare Zeit - Sollzeit
 
 ### 4.3 Periodensaldo und Endsaldo
 
+#### 4.3.1 Grundlegende Definitionen
 ```text
-Periodensaldo = Summe aller Tagessaldi innerhalb der Monatsperiode
-Endsaldo       = Anfangssaldo + Periodensaldo + manuelle Korrekturen
+Periodensaldo (Vollmonat) = Summe aller Tagessaldi innerhalb der Monatsperiode
+Endsaldo (Vollmonat)       = Anfangssaldo + Periodensaldo (Vollmonat) + manuelle Korrekturen
 ```
 
 - **Anfangssaldo:** Entspricht dem `Endsaldo` der vorangegangenen Monatsperiode. Bei der Berechnung traversiert die Saldenermittlung zurück bis zur frühesten Periode oder stoppt sofort, sobald eine genehmigte oder gesperrte Periode (`APPROVED`/`LOCKED`) mit einem gespeicherten `calculationSnapshot` angetroffen wird.
 - **Anfangssaldo beim Onboarding (Baseline-Periode):** Wurde beim Onboarding ein Überzeit-/Unterzeitsaldo (`initialOvertimeMinutes`) erfasst, existiert für den Vormonat von `validFrom` eine gesperrte Baseline-`TimePeriod` mit `endBalanceMinutes = initialOvertimeMinutes`. Der Anfangssaldo des ersten aktiven Erfassungsmonats übernimmt exakt diesen Wert, ohne weiter in die Vergangenheit zurückzurechnen.
 - **Zulässigkeit negativer Zeitsaldi:** Negative Zeitsaldi sind standardmässig zulässig.
+
+#### 4.3.2 Saldo per Vortag für laufende (in-progress) Perioden
+Für die **aktuelle, laufende Erfassungsperiode** (`yearMonth == aktueller Kalendermonat`) wird zur Vermeidung künstlicher Morgendefizite (z. B. scheinbarer 8-Stunden-Rückstand am frühen Morgen des aktuellen Arbeitstages) die operative Saldoberechnung nach dem Schweizer HR-Standard **per Vortag** (`date < heute`) ermittelt:
+
+$$\text{Sollzeit (per Vortag)} = \sum_{d \in \text{Monat}, d < \text{heute}} \text{Sollzeit}(d)$$
+$$\text{Anrechenbare Zeit (per Vortag)} = \sum_{d \in \text{Monat}, d < \text{heute}} \text{Anrechenbare Zeit}(d)$$
+$$\text{Periodensaldo (per Vortag)} = \text{Anrechenbare Zeit (per Vortag)} - \text{Sollzeit (per Vortag)}$$
+$$\text{Endsaldo (per Vortag)} = \text{Anfangssaldo} + \text{Periodensaldo (per Vortag)} + \text{manuelle Korrekturen}$$
+
+**Regeln zur Stichtagsabgrenzung:**
+1. **Laufender Monat (`yearMonth == YearMonth.now(zone)`):** 
+   - Sämtliche Tage vor dem heutigen Kalendertag (`date < heute`) fliessen in den Saldo per Vortag ein.
+   - Am ersten Tag des Monats (`heute == 1. des Monats`) liegen 0 Tage vor heute; der Periodensaldo per Vortag beträgt `0 min`, und der Endsaldo per Vortag entspricht exakt dem `Anfangssaldo`.
+   - Der heutige Arbeitstag (`heute`) wird im Dashboard/Tagesübersicht in Echtzeit separat als aktiver Erfassungstag ausgewiesen (`Ist: X h / Soll: Y h`), ohne den kumulierten Periodensaldo zu verzerren.
+2. **Abgeschlossene / vergangene Perioden (`yearMonth < YearMonth.now(zone)` oder Status `APPROVED`/`LOCKED`):**
+   - Alle Tage des Monats liegen in der Vergangenheit ($d < \text{heute}$). Der Saldo per Vortag ist identisch mit dem Vollmonatssaldo.
+3. **Zukünftige Perioden (`yearMonth > YearMonth.now(zone)`):**
+   - Es liegen noch keine Tage vor heute ($d < \text{heute}$); der Saldo per Vortag ist `0 min`.
+4. **Bezeichnung in Benutzeroberfläche und Berichten:**
+   - In der Monatsübersicht ("Meine Perioden"), in Team-Übersichten für Vorgesetzte und HR sowie in Berichten wird der Saldo für laufende Monate eindeutig als **"Saldo (per Vortag)"** / **"Balance (as of yesterday)"** ausgewiesen.
 
 ---
 

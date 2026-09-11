@@ -41,10 +41,10 @@ chronivaro-web/src/main/webapp/
 
 ### 2.1 Dashboard
 
-- Anzeige von heutiger Sollzeit, Istzeit und Tagessaldo.
+- Anzeige von heutiger Sollzeit, Istzeit und Tagessaldo (Echtzeitanzeige des aktiven Tages).
 - Aktueller Anwesenheitsstatus (`WORKING` / `NOT_WORKING`).
 - Start-/Stopp-Schaltfläche mit optionalem Arbeitsort und Kommentarfeld.
-- Aktueller Gesamtsaldo (Zeitsaldo und Feriensaldo).
+- Aktueller Gesamtsaldo (Zeitsaldo per Vortag und Feriensaldo).
 - Offene Warnungen oder Erinnerungen.
 
 ### 2.2 Meine Zeiten & Mitarbeiter-Zeiterfassung
@@ -57,6 +57,13 @@ chronivaro-web/src/main/webapp/
   - Manuelle Erfassung, Vollkorrektur und Löschung von Zeitbuchungen in offenen Perioden.
 - **Visuelle Kennzeichnung:** Modifizierte und manuell erstellte Buchungen werden optisch hervorgehoben (Badges).
 - **Ersteller-Ausweisung:** Bei Fremderfassung wird transparent ausgewiesen, von wem (`createdBy`) der Eintrag erstellt wurde.
+- **Monatsabschluss-Ansicht ("Meine Perioden"):**
+  - Kennzahlen-Karten zur Monatsabrechnung mit klarer visueller Trennung:
+    - Sollzeit (Monat gesamt)
+    - Istzeit, Feiertage, Abwesenheiten
+    - Saldo: Bei laufenden Monaten eindeutig als **"Saldo (per Vortag)"** / **"Balance (as of yesterday)"** beschriftet, mit Ampelfarben (grün für Plus, rot für Minus).
+    - Gesamtsaldo: **"Gesamtsaldo (per Vortag)"** / **"Total Balance (as of yesterday)"**.
+    - Bei abgeschlossenen Monaten: Reguläre Ausweisung des Vollmonatssaldos und Abschluss-Gesamtsaldos.
 
 ### 2.3 Abwesenheiten & Abwesenheitskalender
 

@@ -39,7 +39,10 @@ Der Core wird durch isolierte, deterministische Unit-Tests (unter Verwendung von
    - Blockade überlappender Zeitbuchungen und mehrerer gleichzeitiger Timer.
 4. **Saldi & Monatsabrechnung:**
    - Monats- und Gesamtsaldoberechnung über Monats- und Jahresgrenzen hinweg.
+   - **Saldo per Vortag für laufende Perioden:** Für den aktuellen Monat berechnet sich der Periodensaldo und Endsaldo ausschliesslich aus Tagen vor heute (`date < heute`); am 1. des Monats beträgt der Periodensaldo 0 min und der Endsaldo entspricht dem Anfangssaldo.
+   - **Abgeschlossene Perioden:** Für vergangene oder geschlossene Monate deckt der Saldo alle Monatstage ab.
    - Unveränderlichkeit von `calculationSnapshot` bei genehmigten Perioden.
+   - Teamübersichten weisen für den laufenden Monat den Saldo per Vortag aus, damit Vorgesetzte/HR ohne morgendliche Defizitverzerrungen Überzeit-/Unterzeitstände sehen.
 5. **Ferienjournal & Kontoführung:**
    - Automatisierte Anspruchsberechnung bei Jahreswechsel (`ENTITLEMENT`) und Eintritt pro-rata.
    - Abzug bei Ferienbezug (`USAGE`) nach FIFO-Prinzip (ältestes Guthaben zuerst).

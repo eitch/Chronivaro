@@ -180,7 +180,33 @@ The following foundational areas are verified as fully implemented in the reposi
 
 ## Prioritized Implementation Backlog
 
-*All currently identified backlog tasks are complete.*
+### Task 6: Current Period Balance as of Yesterday / Balance to Date Calculation & Display
+- **Specification Reference:** [03-business-rules.md](specification/03-business-rules.md#43-periodensaldo-und-endsaldo), [02-domain-model.md](specification/02-domain-model.md#211-timeperiod--monthsummary--erfassungs--und-abschlussperiode), [05-reports-and-exports.md](specification/05-reports-and-exports.md#22-monatsreport), [06-ui-and-localization.md](specification/06-ui-and-localization.md#21-dashboard), [07-rest-api.md](specification/07-rest-api.md#31-arbeitszeiten-und-buchungen), [11-testing-and-acceptance.md](specification/11-testing-and-acceptance.md#11-unit-tests-im-core-chronivaro-core).
+- **Problem & Goal:**
+  - In ongoing/current periods, calculating period balance by subtracting the full month target (160–180h) from actuals logged to date produced confusing negative deficits (e.g. `-84h 38m`).
+  - Furthermore, including today's target time first thing in the morning creates an artificial ~8.0h deficit before the employee starts work.
+  - The balance for open/in-progress periods must be calculated **as of yesterday** (`date < today`, where `today = LocalDate.now(zone)`). On the 1st of the month, the balance to date is `0 min` and the end balance equals `initialBalanceMinutes`. For past/closed periods, the balance naturally encompasses all days of the month.
+- **Scope & Implementation Tasks:**
+  1. **Core Domain (`chronivaro-core`):**
+     - Extend `MonthSummary` and `MonthSummaryService.calculateMonthSummary` to calculate to-date metrics (`targetMinutesToDate`, `actualMinutesToDate`, `holidayMinutesToDate`, `absenceMinutesToDate`, `balanceToDateMinutes`, `endBalanceToDateMinutes`) for days strictly before today (`date < today`).
+     - For current in-progress months (`yearMonth == YearMonth.now(zone)`), provide balance as of yesterday for `periodBalanceMinutes` / `endBalanceMinutes`.
+     - Update `TeamReportService` and `TeamReport.TeamEmployeeSummary` to compute and expose current balance to date for each team member during ongoing periods so supervisors and HR can see who is ahead or behind.
+     - Update `PeriodHelper` calculation snapshot serialization/deserialization to retain backward compatibility with older snapshots.
+     - Update `PdfExportHelper` and `CsvExportHelper` to reflect to-date labels/metrics for current months.
+  2. **REST Layer (`chronivaro-rest`):**
+     - Update `MonthSummaryDto`, `TeamReportDto`, and `ChronivaroMapper` with to-date balance fields (`balanceToDateMinutes`, `endBalanceToDateMinutes`, `targetMinutesToDate`, etc.).
+     - Update `docs/openapi.yaml` schema definitions and field descriptions.
+  3. **Web UI & Localization (`chronivaro-web`):**
+     - Update `MyPeriodsView.js` monthly summary cards to clearly display:
+       - Target (Month) vs. Target (as of yesterday).
+       - "Balance (as of yesterday)" / "Saldo (per Vortag)" with positive/negative color coding.
+       - "Total Balance (as of yesterday)" / "Gesamtsaldo (per Vortag)".
+     - Update `ReportsView.js` (Team Report & Month Report) and `ApprovalsView.js` to render balance as of yesterday for in-progress periods.
+     - Add Swiss German (`de.json`) and English (`en.json`) translation keys with 100% key parity.
+  4. **Automated Verification:**
+     - Add unit tests in `MonthSummaryServiceTest`, `PeriodLifecycleServiceTest`, and `ReportServiceTest`.
+     - Add REST and OpenAPI integration tests in `ChronivaroResourceTest`, `ReportsResourceTest`, and `OpenApiSpecTest`.
+     - Add/update UI tests in `WebPersonalPeriodUiTest` and `WebReportsUiTest`.
 
 ---
 

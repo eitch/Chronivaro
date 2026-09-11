@@ -306,11 +306,11 @@ Der Standort (`locationId`) eines Mitarbeiters bestimmt standardmässig den Feie
 
 ---
 
-### 2.11 TimePeriod – Erfassungs- und Abschlussperiode
+### 2.11 TimePeriod & MonthSummary – Erfassungs- und Abschlussperiode
 
-Repräsentiert die monatliche Zeiterfassungs- und Genehmigungsperiode eines Mitarbeiters.
+Repräsentiert die monatliche Zeiterfassungs- und Genehmigungsperiode eines Mitarbeiters sowie die aggregierte Monatsabrechnung (`MonthSummary`).
 
-#### Attribute
+#### Attribute TimePeriod
 
 | Attribut | Typ / Format | Beschreibung |
 |---|---|---|
@@ -324,10 +324,32 @@ Repräsentiert die monatliche Zeiterfassungs- und Genehmigungsperiode eines Mita
 | `comment` | String | Begründungskommentar bei Ablehnung oder Genehmigung |
 | `calculationSnapshot` | JSON-Objekt | Unveränderlicher Abschlussstand mit Soll-/Istzeiten und Saldi |
 
+#### Attribute MonthSummary (Monatsabrechnung)
+
+| Kennzahl / Attribut | Typ | Beschreibung |
+|---|---|---|
+| `totalTargetMinutes` | Integer | Gesamte Monatssollzeit aller Kalendertage des Monats |
+| `totalActualMinutes` | Integer | Bisher erfasste Gesamtarbeitszeit im Monat |
+| `totalHolidayMinutes` | Integer | Gesamte Feiertagsgutschrift im Monat |
+| `totalAbsenceMinutes` | Integer | Gesamte anrechenbare Abwesenheitsgutschrift (bezahlte Abwesenheiten und Ferien) |
+| `targetMinutesToDate` | Integer | Sollzeit bis einschliesslich Vortag (`date < heute`); bei vergangenen Perioden identisch mit `totalTargetMinutes` |
+| `actualMinutesToDate` | Integer | Istzeit bis einschliesslich Vortag (`date < heute`) |
+| `holidayMinutesToDate` | Integer | Feiertage bis einschliesslich Vortag (`date < heute`) |
+| `absenceMinutesToDate` | Integer | Anrechenbare Abwesenheiten bis einschliesslich Vortag (`date < heute`) |
+| `initialBalanceMinutes` | Integer | Anfangssaldo übertragen aus Vormonatsabschluss |
+| `periodBalanceMinutes` | Integer | Saldo der Monatsperiode (für laufende Perioden: Saldo per Vortag; für abgeschlossene Perioden: Vollmonatssaldo) |
+| `fullPeriodBalanceMinutes` | Integer | Vollmonatlicher Periodensaldo über alle Monatstage |
+| `endBalanceMinutes` | Integer | Endsaldo (für laufende Perioden: Endsaldo per Vortag; für abgeschlossene Perioden: Abschluss-Endsaldo) |
+| `fullEndBalanceMinutes` | Integer | Vollmonatlicher Endsaldo über alle Monatstage |
+| `manualCorrectionsMinutes` | Integer | Im Monat vorgenommene manuelle Saldenkorrekturen |
+| `totalOnCallMinutes` | Integer | Geleistete Piketteinsatzzeit im Monat |
+| `daySummaries` | Liste | Tageszusammenfassungen aller Tage des Monats |
+
 #### Regeln und Invarianten
 
 - **Abschluss und Sperre:** Sobald eine Periode den Status `APPROVED` oder `LOCKED` erreicht, wird ein unveränderlicher `calculationSnapshot` gespeichert, der für nachfolgende Monatsberechnungen als verbindlicher Anfangssaldo dient.
 - **Baseline-Perioden-Snapshots für Altsaldi (Migration / Onboarding):** Wird bei der Neuerstellung eines Mitarbeiters mit historischem Eintritt oder Systemstart ein Anfangsüberzeit-/-unterzeitsaldo (`initialOvertimeMinutes`) übergeben, generiert das System automatisch eine Baseline-`TimePeriod` für den Vormonat von `EmploymentScheduleVersion.validFrom` im Status `LOCKED`. Dieser enthält einen minimalen `calculationSnapshot` mit `endBalanceMinutes = initialOvertimeMinutes`. Dadurch stoppt die historische Rückwärtssaldoberechnung deterministisch bei dieser Baseline-Periode und übernimmt exakt den übergebenen Anfangssaldo als Vormonatssaldo für den ersten operativen Erfassungsmonat.
+- **Saldo per Vortag für offene/laufende Perioden:** Für den aktuellen in-progress Monat liefert die Saldenberechnung stabil den Saldo per Vortag (`date < heute`), um tageszeitabhängige künstliche Defizite zu vermeiden.
 
 ---
 

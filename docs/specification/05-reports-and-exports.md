@@ -39,16 +39,16 @@ Stellt die Arbeitszeiten eines einzelnen Kalendertages detailliert dar:
 
 Monatliche Gesamtübersicht der geleisteten Arbeits- und Abwesenheitszeiten:
 
-- **Sollzeit:** Monatssollzeit (unter Berücksichtigung von Ein-/Austritten unter dem Monat).
+- **Sollzeit:** Gesamte Monatssollzeit (unter Berücksichtigung von Ein-/Austritten unter dem Monat) sowie Sollzeit per Vortag (`targetMinutesToDate`) bei laufenden Monaten.
 - **Ist-Arbeitszeit:** Gesamte erfasste Arbeitszeit.
 - **Bezahlte Abwesenheiten:** Summe aller bezahlten Abwesenheitsstunden (z. B. Krankheit, Unfall, Weiterbildung).
 - **Unbezahlte Abwesenheiten:** Summe unbezahlter Urlaubstage/Stunden.
 - **Ferienbezug:** Im Monat bezogene Ferienzeiten.
 - **Feiertagsgutschrift:** Summe der Feiertagsstunden.
 - **Anfangssaldo:** Übertragener Schlusssaldo des Vormonats.
-- **Monatssaldo:** Summe der Tagessaldi des aktuellen Monats.
+- **Monatssaldo:** Saldo der Monatsperiode. Für den aktuellen, laufenden Monat wird der **Saldo per Vortag** (`date < heute`) ausgewiesen, um tageszeitliche Verfälschungen zu verhindern. Für abgeschlossene Monate wird der Vollmonatssaldo ausgewiesen.
 - **Manuelle Korrekturen:** Im Monat vorgenommene administrative Saldoanpassungen.
-- **Endsaldo:** Neuer Gesamtsaldo per Monatsende.
+- **Endsaldo:** Gesamtsaldo (bei laufenden Monaten: Endsaldo per Vortag; bei abgeschlossenen Monaten: Abschluss-Endsaldo).
 - **Genehmigungsstatus:** `OPEN`, `SUBMITTED`, `APPROVED`, `REJECTED` oder `LOCKED`.
 - **Snapshot-Konsistenz:** Für genehmigte/gesperrte Perioden wird der unveränderliche `calculationSnapshot` geladen.
 
@@ -77,10 +77,10 @@ Aggregierte Monatsauswertung für Führungskräfte:
 - **Filter:** Teamauswahl über Dropdown (keine ID-Texteingabe) und Monatsauswahl über Datumswähler.
 - **Kennzahlen je Mitarbeiter:**
   - Monatssollzeit und Monatsistzeit
-  - Monatssaldo und Gesamtsaldo
+  - Monatssaldo und Gesamtsaldo (bei laufenden Monaten: Stichtag **per Vortag**, damit Vorgesetzte und HR unmittelbar sehen, ob Mitarbeitende aktuell im Plus oder Minus sind, ohne künstliche Tagesdefizite)
   - Offene Genehmigungen
   - Fehltage und Abwesenheiten nach Typ (unter Beachtung des Datenschutzes)
-  - Fehlende Buchungen / unvollständige Tage
+  - Fehlende Buchungen / unvollständige Tage (Tage mit Sollzeit > 0 ohne Arbeits-, Feiertags- oder Abwesenheitsbuchung)
 - **Pausenprüfung:** Detaillierte Arbeitsblöcke und Unterbrüche zur manuellen Beurteilung der gesetzlichen Ruhezeiten.
 - **Visuelle Kennzeichnung:** Modifizierte Buchungen und Fremderfasser werden transparent ausgewiesen.
 

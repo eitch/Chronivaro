@@ -53,7 +53,10 @@ Audit date: 2026-08-28. `IMPLEMENTATION_SPECIFICATION.md` is authoritative; the 
 
 ## Incomplete Requirements / Active Backlog Tasks
 
-*All currently identified backlog tasks are complete.*
+1. **Current Period Balance as of Yesterday / Balance to Date Calculation & Display (Backlog Task 6):**
+   - Specification reference: [03-business-rules.md](specification/03-business-rules.md#43-periodensaldo-und-endsaldo), [02-domain-model.md](specification/02-domain-model.md#211-timeperiod--monthsummary--erfassungs--und-abschlussperiode), [05-reports-and-exports.md](specification/05-reports-and-exports.md#22-monatsreport), [06-ui-and-localization.md](specification/06-ui-and-localization.md#21-dashboard), [07-rest-api.md](specification/07-rest-api.md#31-arbeitszeiten-und-buchungen), [11-testing-and-acceptance.md](specification/11-testing-and-acceptance.md#11-unit-tests-im-core-chronivaro-core).
+   - Problem: In ongoing/current periods, calculating monthly balance by subtracting full-month target hours from actuals logged to date produced confusing negative balances (e.g. -84h). Including today's target time before work also produced an artificial morning deficit.
+   - Solution: For current in-progress periods, calculate balance as of yesterday (`date < today`). Expose to-date metrics in `MonthSummary`, `TeamReport`, and DTOs; display "Balance (as of yesterday)" / "Saldo (per Vortag)" in `MyPeriodsView.js` and Reports; preserve full-month calculations for closed periods and snapshots.
 
 ---
 
