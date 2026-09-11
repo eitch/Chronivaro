@@ -165,9 +165,29 @@ public class MonthSummaryService
 	public static int calculateInitialBalance(StrolchTransaction tx, String employeeId, YearMonth targetYearMonth) {
 		Resource employee = ChronivaroModelHelper.getEmployee(tx, employeeId);
 		LocalDate joinDate = ChronivaroModelHelper.getJoinDate(employee);
-		YearMonth joinYearMonth = YearMonth.from(joinDate);
+		YearMonth earliestActiveMonth = YearMonth.from(joinDate);
 
-		if (!targetYearMonth.isAfter(joinYearMonth)) {
+		Optional<Resource> scheduleOpt = ScheduleHelper.findScheduleVersion(tx, employeeId);
+		if (scheduleOpt.isPresent()) {
+			YearMonth schedYm = YearMonth.from(scheduleOpt.get().getDate(PARAM_VALID_FROM).toLocalDate());
+			if (schedYm.isAfter(earliestActiveMonth)) {
+				earliestActiveMonth = schedYm;
+			}
+		}
+
+		Optional<LocalDate> earliestSchedDate = tx.streamResources(TYPE_EMPLOYMENT_SCHEDULE)
+				.filter(r -> employeeId.equals(r.getRelationId(PARAM_EMPLOYEE)))
+				.map(r -> r.getDate(PARAM_VALID_FROM).toLocalDate())
+				.min(LocalDate::compareTo);
+		if (earliestSchedDate.isPresent()) {
+			YearMonth schedYm = YearMonth.from(earliestSchedDate.get());
+			if (schedYm.isAfter(earliestActiveMonth)) {
+				earliestActiveMonth = schedYm;
+			}
+		}
+
+		YearMonth minCheckYm = earliestActiveMonth.minusMonths(1);
+		if (targetYearMonth.isBefore(earliestActiveMonth)) {
 			return 0;
 		}
 
@@ -176,7 +196,7 @@ public class MonthSummaryService
 		YearMonth snapshotYm = null;
 		int startingBalance = 0;
 
-		while (!checkYm.isBefore(joinYearMonth)) {
+		while (!checkYm.isBefore(minCheckYm)) {
 			Optional<Resource> periodOpt = PeriodHelper.findPeriod(tx, employeeId, checkYm);
 			if (periodOpt.isPresent()) {
 				Resource period = periodOpt.get();
@@ -194,7 +214,7 @@ public class MonthSummaryService
 			checkYm = checkYm.minusMonths(1);
 		}
 
-		YearMonth startMonth = snapshotYm != null ? snapshotYm.plusMonths(1) : joinYearMonth;
+		YearMonth startMonth = snapshotYm != null ? snapshotYm.plusMonths(1) : earliestActiveMonth;
 		int accumulatedBalance = startingBalance;
 
 		for (YearMonth ym = startMonth; ym.isBefore(targetYearMonth); ym = ym.plusMonths(1)) {

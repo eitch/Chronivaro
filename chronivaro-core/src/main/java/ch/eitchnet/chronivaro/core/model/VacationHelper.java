@@ -107,6 +107,12 @@ public class VacationHelper {
 			}
 		}
 
+		// If employee has a schedule configured (or any schedule versions), but not active on this date, rate is 0.0
+		if (ScheduleHelper.findScheduleVersion(tx, employeeId).isPresent()
+				|| tx.streamResources(TYPE_EMPLOYMENT_SCHEDULE).anyMatch(r -> employeeId.equals(r.getRelationId(PARAM_EMPLOYEE)))) {
+			return 0.0;
+		}
+
 		return 1.0;
 	}
 
@@ -326,6 +332,13 @@ public class VacationHelper {
 					corr.setString(PARAM_VACATION_TYPE, VACATION_CORRECTION);
 					LocalDate joinDate = ChronivaroModelHelper.getJoinDate(employee);
 					LocalDate creditDate = joinDate.isAfter(LocalDate.of(year, 1, 1)) ? joinDate : LocalDate.of(year, 1, 1);
+					Optional<Resource> sched = ScheduleHelper.findScheduleVersion(tx, employeeId);
+					if (sched.isPresent()) {
+						LocalDate schedFrom = sched.get().getDate(PARAM_VALID_FROM).toLocalDate();
+						if (schedFrom.getYear() == year && schedFrom.isAfter(creditDate)) {
+							creditDate = schedFrom;
+						}
+					}
 					ZonedDateTime tzNow = ZonedDateTime.now(ChronivaroModelHelper.getEmployeeTimezone(employee));
 					corr.setDate(PARAM_DATE, creditDate.atStartOfDay(ChronivaroModelHelper.getEmployeeTimezone(employee)));
 					corr.setDate(PARAM_CREATED_AT, tzNow);
@@ -355,6 +368,13 @@ public class VacationHelper {
 			entry.setString(PARAM_VACATION_TYPE, VACATION_ENTITLEMENT);
 			LocalDate joinDate = ChronivaroModelHelper.getJoinDate(employee);
 			LocalDate creditDate = joinDate.isAfter(LocalDate.of(year, 1, 1)) ? joinDate : LocalDate.of(year, 1, 1);
+			Optional<Resource> sched = ScheduleHelper.findScheduleVersion(tx, employeeId);
+			if (sched.isPresent()) {
+				LocalDate schedFrom = sched.get().getDate(PARAM_VALID_FROM).toLocalDate();
+				if (schedFrom.getYear() == year && schedFrom.isAfter(creditDate)) {
+					creditDate = schedFrom;
+				}
+			}
 			ZonedDateTime tzNow = ZonedDateTime.now(ChronivaroModelHelper.getEmployeeTimezone(employee));
 			entry.setDate(PARAM_DATE, creditDate.atStartOfDay(ChronivaroModelHelper.getEmployeeTimezone(employee)));
 			entry.setDate(PARAM_CREATED_AT, tzNow);

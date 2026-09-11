@@ -174,27 +174,13 @@ The following foundational areas are verified as fully implemented in the reposi
 - **Add Absences on Behalf of Employees by HR & Supervisors (Backlog Task 1):** Extended `RequestAbsenceService` to allow supervisors (for assigned team members via `assertCanManageEmployee`) and HR/Administrators (organization-wide) to create absences on behalf of employees in either `SUBMITTED` or directly `APPROVED` state with automated vacation deduction (`USAGE`) and balance validation; prevented direct self-approval by employees/supervisors for their own requests; added `createdBy` parameter to `Absence` model, templates, and `AbsenceDto`; added REST endpoints `GET /employees/{id}/absences` and `POST /employees/{id}/absences` in `ChronivaroResource`; updated `AbsenceApi.js` and `MyAbsencesView.js` with team/employee filtering controls and an "Add Absence for Employee" workflow with direct approval toggle; covered by comprehensive unit tests in `AbsenceServiceTest` and REST integration tests in `AbsenceResourceTest`.
 - **Employee Absence Calendar & Direct Absence Creation (Backlog Task 2, Section 2.3, 12.1):** Implemented interactive Absence Calendar (`AbsenceCalendarView.js`, `#absence-calendar`) providing multi-employee matrix timeline view and 7-column month grid view; team, location, employee, and absence type filtering; direct absence creation by clicking on dates/cells with pre-filled employee and date parameters; manager direct approval vs submission workflows; absence type and status color badges; detail inspection dialogs; integrated into main navigation; full German (Swiss German) and English translations with 100% key parity; covered by automated UI tests (`WebAbsenceCalendarUiTest`).
 - **Calendar On-Call Status & Period Management (Backlog Task 3):** Integrated on-call service periods into the calendar UI (`AbsenceCalendarView.js`, `OnCallPeriodApi.js`) with responsive timeline/grid badges (`.type-oncall`), time details and tooltips; filter toggle for showing/hiding on-call periods (`#cal-toggle-oncall`); manager action button ("Schedule On-Call" / "Pikettdienst planen") and modal allowing HR/Supervisors to schedule and update on-call periods directly with duration presets (standard week Monday–Sunday, weekend Saturday–Sunday, workweek Monday–Friday, or custom days); view, edit, and delete actions with confirmation dialogs; full Swiss German and English translations with 100% key parity.
+- **Employee Onboarding Initial Balances & Historical Join Date Decoupling (Backlog Task 5, Sections 2.1, 2.2, 3.2, 4.1, 4.5, 7, 11):** Decoupled legal contract join date (`joinDate`) from operational time-tracking start date (`scheduleValidFrom`); core service `CreateEmployeeService` supports `scheduleValidFrom`, `initialOvertimeMinutes`, and `initialVacationDays`; automatically generates baseline `TimePeriod` calculation snapshots in `LOCKED` state for preceding month upon non-zero opening overtime/undertime balances; credits initial vacation carry-over as `CARRY_OVER` entries and initializes pro-rated vacation entitlement (`ENTITLEMENT`) for the active schedule year; REST DTOs and endpoints extended in `EmployeeResource`; web UI `EmployeesView.js` extended with modal fields, smart defaulting (1st of current month for historical dates), format parsers, and full Swiss German and English translations with 100% key parity; covered by unit tests in `EmployeeServiceTest`, REST integration tests in `EmployeeResourceTest`, and UI tests in `WebEmployeesUiTest`.
 
 ---
 
 ## Prioritized Implementation Backlog
 
-### Task 5: Employee Onboarding Initial Balances & Historical Join Date Decoupling
-- **Goal:** Allow onboarding employees with historical contractual start dates without creating retroactive target hour deficits, while supporting optional opening overtime/undertime balances and opening vacation carry-overs.
-- **Scope:**
-  - **Core (`chronivaro-core`):**
-    - Update `CreateEmployeeService` to accept `scheduleValidFrom`, `initialOvertimeMinutes`, and `initialVacationDays`.
-    - Create the initial `EmploymentScheduleVersion` starting at `scheduleValidFrom` (defaulting to `joinDate` if not provided).
-    - When `initialOvertimeMinutes != 0`, create a baseline `TimePeriod` for the preceding month (`YearMonth.from(scheduleValidFrom).minusMonths(1)`) in `LOCKED` state with a `calculationSnapshot` containing `endBalanceMinutes = initialOvertimeMinutes`.
-    - When `initialVacationDays != 0`, create a `CARRY_OVER` journal entry in `VacationAccountEntry` for the start year ($1 \text{ day} = 480 \text{ min}$).
-    - Credit pro-rated vacation entitlement (`ENTITLEMENT`) for the year of `scheduleValidFrom` (from `scheduleValidFrom` to year end).
-  - **REST (`chronivaro-rest`):**
-    - Extend `EmployeeDto` and `ChronivaroResource` / `AdminResource` to expose `scheduleValidFrom`, `initialOvertimeMinutes`, and `initialVacationDays`.
-  - **Web UI (`chronivaro-web`):**
-    - Extend the "Create Employee" modal in `EmployeesView.js` with fields for Zeiterfassung ab (`scheduleValidFrom`), Anfangssaldo Überzeit (`initialOvertimeMinutes`), and Anfangs-Ferienübertrag (`initialVacationDays`).
-    - Implement smart defaulting: if `joinDate < startOfCurrentMonth`, default `scheduleValidFrom` to `01.MM.YYYY` with an informational hint.
-    - Add complete i18n keys for German (`de`) and English (`en`).
-  - **Verification:** Unit tests in `CreateEmployeeServiceTest` and `MonthSummaryServiceTest`, REST integration tests, and UI tests.
+*All currently identified backlog tasks are complete.*
 
 ---
 

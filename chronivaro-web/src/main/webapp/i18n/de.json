@@ -534,7 +534,16 @@
     "invalidBirthdate": "Bitte geben Sie ein gültiges Geburtsdatum ein.",
     "invalidJoinDate": "Bitte geben Sie ein gültiges Eintrittsdatum ein.",
     "invalidExitDate": "Bitte geben Sie ein gültiges Austrittsdatum ein.",
-    "invalidDateRange": "Das Austrittsdatum darf nicht vor dem Eintrittsdatum liegen."
+    "invalidDateRange": "Das Austrittsdatum darf nicht vor dem Eintrittsdatum liegen.",
+    "invalidScheduleValidFrom": "Bitte geben Sie ein gültiges Zeiterfassungsstartdatum ein.",
+    "fields": {
+      "scheduleValidFrom": "Zeiterfassung ab",
+      "scheduleValidFromHint": "Beginn der Sollzeitberechnung (bei früherem Eintritt wird der 1. des aktuellen Monats empfohlen)",
+      "initialOvertime": "Anfangssaldo Überzeit (Std/Min)",
+      "initialOvertimePlaceholder": "z. B. +15:30 oder -04:00",
+      "initialVacationDays": "Anfangs-Ferienübertrag (Tage)",
+      "initialVacationDaysPlaceholder": "z. B. 5.0"
+    }
   },
   "teams": {
     "title": "Teams",

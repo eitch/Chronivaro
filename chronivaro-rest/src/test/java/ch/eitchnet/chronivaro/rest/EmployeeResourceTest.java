@@ -242,4 +242,55 @@ public class EmployeeResourceTest extends AbstractChronivaroRestfulTest {
 			assertTrue(employee.active());
 		}
 	}
+
+	@Test
+	public void shouldCreateEmployeeWithOnboardingBalancesAndScheduleStart() {
+		String authToken = authenticate();
+
+		EmployeeDto newEmployee = new EmployeeDto(null, "PN_HIST_REST", "HistRest", "User", LocalDate.of(1988, 3, 10),
+				"team-1", "team-1", "location-1", "location-1", "Europe/Zurich", LocalDate.of(2018, 5, 1), null, true,
+				null, "hist_user_rest", "hist_rest@example.com", "schedule-template-1",
+				LocalDate.of(2026, 9, 1), 900, 5.0);
+		String json = ChronivaroRestHelper.createGson().toJson(newEmployee);
+
+		String employeeId;
+		try (Response response = target()
+				.path("chronivaro/v1/admin/employees")
+				.request(MediaType.APPLICATION_JSON)
+				.header("Authorization", authToken)
+				.post(Entity.json(json))) {
+			assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+			EmployeeDto created = ChronivaroRestHelper
+					.createGson()
+					.fromJson(response.readEntity(String.class), EmployeeDto.class);
+			employeeId = created.id();
+			assertEquals("hist_user_rest", created.username());
+			assertEquals(LocalDate.of(2018, 5, 1), created.joinDate());
+		}
+
+		// Verify schedule validFrom is 2026-09-01
+		try (Response response = target()
+				.path("chronivaro/v1/admin/employees/" + employeeId + "/schedules")
+				.request(MediaType.APPLICATION_JSON)
+				.header("Authorization", authToken)
+				.get()) {
+			assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+			String respJson = response.readEntity(String.class);
+			assertTrue(respJson.contains("2026-09-01"));
+		}
+
+		// Verify vacation account summary for 2026 contains carry over
+		try (Response response = target()
+				.path("chronivaro/v1/admin/employees/" + employeeId + "/vacation-account")
+				.queryParam("year", 2026)
+				.queryParam("summary", true)
+				.request(MediaType.APPLICATION_JSON)
+				.header("Authorization", authToken)
+				.get()) {
+			assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+			String respJson = response.readEntity(String.class);
+			assertTrue(respJson.contains("\"carryOverMinutes\":2400") || respJson.contains("\"carryOverDays\":5.0")
+					|| respJson.contains("2400"));
+		}
+	}
 }

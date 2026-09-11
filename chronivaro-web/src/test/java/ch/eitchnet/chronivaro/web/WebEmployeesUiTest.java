@@ -140,4 +140,56 @@ public class WebEmployeesUiTest {
 		assertTrue("de.json must contain employees.invalidExitDate", deJson.contains("\"invalidExitDate\":"));
 		assertTrue("de.json must contain employees.invalidDateRange", deJson.contains("\"invalidDateRange\":"));
 	}
+
+	@Test
+	public void shouldVerifyOnboardingInitialBalancesAndScheduleValidFromUi() throws IOException {
+		File viewFile = new File(getWebappDir(), "js/pages/EmployeesView.js");
+		assertTrue("EmployeesView.js must exist", viewFile.exists());
+		String viewJs = Files.readString(viewFile.toPath());
+
+		// Verify input elements for onboarding balances and decoupled schedule validFrom
+		assertTrue("EmployeesView must contain emp-schedule-valid-from input",
+				viewJs.contains("id=\"emp-schedule-valid-from\""));
+		assertTrue("EmployeesView must contain emp-schedule-valid-from-hint",
+				viewJs.contains("id=\"emp-schedule-valid-from-hint\""));
+		assertTrue("EmployeesView must contain emp-initial-overtime input",
+				viewJs.contains("id=\"emp-initial-overtime\""));
+		assertTrue("EmployeesView must contain emp-initial-vacation-days input",
+				viewJs.contains("id=\"emp-initial-vacation-days\""));
+
+		// Verify smart defaulting logic and parsing
+		assertTrue("EmployeesView must implement smart defaulting for scheduleValidFrom",
+				viewJs.contains("updateScheduleValidFromDefault"));
+		assertTrue("EmployeesView must parse overtime minutes",
+				viewJs.contains("parseOvertimeMinutes"));
+		assertTrue("EmployeesView must parse vacation days",
+				viewJs.contains("parseVacationDays"));
+
+		// Verify i18n keys in en.json and de.json
+		File enJsonFile = new File(getWebappDir(), "i18n/en.json");
+		String enJson = Files.readString(enJsonFile.toPath());
+		assertTrue("en.json must contain employees.fields.scheduleValidFrom",
+				enJson.contains("\"scheduleValidFrom\":"));
+		assertTrue("en.json must contain employees.fields.scheduleValidFromHint",
+				enJson.contains("\"scheduleValidFromHint\":"));
+		assertTrue("en.json must contain employees.fields.initialOvertime",
+				enJson.contains("\"initialOvertime\":"));
+		assertTrue("en.json must contain employees.fields.initialVacationDays",
+				enJson.contains("\"initialVacationDays\":"));
+		assertTrue("en.json must contain employees.invalidScheduleValidFrom",
+				enJson.contains("\"invalidScheduleValidFrom\":"));
+
+		File deJsonFile = new File(getWebappDir(), "i18n/de.json");
+		String deJson = Files.readString(deJsonFile.toPath());
+		assertTrue("de.json must contain employees.fields.scheduleValidFrom",
+				deJson.contains("\"scheduleValidFrom\":"));
+		assertTrue("de.json must contain employees.fields.scheduleValidFromHint",
+				deJson.contains("\"scheduleValidFromHint\":"));
+		assertTrue("de.json must contain employees.fields.initialOvertime",
+				deJson.contains("\"initialOvertime\":"));
+		assertTrue("de.json must contain employees.fields.initialVacationDays",
+				deJson.contains("\"initialVacationDays\":"));
+		assertTrue("de.json must contain employees.invalidScheduleValidFrom",
+				deJson.contains("\"invalidScheduleValidFrom\":"));
+	}
 }

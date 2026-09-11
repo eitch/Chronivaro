@@ -1,7 +1,9 @@
 package ch.eitchnet.chronivaro.core.service;
 
 import ch.eitchnet.chronivaro.core.model.ChronivaroAuditHelper;
+import ch.eitchnet.chronivaro.core.model.PeriodHelper;
 import ch.eitchnet.chronivaro.core.model.VacationHelper;
+import com.google.gson.JsonObject;
 import li.strolch.model.Resource;
 import li.strolch.persistence.api.StrolchTransaction;
 import li.strolch.privilege.base.PrivilegeConstants;
@@ -13,7 +15,9 @@ import li.strolch.service.api.ServiceArgument;
 import li.strolch.service.api.ServiceResultState;
 
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -68,12 +72,14 @@ public class CreateEmployeeService extends AbstractService<CreateEmployeeService
 			ChronivaroAuditHelper.audit(tx, TYPE_EMPLOYEE, employee.getId(), AUDIT_ACTION_CREATE,
 					"Created employee " + employee.getName());
 
+			LocalDate scheduleValidFrom = arg.scheduleValidFrom != null ? arg.scheduleValidFrom : arg.joinDate;
+
 			if (arg.scheduleTemplateId != null && !arg.scheduleTemplateId.isBlank()) {
 				Resource template = tx.getResourceBy(TYPE_EMPLOYMENT_SCHEDULE_TEMPLATE, arg.scheduleTemplateId, true);
 				Resource schedule = tx.getResourceTemplate(TYPE_EMPLOYMENT_SCHEDULE, true);
 				schedule.setName("Schedule for " + employee.getName());
 				schedule.setRelation(PARAM_EMPLOYEE, employee);
-				schedule.setDate(PARAM_VALID_FROM, arg.joinDate.atStartOfDay(zoneId));
+				schedule.setDate(PARAM_VALID_FROM, scheduleValidFrom.atStartOfDay(zoneId));
 
 				schedule.setInteger(PARAM_DAILY_TARGET_MINUTES_MONDAY, template.getInteger(PARAM_DAILY_TARGET_MINUTES_MONDAY));
 				schedule.setInteger(PARAM_DAILY_TARGET_MINUTES_TUESDAY, template.getInteger(PARAM_DAILY_TARGET_MINUTES_TUESDAY));
@@ -103,7 +109,59 @@ public class CreateEmployeeService extends AbstractService<CreateEmployeeService
 				employee.removeParameter(BAG_RELATIONS, PARAM_CURRENT_SCHEDULE);
 			}
 
-			VacationHelper.creditOrRecalculateEntitlement(tx, employeeId, arg.joinDate.getYear(), false);
+			if (arg.initialOvertimeMinutes != null && arg.initialOvertimeMinutes != 0) {
+				YearMonth baselineYm = YearMonth.from(scheduleValidFrom).minusMonths(1);
+				Resource period = PeriodHelper.getOrCreatePeriod(tx, employeeId, baselineYm);
+				period.setString(PARAM_STATE, STATE_LOCKED);
+				period.setString(PARAM_COMMENT, "Baseline opening balance snapshot");
+
+				JsonObject json = new JsonObject();
+				json.addProperty("employeeId", employeeId);
+				json.addProperty("yearMonth", baselineYm.toString());
+				json.addProperty("totalTargetMinutes", 0);
+				json.addProperty("totalActualMinutes", 0);
+				json.addProperty("paidAbsenceMinutes", 0);
+				json.addProperty("unpaidAbsenceMinutes", 0);
+				json.addProperty("vacationMinutes", 0);
+				json.addProperty("totalHolidayMinutes", 0);
+				json.addProperty("totalAbsenceMinutes", 0);
+				json.addProperty("totalOnCallMinutes", 0);
+				json.addProperty("periodBalanceMinutes", 0);
+				json.addProperty("initialBalanceMinutes", arg.initialOvertimeMinutes);
+				json.addProperty("manualCorrectionsMinutes", 0);
+				json.addProperty("finalBalanceMinutes", arg.initialOvertimeMinutes);
+				json.addProperty("endBalanceMinutes", arg.initialOvertimeMinutes);
+				json.addProperty("calculatedAt", ZonedDateTime.now(zoneId).toString());
+
+				period.setString(PARAM_CALCULATION_SNAPSHOT, json.toString());
+				ChronivaroAuditHelper.audit(tx, TYPE_TIME_PERIOD, period.getId(), AUDIT_ACTION_CREATE,
+						"Created baseline period snapshot for " + employee.getName() + " with opening balance "
+								+ arg.initialOvertimeMinutes + " minutes");
+			}
+
+			if (arg.initialVacationDays != null && arg.initialVacationDays != 0.0) {
+				int minutesPerDay = VacationHelper.getMinutesPerVacationDay(tx);
+				int carryOverMinutes = (int) Math.round(arg.initialVacationDays * minutesPerDay);
+				Resource carryOver = tx.getResourceTemplate(TYPE_VACATION_ACCOUNT_ENTRY, true);
+				String empName = employee.hasParameter(PARAM_FIRSTNAME) && employee.hasParameter(PARAM_LASTNAME)
+						? employee.getString(PARAM_FIRSTNAME) + " " + employee.getString(PARAM_LASTNAME)
+						: employee.getName();
+				carryOver.setName("Initial Vacation Carry-Over " + scheduleValidFrom.getYear() + " (" + empName + ")");
+				carryOver.setRelation(PARAM_EMPLOYEE, employee);
+				carryOver.setString(PARAM_VACATION_TYPE, VACATION_CARRY_OVER);
+				carryOver.setDate(PARAM_DATE, scheduleValidFrom.atStartOfDay(zoneId));
+				carryOver.setDate(PARAM_CREATED_AT, ZonedDateTime.now(zoneId));
+				carryOver.setInteger(PARAM_VALUE, carryOverMinutes);
+				carryOver.setString(PARAM_COMMENT, "Initial vacation carry-over from onboarding (" + arg.initialVacationDays + " days)");
+				carryOver.setString(PARAM_CREATED_BY, tx.getCertificate() != null ? tx.getCertificate().getUsername() : "system");
+
+				initVersion(carryOver, tx);
+				tx.add(carryOver);
+				ChronivaroAuditHelper.audit(tx, TYPE_VACATION_ACCOUNT_ENTRY, carryOver.getId(), AUDIT_ACTION_CREATE,
+						"Credited initial vacation carry-over for " + empName + " (" + carryOverMinutes + " minutes)");
+			}
+
+			VacationHelper.creditOrRecalculateEntitlement(tx, employeeId, scheduleValidFrom.getYear(), false);
 
 			tx.commitOnClose();
 		}
@@ -157,6 +215,9 @@ public class CreateEmployeeService extends AbstractService<CreateEmployeeService
 		public String username;
 		public String email;
 		public String scheduleTemplateId;
+		public LocalDate scheduleValidFrom;
+		public Integer initialOvertimeMinutes;
+		public Double initialVacationDays;
 	}
 
 	public static class UpdateEmployeeArgument extends EmployeeArgument {

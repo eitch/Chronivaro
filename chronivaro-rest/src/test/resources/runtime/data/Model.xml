@@ -48,6 +48,18 @@
         </ParameterBag>
     </Resource>
 
+    <Resource Id="schedule-template-1" Name="Standard 8h Mon-Fri" Type="EmploymentScheduleTemplate">
+        <ParameterBag Id="parameters" Name="Parameters" Type="Parameters">
+            <Parameter Id="dailyTargetMinutesMonday" Name="Daily Target Minutes Monday" Type="Integer" Value="480"/>
+            <Parameter Id="dailyTargetMinutesTuesday" Name="Daily Target Minutes Tuesday" Type="Integer" Value="480"/>
+            <Parameter Id="dailyTargetMinutesWednesday" Name="Daily Target Minutes Wednesday" Type="Integer" Value="480"/>
+            <Parameter Id="dailyTargetMinutesThursday" Name="Daily Target Minutes Thursday" Type="Integer" Value="480"/>
+            <Parameter Id="dailyTargetMinutesFriday" Name="Daily Target Minutes Friday" Type="Integer" Value="480"/>
+            <Parameter Id="dailyTargetMinutesSaturday" Name="Daily Target Minutes Saturday" Type="Integer" Value="0"/>
+            <Parameter Id="dailyTargetMinutesSunday" Name="Daily Target Minutes Sunday" Type="Integer" Value="0"/>
+        </ParameterBag>
+    </Resource>
+
     <Resource Id="schedAdmin_emp" Name="Standard Monday-Friday 8h" Type="EmploymentSchedule">
         <ParameterBag Id="parameters" Name="Parameters" Type="Parameters">
             <Parameter Id="name" Name="Name" Type="String" Value="Standard Monday-Friday 8h"/>

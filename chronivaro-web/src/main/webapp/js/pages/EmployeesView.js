@@ -138,6 +138,19 @@ export default class EmployeesView {
 										<option value="">${I18n.t('employees.selectTemplatePrompt')}</option>
 									</select>
 								</div>
+								<div class="form-group">
+									<label for="emp-schedule-valid-from">${I18n.t('employees.fields.scheduleValidFrom')} (DD.MM.YYYY):</label>
+									<input type="text" id="emp-schedule-valid-from" placeholder="DD.MM.YYYY" maxlength="10">
+									<small class="text-muted" id="emp-schedule-valid-from-hint" style="display: block; font-size: 0.75rem; margin-top: 0.25rem;">${I18n.t('employees.fields.scheduleValidFromHint')}</small>
+								</div>
+								<div class="form-group">
+									<label for="emp-initial-overtime">${I18n.t('employees.fields.initialOvertime')}:</label>
+									<input type="text" id="emp-initial-overtime" placeholder="${I18n.t('employees.fields.initialOvertimePlaceholder')}">
+								</div>
+								<div class="form-group">
+									<label for="emp-initial-vacation-days">${I18n.t('employees.fields.initialVacationDays')}:</label>
+									<input type="number" step="0.5" id="emp-initial-vacation-days" placeholder="${I18n.t('employees.fields.initialVacationDaysPlaceholder')}">
+								</div>
 							</div>
 						</div>
 						<div class="actions">
@@ -454,16 +467,72 @@ export default class EmployeesView {
             adjustingVacationEmpId = null;
         });
 
+        const parseOvertimeMinutes = (val) => {
+            if (!val || typeof val !== 'string') return null;
+            val = val.trim();
+            if (!val) return null;
+            const isNegative = val.startsWith('-');
+            const clean = val.replace(/^[+-]/, '').trim();
+            if (clean.includes(':')) {
+                const parts = clean.split(':');
+                const h = parseInt(parts[0], 10) || 0;
+                const m = parseInt(parts[1], 10) || 0;
+                const total = h * 60 + m;
+                return isNegative ? -total : total;
+            }
+            const num = parseFloat(clean);
+            if (isNaN(num)) return null;
+            const total = Math.round(num * 60);
+            return isNegative ? -total : total;
+        };
+
+        const parseVacationDays = (val) => {
+            if (val === null || val === undefined || val === '') return null;
+            const num = parseFloat(val);
+            return isNaN(num) ? null : num;
+        };
+
+        const joinDateInput = container.querySelector('#emp-join-date');
+        const scheduleValidFromInput = container.querySelector('#emp-schedule-valid-from');
+
+        const updateScheduleValidFromDefault = () => {
+            if (editingId) return;
+            const joinVal = joinDateInput.value;
+            if (!joinVal || !Format.isValidDate(joinVal)) return;
+            const joinIso = Format.toIsoDate(joinVal);
+            const now = new Date();
+            const startOfCurrentMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+            const startOfCurrentMonthIso = Format.toIsoDate(Format.date(startOfCurrentMonth));
+            if (joinIso < startOfCurrentMonthIso) {
+                scheduleValidFromInput.value = Format.date(startOfCurrentMonth);
+            } else {
+                scheduleValidFromInput.value = joinVal;
+            }
+        };
+
+        joinDateInput.addEventListener('change', updateScheduleValidFromDefault);
+        joinDateInput.addEventListener('input', () => {
+            if (joinDateInput.value.length === 10) {
+                updateScheduleValidFromDefault();
+            }
+        });
+
         const dateInputs = [
             container.querySelector('#emp-birthdate'),
             container.querySelector('#emp-join-date'),
             container.querySelector('#emp-exit-date'),
+            container.querySelector('#emp-schedule-valid-from'),
             container.querySelector('#vacation-adjust-date')
         ];
         dateInputs.forEach(inp => {
             if (inp) {
                 inp.addEventListener('blur', () => {
-                    if (inp.value) inp.value = Format.normalizeDate(inp.value);
+                    if (inp.value) {
+                        inp.value = Format.normalizeDate(inp.value);
+                        if (inp === joinDateInput) {
+                            updateScheduleValidFromDefault();
+                        }
+                    }
                 });
             }
         });
@@ -525,6 +594,9 @@ export default class EmployeesView {
             container.querySelector('#emp-username').value = '';
             container.querySelector('#emp-timezone').value = Intl.DateTimeFormat().resolvedOptions().timeZone || 'Europe/Zurich';
             container.querySelector('#emp-join-date').value = Format.date(new Date());
+            container.querySelector('#emp-schedule-valid-from').value = Format.date(new Date());
+            container.querySelector('#emp-initial-overtime').value = '';
+            container.querySelector('#emp-initial-vacation-days').value = '';
             container.querySelector('#emp-active').checked = true;
             container.querySelector('#schedule-section').style.display = 'block';
             modal.style.display = 'block';
@@ -563,6 +635,25 @@ export default class EmployeesView {
                 return;
             }
 
+            let scheduleValidFromIso = null;
+            let initialOvertimeMin = null;
+            let initialVacationDaysVal = null;
+
+            if (!editingId) {
+                const schedValidFromRaw = container.querySelector('#emp-schedule-valid-from').value;
+                if (schedValidFromRaw) {
+                    if (!Format.isValidDate(schedValidFromRaw)) {
+                        NotificationDialog.error(I18n.t('employees.invalidScheduleValidFrom') || I18n.t('common.invalidDate'));
+                        return;
+                    }
+                    scheduleValidFromIso = Format.toIsoDate(schedValidFromRaw);
+                } else {
+                    scheduleValidFromIso = joinDateIso;
+                }
+                initialOvertimeMin = parseOvertimeMinutes(container.querySelector('#emp-initial-overtime').value);
+                initialVacationDaysVal = parseVacationDays(container.querySelector('#emp-initial-vacation-days').value);
+            }
+
             const emp = {
                 personalNumber: container.querySelector('#emp-pers-nr').value,
                 firstname: container.querySelector('#emp-firstname').value,
@@ -576,7 +667,10 @@ export default class EmployeesView {
                 username: container.querySelector('#emp-username').value,
                 email: container.querySelector('#emp-email').value,
                 active: container.querySelector('#emp-active').checked,
-                scheduleTemplateId: editingId ? null : container.querySelector('#sched-template').value
+                scheduleTemplateId: editingId ? null : container.querySelector('#sched-template').value,
+                scheduleValidFrom: scheduleValidFromIso,
+                initialOvertimeMinutes: initialOvertimeMin,
+                initialVacationDays: initialVacationDaysVal
             };
 
             try {

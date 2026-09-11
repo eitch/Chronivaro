@@ -5180,6 +5180,16 @@ components:
         scheduleTemplateId:
           type: string
           example: 'st-fulltime-40'
+        scheduleValidFrom:
+          type: string
+          format: date
+          example: '2024-01-01'
+        initialOvertimeMinutes:
+          type: integer
+          example: 900
+        initialVacationDays:
+          type: number
+          example: 5.0
 
     EmployeeCreateDto:
       type: object
@@ -5222,6 +5232,16 @@ components:
         scheduleTemplateId:
           type: string
           example: 'st-fulltime-40'
+        scheduleValidFrom:
+          type: string
+          format: date
+          example: '2024-01-01'
+        initialOvertimeMinutes:
+          type: integer
+          example: 900
+        initialVacationDays:
+          type: number
+          example: 5.0
 
     EmployeeUpdateDto:
       type: object

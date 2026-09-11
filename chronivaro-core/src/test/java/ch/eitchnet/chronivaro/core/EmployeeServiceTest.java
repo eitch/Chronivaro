@@ -1,9 +1,12 @@
 package ch.eitchnet.chronivaro.core;
 
+import ch.eitchnet.chronivaro.core.model.PeriodHelper;
+import ch.eitchnet.chronivaro.core.model.ScheduleHelper;
 import ch.eitchnet.chronivaro.core.model.VacationAccountSummary;
 import ch.eitchnet.chronivaro.core.model.VacationHelper;
 import ch.eitchnet.chronivaro.core.service.CreateEmployeeService;
 import ch.eitchnet.chronivaro.core.service.InitiateEmployeeRegistrationService;
+import ch.eitchnet.chronivaro.core.service.MonthSummaryService;
 import ch.eitchnet.chronivaro.core.service.ReactivateEmployeeService;
 import ch.eitchnet.chronivaro.core.service.RemoveEmployeeService;
 import ch.eitchnet.chronivaro.core.service.RemoveUserService;
@@ -21,6 +24,8 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.time.LocalDate;
+import java.time.YearMonth;
+import java.util.Optional;
 
 import static ch.eitchnet.chronivaro.core.model.ChronivaroConstants.*;
 import static org.junit.Assert.*;
@@ -47,6 +52,18 @@ public class EmployeeServiceTest {
 			team.setId("team1");
 			team.setName("Team 1");
 			tx.add(team);
+
+			Resource template = tx.getResourceTemplate(TYPE_EMPLOYMENT_SCHEDULE_TEMPLATE, true);
+			template.setId("template1");
+			template.setName("100% Template");
+			template.setInteger(PARAM_DAILY_TARGET_MINUTES_MONDAY, 504);
+			template.setInteger(PARAM_DAILY_TARGET_MINUTES_TUESDAY, 504);
+			template.setInteger(PARAM_DAILY_TARGET_MINUTES_WEDNESDAY, 504);
+			template.setInteger(PARAM_DAILY_TARGET_MINUTES_THURSDAY, 504);
+			template.setInteger(PARAM_DAILY_TARGET_MINUTES_FRIDAY, 504);
+			template.setInteger(PARAM_DAILY_TARGET_MINUTES_SATURDAY, 0);
+			template.setInteger(PARAM_DAILY_TARGET_MINUTES_SUNDAY, 0);
+			tx.add(template);
 
 			tx.commitOnClose();
 		}
@@ -349,6 +366,68 @@ public class EmployeeServiceTest {
 			assertEquals("Future Updated", employee.getName());
 			assertEquals(LocalDate.of(2025, 1, 1), employee.getDate(PARAM_JOIN_DATE).toLocalDate());
 			assertEquals(LocalDate.of(9999, 12, 31), employee.getDate(PARAM_EXIT_DATE).toLocalDate());
+		}
+	}
+
+	@Test
+	public void shouldCreateEmployeeWithHistoricalJoinDateAndInitialBalances() {
+		ServiceHandler serviceHandler = runtimeMock.getServiceHandler();
+
+		String username = "histuser";
+		CreateEmployeeService.EmployeeArgument createArg = new CreateEmployeeService.EmployeeArgument();
+		createArg.personalNumber = "HIST-001";
+		createArg.firstname = "Historical";
+		createArg.lastname = "Employee";
+		createArg.teamId = "team1";
+		createArg.locationId = "loc1";
+		createArg.timezone = "Europe/Zurich";
+		createArg.joinDate = LocalDate.of(2016, 8, 1);
+		createArg.scheduleValidFrom = LocalDate.of(2026, 9, 1);
+		createArg.initialOvertimeMinutes = 900;
+		createArg.initialVacationDays = 5.0;
+		createArg.scheduleTemplateId = "template1";
+		createArg.active = true;
+		createArg.username = username;
+
+		ServiceResult createResult = serviceHandler.doService(certificate, new CreateEmployeeService(), createArg);
+		assertTrue(createResult.getMessage(), createResult.isOk());
+
+		String employeeId;
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
+			Resource employee = tx.streamResources(TYPE_EMPLOYEE)
+					.filter(e -> username.equals(e.getString(PARAM_USERNAME)))
+					.findFirst()
+					.orElseThrow();
+			employeeId = employee.getId();
+
+			assertEquals(LocalDate.of(2016, 8, 1), employee.getDate(PARAM_JOIN_DATE).toLocalDate());
+
+			// Schedule validFrom must be 2026-09-01
+			Resource schedule = tx.getResourceByRelation(employee, PARAM_CURRENT_SCHEDULE, true);
+			assertEquals(LocalDate.of(2026, 9, 1), schedule.getDate(PARAM_VALID_FROM).toLocalDate());
+
+			// Target minutes before validFrom must be 0
+			assertEquals(0, ScheduleHelper.getTargetMinutes(tx, employeeId, LocalDate.of(2026, 8, 31)));
+			assertEquals(0, ScheduleHelper.getTargetMinutes(tx, employeeId, LocalDate.of(2016, 8, 1)));
+			assertEquals(504, ScheduleHelper.getTargetMinutes(tx, employeeId, LocalDate.of(2026, 9, 1))); // Tuesday
+
+			// Baseline period must exist for preceding month 2026-08 in LOCKED state
+			Optional<Resource> baselinePeriodOpt = PeriodHelper.findPeriod(tx, employeeId, YearMonth.of(2026, 8));
+			assertTrue("Baseline period for 2026-08 must exist", baselinePeriodOpt.isPresent());
+			Resource baselinePeriod = baselinePeriodOpt.get();
+			assertEquals(STATE_LOCKED, baselinePeriod.getString(PARAM_STATE));
+			assertTrue(baselinePeriod.hasParameter(PARAM_CALCULATION_SNAPSHOT));
+
+			// Initial balance calculation for September 2026 must be 900 minutes
+			int initialBalanceSep = MonthSummaryService.calculateInitialBalance(tx, employeeId, YearMonth.of(2026, 9));
+			assertEquals(900, initialBalanceSep);
+
+			// Vacation summary for 2026
+			VacationAccountSummary vacSummary = VacationHelper.getVacationAccountSummary(tx, employeeId, 2026);
+			assertNotNull(vacSummary);
+			assertEquals("Carry-over must be 5 days * 480 min = 2400 min", 2400, vacSummary.carryOverMinutes());
+			assertTrue("Entitlement for 2026 must be pro-rated from Sep 1 to Dec 31", vacSummary.entitlementMinutes() > 0);
+			assertEquals(2400 + vacSummary.entitlementMinutes(), vacSummary.remainingMinutes());
 		}
 	}
 }

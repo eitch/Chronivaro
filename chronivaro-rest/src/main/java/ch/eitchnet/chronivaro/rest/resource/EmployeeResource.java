@@ -74,6 +74,9 @@ public class EmployeeResource {
 		arg.username = dto.username();
 		arg.email = dto.email();
 		arg.scheduleTemplateId = dto.scheduleTemplateId();
+		arg.scheduleValidFrom = dto.scheduleValidFrom();
+		arg.initialOvertimeMinutes = dto.initialOvertimeMinutes();
+		arg.initialVacationDays = dto.initialVacationDays();
 
 		StringResult result = serviceHandler.doService(cert, new CreateEmployeeService(), arg);
 		if (result.isNok())
