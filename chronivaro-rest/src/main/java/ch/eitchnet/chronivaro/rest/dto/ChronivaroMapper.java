@@ -121,7 +121,10 @@ public class ChronivaroMapper {
 				summary.totalActualMinutes(), summary.paidAbsenceMinutes(), summary.unpaidAbsenceMinutes(),
 				summary.vacationMinutes(), summary.totalHolidayMinutes(), summary.totalAbsenceMinutes(),
 				summary.initialBalanceMinutes(), summary.getPeriodBalance(), summary.manualCorrectionsMinutes(),
-				summary.totalOnCallMinutes(), summary.getEndBalance(),
+				summary.totalOnCallMinutes(), summary.targetMinutesToDate(), summary.actualMinutesToDate(),
+				summary.holidayMinutesToDate(), summary.absenceMinutesToDate(), summary.getBalanceToDate(),
+				summary.getEndBalanceToDate(), summary.getFullPeriodBalance(), summary.getFullEndBalance(),
+				summary.getEndBalance(),
 				summary.daySummaries() != null ? summary.daySummaries().stream().map(ChronivaroMapper::toDto).toList() :
 						List.of());
 	}

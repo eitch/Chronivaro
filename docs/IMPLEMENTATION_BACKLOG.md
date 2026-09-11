@@ -175,38 +175,13 @@ The following foundational areas are verified as fully implemented in the reposi
 - **Employee Absence Calendar & Direct Absence Creation (Backlog Task 2, Section 2.3, 12.1):** Implemented interactive Absence Calendar (`AbsenceCalendarView.js`, `#absence-calendar`) providing multi-employee matrix timeline view and 7-column month grid view; team, location, employee, and absence type filtering; direct absence creation by clicking on dates/cells with pre-filled employee and date parameters; manager direct approval vs submission workflows; absence type and status color badges; detail inspection dialogs; integrated into main navigation; full German (Swiss German) and English translations with 100% key parity; covered by automated UI tests (`WebAbsenceCalendarUiTest`).
 - **Calendar On-Call Status & Period Management (Backlog Task 3):** Integrated on-call service periods into the calendar UI (`AbsenceCalendarView.js`, `OnCallPeriodApi.js`) with responsive timeline/grid badges (`.type-oncall`), time details and tooltips; filter toggle for showing/hiding on-call periods (`#cal-toggle-oncall`); manager action button ("Schedule On-Call" / "Pikettdienst planen") and modal allowing HR/Supervisors to schedule and update on-call periods directly with duration presets (standard week Monday–Sunday, weekend Saturday–Sunday, workweek Monday–Friday, or custom days); view, edit, and delete actions with confirmation dialogs; full Swiss German and English translations with 100% key parity.
 - **Employee Onboarding Initial Balances & Historical Join Date Decoupling (Backlog Task 5, Sections 2.1, 2.2, 3.2, 4.1, 4.5, 7, 11):** Decoupled legal contract join date (`joinDate`) from operational time-tracking start date (`scheduleValidFrom`); core service `CreateEmployeeService` supports `scheduleValidFrom`, `initialOvertimeMinutes`, and `initialVacationDays`; automatically generates baseline `TimePeriod` calculation snapshots in `LOCKED` state for preceding month upon non-zero opening overtime/undertime balances; credits initial vacation carry-over as `CARRY_OVER` entries and initializes pro-rated vacation entitlement (`ENTITLEMENT`) for the active schedule year; REST DTOs and endpoints extended in `EmployeeResource`; web UI `EmployeesView.js` extended with modal fields, smart defaulting (1st of current month for historical dates), format parsers, and full Swiss German and English translations with 100% key parity; covered by unit tests in `EmployeeServiceTest`, REST integration tests in `EmployeeResourceTest`, and UI tests in `WebEmployeesUiTest`.
+- **Current Period Balance as of Yesterday / Balance to Date Calculation & Display (Backlog Task 6, Sections 2.11, 4.3.2, 5.2.2, 6.2, 7.3.1, 11.1):** Implemented balance calculation as of yesterday (`date < today`) for ongoing/in-progress months avoiding artificial morning deficit distortions while retaining full-month calculations for closed periods; added to-date metric fields (`targetMinutesToDate`, `actualMinutesToDate`, `holidayMinutesToDate`, `absenceMinutesToDate`, `balanceToDateMinutes`, `endBalanceToDateMinutes`, `fullPeriodBalanceMinutes`, `fullEndBalanceMinutes`) in `MonthSummary`, `MonthSummaryDto`, `PeriodHelper`, and `openapi.yaml`; updated `MyPeriodsView.js` monthly summary cards with dynamic labels ("Balance (as of yesterday)" / "Saldo (per Vortag)", "Total Balance (as of yesterday)" / "Gesamtsaldo (per Vortag)"); updated German and English translation dictionaries with 100% key parity; verified with unit tests in `MonthSummaryServiceTest`, REST/OpenAPI integration tests, and UI tests.
 
 ---
 
 ## Prioritized Implementation Backlog
 
-### Task 6: Current Period Balance as of Yesterday / Balance to Date Calculation & Display
-- **Specification Reference:** [03-business-rules.md](specification/03-business-rules.md#43-periodensaldo-und-endsaldo), [02-domain-model.md](specification/02-domain-model.md#211-timeperiod--monthsummary--erfassungs--und-abschlussperiode), [05-reports-and-exports.md](specification/05-reports-and-exports.md#22-monatsreport), [06-ui-and-localization.md](specification/06-ui-and-localization.md#21-dashboard), [07-rest-api.md](specification/07-rest-api.md#31-arbeitszeiten-und-buchungen), [11-testing-and-acceptance.md](specification/11-testing-and-acceptance.md#11-unit-tests-im-core-chronivaro-core).
-- **Problem & Goal:**
-  - In ongoing/current periods, calculating period balance by subtracting the full month target (160–180h) from actuals logged to date produced confusing negative deficits (e.g. `-84h 38m`).
-  - Furthermore, including today's target time first thing in the morning creates an artificial ~8.0h deficit before the employee starts work.
-  - The balance for open/in-progress periods must be calculated **as of yesterday** (`date < today`, where `today = LocalDate.now(zone)`). On the 1st of the month, the balance to date is `0 min` and the end balance equals `initialBalanceMinutes`. For past/closed periods, the balance naturally encompasses all days of the month.
-- **Scope & Implementation Tasks:**
-  1. **Core Domain (`chronivaro-core`):**
-     - Extend `MonthSummary` and `MonthSummaryService.calculateMonthSummary` to calculate to-date metrics (`targetMinutesToDate`, `actualMinutesToDate`, `holidayMinutesToDate`, `absenceMinutesToDate`, `balanceToDateMinutes`, `endBalanceToDateMinutes`) for days strictly before today (`date < today`).
-     - For current in-progress months (`yearMonth == YearMonth.now(zone)`), provide balance as of yesterday for `periodBalanceMinutes` / `endBalanceMinutes`.
-     - Update `TeamReportService` and `TeamReport.TeamEmployeeSummary` to compute and expose current balance to date for each team member during ongoing periods so supervisors and HR can see who is ahead or behind.
-     - Update `PeriodHelper` calculation snapshot serialization/deserialization to retain backward compatibility with older snapshots.
-     - Update `PdfExportHelper` and `CsvExportHelper` to reflect to-date labels/metrics for current months.
-  2. **REST Layer (`chronivaro-rest`):**
-     - Update `MonthSummaryDto`, `TeamReportDto`, and `ChronivaroMapper` with to-date balance fields (`balanceToDateMinutes`, `endBalanceToDateMinutes`, `targetMinutesToDate`, etc.).
-     - Update `docs/openapi.yaml` schema definitions and field descriptions.
-  3. **Web UI & Localization (`chronivaro-web`):**
-     - Update `MyPeriodsView.js` monthly summary cards to clearly display:
-       - Target (Month) vs. Target (as of yesterday).
-       - "Balance (as of yesterday)" / "Saldo (per Vortag)" with positive/negative color coding.
-       - "Total Balance (as of yesterday)" / "Gesamtsaldo (per Vortag)".
-     - Update `ReportsView.js` (Team Report & Month Report) and `ApprovalsView.js` to render balance as of yesterday for in-progress periods.
-     - Add Swiss German (`de.json`) and English (`en.json`) translation keys with 100% key parity.
-  4. **Automated Verification:**
-     - Add unit tests in `MonthSummaryServiceTest`, `PeriodLifecycleServiceTest`, and `ReportServiceTest`.
-     - Add REST and OpenAPI integration tests in `ChronivaroResourceTest`, `ReportsResourceTest`, and `OpenApiSpecTest`.
-     - Add/update UI tests in `WebPersonalPeriodUiTest` and `WebReportsUiTest`.
+*All currently identified backlog tasks are complete.*
 
 ---
 

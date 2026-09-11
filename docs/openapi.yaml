@@ -4686,6 +4686,15 @@ components:
         totalActualMinutes:
           type: integer
           example: 10320
+        paidAbsenceMinutes:
+          type: integer
+          example: 0
+        unpaidAbsenceMinutes:
+          type: integer
+          example: 0
+        vacationMinutes:
+          type: integer
+          example: 0
         totalHolidayMinutes:
           type: integer
           example: 480
@@ -4697,9 +4706,49 @@ components:
           example: 120
         periodBalanceMinutes:
           type: integer
+          description: Balance of the period. For ongoing periods, this is the balance as of yesterday (date < today). For closed periods, it encompasses the full month.
           example: 720
+        manualCorrectionsMinutes:
+          type: integer
+          example: 0
+        totalOnCallMinutes:
+          type: integer
+          example: 0
+        targetMinutesToDate:
+          type: integer
+          description: Target time up to yesterday for ongoing periods, or full month target for past periods.
+          example: 3360
+        actualMinutesToDate:
+          type: integer
+          description: Actual recorded time up to yesterday.
+          example: 3480
+        holidayMinutesToDate:
+          type: integer
+          description: Holiday minutes credited up to yesterday.
+          example: 480
+        absenceMinutesToDate:
+          type: integer
+          description: Absence minutes credited up to yesterday.
+          example: 0
+        balanceToDateMinutes:
+          type: integer
+          description: Net balance strictly up to yesterday (date < today).
+          example: 600
+        endBalanceToDateMinutes:
+          type: integer
+          description: Cumulative end balance as of yesterday (initialBalance + balanceToDate + manualCorrections).
+          example: 720
+        fullPeriodBalanceMinutes:
+          type: integer
+          description: Net period balance over the entire month (actual + holiday + absence - target).
+          example: 720
+        fullEndBalanceMinutes:
+          type: integer
+          description: End balance calculated over the entire month.
+          example: 840
         endBalanceMinutes:
           type: integer
+          description: End balance for the period (for ongoing periods, this is end balance as of yesterday).
           example: 840
         daySummaries:
           type: array

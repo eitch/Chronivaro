@@ -103,6 +103,10 @@ public class PeriodHelper {
 		json.addProperty("totalHolidayMinutes", summary.totalHolidayMinutes());
 		json.addProperty("totalAbsenceMinutes", summary.totalAbsenceMinutes());
 		json.addProperty("totalOnCallMinutes", summary.totalOnCallMinutes());
+		json.addProperty("targetMinutesToDate", summary.targetMinutesToDate());
+		json.addProperty("actualMinutesToDate", summary.actualMinutesToDate());
+		json.addProperty("holidayMinutesToDate", summary.holidayMinutesToDate());
+		json.addProperty("absenceMinutesToDate", summary.absenceMinutesToDate());
 		json.addProperty("periodBalanceMinutes", summary.getPeriodBalance());
 		json.addProperty("initialBalanceMinutes", summary.initialBalanceMinutes());
 		json.addProperty("manualCorrectionsMinutes", summary.manualCorrectionsMinutes());
@@ -176,6 +180,14 @@ public class PeriodHelper {
 		int initialBalance = json.has("initialBalanceMinutes") ? json.get("initialBalanceMinutes").getAsInt() : 0;
 		int manualCorrections = json.has("manualCorrectionsMinutes") ? json.get("manualCorrectionsMinutes").getAsInt() : 0;
 		int totalOnCall = json.has("totalOnCallMinutes") ? json.get("totalOnCallMinutes").getAsInt() : 0;
+		int targetToDate = json.has("targetMinutesToDate") ? json.get("targetMinutesToDate").getAsInt() : totalTarget;
+		int actualToDate = json.has("actualMinutesToDate") ? json.get("actualMinutesToDate").getAsInt() : totalActual;
+		int holidayToDate = json.has("holidayMinutesToDate") ? json.get("holidayMinutesToDate").getAsInt() : totalHoliday;
+		int absenceToDate = json.has("absenceMinutesToDate") ? json.get("absenceMinutesToDate").getAsInt() : totalAbsence;
+		int periodBalance = json.has("periodBalanceMinutes") ? json.get("periodBalanceMinutes").getAsInt() :
+				(actualToDate + holidayToDate + absenceToDate - targetToDate);
+		int endBalance = json.has("endBalanceMinutes") ? json.get("endBalanceMinutes").getAsInt() :
+				(json.has("finalBalanceMinutes") ? json.get("finalBalanceMinutes").getAsInt() : initialBalance + periodBalance + manualCorrections);
 
 		List<DaySummary> daySummaries = new ArrayList<>();
 		if (json.has("daySummaries") && json.get("daySummaries").isJsonArray()) {
@@ -230,6 +242,7 @@ public class PeriodHelper {
 		}
 
 		return new MonthSummary(employeeId, yearMonth, totalTarget, totalActual, paidAbsence, unpaidAbsence,
-				vacationMinutes, totalHoliday, totalAbsence, initialBalance, manualCorrections, totalOnCall, daySummaries);
+				vacationMinutes, totalHoliday, totalAbsence, initialBalance, manualCorrections, totalOnCall,
+				targetToDate, actualToDate, holidayToDate, absenceToDate, periodBalance, endBalance, daySummaries);
 	}
 }

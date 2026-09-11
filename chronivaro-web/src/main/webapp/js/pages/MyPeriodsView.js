@@ -298,6 +298,8 @@ export default class MyPeriodsView {
 		const periodBalanceEl = container.querySelector('#summary-period-balance');
 		const initialBalanceEl = container.querySelector('#summary-initial-balance');
 		const endBalanceEl = container.querySelector('#summary-end-balance');
+		const periodBalanceLabel = container.querySelector('#card-period-balance-container .card-label');
+		const endBalanceLabel = container.querySelector('#card-end-balance-container .card-label');
 		const snapshotContainer = container.querySelector('#calculation-snapshot-container');
 		const snapshotJsonView = container.querySelector('#snapshot-json-view');
 
@@ -311,6 +313,19 @@ export default class MyPeriodsView {
 			endBalanceEl.textContent = '--';
 			snapshotContainer.classList.add('hidden');
 			return;
+		}
+
+		const now = new Date();
+		const currentYm = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+		const isCurrentMonth = this.selectedYearMonth === currentYm;
+		const isClosed = this.currentPeriodStatus && (this.currentPeriodStatus.status === 'APPROVED' || this.currentPeriodStatus.status === 'LOCKED');
+
+		if (isCurrentMonth && !isClosed) {
+			if (periodBalanceLabel) periodBalanceLabel.textContent = I18n.t('periods.balanceAsOfYesterday');
+			if (endBalanceLabel) endBalanceLabel.textContent = I18n.t('periods.totalBalanceAsOfYesterday');
+		} else {
+			if (periodBalanceLabel) periodBalanceLabel.textContent = I18n.t('periods.balanceHours');
+			if (endBalanceLabel) endBalanceLabel.textContent = `${I18n.t('common.total')} ${I18n.t('common.balance')}`;
 		}
 
 		const s = this.currentMonthSummary;

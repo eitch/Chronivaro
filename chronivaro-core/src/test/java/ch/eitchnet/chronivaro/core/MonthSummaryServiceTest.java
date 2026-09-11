@@ -78,4 +78,50 @@ public class MonthSummaryServiceTest {
 		assertEquals(DayState.WORKING.getLabel(), summary.daySummaries().get(today.getDayOfMonth() - 1).stateLabel());
 		assertEquals(15, summary.daySummaries().get(today.getDayOfMonth() - 1).actualMinutes());
 	}
+
+	@Test
+	public void shouldCalculateToDateBalanceAsOfYesterdayForCurrentMonth() {
+		String employeeId = "empToDate";
+		LocalDate today = LocalDate.now();
+		YearMonth currentYm = YearMonth.from(today);
+
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
+			Resource employee = createEmployee(tx, employeeId, "ToDate Doe");
+			employee = tx.readLock(employee);
+			employee.setString(PARAM_TIMEZONE, "Europe/Zurich");
+			tx.update(employee);
+
+			// Work entries on day 1 if today is > day 1, or past/future
+			LocalDate day1 = currentYm.atDay(1);
+			if (today.getDayOfMonth() > 1) {
+				ZonedDateTime startDay1 = day1.atTime(8, 0).atZone(java.time.ZoneId.of("Europe/Zurich"));
+				ZonedDateTime endDay1 = day1.atTime(17, 0).atZone(java.time.ZoneId.of("Europe/Zurich"));
+				createWorkEntry(tx, employee, startDay1, endDay1);
+			}
+
+			tx.commitOnClose();
+		}
+
+		ServiceHandler serviceHandler = runtimeMock.getServiceHandler();
+		MonthSummaryService.MonthSummaryArgument arg = new MonthSummaryService.MonthSummaryArgument();
+		arg.employeeId = employeeId;
+		arg.yearMonth = currentYm;
+
+		MonthSummaryService.MonthSummaryResult result = serviceHandler.doService(certificate, new MonthSummaryService(), arg);
+		assertEquals(ServiceResult.success().getState(), result.getState());
+
+		MonthSummary summary = result.monthSummary;
+
+		int expectedTargetToDate = 0;
+		int expectedActualToDate = 0;
+		for (int d = 1; d < today.getDayOfMonth(); d++) {
+			expectedTargetToDate += summary.daySummaries().get(d - 1).targetMinutes();
+			expectedActualToDate += summary.daySummaries().get(d - 1).actualMinutes();
+		}
+
+		assertEquals(expectedTargetToDate, summary.targetMinutesToDate());
+		assertEquals(expectedActualToDate, summary.actualMinutesToDate());
+		assertEquals(expectedActualToDate - expectedTargetToDate, summary.getPeriodBalance());
+		assertEquals(summary.initialBalanceMinutes() + (expectedActualToDate - expectedTargetToDate), summary.getEndBalance());
+	}
 }

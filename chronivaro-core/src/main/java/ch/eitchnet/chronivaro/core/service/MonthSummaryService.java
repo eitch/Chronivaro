@@ -158,8 +158,60 @@ public class MonthSummaryService
 		int initialBalance = calculateInitialBalance(tx, employeeId, yearMonth);
 		int manualCorrections = 0;
 
+		LocalDate today = LocalDate.now(zone);
+		YearMonth currentYearMonth = YearMonth.from(today);
+
+		int targetMinutesToDate;
+		int actualMinutesToDate;
+		int holidayMinutesToDate;
+		int absenceMinutesToDate;
+		int periodBalanceMinutes;
+		int endBalanceMinutes;
+
+		if (yearMonth.isBefore(currentYearMonth)) {
+			// Past closed period: encompasses full month
+			targetMinutesToDate = totalTarget;
+			actualMinutesToDate = totalActual;
+			holidayMinutesToDate = totalHoliday;
+			absenceMinutesToDate = totalCreditedAbsence;
+			periodBalanceMinutes = totalActual + totalHoliday + totalCreditedAbsence - totalTarget;
+			endBalanceMinutes = initialBalance + periodBalanceMinutes + manualCorrections;
+		} else if (yearMonth.isAfter(currentYearMonth)) {
+			// Future month: 0 passed so far
+			targetMinutesToDate = 0;
+			actualMinutesToDate = 0;
+			holidayMinutesToDate = 0;
+			absenceMinutesToDate = 0;
+			periodBalanceMinutes = 0;
+			endBalanceMinutes = initialBalance + manualCorrections;
+		} else {
+			// Current in-progress month: calculate balance as of yesterday (date < today)
+			int targetToDate = 0;
+			int actualToDate = 0;
+			int holidayToDate = 0;
+			int absenceToDate = 0;
+
+			for (DaySummary ds : daySummaries) {
+				if (ds.date().isBefore(today)) {
+					targetToDate += ds.targetMinutes();
+					actualToDate += ds.actualMinutes();
+					holidayToDate += ds.holidayMinutes();
+					absenceToDate += ds.absenceMinutes();
+				}
+			}
+
+			targetMinutesToDate = targetToDate;
+			actualMinutesToDate = actualToDate;
+			holidayMinutesToDate = holidayToDate;
+			absenceMinutesToDate = absenceToDate;
+			periodBalanceMinutes = actualToDate + holidayToDate + absenceToDate - targetToDate;
+			endBalanceMinutes = initialBalance + periodBalanceMinutes + manualCorrections;
+		}
+
 		return new MonthSummary(employeeId, yearMonth, totalTarget, totalActual, totalPaidAbsence, totalUnpaidAbsence,
-				totalVacationAbsence, totalHoliday, totalCreditedAbsence, initialBalance, manualCorrections, totalOnCall, daySummaries);
+				totalVacationAbsence, totalHoliday, totalCreditedAbsence, initialBalance, manualCorrections, totalOnCall,
+				targetMinutesToDate, actualMinutesToDate, holidayMinutesToDate, absenceMinutesToDate,
+				periodBalanceMinutes, endBalanceMinutes, daySummaries);
 	}
 
 	public static int calculateInitialBalance(StrolchTransaction tx, String employeeId, YearMonth targetYearMonth) {

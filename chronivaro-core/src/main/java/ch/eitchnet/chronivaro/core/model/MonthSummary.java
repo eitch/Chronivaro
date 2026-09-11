@@ -6,7 +6,22 @@ import java.util.List;
 public record MonthSummary(String employeeId, YearMonth yearMonth, int totalTargetMinutes, int totalActualMinutes,
 		int paidAbsenceMinutes, int unpaidAbsenceMinutes, int vacationMinutes, int totalHolidayMinutes,
 		int totalAbsenceMinutes, int initialBalanceMinutes, int manualCorrectionsMinutes, int totalOnCallMinutes,
+		int targetMinutesToDate, int actualMinutesToDate, int holidayMinutesToDate, int absenceMinutesToDate,
+		int periodBalanceMinutes, int endBalanceMinutes,
 		List<DaySummary> daySummaries) {
+
+	public MonthSummary(String employeeId, YearMonth yearMonth, int totalTargetMinutes, int totalActualMinutes,
+			int paidAbsenceMinutes, int unpaidAbsenceMinutes, int vacationMinutes, int totalHolidayMinutes,
+			int totalAbsenceMinutes, int initialBalanceMinutes, int manualCorrectionsMinutes, int totalOnCallMinutes,
+			List<DaySummary> daySummaries) {
+		this(employeeId, yearMonth, totalTargetMinutes, totalActualMinutes, paidAbsenceMinutes, unpaidAbsenceMinutes,
+				vacationMinutes, totalHolidayMinutes, totalAbsenceMinutes, initialBalanceMinutes,
+				manualCorrectionsMinutes, totalOnCallMinutes,
+				totalTargetMinutes, totalActualMinutes, totalHolidayMinutes, totalAbsenceMinutes,
+				totalActualMinutes + totalHolidayMinutes + totalAbsenceMinutes - totalTargetMinutes,
+				initialBalanceMinutes + (totalActualMinutes + totalHolidayMinutes + totalAbsenceMinutes - totalTargetMinutes) + manualCorrectionsMinutes,
+				daySummaries);
+	}
 
 	public MonthSummary(String employeeId, YearMonth yearMonth, int totalTargetMinutes, int totalActualMinutes,
 			int paidAbsenceMinutes, int unpaidAbsenceMinutes, int vacationMinutes, int totalHolidayMinutes,
@@ -25,10 +40,26 @@ public record MonthSummary(String employeeId, YearMonth yearMonth, int totalTarg
 	}
 
 	public int getPeriodBalance() {
-		return totalActualMinutes + totalHolidayMinutes + totalAbsenceMinutes - totalTargetMinutes;
+		return periodBalanceMinutes;
 	}
 
 	public int getEndBalance() {
-		return initialBalanceMinutes + getPeriodBalance() + manualCorrectionsMinutes;
+		return endBalanceMinutes;
+	}
+
+	public int getFullPeriodBalance() {
+		return totalActualMinutes + totalHolidayMinutes + totalAbsenceMinutes - totalTargetMinutes;
+	}
+
+	public int getFullEndBalance() {
+		return initialBalanceMinutes + getFullPeriodBalance() + manualCorrectionsMinutes;
+	}
+
+	public int getBalanceToDate() {
+		return actualMinutesToDate + holidayMinutesToDate + absenceMinutesToDate - targetMinutesToDate;
+	}
+
+	public int getEndBalanceToDate() {
+		return initialBalanceMinutes + getBalanceToDate() + manualCorrectionsMinutes;
 	}
 }
