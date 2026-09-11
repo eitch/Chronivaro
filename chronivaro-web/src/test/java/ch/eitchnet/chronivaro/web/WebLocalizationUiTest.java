@@ -113,6 +113,7 @@ public class WebLocalizationUiTest {
 		assertTrue("DashboardView must localize start button", content.contains("I18n.t('dashboard.start')"));
 		assertTrue("DashboardView must localize stop button", content.contains("I18n.t('dashboard.stop')"));
 		assertTrue("DashboardView must localize summary title", content.contains("I18n.t('dashboard.todaySummary')"));
+		assertTrue("DashboardView must localize total balance", content.contains("I18n.t('dashboard.totalBalance')"));
 		assertTrue("DashboardView must localize presence states", content.contains("I18n.t('presence.working')"));
 		assertTrue("DashboardView must localize off duty badge", content.contains("I18n.t('dashboard.offDuty')"));
 	}

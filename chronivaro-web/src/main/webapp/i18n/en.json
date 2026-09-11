@@ -160,6 +160,7 @@
     "worked": "Worked",
     "required": "Required",
     "balance": "Balance",
+    "totalBalance": "Total Balance",
     "changeLocation": "Change location",
     "clearLocation": "Clear",
     "selectLocationFirst": "Select a working location before starting work.",

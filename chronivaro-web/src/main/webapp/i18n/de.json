@@ -160,6 +160,7 @@
     "worked": "Gearbeitet",
     "required": "Soll",
     "balance": "Saldo",
+    "totalBalance": "Gesamtsaldo",
     "changeLocation": "Arbeitsort wechseln",
     "clearLocation": "Auswahl aufheben",
     "selectLocationFirst": "Bitte wählen Sie vor Arbeitsbeginn einen Arbeitsort.",

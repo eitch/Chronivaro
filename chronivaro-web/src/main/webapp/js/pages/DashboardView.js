@@ -1,4 +1,5 @@
 import WorkEntryApi from '../api/WorkEntryApi.js';
+import PeriodApi from '../api/PeriodApi.js';
 import NotificationDialog from '../utils/NotificationDialog.js';
 import Format from '../utils/Format.js';
 import I18n from '../i18n/I18n.js';
@@ -48,6 +49,7 @@ export default class DashboardView {
 				<p>${I18n.t('dashboard.worked')}: <span id="worked-time">...</span></p>
 				<p>${I18n.t('dashboard.required')}: <span id="required-time">...</span></p>
 				<p>${I18n.t('dashboard.balance')}: <span id="day-balance">...</span></p>
+				<p>${I18n.t('dashboard.totalBalance')}: <span id="total-balance">...</span></p>
 			</div>
 
 			<!-- Fix Stop Timer Modal (when timer was forgotten on previous day) -->
@@ -104,6 +106,7 @@ export default class DashboardView {
         const workedSpan = container.querySelector('#worked-time');
         const requiredSpan = container.querySelector('#required-time');
         const balanceSpan = container.querySelector('#day-balance');
+        const totalBalanceSpan = container.querySelector('#total-balance');
 
 		// Modal elements
 		const fixStopModal = container.querySelector('#fix-stop-modal');
@@ -279,6 +282,25 @@ export default class DashboardView {
                 const balSign = summary.balance > 0 ? '+' : '';
                 balanceSpan.textContent = `${balSign}${Format.duration(summary.balance)}`;
                 balanceSpan.className = summary.balance > 0 ? 'positive' : (summary.balance < 0 ? 'negative' : 'neutral');
+
+                try {
+                    const todayDate = new Date();
+                    const currentYearMonth = `${todayDate.getFullYear()}-${String(todayDate.getMonth() + 1).padStart(2, '0')}`;
+                    const monthSummary = await PeriodApi.getMonthSummary(currentYearMonth);
+                    if (monthSummary && typeof monthSummary.endBalanceMinutes === 'number') {
+                        const totalBal = monthSummary.endBalanceMinutes;
+                        const totalBalSign = totalBal > 0 ? '+' : '';
+                        totalBalanceSpan.textContent = `${totalBalSign}${Format.duration(totalBal)}`;
+                        totalBalanceSpan.className = totalBal > 0 ? 'positive' : (totalBal < 0 ? 'negative' : 'neutral');
+                    } else {
+                        totalBalanceSpan.textContent = '-';
+                        totalBalanceSpan.className = '';
+                    }
+                } catch (monthSummaryErr) {
+                    console.warn('Failed to load month summary for total balance on dashboard', monthSummaryErr);
+                    totalBalanceSpan.textContent = '-';
+                    totalBalanceSpan.className = '';
+                }
 
 				startBtn.disabled = isWorking;
 				stopBtn.disabled = !isWorking;
