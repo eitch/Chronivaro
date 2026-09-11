@@ -148,4 +148,36 @@ Tritt bei der Verarbeitung ein fachlicher oder Validierungsfehler auf, antwortet
 | `GET` / `POST` / `PUT` | `/configuration` | Globale Einstellungen (Firmenname, Logo, Bürozeiten) | Admin |
 | `GET` | `/audits` | Audit-Log mit Filterparametern und Pagination abrufen | Admin, Revisor |
 
+#### Request-Schema `POST /employees` (Mitarbeiter erstellen mit Onboarding-Parametern)
+
+Beim Anlegen eines neuen Mitarbeiters akzeptiert das `EmployeeDto` folgende optionale Erweiterungsfelder für Altsaldi und entkoppelten Zeiterfassungsstart:
+
+```json
+{
+  "personnelNumber": "EMP-042",
+  "firstname": "Max",
+  "lastname": "Muster",
+  "email": "max.muster@example.com",
+  "teamId": "TEAM_DEV",
+  "locationId": "LOC_BERN",
+  "joinDate": "2016-08-01",
+  "scheduleValidFrom": "2026-09-01",
+  "initialOvertimeMinutes": 900,
+  "initialVacationDays": 5.0,
+  "employmentPercentage": 100.0,
+  "weeklyTargetMinutes": 2520,
+  "mondayMinutes": 504,
+  "tuesdayMinutes": 504,
+  "wednesdayMinutes": 504,
+  "thursdayMinutes": 504,
+  "fridayMinutes": 504,
+  "saturdayMinutes": 0,
+  "sundayMinutes": 0
+}
+```
+
+- `scheduleValidFrom` (optional, Date `YYYY-MM-DD`): Wirksamkeitsbeginn des ersten Arbeitsplans und Start der Zeiterfassung. Standardwert ist `joinDate`, wenn nicht explizit übergeben.
+- `initialOvertimeMinutes` (optional, Integer): Anfangsüberzeit/Unterzeit in Minuten. Erzeugt bei Wert != 0 einen Baseline-Perioden-Snapshot für den Vormonat.
+- `initialVacationDays` (optional, Double): Anfangs-Ferienübertrag in Tagen. Erzeugt bei Wert != 0 einen `CARRY_OVER`-Journaleintrag für das aktive Erfassungsjahr.
+
 Detaillierte Autorisierungsregeln für alle Operationen sind in [Sicherheit und Datenschutz](09-security-and-privacy.md) festgelegt.

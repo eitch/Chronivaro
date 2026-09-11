@@ -51,6 +51,7 @@ Ein `Employee` repräsentiert das fachliche Mitarbeiterprofil für die Zeiterfas
 - **Deaktivierung:** Wird der mit dem Mitarbeiter verknüpfte Strolch-Benutzer gelöscht, wird der `Employee` automatisch auf inaktiv gesetzt (`active = false`).
 - **Reaktivierung:** Ein inaktiver Mitarbeiter kann später wieder aktiviert werden (`active = true`). Bei der Reaktivierung wird der zugehörige Strolch-Benutzer im System neu angelegt und für die Registrierung/Passwortvergabe freigegeben (Workflow siehe [Geschäftsprozesse](04-business-processes.md#44-reaktivierung-von-mitarbeitern)).
 - **Profileinsicht:** Mitarbeitende können ihre eigenen Mitarbeiter- und Profilinformationen (u. a. Personalnummer, Eintrittsdatum, Austrittsdatum, Anzeigename, zugeordnetes Team, Standort, Zeitzone sowie aktueller Arbeitsplan und Beschäftigungsgrad) in der Benutzeroberfläche einsehen.
+- **Entkopplung von Anstellungsvertragsbeginn und Zeiterfassungsstart:** Das Eintrittsdatum (`entryDate` / `joinDate`) dokumentiert den rechtlichen Anstellungsbeginn für Senioritäts- und Stammdatenzwecke. Der operative Beginn der Zeiterfassung und Sollzeitberechnung im System wird hingegen durch den ersten Arbeitsplan (`EmploymentScheduleVersion.validFrom`) gesteuert. Liegt das rechtliche Eintrittsdatum vor dem operativen Zeiterfassungsstart in Chronivaro, fallen vor `validFrom` keine Sollstunden an.
 
 ---
 
@@ -93,7 +94,8 @@ Ein Mitarbeiter besitzt mindestens einen Arbeitsplan. Jede Änderung des Beschä
 - **Eindeutigkeit:** Für jeden aktiven Beschäftigungstag muss genau eine Version bestimmbar sein.
 - **Korrekturen vergangener Versionen:** Vergangene Versionen dürfen nur mit entsprechender Berechtigung korrigiert werden.
 - **Pensum vs. Verteilung:** Pensum und Wochentagsverteilung sind getrennt zu speichern, damit beispielsweise ein 80-%-Pensum auf vier oder fünf Tage verteilt werden kann.
-- **Eintritt unter dem Monat:** Tritt ein Mitarbeiter im Laufe eines Monats ein (`entryDate`), gilt für alle Tage vor dem Eintrittsdatum eine tägliche Sollzeit von `0` Minuten. Die Monatssollzeit ergibt sich ausschliesslich aus der Summe der aktiven Tage ab `entryDate` bis Monatsende. Tage vor dem Eintrittsdatum werden im Monatskalender als inaktiv dargestellt und lösen keine Warnungen vor fehlenden Buchungen aus.
+- **Gültigkeitsbeginn vs. Eintrittsdatum:** Der Gültigkeitsbeginn (`validFrom`) der ersten Arbeitsplanversion definiert den operativen Startzeitpunkt der Zeiterfassung und Sollzeitberechnung in Chronivaro. Für Tage vor `validFrom` beträgt die tägliche Sollzeit `0` Minuten. Bei historischem Eintrittsdatum (`entryDate` < operativer Start) kann `validFrom` auf den Go-Live- bzw. Erfassungsstart gelegt werden, wodurch rückwirkende künstliche Sollzeiten vermieden werden.
+- **Eintritt unter dem Monat:** Tritt ein Mitarbeiter im Laufe eines Monats ein bzw. beginnt der erste Arbeitsplan unter dem Monat (`validFrom`), gilt für alle Tage vor `validFrom` eine tägliche Sollzeit von `0` Minuten. Die Monatssollzeit ergibt sich ausschliesslich aus der Summe der aktiven Tage ab `validFrom` bis Monatsende. Tage vor `validFrom` werden im Monatskalender als inaktiv dargestellt und lösen keine Warnungen vor fehlenden Buchungen aus.
 - **Austritt unter dem Monat:** Scheidet ein Mitarbeiter im Laufe eines Monats aus (`exitDate`), gilt für alle Tage nach dem Austrittsdatum eine Sollzeit von `0` Minuten.
 
 ---
@@ -321,6 +323,11 @@ Repräsentiert die monatliche Zeiterfassungs- und Genehmigungsperiode eines Mita
 | `approvedBy` | String | Benutzername des Genehmigers |
 | `comment` | String | Begründungskommentar bei Ablehnung oder Genehmigung |
 | `calculationSnapshot` | JSON-Objekt | Unveränderlicher Abschlussstand mit Soll-/Istzeiten und Saldi |
+
+#### Regeln und Invarianten
+
+- **Abschluss und Sperre:** Sobald eine Periode den Status `APPROVED` oder `LOCKED` erreicht, wird ein unveränderlicher `calculationSnapshot` gespeichert, der für nachfolgende Monatsberechnungen als verbindlicher Anfangssaldo dient.
+- **Baseline-Perioden-Snapshots für Altsaldi (Migration / Onboarding):** Wird bei der Neuerstellung eines Mitarbeiters mit historischem Eintritt oder Systemstart ein Anfangsüberzeit-/-unterzeitsaldo (`initialOvertimeMinutes`) übergeben, generiert das System automatisch eine Baseline-`TimePeriod` für den Vormonat von `EmploymentScheduleVersion.validFrom` im Status `LOCKED`. Dieser enthält einen minimalen `calculationSnapshot` mit `endBalanceMinutes = initialOvertimeMinutes`. Dadurch stoppt die historische Rückwärtssaldoberechnung deterministisch bei dieser Baseline-Periode und übernimmt exakt den übergebenen Anfangssaldo als Vormonatssaldo für den ersten operativen Erfassungsmonat.
 
 ---
 

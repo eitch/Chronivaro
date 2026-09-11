@@ -55,3 +55,11 @@ Bis zur formellen Entscheidung abweichender Richtlinien gelten im gesamten Syste
 6. **Visuelle Hervorhebung und Erstelleranzeige:** Alle modifizierten oder manuell erstellten Arbeitszeitbuchungen werden visuell gekennzeichnet. Bei Fremderfassung wird transparent ausgewiesen, von wem (`createdBy`) der Eintrag erstellt wurde.
 7. **Deterministische Sprachwahl:** Die Sprachwahl folgt einer eindeutigen Prioritätskette (Login-Auswahl > Browser Storage > Strolch-Benutzerprofil > Systemstandard).
 8. **PDF-Scope:** Natives PDF wird ausschliesslich für Monatsreport, Ferienübersicht und Abwesenheitsreport erzeugt (der Teamreport ist nicht im nativen PDF-Scope).
+9. **Onboarding von Mitarbeitenden mit Altdaten (Option 3):**
+   - *Problemstellung:* Werden Mitarbeitende mit historischem Eintrittsdatum (`joinDate`, z. B. `2016-08-01`) erfasst, führte die automatische Rückrechnung von Sollzeiten ohne historische Ist-Buchungen zu massiven, künstlichen Defiziten (z. B. `-9232h`). Zudem wurde der Ferienanspruch fälschlicherweise für das historische Eintrittsjahr statt für das operative Systemjahr initialisiert.
+   - *Beschlossene Lösung (Option 3):* 
+     1. Entkopplung von rechtlichem Anstellungsbeginn (`Employee.joinDate`) und operativem Zeiterfassungsstart (`EmploymentScheduleVersion.validFrom`).
+     2. Intelligente UI-Vorbelegung von `scheduleValidFrom` auf den 1. des laufenden Monats bei vergangenem Eintrittsdatum mit Hinweistext.
+     3. Optionale Angabe von Anfangssaldi beim Erstellen (`initialOvertimeMinutes`, `initialVacationDays`).
+     4. Automatische Anlage eines Baseline-Perioden-Snapshots für den Vormonat von `scheduleValidFrom` im Status `LOCKED` zur nahtlosen Übernahme des Überzeit-/Unterzeitsaldos.
+     5. Automatische Buchung von Anfangs-Ferientagen als `CARRY_OVER`-Journaleintrag für das aktive Erfassungsjahr sowie Pro-rata-Anspruchsgutschrift (`ENTITLEMENT`) für das aktive Erfassungsjahr.

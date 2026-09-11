@@ -101,6 +101,10 @@ chronivaro-web/src/main/webapp/
 
 - Benutzerverwaltung (für reine Systembenutzer und Mitarbeiter).
 - Mitarbeiter- und Teamverwaltung (Deaktivierung bei Benutzerlöschung, Reaktivierung, Ferieninitialisierung).
+- **Dialog "Mitarbeiter erstellen":**
+  - Eingabefelder für persönliche Daten und Eintrittsdatum (`joinDate`).
+  - Zeiterfassungsstartdatum (`scheduleValidFrom`): Standardmässig mit `joinDate` vorbelegt; bei vergangenem `joinDate` intelligent auf den 1. des laufenden Monats vorbesetzt, begleitet von einem Hinweistext.
+  - Optionale Altsalden-Eingabe: Anfangsüberzeit/-unterzeit (`initialOvertimeMinutes` formatiert als Stunden `HH:mm` oder Dezimalstunden) und Anfangs-Ferienübertrag (`initialVacationDays` in Tagen).
 - Arbeitspläne, Standorte, Feiertagskalender, Abwesenheitsarten.
 - Globale Einstellungen (zentrierter Einstellungsbereich mit Beschreibungstext, Firmenname, Logo-Upload).
 - Audit-Log-Ansicht mit Filterung und Detailmodal.
@@ -186,8 +190,15 @@ Konfigurierte Standardsprache (z. B. de)
 
 ---
 
-### 4.4 Übersetzungsqualität und Vollständigkeit
+### 4.5 Lokalisierungsschlüssel für Onboarding und Altsaldi
 
-- **100 % Parität:** Alle verpflichtenden Übersetzungsschlüssel müssen in Deutsch (`de`) und Englisch (`en`) vorhanden sein.
-- **Automatisierte Build-Prüfung:** Fehlende Schlüssel in Deutsch oder Englisch, doppelte Schlüssel sowie ungültiges JSON lassen den Maven-Build fehlschlagen (siehe [Teststrategie](11-testing-and-acceptance.md#14-übersetzungs--und-exporttests)).
-- Weitere Sprachen können modular über zusätzliche Sprachdateien ergänzt werden.
+Für die erweiterten Dialogfelder und Hinweise bei der Mitarbeitererstellung gelten folgende verpflichtende i18n-Schlüssel in Deutsch (`de`) und Englisch (`en`):
+
+| Schlüssel (Key) | Deutsch (`de`) | Englisch (`en`) |
+|---|---|---|
+| `employees.fields.scheduleValidFrom` | Zeiterfassung ab | Time tracking start date |
+| `employees.fields.scheduleValidFromHint` | Beginn der Sollzeitberechnung (bei früherem Eintritt wird der 1. des aktuellen Monats empfohlen) | Start of target time accounting (for earlier start dates, 1st of current month is recommended) |
+| `employees.fields.initialOvertime` | Anfangssaldo Überzeit (Std/Min) | Opening overtime balance (hrs/min) |
+| `employees.fields.initialOvertimePlaceholder` | z. B. +15:30 oder -04:00 | e.g. +15:30 or -04:00 |
+| `employees.fields.initialVacationDays` | Anfangs-Ferienübertrag (Tage) | Opening vacation carry-over (days) |
+| `employees.fields.initialVacationDaysPlaceholder` | z. B. 5.0 | e.g. 5.0 |

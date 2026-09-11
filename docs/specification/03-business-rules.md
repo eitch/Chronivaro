@@ -22,7 +22,7 @@ Sollzeit = Arbeitsplan-Minuten des jeweiligen Wochentags
 
 ### 2.2 Anpassungen und Sonderfälle
 
-1. **Eintritt unter dem Monat (`entryDate`):** Für alle Tage vor dem Eintrittsdatum gilt eine Sollzeit von `0` Minuten. Diese Tage werden als inaktiv gewertet und erzeugen keine Warnungen über fehlende Buchungen.
+1. **Eintritt unter dem Monat und operativer Erfassungsstart (`validFrom`):** Für alle Tage vor dem Beginn der ersten Arbeitsplanversion (`EmploymentScheduleVersion.validFrom`) gilt eine Sollzeit von `0` Minuten. Liegt das vertragliche Eintrittsdatum (`entryDate`) in der Vergangenheit vor dem Start der Zeiterfassung in Chronivaro, werden vor `validFrom` keine Sollminuten berechnet. Diese Tage werden als inaktiv gewertet und erzeugen keine Warnungen über fehlende Buchungen.
 2. **Austritt unter dem Monat (`exitDate`):** Für alle Tage nach dem Austrittsdatum gilt eine Sollzeit von `0` Minuten.
 3. **Gesetzliche und konfigurierte Feiertage:** 
    - Ganzer Feiertag (`creditFactor = 1.0`): Reduktion der Sollzeit bzw. Feiertagsgutschrift in voller Höhe der Arbeitsplan-Sollzeit dieses Tages.
@@ -72,7 +72,8 @@ Periodensaldo = Summe aller Tagessaldi innerhalb der Monatsperiode
 Endsaldo       = Anfangssaldo + Periodensaldo + manuelle Korrekturen
 ```
 
-- **Anfangssaldo:** Entspricht dem `Endsaldo` der vorangegangenen Monatsperiode.
+- **Anfangssaldo:** Entspricht dem `Endsaldo` der vorangegangenen Monatsperiode. Bei der Berechnung traversiert die Saldenermittlung zurück bis zur frühesten Periode oder stoppt sofort, sobald eine genehmigte oder gesperrte Periode (`APPROVED`/`LOCKED`) mit einem gespeicherten `calculationSnapshot` angetroffen wird.
+- **Anfangssaldo beim Onboarding (Baseline-Periode):** Wurde beim Onboarding ein Überzeit-/Unterzeitsaldo (`initialOvertimeMinutes`) erfasst, existiert für den Vormonat von `validFrom` eine gesperrte Baseline-`TimePeriod` mit `endBalanceMinutes = initialOvertimeMinutes`. Der Anfangssaldo des ersten aktiven Erfassungsmonats übernimmt exakt diesen Wert, ohne weiter in die Vergangenheit zurückzurechnen.
 - **Zulässigkeit negativer Zeitsaldi:** Negative Zeitsaldi sind standardmässig zulässig.
 
 ---
@@ -95,11 +96,15 @@ Das Ferienguthaben wird als unveränderliches Journal (`VacationAccountEntry`) g
 - **Anspruchsjahr:** Entspricht dem Kalenderjahr (`1. Januar` bis `31. Dezember`).
 - **Initialbuchung:** Für bestehende Mitarbeitende wird der Jahresanspruch per `1. Januar` als `ENTITLEMENT`-Journaleintrag gutgeschrieben.
 
-### 6.2 Eintritt unter dem Jahr
+### 6.2 Eintritt unter dem Jahr und Onboarding mit Altdaten
 
-Tritt ein Mitarbeiter während des Jahres ein (`entryDate`), wird der anteilige Ferienanspruch ab `entryDate` bis Jahresende berechnet und per `entryDate` als `ENTITLEMENT` gebucht:
+1. **Regulärer Eintritt:** Tritt ein Mitarbeiter während des laufenden Jahres ein (`entryDate` im selben Jahr wie der Erfassungsstart `scheduleValidFrom`), wird der anteilige Ferienanspruch ab `validFrom` bis Jahresende berechnet und per `validFrom` als `ENTITLEMENT` gebucht:
 
-$$\text{Anspruch (Minuten)} = \text{round}\left( 25 \times 480 \times \frac{\text{Aktive Kalendertage ab } entryDate}{\text{Gesamttage des Kalenderjahres}} \times \frac{\text{employmentPercentage}}{100} \right)$$
+$$\text{Anspruch (Minuten)} = \text{round}\left( 25 \times 480 \times \frac{\text{Aktive Kalendertage ab } validFrom}{\text{Gesamttage des Kalenderjahres}} \times \frac{\text{employmentPercentage}}{100} \right)$$
+
+2. **Onboarding mit historischem Eintrittsdatum (`entryDate` in Vorjahren):** 
+   - Bei Mitarbeitenden, deren vertraglicher Eintritt vor dem aktiven Zeiterfassungsjahr liegt (`entryDate < Jahresbeginn von validFrom`), wird der anteilige Ferienanspruch für das Jahr des operativen Erfassungsstarts (`validFrom.getYear()`) berechnet und gutgeschrieben (pro-rata ab `validFrom` bis Jahresende). Vergangene, in Chronivaro nicht aktiv geführte Vorjahre erhalten keine rückwirkenden Buchungen.
+   - **Initialer Ferienübertrag (`initialVacationDays`):** Werden beim Onboarding bestehende Restferientage aus dem Altsystem angegeben, werden diese als `CARRY_OVER`-Journaleintrag für das aktive Erfassungsjahr per `validFrom` gutgeschrieben ($1 \text{ Tag} = 480 \text{ Minuten}$). Dieser Übertrag steht sofort für künftige Ferienbezüge zur Verfügung.
 
 ### 6.3 Pensums- und Beschäftigungsgradanpassungen
 

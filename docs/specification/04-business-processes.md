@@ -125,10 +125,26 @@ Dieses Dokument beschreibt alle fachlichen und administrativen Interaktions- und
 
 ### 4.1 Registrierung und Onboarding von Mitarbeitern
 
-1. Ein Administrator legt einen neuen Mitarbeiter an und wählt in der Mitarbeiterverwaltung die Aktion "Registrieren".
-2. Das System identifiziert den verknüpften Strolch-Benutzer.
-3. Das System löst eine Strolch-Challenge (`Usage.SET_PASSWORD`) aus.
-4. Der `UserChallengeHandler` übermittelt eine ansprechende Onboarding-E-Mail mit dem Registrierungstoken und einem direkten Link zum Passwortformular (unter Verwendung der konfigurierten `serverBaseUrl`).
+1. Ein Administrator oder HR-Verantwortlicher öffnet den Dialog "Mitarbeiter erstellen" in der Mitarbeiterverwaltung.
+2. **Eingabe von Stammdaten und Arbeitsplan:**
+   - Vertrags-Eintrittsdatum (`entryDate` / `joinDate`): Rechtlicher Beginn des Arbeitsverhältnisses.
+   - **Intelligente Vorbelegung des Zeiterfassungsstarts (`scheduleValidFrom`):**
+     - Liegt das Eintrittsdatum im aktuellen Monat oder in der Zukunft (`joinDate >= Erster Tag des aktuellen Monats`), wird `scheduleValidFrom` automatisch mit `joinDate` vorbelegt.
+     - Liegt das Eintrittsdatum vor dem aktuellen Monat (historischer Eintritt / Migration), wird `scheduleValidFrom` intelligent auf den 1. Tag des aktuellen Monats (`01.MM.YYYY`) vorbesetzt, begleitet von einem Hinweistext in der Benutzeroberfläche.
+     - Der Administrator kann das Datum `scheduleValidFrom` bei Bedarf manuell anpassen.
+   - **Optionale Altsaldi (Übertrag aus Altsystem):**
+     - **Anfangs-Überzeit/Unterzeit (`initialOvertimeMinutes`):** Bestehender Überstundensaldo (positiv) oder Minussaldo (negativ) in Stunden/Minuten.
+     - **Anfangs-Ferienguthaben (`initialVacationDays`):** Bestehende Restferientage aus Vorjahren.
+3. **Automatische Initialisierung im Backend (`CreateEmployeeService`):**
+   - Anlegen der `Employee`-Ressource mit rechtlichem `joinDate`.
+   - Anlegen der ersten `EmploymentScheduleVersion` mit `validFrom = scheduleValidFrom`.
+   - **Baseline-Perioden-Snapshot (bei `initialOvertimeMinutes != 0`):** Erstellung einer gesperrten `TimePeriod` (`LOCKED`) für den Vormonat von `scheduleValidFrom` mit einem `calculationSnapshot` (`endBalanceMinutes = initialOvertimeMinutes`). Dadurch startet der Folgemonat exakt mit diesem Saldo.
+   - **Initialer Ferienübertrag (bei `initialVacationDays != 0`):** Buchung eines `CARRY_OVER`-Journaleintrags in `VacationAccountEntry` für das Jahr von `scheduleValidFrom` ($1 \text{ Tag} = 480 \text{ Minuten}$).
+   - **Pro-rata Ferienanspruch:** Automatische Gutschrift des anteiligen Jahresanspruchs für das Jahr von `scheduleValidFrom` ab `scheduleValidFrom` bis Jahresende als `ENTITLEMENT`.
+4. **Benutzerkonto und Registrierungseinladung:**
+   - Das System erstellt den verknüpften Strolch-Benutzer.
+   - Das System löst eine Strolch-Challenge (`Usage.SET_PASSWORD`) aus.
+   - Der `UserChallengeHandler` übermittelt eine ansprechende Onboarding-E-Mail mit dem Registrierungstoken und einem direkten Link zum Passwortformular (unter Verwendung der konfigurierten `serverBaseUrl`).
 5. Der Mitarbeiter öffnet den Link, vergibt sein initiales Passwort und meldet sich an.
 6. Es werden keine Passwörter manuell vergeben oder im Klartext versendet.
 

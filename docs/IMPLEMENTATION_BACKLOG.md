@@ -179,7 +179,22 @@ The following foundational areas are verified as fully implemented in the reposi
 
 ## Prioritized Implementation Backlog
 
-*All currently identified backlog tasks are complete.*
+### Task 5: Employee Onboarding Initial Balances & Historical Join Date Decoupling
+- **Goal:** Allow onboarding employees with historical contractual start dates without creating retroactive target hour deficits, while supporting optional opening overtime/undertime balances and opening vacation carry-overs.
+- **Scope:**
+  - **Core (`chronivaro-core`):**
+    - Update `CreateEmployeeService` to accept `scheduleValidFrom`, `initialOvertimeMinutes`, and `initialVacationDays`.
+    - Create the initial `EmploymentScheduleVersion` starting at `scheduleValidFrom` (defaulting to `joinDate` if not provided).
+    - When `initialOvertimeMinutes != 0`, create a baseline `TimePeriod` for the preceding month (`YearMonth.from(scheduleValidFrom).minusMonths(1)`) in `LOCKED` state with a `calculationSnapshot` containing `endBalanceMinutes = initialOvertimeMinutes`.
+    - When `initialVacationDays != 0`, create a `CARRY_OVER` journal entry in `VacationAccountEntry` for the start year ($1 \text{ day} = 480 \text{ min}$).
+    - Credit pro-rated vacation entitlement (`ENTITLEMENT`) for the year of `scheduleValidFrom` (from `scheduleValidFrom` to year end).
+  - **REST (`chronivaro-rest`):**
+    - Extend `EmployeeDto` and `ChronivaroResource` / `AdminResource` to expose `scheduleValidFrom`, `initialOvertimeMinutes`, and `initialVacationDays`.
+  - **Web UI (`chronivaro-web`):**
+    - Extend the "Create Employee" modal in `EmployeesView.js` with fields for Zeiterfassung ab (`scheduleValidFrom`), Anfangssaldo Überzeit (`initialOvertimeMinutes`), and Anfangs-Ferienübertrag (`initialVacationDays`).
+    - Implement smart defaulting: if `joinDate < startOfCurrentMonth`, default `scheduleValidFrom` to `01.MM.YYYY` with an informational hint.
+    - Add complete i18n keys for German (`de`) and English (`en`).
+  - **Verification:** Unit tests in `CreateEmployeeServiceTest` and `MonthSummaryServiceTest`, REST integration tests, and UI tests.
 
 ---
 

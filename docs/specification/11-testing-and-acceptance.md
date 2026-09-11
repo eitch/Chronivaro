@@ -44,7 +44,13 @@ Der Core wird durch isolierte, deterministische Unit-Tests (unter Verwendung von
    - Automatisierte Anspruchsberechnung bei Jahreswechsel (`ENTITLEMENT`) und Eintritt pro-rata.
    - Abzug bei Ferienbezug (`USAGE`) nach FIFO-Prinzip (ältestes Guthaben zuerst).
    - Korrekturbuchungen (`CORRECTION`) und Blockade negativer Feriensaldi.
-6. **Benutzer-Lifecycle & Audit:**
+   - Initialer Ferienübertrag (`CARRY_OVER`) bei Onboarding mit Altdaten.
+6. **Mitarbeiter-Onboarding & Altdatenübernahme:**
+   - Erstellung von Mitarbeitenden mit vergangenem Eintrittsdatum (`joinDate`) und entkoppeltem Zeiterfassungsstart (`validFrom`).
+   - Verifikation, dass Tage vor `validFrom` 0 Sollminuten erzeugen und keine künstlichen Salendefizite entstehen.
+   - Erzeugung von Baseline-Perioden-Snapshots für den Vormonat bei Angabe von `initialOvertimeMinutes` (positive und negative Saldi).
+   - Verifikation, dass `MonthSummaryService.calculateInitialBalance` am Baseline-Snapshot stoppt und den Altsaldo korrekt als Anfangssaldo übernimmt.
+7. **Benutzer-Lifecycle & Audit:**
    - Benutzerlöschung führt zur Soft-Deaktivierung des verknüpften `Employee` ohne Datenverlust historischer Buchungen.
    - Reaktivierung inaktiver Mitarbeiter mit automatischer Neuerstellung des Strolch-Benutzers und Ferieninitialisierung.
    - Revisionssichere Audit-Log-Erstellung und Filterung nach Korrelations-ID, Entität, Benutzer und Aktion.
@@ -110,26 +116,27 @@ Das Gesamtsystem gilt als fachlich und technisch abnahmebereit, wenn alle nachfo
 ### 2.1 Kernfunktionalität
 
 1. **Stammdatenverwaltung:** Administratoren können Mitarbeiter, Benutzer (auch reine Systembenutzer), Teams, Standorte, Feiertagskalender und Arbeitspläne verwalten.
-2. **Nicht-destruktive Löschung:** Beim Löschen eines Benutzers wird der verknüpfte Mitarbeiter deaktiviert (`active = false`), und alle historischen Buchungen und Saldi bleiben unverändert erhalten.
-3. **Mitarbeiter-Reaktivierung:** Inaktive Mitarbeiter können reaktiviert werden; dabei wird das Ferienkonto initialisiert und der Strolch-Benutzer automatisch neu angelegt.
-4. **Profileinsicht:** Mitarbeitende können ihre eigenen Profildaten und Sollzeiten in der Weboberfläche einsehen.
-5. **Flexible Zeiterfassung:** Mitarbeitende können mehrere Arbeitsblöcke pro Tag erfassen und kommentieren; Unterbrüche werden als zeitliche Lücken ausgewiesen.
-6. **Korrekturen und Transparenz:** Mitarbeitende können eigene Buchungen in offenen Perioden bearbeiten; Vorgesetzte und HR können Buchungen für Mitarbeitende erfassen, korrigieren und löschen. Alle modifizierten und manuell erstellten Einträge werden visuell hervorgehoben und der Ersteller (`createdBy`) wird ausgewiesen.
-7. **Soll- und Istzeitberechnung:** Korrekte Berechnung von Soll- und Istzeiten für Tag und Monat (inklusive Eintritten/Austritten unter dem Monat).
-8. **Abwesenheitsmanagement:** Vordefinierte und kundenspezifische Abwesenheitsarten sind verfügbar; Halb- und Ganztage werden anhand des Arbeitsplans berechnet; Entwürfe (`DRAFT`) können ohne Ferienabzug verworfen werden.
-9. **Fremderfassung von Abwesenheiten:** Vorgesetzte und HR können Abwesenheiten im Namen von Mitarbeitenden erfassen.
-10. **Automatisierte Ferienkontoführung:** Ferienbezüge erzeugen nachvollziehbare Journaleinträge (`VacationAccountEntry`); negative Feriensaldi werden strikt verhindert.
-11. **Anwesenheitsstatus:** Die Statusseite zeigt den aktuellen Zustand binär (`WORKING`/`NOT_WORKING`) ohne vertrauliche Abwesenheitsgründe.
-12. **Monatsabschluss-Workflow:** Monatsperioden können eingereicht, über eine detaillierte Inspektionsansicht geprüft, genehmigt, gesperrt und begründet wiedereröffnet werden.
-13. **Reports & CSV:** Monats-, Ferien-, Team- und Abwesenheitsreports stehen zur Verfügung und können als CSV exportiert werden.
-14. **Audit-Trail:** Alle relevanten Vorgänge werden mit Korrelations-ID protokolliert und können über eine filterbare UI-Ansicht eingesehen werden.
+2. **Onboarding & Altsalden-Migration:** Bei der Mitarbeitererstellung können vergangene Eintrittsdaten erfasst werden, ohne rückwirkende Sollzeiten zu generieren; Zeiterfassungsstart, Anfangsüberzeit/Unterzeit und Anfangsferien werden über Baseline-Snapshots und Ferienüberträge deterministisch initialisiert.
+3. **Nicht-destruktive Löschung:** Beim Löschen eines Benutzers wird der verknüpfte Mitarbeiter deaktiviert (`active = false`), und alle historischen Buchungen und Saldi bleiben unverändert erhalten.
+4. **Mitarbeiter-Reaktivierung:** Inaktive Mitarbeiter können reaktiviert werden; dabei wird das Ferienkonto initialisiert und der Strolch-Benutzer automatisch neu angelegt.
+5. **Profileinsicht:** Mitarbeitende können ihre eigenen Profildaten und Sollzeiten in der Weboberfläche einsehen.
+6. **Flexible Zeiterfassung:** Mitarbeitende können mehrere Arbeitsblöcke pro Tag erfassen und kommentieren; Unterbrüche werden als zeitliche Lücken ausgewiesen.
+7. **Korrekturen und Transparenz:** Mitarbeitende können eigene Buchungen in offenen Perioden bearbeiten; Vorgesetzte und HR können Buchungen für Mitarbeitende erfassen, korrigieren und löschen. Alle modifizierten und manuell erstellten Einträge werden visuell hervorgehoben und der Ersteller (`createdBy`) wird ausgewiesen.
+8. **Soll- und Istzeitberechnung:** Korrekte Berechnung von Soll- und Istzeiten für Tag und Monat (inklusive Eintritten/Austritten unter dem Monat).
+9. **Abwesenheitsmanagement:** Vordefinierte und kundenspezifische Abwesenheitsarten sind verfügbar; Halb- und Ganztage werden anhand des Arbeitsplans berechnet; Entwürfe (`DRAFT`) können ohne Ferienabzug verworfen werden.
+10. **Fremderfassung von Abwesenheiten:** Vorgesetzte und HR können Abwesenheiten im Namen von Mitarbeitenden erfassen.
+11. **Automatisierte Ferienkontoführung:** Ferienbezüge erzeugen nachvollziehbare Journaleinträge (`VacationAccountEntry`); negative Feriensaldi werden strikt verhindert.
+12. **Anwesenheitsstatus:** Die Statusseite zeigt den aktuellen Zustand binär (`WORKING`/`NOT_WORKING`) ohne vertrauliche Abwesenheitsgründe.
+13. **Monatsabschluss-Workflow:** Monatsperioden können eingereicht, über eine detaillierte Inspektionsansicht geprüft, genehmigt, gesperrt und begründet wiedereröffnet werden.
+14. **Reports & CSV:** Monats-, Ferien-, Team- und Abwesenheitsreports stehen zur Verfügung und können als CSV exportiert werden.
+15. **Audit-Trail:** Alle relevanten Vorgänge werden mit Korrelations-ID protokolliert und können über eine filterbare UI-Ansicht eingesehen werden.
 
 ### 2.2 Laufzeit, Mehrsprachigkeit und PDF-Export
 
-15. **Containerloser Betrieb:** Chronivaro startet ohne externen Tomcat als eigenständige Java-Anwendung (`java -jar chronivaro.jar`).
-16. **Embedded Jetty:** Frontend und REST-API werden gemeinsam über den eingebetteten Jetty-Server ausgeliefert.
-17. **Zweisprachiger Login:** Der Login-Bildschirm erlaubt die explizite Sprachwahl zwischen Deutsch und Englisch.
-18. **Sprachpriorität:** Die wirksame Sprache wird vor und nach dem Login nach der definierten Prioritätskette bestimmt und persistent gespeichert.
-19. **Vollständige i18n-Abdeckung:** Sämtliche UI-Texte, Validierungen und menschenlesbaren REST-Fehlermeldungen sind in Deutsch und Englisch verfügbar; fehlende Schlüssel brechen den Build ab.
-20. **Unternehmensbranding:** Firmenname und optionales Firmenlogo sind global konfigurierbar und werden in Web-UI und PDFs konsistent dargestellt.
-21. **Nativer PDF-Export:** Monatsreport, Ferienübersicht und Abwesenheitsreport können serverseitig als PDF erzeugt werden, verwenden dieselben Daten und Berechtigungen wie die Weboberfläche und sind auch monochrom lesbar.
+16. **Containerloser Betrieb:** Chronivaro startet ohne externen Tomcat als eigenständige Java-Anwendung (`java -jar chronivaro.jar`).
+17. **Embedded Jetty:** Frontend und REST-API werden gemeinsam über den eingebetteten Jetty-Server ausgeliefert.
+18. **Zweisprachiger Login:** Der Login-Bildschirm erlaubt die explizite Sprachwahl zwischen Deutsch und Englisch.
+19. **Sprachpriorität:** Die wirksame Sprache wird vor und nach dem Login nach der definierten Prioritätskette bestimmt und persistent gespeichert.
+20. **Vollständige i18n-Abdeckung:** Sämtliche UI-Texte, Validierungen und menschenlesbaren REST-Fehlermeldungen sind in Deutsch und Englisch verfügbar; fehlende Schlüssel brechen den Build ab.
+21. **Unternehmensbranding:** Firmenname und optionales Firmenlogo sind global konfigurierbar und werden in Web-UI und PDFs konsistent dargestellt.
+22. **Nativer PDF-Export:** Monatsreport, Ferienübersicht und Abwesenheitsreport können serverseitig als PDF erzeugt werden, verwenden dieselben Daten und Berechtigungen wie die Weboberfläche und sind auch monochrom lesbar.
