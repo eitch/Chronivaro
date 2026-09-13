@@ -74,25 +74,25 @@ export default class MyTimesView {
 				</div>
 			</section>
 
-			<!-- Summary Stats Bar -->
-			<section class="card summary-card" style="margin-bottom: 1.5rem; padding: 0.75rem 1.25rem; display: flex; gap: 2rem; background-color: var(--card-bg, #ffffff);">
-				<div class="stat-item">
-					<span class="text-muted" style="font-size: 0.875rem;">${I18n.t('times.entriesCount')}:</span>
-					<strong id="stat-entries-count" style="margin-left: 0.5rem; font-size: 1.1rem;">0</strong>
+			<!-- Summary Cards Grid -->
+			<div class="summary-grid report-summary-grid">
+				<div class="summary-card">
+					<div class="card-title">${I18n.t('times.entriesCount')}</div>
+					<div class="card-value" id="stat-entries-count">0</div>
 				</div>
-				<div class="stat-item">
-					<span class="text-muted" style="font-size: 0.875rem;">${I18n.t('times.totalDuration')}:</span>
-					<strong id="stat-total-duration" style="margin-left: 0.5rem; font-size: 1.1rem; color: var(--primary-color, #6366f1);">0h 00m</strong>
+				<div class="summary-card">
+					<div class="card-title">${I18n.t('times.totalDuration')}</div>
+					<div class="card-value" id="stat-total-duration">0h 00m</div>
 				</div>
-				<div class="stat-item">
-					<span class="text-muted" style="font-size: 0.875rem;">${I18n.t('times.todayBalance')}:</span>
-					<strong id="stat-today-balance" style="margin-left: 0.5rem; font-size: 1.1rem;">-</strong>
+				<div class="summary-card">
+					<div class="card-title">${I18n.t('times.todayBalance')}</div>
+					<div class="card-value" id="stat-today-balance">-</div>
 				</div>
-				<div class="stat-item">
-					<span class="text-muted" style="font-size: 0.875rem;">${I18n.t('times.totalBalance')}:</span>
-					<strong id="stat-total-balance" style="margin-left: 0.5rem; font-size: 1.1rem;">-</strong>
+				<div class="summary-card highlight-card">
+					<div class="card-title">${I18n.t('times.totalBalance')}</div>
+					<div class="card-value" id="stat-total-balance">-</div>
 				</div>
-			</section>
+			</div>
 
 			<!-- Work Entries Table -->
 			<div class="table-container card" style="padding: 0; overflow-x: auto;">
