@@ -842,8 +842,8 @@ export default class MyAbsencesView {
 
             try {
                 const [teamsRes, employeesRes] = await Promise.all([
-                    TeamApi.getTeams().catch(() => []),
-                    EmployeeApi.getEmployees().catch(() => [])
+                    TeamApi.getAll().catch(() => []),
+                    EmployeeApi.getAll().catch(() => [])
                 ]);
 
                 this.teams = Array.isArray(teamsRes) ? teamsRes : (teamsRes.data || []);
