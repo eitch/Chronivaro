@@ -7,7 +7,10 @@ import li.strolch.search.ResourceSearch;
 
 import java.time.LocalDate;
 import java.time.ZonedDateTime;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 
 import static ch.eitchnet.chronivaro.core.model.ChronivaroConstants.*;
 
@@ -46,6 +49,29 @@ public class OnCallPeriodSearch extends ResourceSearch {
 				|| tx.getPrivilegeContext().hasRole(ROLE_STROLCH_ADMIN)
 				|| tx.getPrivilegeContext().hasRole(ROLE_PRIVILEGE_ADMIN);
 
+		final Set<String> allowedEmployeeIds;
+		if (isHrOrAdmin) {
+			allowedEmployeeIds = null;
+		} else {
+			allowedEmployeeIds = new HashSet<>();
+			if (tx.getPrivilegeContext().hasRole(ROLE_SUPERVISOR)) {
+				allowedEmployeeIds.addAll(supervised);
+			}
+			Optional<Resource> callerEmp = ChronivaroModelHelper.findEmployeeByUser(tx, tx.getCertificate().getUserId());
+			if (callerEmp.isPresent()) {
+				Resource emp = callerEmp.get();
+				allowedEmployeeIds.add(emp.getId());
+				if (emp.hasRelation(PARAM_PRIMARY_TEAM)) {
+					String teamId = emp.getRelationId(PARAM_PRIMARY_TEAM);
+					if (teamId != null && !teamId.isBlank()) {
+						for (Resource e : ChronivaroModelHelper.findEmployeesByTeam(tx, teamId)) {
+							allowedEmployeeIds.add(e.getId());
+						}
+					}
+				}
+			}
+		}
+
 		return search(tx).toList().stream()
 				.filter(period -> {
 					String empId = period.getRelationId(PARAM_EMPLOYEE);
@@ -57,14 +83,8 @@ public class OnCallPeriodSearch extends ResourceSearch {
 					}
 
 					// Privilege filter
-					if (!isHrOrAdmin) {
-						String userCertId = tx.getCertificate().getUserId();
-						boolean isSelf = ChronivaroModelHelper.findEmployeeByUser(tx, userCertId)
-								.map(e -> e.getId().equals(empId))
-								.orElse(false);
-						if (!isSelf && !supervised.contains(empId)) {
-							return false;
-						}
+					if (allowedEmployeeIds != null && !allowedEmployeeIds.contains(empId)) {
+						return false;
 					}
 
 					if (from != null || to != null) {

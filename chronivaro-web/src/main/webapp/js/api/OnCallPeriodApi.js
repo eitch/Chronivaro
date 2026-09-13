@@ -2,6 +2,18 @@ import Rest from '../utils/Rest.js';
 
 export default class OnCallPeriodApi {
 
+    static async getAll(params = {}) {
+        const queryParams = new URLSearchParams();
+        if (params.employeeId) queryParams.append('employeeId', params.employeeId);
+        if (params.from) queryParams.append('from', params.from);
+        if (params.to) queryParams.append('to', params.to);
+
+        const query = queryParams.toString();
+        const url = `rest/chronivaro/v1/on-call-periods${query ? '?' + query : ''}`;
+        const response = await Rest.get(url);
+        return Array.isArray(response) ? response : (response.data || []);
+    }
+
     static async getAdminOnCallPeriods(params = {}) {
         const queryParams = new URLSearchParams();
         if (params.employeeId) queryParams.append('employeeId', params.employeeId);

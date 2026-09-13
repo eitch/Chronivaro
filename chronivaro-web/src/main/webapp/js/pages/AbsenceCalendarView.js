@@ -330,6 +330,7 @@ export default class AbsenceCalendarView {
             const currentProfile = await EmployeeApi.getMyProfile().catch(() => null);
             if (currentProfile && currentProfile.id) {
                 this.currentUserEmployeeId = currentProfile.id;
+                this.currentUserEmployeeName = currentProfile.name || (currentProfile.firstname ? (currentProfile.firstname + ' ' + (currentProfile.lastname || '')).trim() : 'Me');
             }
 
             // Load master data in parallel
@@ -463,15 +464,11 @@ export default class AbsenceCalendarView {
 
             const onCallPromise = (async () => {
                 try {
-                    if (this.isManager) {
-                        return await OnCallPeriodApi.getAdminOnCallPeriods({
-                            from,
-                            to,
-                            employeeId: this.filterEmployeeId || undefined
-                        });
-                    } else {
-                        return await OnCallPeriodApi.getMyOnCallPeriods({ from, to });
-                    }
+                    return await OnCallPeriodApi.getAll({
+                        from,
+                        to,
+                        employeeId: this.filterEmployeeId || undefined
+                    });
                 } catch (e) {
                     console.warn('Could not load on-call periods:', e);
                     return [];
@@ -515,14 +512,45 @@ export default class AbsenceCalendarView {
             list = list.filter(e => e.id === this.filterEmployeeId);
         }
 
-        // If not manager and no employee list loaded, ensure at least current employee is shown
-        if (list.length === 0 && this.currentUserEmployeeId) {
-            list = [{
-                id: this.currentUserEmployeeId,
-                name: 'Me',
-                firstname: 'Me',
-                lastname: ''
-            }];
+        // If not manager and no employee list loaded, construct list from absences and on-call data
+        if (list.length === 0) {
+            const empMap = new Map();
+            if (this.currentUserEmployeeId) {
+                empMap.set(this.currentUserEmployeeId, {
+                    id: this.currentUserEmployeeId,
+                    name: this.currentUserEmployeeName || 'Me',
+                    firstname: this.currentUserEmployeeName || 'Me',
+                    lastname: ''
+                });
+            }
+            if (Array.isArray(this.absences)) {
+                this.absences.forEach(a => {
+                    if (a.employeeId && !empMap.has(a.employeeId)) {
+                        empMap.set(a.employeeId, {
+                            id: a.employeeId,
+                            name: a.employeeName || a.employeeId,
+                            firstname: a.employeeName || a.employeeId,
+                            lastname: ''
+                        });
+                    }
+                });
+            }
+            if (Array.isArray(this.onCallPeriods)) {
+                this.onCallPeriods.forEach(p => {
+                    if (p.employeeId && !empMap.has(p.employeeId)) {
+                        empMap.set(p.employeeId, {
+                            id: p.employeeId,
+                            name: p.employeeName || p.employeeId,
+                            firstname: p.employeeName || p.employeeId,
+                            lastname: ''
+                        });
+                    }
+                });
+            }
+            list = Array.from(empMap.values());
+            if (this.filterEmployeeId) {
+                list = list.filter(e => e.id === this.filterEmployeeId);
+            }
         }
         return list;
     }

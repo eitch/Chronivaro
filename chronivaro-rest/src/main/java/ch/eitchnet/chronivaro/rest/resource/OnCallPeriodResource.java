@@ -22,6 +22,7 @@ import li.strolch.service.api.ServiceResult;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 import static ch.eitchnet.chronivaro.core.model.ChronivaroConstants.TYPE_ON_CALL_PERIOD;
 
@@ -48,9 +49,9 @@ public class OnCallPeriodResource {
 	}
 
 	@GET
-	@Path("admin/on-call-periods")
+	@Path("on-call-periods")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response getAdminOnCallPeriods(
+	public Response getOnCallPeriods(
 			@Context HttpServletRequest request,
 			@QueryParam("employeeId") String employeeId,
 			@QueryParam("from") String fromStr,
@@ -70,6 +71,17 @@ public class OnCallPeriodResource {
 					.toList();
 			return Response.ok(ChronivaroRestHelper.createGson().toJson(dtos), MediaType.APPLICATION_JSON).build();
 		}
+	}
+
+	@GET
+	@Path("admin/on-call-periods")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response getAdminOnCallPeriods(
+			@Context HttpServletRequest request,
+			@QueryParam("employeeId") String employeeId,
+			@QueryParam("from") String fromStr,
+			@QueryParam("to") String toStr) {
+		return getOnCallPeriods(request, employeeId, fromStr, toStr);
 	}
 
 	@POST
@@ -155,9 +167,13 @@ public class OnCallPeriodResource {
 		LocalDate to = toStr != null && !toStr.isBlank() ? LocalDate.parse(toStr) : null;
 
 		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
-			Resource employee = ChronivaroModelHelper.getEmployee(tx, cert.getUsername());
+			Optional<Resource> employee = ChronivaroModelHelper.findEmployeeByUser(tx, cert.getUserId());
+			if (employee.isEmpty()) {
+				return ChronivaroRestHelper.toErrorResponse(Response.Status.NOT_FOUND, "NOT_FOUND",
+						"Employee profile not found for current user");
+			}
 			List<Resource> periods = new OnCallPeriodSearch()
-					.forEmployee(employee.getId())
+					.forEmployee(employee.get().getId())
 					.between(from, to)
 					.searchPeriods(tx);
 
