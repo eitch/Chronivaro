@@ -1,4 +1,6 @@
 import WorkEntryApi from '../api/WorkEntryApi.js';
+import PeriodApi from '../api/PeriodApi.js';
+import ReportApi from '../api/ReportApi.js';
 import TeamApi from '../api/TeamApi.js';
 import EmployeeApi from '../api/EmployeeApi.js';
 import AuthApi from '../api/AuthApi.js';
@@ -85,6 +87,10 @@ export default class MyTimesView {
 				<div class="stat-item">
 					<span class="text-muted" style="font-size: 0.875rem;">${I18n.t('times.todayBalance')}:</span>
 					<strong id="stat-today-balance" style="margin-left: 0.5rem; font-size: 1.1rem;">-</strong>
+				</div>
+				<div class="stat-item">
+					<span class="text-muted" style="font-size: 0.875rem;">${I18n.t('times.totalBalance')}:</span>
+					<strong id="stat-total-balance" style="margin-left: 0.5rem; font-size: 1.1rem;">-</strong>
 				</div>
 			</section>
 
@@ -237,6 +243,7 @@ export default class MyTimesView {
 		const statEntriesCount = container.querySelector('#stat-entries-count');
 		const statTotalDuration = container.querySelector('#stat-total-duration');
 		const statTodayBalance = container.querySelector('#stat-today-balance');
+		const statTotalBalance = container.querySelector('#stat-total-balance');
 		const titleEl = container.querySelector('#times-view-title');
 
 		// Add Modal elements
@@ -435,6 +442,27 @@ export default class MyTimesView {
 					console.warn('Failed to fetch today balance for times view', summaryErr);
 					statTodayBalance.textContent = '-';
 					statTodayBalance.className = '';
+				}
+
+				try {
+					const todayDate = new Date();
+					const currentYearMonth = `${todayDate.getFullYear()}-${String(todayDate.getMonth() + 1).padStart(2, '0')}`;
+					const monthSummary = isViewingOther
+							? await ReportApi.getMonthReport(currentYearMonth, this.selectedEmployeeId)
+							: await PeriodApi.getMonthSummary(currentYearMonth);
+					if (monthSummary && typeof monthSummary.endBalanceMinutes === 'number') {
+						const totalBal = monthSummary.endBalanceMinutes;
+						const totalBalSign = totalBal > 0 ? '+' : '';
+						statTotalBalance.textContent = `${totalBalSign}${Format.duration(totalBal)}`;
+						statTotalBalance.className = totalBal > 0 ? 'positive' : (totalBal < 0 ? 'negative' : 'neutral');
+					} else {
+						statTotalBalance.textContent = '-';
+						statTotalBalance.className = '';
+					}
+				} catch (monthSummaryErr) {
+					console.warn('Failed to fetch total balance for times view', monthSummaryErr);
+					statTotalBalance.textContent = '-';
+					statTotalBalance.className = '';
 				}
 
 				if (this.workEntries.length === 0) {
