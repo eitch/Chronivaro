@@ -1,4 +1,5 @@
 import AuthApi from '../api/AuthApi.js';
+import EmployeeApi from '../api/EmployeeApi.js';
 import PresenceApi from '../api/PresenceApi.js';
 import TeamApi from '../api/TeamApi.js';
 import LocationApi from '../api/LocationApi.js';
@@ -46,6 +47,16 @@ export default class PresenceView {
 		settingsToggle.addEventListener('click', () => {
 			settingsMenu.classList.toggle('hidden');
 		});
+
+		let currentUserEmployeeId = null;
+		try {
+			const myProfile = await EmployeeApi.getMyProfile();
+			if (myProfile && myProfile.id) {
+				currentUserEmployeeId = myProfile.id;
+			}
+		} catch (err) {
+			// Ignore if not found
+		}
 
 		let allTeams = [];
 		const loadFilters = async () => {
@@ -138,6 +149,10 @@ export default class PresenceView {
 								: '';
 
 							const fullName = `${info.firstname} ${info.lastname}`.trim();
+							const canSeeStats = isPrivileged || (currentUserEmployeeId && info.employeeId === currentUserEmployeeId);
+							const statsHtml = canSeeStats
+								? `<div class="presence-stats">${I18n.t('presence.todayStats', { time: Format.duration(info.minutesToday) })}</div>`
+								: '';
 
 							card.innerHTML = `
 								<div class="presence-info">
@@ -148,9 +163,7 @@ export default class PresenceView {
 									</div>
 									${extraInfo}
 								</div>
-								<div class="presence-stats">
-									${I18n.t('presence.todayStats', { time: Format.duration(info.minutesToday) })}
-								</div>
+								${statsHtml}
 							`;
 
 							if (info.isPreviousDayTimer) {

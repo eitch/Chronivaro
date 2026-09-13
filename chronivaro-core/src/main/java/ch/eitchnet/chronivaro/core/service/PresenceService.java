@@ -67,11 +67,13 @@ public class PresenceService extends AbstractService<PresenceService.PresenceArg
 			boolean isPrivileged = tx.getPrivilegeContext().hasRole(ROLE_HR)
 					|| tx.getPrivilegeContext().hasRole(ROLE_ADMIN)
 					|| tx.getPrivilegeContext().hasRole(ROLE_ADMINISTRATOR)
+					|| tx.getPrivilegeContext().hasRole(ROLE_STROLCH_ADMIN)
+					|| tx.getPrivilegeContext().hasRole(ROLE_PRIVILEGE_ADMIN)
 					|| tx.getPrivilegeContext().hasRole(ROLE_SUPERVISOR);
 
+			Optional<Resource> callerEmp = ChronivaroModelHelper.findEmployeeByUser(tx, tx.getCertificate().getUserId());
 			String effectiveTeamId = arg.teamId;
 			if (!isPrivileged) {
-				Optional<Resource> callerEmp = ChronivaroModelHelper.findEmployeeByUser(tx, tx.getCertificate().getUserId());
 				if (callerEmp.isEmpty() || !callerEmp.get().hasRelation(PARAM_PRIMARY_TEAM)) {
 					throw new AccessDeniedException("Access denied: No employee profile or team found for current user.");
 				}
@@ -82,6 +84,7 @@ public class PresenceService extends AbstractService<PresenceService.PresenceArg
 				effectiveTeamId = callerTeamId;
 			}
 
+			String callerEmployeeId = callerEmp.map(Resource::getId).orElse(null);
 			String finalTeamId = effectiveTeamId;
 			List<PresenceInfo> presenceInfos = tx
 					.streamResources(TYPE_EMPLOYEE)
@@ -93,7 +96,8 @@ public class PresenceService extends AbstractService<PresenceService.PresenceArg
 						PresenceStatus status = activeEntry.isPresent() ? PresenceStatus.WORKING :
 								PresenceStatus.NOT_WORKING;
 
-						int minutesToday = calculateMinutesToday(tx, e);
+						boolean canSeeTodayBalance = isPrivileged || (callerEmployeeId != null && callerEmployeeId.equals(e.getId()));
+						int minutesToday = canSeeTodayBalance ? calculateMinutesToday(tx, e) : 0;
 
 						ZonedDateTime now = ZonedDateTime.now(ChronivaroModelHelper.getEmployeeTimezone(e));
 						LocalDate today = now.toLocalDate();

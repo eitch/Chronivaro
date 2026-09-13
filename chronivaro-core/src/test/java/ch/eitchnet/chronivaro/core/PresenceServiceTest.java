@@ -223,6 +223,16 @@ public class PresenceServiceTest {
 			teammate.setRelation(PARAM_PRIMARY_TEAM, team);
 			tx.update(teammate);
 
+			// Add work entry today for teammate
+			Resource we = tx.getResourceTemplate(TYPE_WORK_ENTRY, true);
+			we.setId("we-teammate-1");
+			we.setRelation(PARAM_EMPLOYEE, teammate);
+			we.setDate(PARAM_START, ZonedDateTime.now().minusHours(2));
+			we.setDate(PARAM_END, ZonedDateTime.now().minusHours(1));
+			we.setString(PARAM_WORKING_LOCATION, WorkingLocation.OFFICE.name());
+			we.setString(PARAM_SOURCE, SOURCE_MANUAL);
+			tx.add(we);
+
 			// Other team employee
 			Resource otherEmp = createEmployee(tx, "emp-other", "Emp Other", ZonedDateTime.now());
 			otherEmp = tx.readLock(otherEmp);
@@ -235,19 +245,24 @@ public class PresenceServiceTest {
 		Certificate empCert = runtimeMock.login("employee", "admin");
 		ServiceHandler serviceHandler = runtimeMock.getServiceHandler();
 
-		// 1. Employee calling without teamId -> automatically scopes to own team
+		// 1. Employee calling without teamId -> automatically scopes to own team and hides teammate's minutesToday
 		PresenceService.PresenceArgument argNoTeam = new PresenceService.PresenceArgument();
 		PresenceService.PresenceResult resultNoTeam = serviceHandler.doService(empCert, new PresenceService(), argNoTeam);
 		assertTrue(resultNoTeam.isOk());
 		assertEquals(2, resultNoTeam.presenceInfos.size());
 		assertTrue(resultNoTeam.presenceInfos.stream().allMatch(i -> i.teamId().equals(teamId)));
+		PresenceService.PresenceInfo callerInfo = resultNoTeam.presenceInfos.stream().filter(i -> i.employeeId().equals("emp-caller")).findFirst().orElseThrow();
+		PresenceService.PresenceInfo teammateInfo = resultNoTeam.presenceInfos.stream().filter(i -> i.employeeId().equals("emp-teammate")).findFirst().orElseThrow();
+		assertEquals(0, teammateInfo.minutesToday()); // Normal employee must not see teammate's balance of today
 
-		// 2. Employee calling with own teamId -> succeeds
+		// 2. Employee calling with own teamId -> succeeds and teammate's minutesToday is 0
 		PresenceService.PresenceArgument argOwnTeam = new PresenceService.PresenceArgument();
 		argOwnTeam.teamId = teamId;
 		PresenceService.PresenceResult resultOwnTeam = serviceHandler.doService(empCert, new PresenceService(), argOwnTeam);
 		assertTrue(resultOwnTeam.isOk());
 		assertEquals(2, resultOwnTeam.presenceInfos.size());
+		PresenceService.PresenceInfo teammateInfo2 = resultOwnTeam.presenceInfos.stream().filter(i -> i.employeeId().equals("emp-teammate")).findFirst().orElseThrow();
+		assertEquals(0, teammateInfo2.minutesToday());
 
 		// 3. Employee calling with different teamId -> fails with Access Denied
 		PresenceService.PresenceArgument argOtherTeam = new PresenceService.PresenceArgument();
