@@ -35,6 +35,7 @@
     "logout": "Logout"
   },
   "common": {
+    "self": "Self",
     "save": "Save",
     "cancel": "Cancel",
     "delete": "Delete",

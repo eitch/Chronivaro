@@ -35,6 +35,7 @@
     "logout": "Abmelden"
   },
   "common": {
+    "self": "Selbst",
     "save": "Speichern",
     "cancel": "Abbrechen",
     "delete": "Löschen",
