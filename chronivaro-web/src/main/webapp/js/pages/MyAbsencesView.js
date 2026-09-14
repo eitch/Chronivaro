@@ -476,6 +476,9 @@ export default class MyAbsencesView {
                     else if (absenceState === 'CANCELLED') statusClass = 'badge-cancelled';
 
                     const statusLabel = I18n.t(`enums.absenceState.${absenceState}`, {}, absenceState);
+                    const modifiedBadge = absence.modified
+                            ? `<span class="badge badge-modified" style="background: #fed7aa; color: #9a3412; padding: 2px 6px; border-radius: 4px; font-size: 0.8rem; font-weight: 500; margin-left: 4px;">${I18n.t('times.modifiedBadge')}</span>`
+                            : '';
 
                     // Notes / Reason
                     let notes = absence.comment || '';
@@ -492,10 +495,20 @@ export default class MyAbsencesView {
                             <button class="action-btn submit-btn" data-id="${absence.id}" data-version="${absence.version || 0}">${I18n.t('common.submit')}</button>
                             <button class="action-btn cancel-btn" data-id="${absence.id}" data-version="${absence.version || 0}">${I18n.t('common.cancel')}</button>
                         `;
-                    } else if (absenceState === 'SUBMITTED' || absenceState === 'APPROVED') {
+                    } else if (absenceState === 'SUBMITTED') {
                         if (!isManagingOther()) {
                             actionsHtml = `<button class="action-btn cancel-btn" data-id="${absence.id}" data-version="${absence.version || 0}">${I18n.t('common.cancel')}</button>`;
                         }
+                    } else if (absenceState === 'APPROVED') {
+                        const canEditApproved = this.canManage;
+                        const editBtnHtml = canEditApproved
+                            ? `<button class="action-btn edit-btn" data-id="${absence.id}" data-version="${absence.version || 0}">${I18n.t('common.edit')}</button>`
+                            : '';
+                        const cancelBtnHtml = !isManagingOther()
+                            ? `<button class="action-btn cancel-btn" data-id="${absence.id}" data-version="${absence.version || 0}">${I18n.t('common.cancel')}</button>`
+                            : '';
+                        const combinedActions = [editBtnHtml, cancelBtnHtml].filter(Boolean).join(' ');
+                        actionsHtml = combinedActions || '--';
                     }
 
                     const createdByDisplay = absence.createdBy || '--';
@@ -505,7 +518,7 @@ export default class MyAbsencesView {
                         <td>${Format.date(absence.start || absence.startDate)}</td>
                         <td>${Format.date(absence.end || absence.endDate)}</td>
                         <td>${durationLabel}</td>
-                        <td><span class="badge ${statusClass}">${statusLabel}</span></td>
+                        <td><span class="badge ${statusClass}">${statusLabel}</span>${modifiedBadge}</td>
                         <td>${notes || '--'}</td>
                         <td>${createdByDisplay}</td>
                         <td>${actionsHtml}</td>
@@ -543,8 +556,13 @@ export default class MyAbsencesView {
                             modalComment.value = absence.comment || '';
                             if (modalEmployeeGroup) modalEmployeeGroup.style.display = 'none';
                             if (modalApprovalModeGroup) modalApprovalModeGroup.style.display = 'none';
-                            if (saveDraftBtn) saveDraftBtn.style.display = 'inline-block';
-                            if (modalSubmitBtn) modalSubmitBtn.textContent = I18n.t('absences.submitDraft');
+                            if (absence.state === 'APPROVED') {
+                                if (saveDraftBtn) saveDraftBtn.style.display = 'none';
+                                if (modalSubmitBtn) modalSubmitBtn.textContent = I18n.t('common.save');
+                            } else {
+                                if (saveDraftBtn) saveDraftBtn.style.display = 'inline-block';
+                                if (modalSubmitBtn) modalSubmitBtn.textContent = I18n.t('absences.submitDraft');
+                            }
 
                             modal.style.display = 'block';
                         });
@@ -813,10 +831,22 @@ export default class MyAbsencesView {
 
             try {
                 if (currentEditingAbsence) {
-                    const updateRes = await AbsenceApi.updateAbsence(currentEditingAbsence.id, payload, currentEditingAbsence.version);
-                    const updatedVersion = (updateRes && updateRes.version !== undefined) ? updateRes.version : currentEditingAbsence.version;
-                    await AbsenceApi.submitAbsence(currentEditingAbsence.id, updatedVersion);
-                    await NotificationDialog.info(I18n.t('absences.requestSubmitted'));
+                    const empId = currentEditingAbsence.employeeId || this.selectedEmployeeId;
+                    if (currentEditingAbsence.state === 'APPROVED') {
+                        if (isManagingOther()) {
+                            await AbsenceApi.updateEmployeeAbsence(empId, currentEditingAbsence.id, payload, currentEditingAbsence.version);
+                        } else {
+                            await AbsenceApi.updateAbsence(currentEditingAbsence.id, payload, currentEditingAbsence.version);
+                        }
+                        await NotificationDialog.info(I18n.t('absences.absenceUpdated') || I18n.t('common.saved'));
+                    } else {
+                        const updateRes = isManagingOther()
+                            ? await AbsenceApi.updateEmployeeAbsence(empId, currentEditingAbsence.id, payload, currentEditingAbsence.version)
+                            : await AbsenceApi.updateAbsence(currentEditingAbsence.id, payload, currentEditingAbsence.version);
+                        const updatedVersion = (updateRes && updateRes.version !== undefined) ? updateRes.version : currentEditingAbsence.version;
+                        await AbsenceApi.submitAbsence(currentEditingAbsence.id, updatedVersion);
+                        await NotificationDialog.info(I18n.t('absences.requestSubmitted'));
+                    }
                 } else if (managingOther) {
                     await AbsenceApi.createEmployeeAbsence(this.selectedEmployeeId, payload);
                     const msg = directApprove 
@@ -850,8 +880,8 @@ export default class MyAbsencesView {
                 this.employees = Array.isArray(employeesRes) ? employeesRes : (employeesRes.data || []);
 
                 // Determine current user's linked employee
-                const user = AuthApi.getCurrentUser();
-                if (user) {
+                const user = AuthApi.getUser();
+                if (user && user.username) {
                     const matchedEmp = this.employees.find(e =>
                         (e.userId && e.userId === user.username) ||
                         (e.username && e.username === user.username) ||

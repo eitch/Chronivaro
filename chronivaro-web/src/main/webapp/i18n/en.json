@@ -309,6 +309,7 @@
     "invalidDateRange": "End date cannot be earlier than start date.",
     "draftSaved": "Absence saved as draft.",
     "requestSubmitted": "Absence request submitted successfully.",
+    "absenceUpdated": "Absence updated successfully.",
     "requestCancelled": "Absence request has been cancelled.",
     "confirmCancel": "Are you sure you want to cancel this {type} request?",
     "expiration": "Expiration",

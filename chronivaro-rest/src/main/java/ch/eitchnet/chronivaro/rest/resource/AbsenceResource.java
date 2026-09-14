@@ -3,6 +3,7 @@ package ch.eitchnet.chronivaro.rest.resource;
 import ch.eitchnet.chronivaro.core.service.ApproveAbsenceService;
 import ch.eitchnet.chronivaro.core.service.CancelAbsenceService;
 import ch.eitchnet.chronivaro.core.service.RejectAbsenceService;
+import ch.eitchnet.chronivaro.core.service.UpdateAbsenceService;
 import ch.eitchnet.chronivaro.rest.dto.AbsenceDto;
 import ch.eitchnet.chronivaro.rest.dto.ChronivaroMapper;
 import jakarta.servlet.http.HttpServletRequest;
@@ -49,6 +50,41 @@ public class AbsenceResource {
 			Resource type = tx.getResourceByRelation(absence, PARAM_ABSENCE_TYPE, true);
 			return ConcurrencyHelper.toResponseWithETag(absence, ChronivaroMapper.toDto(tx, absence, type));
 		}
+	}
+
+	@PUT
+	@Path("{id}")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response updateAbsence(@Context HttpServletRequest request, @PathParam("id") String id, String data) {
+		Certificate cert = (Certificate) request.getAttribute(STROLCH_CERTIFICATE);
+		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
+			Resource absence = tx.getResourceBy(TYPE_ABSENCE, id, true);
+			ConcurrencyHelper.validateIfMatch(request, absence);
+		}
+
+		ServiceHandler serviceHandler = ChronivaroRestHelper.getServiceHandler();
+		AbsenceDto dto = ChronivaroRestHelper.createGson().fromJson(data, AbsenceDto.class);
+
+		UpdateAbsenceService.UpdateAbsenceArgument arg = new UpdateAbsenceService.UpdateAbsenceArgument();
+		arg.absenceId = id;
+		arg.absenceTypeCode = dto.absenceTypeCode();
+		arg.start = dto.start();
+		arg.end = dto.end();
+		arg.durationType = dto.durationType();
+		arg.dayPart = dto.dayPart();
+		arg.minutes = dto.minutes();
+		arg.comment = dto.comment();
+
+		ServiceResult result = serviceHandler.doService(cert, new UpdateAbsenceService(), arg);
+		if (result.isOk()) {
+			try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
+				Resource absence = tx.getResourceBy(TYPE_ABSENCE, id, true);
+				Resource type = tx.getResourceByRelation(absence, PARAM_ABSENCE_TYPE, true);
+				return ConcurrencyHelper.toResponseWithETag(absence, ChronivaroMapper.toDto(tx, absence, type));
+			}
+		}
+		return ChronivaroRestHelper.toResponse(result);
 	}
 
 	@POST

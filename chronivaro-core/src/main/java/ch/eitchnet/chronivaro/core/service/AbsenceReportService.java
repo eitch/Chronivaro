@@ -1,6 +1,7 @@
 package ch.eitchnet.chronivaro.core.service;
 
 import ch.eitchnet.chronivaro.core.model.ChronivaroModelHelper;
+import ch.eitchnet.chronivaro.core.model.ChronivaroVersionHelper;
 import ch.eitchnet.chronivaro.core.report.AbsenceReportItem;
 import ch.eitchnet.chronivaro.core.search.AbsenceSearch;
 import li.strolch.model.Resource;
@@ -111,6 +112,7 @@ public class AbsenceReportService extends AbstractService<AbsenceReportService.A
 				ZonedDateTime submittedAt = absence.hasParameter(PARAM_SUBMITTED_AT) ? absence.getDate(PARAM_SUBMITTED_AT) : null;
 				ZonedDateTime approvedAt = absence.hasParameter(PARAM_APPROVED_AT) ? absence.getDate(PARAM_APPROVED_AT) : null;
 				String approvedBy = absence.hasParameter(PARAM_APPROVED_BY) ? absence.getString(PARAM_APPROVED_BY) : "";
+				boolean modified = ChronivaroVersionHelper.isModified(absence);
 
 				items.add(new AbsenceReportItem(
 						absence.getId(),
@@ -128,7 +130,8 @@ public class AbsenceReportService extends AbstractService<AbsenceReportService.A
 						comment,
 						submittedAt,
 						approvedAt,
-						approvedBy
+						approvedBy,
+						modified
 				));
 			}
 

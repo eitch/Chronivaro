@@ -21,6 +21,10 @@ public final class ChronivaroVersionHelper {
 		return 0;
 	}
 
+	public static boolean isModified(StrolchRootElement element) {
+		return getVersion(element) > 0;
+	}
+
 	public static void initVersion(StrolchRootElement element, StrolchTransaction tx) {
 		if (element == null)
 			return;

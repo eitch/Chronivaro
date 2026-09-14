@@ -4871,6 +4871,9 @@ components:
           type: string
           nullable: true
           example: 'supervisor_user'
+        modified:
+          type: boolean
+          example: false
 
     OnCallReportDto:
       type: object
@@ -5023,6 +5026,9 @@ components:
           type: string
           nullable: true
           example: 'admin'
+        modified:
+          type: boolean
+          example: false
 
     AbsenceCreateDto:
       type: object

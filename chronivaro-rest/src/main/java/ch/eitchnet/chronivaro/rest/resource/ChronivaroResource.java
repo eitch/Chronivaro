@@ -628,6 +628,46 @@ public class ChronivaroResource {
 		return ChronivaroRestHelper.toResponse(result);
 	}
 
+	@PUT
+	@Path("employees/{id}/absences/{absenceId}")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response updateEmployeeAbsence(@Context HttpServletRequest request, @PathParam("id") String employeeId,
+			@PathParam("absenceId") String absenceId, String data) {
+		Certificate cert = (Certificate) request.getAttribute(STROLCH_CERTIFICATE);
+		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
+			Resource absence = tx.getResourceBy(TYPE_ABSENCE, absenceId, true);
+			if (!absence.getRelationId(PARAM_EMPLOYEE).equals(employeeId)) {
+				return ChronivaroRestHelper.toErrorResponse(Response.Status.BAD_REQUEST, "INVALID_ARGUMENT",
+						"Absence does not belong to employee " + employeeId);
+			}
+			ConcurrencyHelper.validateIfMatch(request, absence);
+		}
+
+		ServiceHandler serviceHandler = ChronivaroRestHelper.getServiceHandler();
+		AbsenceDto dto = ChronivaroRestHelper.createGson().fromJson(data, AbsenceDto.class);
+
+		UpdateAbsenceService.UpdateAbsenceArgument arg = new UpdateAbsenceService.UpdateAbsenceArgument();
+		arg.absenceId = absenceId;
+		arg.absenceTypeCode = dto.absenceTypeCode();
+		arg.start = dto.start();
+		arg.end = dto.end();
+		arg.durationType = dto.durationType();
+		arg.dayPart = dto.dayPart();
+		arg.minutes = dto.minutes();
+		arg.comment = dto.comment();
+
+		ServiceResult result = serviceHandler.doService(cert, new UpdateAbsenceService(), arg);
+		if (result.isOk()) {
+			try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
+				Resource absence = tx.getResourceBy(TYPE_ABSENCE, absenceId, true);
+				Resource type = tx.getResourceByRelation(absence, PARAM_ABSENCE_TYPE, true);
+				return ConcurrencyHelper.toResponseWithETag(absence, ChronivaroMapper.toDto(tx, absence, type));
+			}
+		}
+		return ChronivaroRestHelper.toResponse(result);
+	}
+
 	@POST
 	@Path("me/absences")
 	@Consumes(MediaType.APPLICATION_JSON)

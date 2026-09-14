@@ -5,17 +5,26 @@ import java.time.ZonedDateTime;
 public record AbsenceDto(String id, String employeeId, String employeeName, String personalNumber, String teamName,
 						 String absenceTypeCode, String absenceTypeName, ZonedDateTime start, ZonedDateTime end,
 						 String durationType, String dayPart, Integer minutes, String comment, String state,
-						 String createdBy) {
+						 String createdBy, boolean modified) {
+
+	public AbsenceDto(String id, String employeeId, String employeeName, String personalNumber, String teamName,
+			String absenceTypeCode, String absenceTypeName, ZonedDateTime start, ZonedDateTime end,
+			String durationType, String dayPart, Integer minutes, String comment, String state,
+			String createdBy) {
+		this(id, employeeId, employeeName, personalNumber, teamName, absenceTypeCode, absenceTypeName, start, end,
+				durationType, dayPart, minutes, comment, state, createdBy, false);
+	}
+
 	public AbsenceDto(String id, String employeeId, String employeeName, String personalNumber, String teamName,
 			String absenceTypeCode, String absenceTypeName, ZonedDateTime start, ZonedDateTime end,
 			String durationType, String dayPart, Integer minutes, String comment, String state) {
 		this(id, employeeId, employeeName, personalNumber, teamName, absenceTypeCode, absenceTypeName, start, end,
-				durationType, dayPart, minutes, comment, state, null);
+				durationType, dayPart, minutes, comment, state, null, false);
 	}
 
 	public AbsenceDto(String id, String employeeId, String absenceTypeCode, ZonedDateTime start, ZonedDateTime end,
 			String durationType, String dayPart, Integer minutes, String comment, String state) {
 		this(id, employeeId, null, null, null, absenceTypeCode, null, start, end, durationType, dayPart, minutes,
-				comment, state, null);
+				comment, state, null, false);
 	}
 }

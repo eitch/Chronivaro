@@ -7,7 +7,16 @@ import java.util.List;
 public record AbsenceReportItem(String id, String employeeId, String employeeName, String absenceTypeCode,
 								String absenceTypeName, LocalDate start, LocalDate end, String durationType,
 								String dayPart, int minutes, String state, boolean paid, String comment,
-								ZonedDateTime submittedAt, ZonedDateTime approvedAt, String approvedBy) {
+								ZonedDateTime submittedAt, ZonedDateTime approvedAt, String approvedBy,
+								boolean modified) {
+
+	public AbsenceReportItem(String id, String employeeId, String employeeName, String absenceTypeCode,
+							 String absenceTypeName, LocalDate start, LocalDate end, String durationType,
+							 String dayPart, int minutes, String state, boolean paid, String comment,
+							 ZonedDateTime submittedAt, ZonedDateTime approvedAt, String approvedBy) {
+		this(id, employeeId, employeeName, absenceTypeCode, absenceTypeName, start, end, durationType,
+				dayPart, minutes, state, paid, comment, submittedAt, approvedAt, approvedBy, false);
+	}
 
 	public record AbsenceReport(List<AbsenceReportItem> items) {
 	}

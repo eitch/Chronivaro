@@ -36,6 +36,16 @@ export default class AbsenceApi {
         return await Rest.post(`rest/chronivaro/v1/employees/${encodeURIComponent(employeeId)}/absences`, absence);
     }
 
+    static async updateEmployeeAbsence(employeeId, id, absence, version) {
+        const headers = version !== undefined && version !== null ? { 'If-Match': `"${version}"` } : {};
+        return await Rest.put(`rest/chronivaro/v1/employees/${encodeURIComponent(employeeId)}/absences/${encodeURIComponent(id)}`, absence, headers);
+    }
+
+    static async adminUpdateAbsence(id, absence, version) {
+        const headers = version !== undefined && version !== null ? { 'If-Match': `"${version}"` } : {};
+        return await Rest.put(`rest/chronivaro/v1/admin/absences/${encodeURIComponent(id)}`, absence, headers);
+    }
+
     static async getAbsenceTypes() {
         const response = await Rest.get('rest/chronivaro/v1/admin/absence-types');
         return Array.isArray(response) ? response : (response.data || []);

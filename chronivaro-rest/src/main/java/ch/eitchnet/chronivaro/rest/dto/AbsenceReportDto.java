@@ -7,6 +7,14 @@ public record AbsenceReportDto(List<AbsenceReportItemDto> items) {
 	public record AbsenceReportItemDto(String id, String employeeId, String employeeName, String absenceTypeCode,
 									   String absenceTypeName, String start, String end, String durationType,
 									   String dayPart, int minutes, String state, boolean paid, String comment,
-									   String createdAt, String approvedAt, String approvedBy) {
+									   String createdAt, String approvedAt, String approvedBy, boolean modified) {
+
+		public AbsenceReportItemDto(String id, String employeeId, String employeeName, String absenceTypeCode,
+									String absenceTypeName, String start, String end, String durationType,
+									String dayPart, int minutes, String state, boolean paid, String comment,
+									String createdAt, String approvedAt, String approvedBy) {
+			this(id, employeeId, employeeName, absenceTypeCode, absenceTypeName, start, end, durationType,
+					dayPart, minutes, state, paid, comment, createdAt, approvedAt, approvedBy, false);
+		}
 	}
 }

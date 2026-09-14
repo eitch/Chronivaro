@@ -1273,6 +1273,9 @@ export default class ReportsView {
 					? `<span class="badge badge-success">${I18n.t('reports.paid')}</span>`
 					: `<span class="badge badge-neutral">${I18n.t('reports.unpaid')}</span>`;
 				const aStateLabel = I18n.t(`enums.absenceState.${item.state}`, {}, item.state);
+				const modifiedBadge = item.modified
+					? `<span class="badge badge-modified" style="background: #fed7aa; color: #9a3412; padding: 2px 6px; border-radius: 4px; font-size: 0.8rem; font-weight: 500; margin-left: 4px;">${I18n.t('times.modifiedBadge')}</span>`
+					: '';
 
 				return `
 					<tr>
@@ -1281,7 +1284,7 @@ export default class ReportsView {
 						<td>${Format.date(item.start)} - ${Format.date(item.end)}</td>
 						<td>${item.durationType || '-'} ${item.dayPart ? `(${item.dayPart})` : ''}</td>
 						<td><strong>${Format.duration(item.minutes)}</strong> (${item.minutes}m)</td>
-						<td><span class="status-badge state-${(item.state || 'SUBMITTED').toLowerCase()}">${aStateLabel}</span></td>
+						<td><span class="status-badge state-${(item.state || 'SUBMITTED').toLowerCase()}">${aStateLabel}</span>${modifiedBadge}</td>
 						<td>${paidBadge}</td>
 						<td>${item.approvedBy ? `${item.approvedBy}<br><small class="text-muted">${Format.dateTime(item.approvedAt)}</small>` : '-'}</td>
 						<td>${item.comment || '-'}</td>

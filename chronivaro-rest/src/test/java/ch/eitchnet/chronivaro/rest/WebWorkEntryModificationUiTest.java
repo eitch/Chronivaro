@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashSet;
 import java.util.Map;
@@ -104,6 +105,7 @@ public class WebWorkEntryModificationUiTest extends AbstractChronivaroRestfulTes
 		assertTrue("en.json must contain times.onCallBadge", enKeys.contains("times.onCallBadge"));
 		assertTrue("en.json must contain times.onCall", enKeys.contains("times.onCall"));
 		assertTrue("en.json must contain times.createdBy", enKeys.contains("times.createdBy"));
+		assertTrue("en.json must contain absences.absenceUpdated", enKeys.contains("absences.absenceUpdated"));
 	}
 
 	private Set<String> extractAllKeys(JsonObject obj, String prefix) {
@@ -172,8 +174,9 @@ public class WebWorkEntryModificationUiTest extends AbstractChronivaroRestfulTes
 		}
 
 		// 4. Employee modifies their own work entry: adjusting start time, end time, location, comment
-		String updateStart = today.atTime(8, 0).atZone(ZoneId.systemDefault()).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
-		String updateEnd = today.atTime(17, 0).atZone(ZoneId.systemDefault()).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+		ZonedDateTime now = ZonedDateTime.now(ZoneId.systemDefault());
+		String updateStart = now.minusHours(2).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+		String updateEnd = now.minusHours(1).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
 		String updateJson = """
 				{
 				  "start": "%s",

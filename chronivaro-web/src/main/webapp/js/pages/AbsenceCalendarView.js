@@ -986,6 +986,7 @@ export default class AbsenceCalendarView {
                         <div>
                             <span style="font-weight: 600; color: var(--text-muted); display: block; font-size: 0.75rem;">${I18n.t('common.status')}:</span>
                             <span class="badge ${this.getStatusClass(abs.state || abs.status)}" style="padding: 2px 8px; border-radius: 4px; font-size: 0.8rem;">${abs.state || abs.status || 'APPROVED'}</span>
+                            ${abs.modified ? `<span class="badge badge-modified" style="background: #fed7aa; color: #9a3412; padding: 2px 6px; border-radius: 4px; font-size: 0.8rem; font-weight: 500; margin-left: 4px;">${I18n.t('times.modifiedBadge')}</span>` : ''}
                         </div>
                     </div>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 0.75rem;">

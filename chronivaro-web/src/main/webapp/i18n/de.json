@@ -309,6 +309,7 @@
     "invalidDateRange": "Das Enddatum darf nicht vor dem Startdatum liegen.",
     "draftSaved": "Abwesenheit als Entwurf gespeichert.",
     "requestSubmitted": "Abwesenheitsantrag erfolgreich eingereicht.",
+    "absenceUpdated": "Abwesenheit erfolgreich aktualisiert.",
     "requestCancelled": "Abwesenheitsantrag wurde storniert.",
     "confirmCancel": "Möchten Sie diesen Antrag für {type} wirklich stornieren?",
     "expiration": "Verfall",

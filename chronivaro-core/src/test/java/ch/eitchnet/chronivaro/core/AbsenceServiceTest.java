@@ -1,5 +1,6 @@
 package ch.eitchnet.chronivaro.core;
 
+import ch.eitchnet.chronivaro.core.model.ChronivaroVersionHelper;
 import ch.eitchnet.chronivaro.core.model.VacationHelper;
 import ch.eitchnet.chronivaro.core.service.ApproveAbsenceService;
 import ch.eitchnet.chronivaro.core.service.CancelAbsenceService;
@@ -566,5 +567,179 @@ public class AbsenceServiceTest {
 
 		li.strolch.service.StringResult selfResult = serviceHandler.doService(supervisorCert, new RequestAbsenceService(), selfArg);
 		assertTrue("Supervisor cannot direct self-approve", selfResult.isNok());
+	}
+
+	@Test
+	public void shouldAllowSupervisorAndHRToCorrectApprovedAbsence() {
+		String employeeId = "emp-correct-abs-test";
+		String supervisorId = "supervisor-correct-test";
+		String supervisorUserId = "sup-user-correct";
+		Certificate supervisorCert;
+
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
+			Resource supervisor = createEmployee(tx, supervisorId, "Supervisor Correct User");
+			supervisor.setString(PARAM_USER_ID, supervisorUserId);
+			supervisor.setString(PARAM_USERNAME, "sup-user-correct");
+			tx.update(supervisor);
+
+			Resource employee = createEmployee(tx, employeeId, "Subordinate For Correct");
+
+			Resource team = tx.getResourceTemplate(TYPE_TEAM, true);
+			team.setId("team-abs-correct");
+			team.setName("Absence Correct Team");
+			team.setRelation(PARAM_LEADER, supervisor);
+			tx.add(team);
+
+			supervisor.setRelation(PARAM_PRIMARY_TEAM, team);
+			tx.update(supervisor);
+			employee.setRelation(PARAM_PRIMARY_TEAM, team);
+			tx.update(employee);
+
+			// Add schedule: Monday and Tuesday 480 mins each
+			Resource schedule = tx.getResourceByRelation(employee, PARAM_CURRENT_SCHEDULE, true);
+			schedule.setInteger(PARAM_DAILY_TARGET_MINUTES + "Monday", 480);
+			schedule.setInteger(PARAM_DAILY_TARGET_MINUTES + "Tuesday", 480);
+			tx.update(schedule);
+
+			// Add initial vacation entitlement: 10 days
+			Resource entry = tx.getResourceTemplate(TYPE_VACATION_ACCOUNT_ENTRY, true);
+			entry.setName("Initial Entitlement");
+			entry.setRelation(PARAM_EMPLOYEE, employee);
+			entry.setDate(PARAM_DATE, ZonedDateTime.parse("2026-01-01T00:00:00Z"));
+			entry.setString(PARAM_VACATION_TYPE, VACATION_ENTITLEMENT);
+			entry.setInteger(PARAM_VALUE, 10 * 480);
+			tx.add(entry);
+
+			tx.commitOnClose();
+
+			UserRep userRep = new UserRep(null, supervisorUserId, "Sup", "Correct", UserState.ENABLED, emptySet(),
+					Set.of(ROLE_SUPERVISOR, ROLE_EMPLOYEE, ROLE_MODEL_ACCESSOR), Locale.of("de", "CH"), emptyMap(), null);
+			runtimeMock.getPrivilegeHandler().getPrivilegeHandler().addUser(certificate, userRep, supervisorUserId.toCharArray());
+			supervisorCert = runtimeMock.login(supervisorUserId, supervisorUserId);
+		}
+
+		ServiceHandler serviceHandler = runtimeMock.getServiceHandler();
+
+		// 1. Create an approved vacation absence for Monday only (2026-08-03)
+		RequestAbsenceService.RequestAbsenceArgument reqArg = new RequestAbsenceService.RequestAbsenceArgument();
+		reqArg.employeeId = employeeId;
+		reqArg.absenceTypeCode = "VACATION";
+		reqArg.start = ZonedDateTime.parse("2026-08-03T00:00:00+02:00[Europe/Zurich]"); // Monday
+		reqArg.end = ZonedDateTime.parse("2026-08-03T23:59:59+02:00[Europe/Zurich]");
+		reqArg.durationType = DURATION_FULL_DAY;
+		reqArg.directApprove = true;
+
+		li.strolch.service.StringResult result = serviceHandler.doService(supervisorCert, new RequestAbsenceService(), reqArg);
+		assertTrue(result.getMessage(), result.isOk());
+		String absenceId = result.getValue();
+
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
+			Resource absence = tx.getResourceBy(TYPE_ABSENCE, absenceId, true);
+			assertEquals(STATE_APPROVED, absence.getString(PARAM_STATE));
+			assertEquals(0, ChronivaroVersionHelper.getVersion(absence));
+			int balance = VacationHelper.getVacationBalance(tx, employeeId, ZonedDateTime.now());
+			assertEquals(9 * 480, balance);
+		}
+
+		// 2. Supervisor corrects the approved absence to extend to Tuesday (2026-08-03 to 2026-08-04)
+		UpdateAbsenceService.UpdateAbsenceArgument updateArg = new UpdateAbsenceService.UpdateAbsenceArgument();
+		updateArg.absenceId = absenceId;
+		updateArg.absenceTypeCode = "VACATION";
+		updateArg.start = ZonedDateTime.parse("2026-08-03T00:00:00+02:00[Europe/Zurich]");
+		updateArg.end = ZonedDateTime.parse("2026-08-04T23:59:59+02:00[Europe/Zurich]"); // Monday + Tuesday = 2 days
+		updateArg.durationType = DURATION_FULL_DAY;
+		updateArg.comment = "Extended by supervisor";
+
+		ServiceResult updateResult = serviceHandler.doService(supervisorCert, new UpdateAbsenceService(), updateArg);
+		assertTrue(updateResult.getMessage(), updateResult.isOk());
+
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
+			Resource absence = tx.getResourceBy(TYPE_ABSENCE, absenceId, true);
+			assertEquals(STATE_APPROVED, absence.getString(PARAM_STATE));
+			assertTrue("Absence must be marked as modified (version > 0)", ChronivaroVersionHelper.getVersion(absence) > 0);
+			assertEquals("Extended by supervisor", absence.getString(PARAM_COMMENT));
+
+			// Verify vacation balance was recalculated (now deducted 2 days = 8 days left)
+			int balance = VacationHelper.getVacationBalance(tx, employeeId, ZonedDateTime.now());
+			assertEquals(8 * 480, balance);
+		}
+	}
+
+	@Test
+	public void shouldAllowAdminToCorrectOwnApprovedAbsence() {
+		String adminEmployeeId = "emp-admin-self-correct";
+		String adminUserId = "admin";
+
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
+			Resource adminEmp = createEmployee(tx, adminEmployeeId, "Admin User");
+			adminEmp.setString(PARAM_USER_ID, adminUserId);
+			adminEmp.setString(PARAM_USERNAME, adminUserId);
+			tx.update(adminEmp);
+
+			// Add schedule: Wednesday and Thursday 480 mins each
+			Resource schedule = tx.getResourceByRelation(adminEmp, PARAM_CURRENT_SCHEDULE, true);
+			schedule.setInteger(PARAM_DAILY_TARGET_MINUTES + "Wednesday", 480);
+			schedule.setInteger(PARAM_DAILY_TARGET_MINUTES + "Thursday", 480);
+			tx.update(schedule);
+
+			// Add initial vacation entitlement: 10 days
+			Resource entry = tx.getResourceTemplate(TYPE_VACATION_ACCOUNT_ENTRY, true);
+			entry.setName("Initial Entitlement");
+			entry.setRelation(PARAM_EMPLOYEE, adminEmp);
+			entry.setDate(PARAM_DATE, ZonedDateTime.parse("2026-01-01T00:00:00Z"));
+			entry.setString(PARAM_VACATION_TYPE, VACATION_ENTITLEMENT);
+			entry.setInteger(PARAM_VALUE, 10 * 480);
+			tx.add(entry);
+
+			tx.commitOnClose();
+		}
+
+		ServiceHandler serviceHandler = runtimeMock.getServiceHandler();
+
+		// 1. Admin creates absence request and approves it
+		RequestAbsenceService.RequestAbsenceArgument reqArg = new RequestAbsenceService.RequestAbsenceArgument();
+		reqArg.employeeId = adminEmployeeId;
+		reqArg.absenceTypeCode = "VACATION";
+		reqArg.start = ZonedDateTime.parse("2026-08-05T00:00:00+02:00[Europe/Zurich]"); // Wednesday
+		reqArg.end = ZonedDateTime.parse("2026-08-05T23:59:59+02:00[Europe/Zurich]");
+		reqArg.durationType = DURATION_FULL_DAY;
+
+		li.strolch.service.StringResult result = serviceHandler.doService(certificate, new RequestAbsenceService(), reqArg);
+		assertTrue(result.getMessage(), result.isOk());
+		String absenceId = result.getValue();
+
+		ServiceResult approveResult = serviceHandler.doService(certificate, new ApproveAbsenceService(),
+				new StringArgument(absenceId));
+		assertTrue(approveResult.getMessage(), approveResult.isOk());
+
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
+			Resource absence = tx.getResourceBy(TYPE_ABSENCE, absenceId, true);
+			assertEquals(STATE_APPROVED, absence.getString(PARAM_STATE));
+			int balance = VacationHelper.getVacationBalance(tx, adminEmployeeId, ZonedDateTime.now());
+			assertEquals(9 * 480, balance);
+		}
+
+		// 2. Admin corrects own approved absence to extend to Thursday (2026-08-05 to 2026-08-06)
+		UpdateAbsenceService.UpdateAbsenceArgument updateArg = new UpdateAbsenceService.UpdateAbsenceArgument();
+		updateArg.absenceId = absenceId;
+		updateArg.absenceTypeCode = "VACATION";
+		updateArg.start = ZonedDateTime.parse("2026-08-05T00:00:00+02:00[Europe/Zurich]");
+		updateArg.end = ZonedDateTime.parse("2026-08-06T23:59:59+02:00[Europe/Zurich]"); // Wednesday + Thursday = 2 days
+		updateArg.durationType = DURATION_FULL_DAY;
+		updateArg.comment = "Extended by admin self";
+
+		ServiceResult updateResult = serviceHandler.doService(certificate, new UpdateAbsenceService(), updateArg);
+		assertTrue(updateResult.getMessage(), updateResult.isOk());
+
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
+			Resource absence = tx.getResourceBy(TYPE_ABSENCE, absenceId, true);
+			assertEquals(STATE_APPROVED, absence.getString(PARAM_STATE));
+			assertTrue("Absence must be marked as modified (version > 0)", ChronivaroVersionHelper.getVersion(absence) > 0);
+			assertEquals("Extended by admin self", absence.getString(PARAM_COMMENT));
+
+			// Verify vacation balance was recalculated (now deducted 2 days = 8 days left)
+			int balance = VacationHelper.getVacationBalance(tx, adminEmployeeId, ZonedDateTime.now());
+			assertEquals(8 * 480, balance);
+		}
 	}
 }

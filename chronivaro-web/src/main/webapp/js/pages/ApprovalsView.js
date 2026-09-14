@@ -466,6 +466,9 @@ export default class ApprovalsView {
 				].filter(Boolean).join(' • ');
 
 				const typeDisplayName = absence.absenceTypeName || absence.absenceTypeCode || 'ABSENCE';
+				const modifiedBadge = absence.modified
+					? `<span class="badge badge-modified" style="background: #fed7aa; color: #9a3412; padding: 2px 6px; border-radius: 4px; font-size: 0.8rem; font-weight: 500; margin-left: 4px;">${I18n.t('times.modifiedBadge')}</span>`
+					: '';
 
 				tr.innerHTML = `
 					<td>
@@ -474,7 +477,7 @@ export default class ApprovalsView {
 							${empSubDetails ? `<br><small class="text-muted">${empSubDetails}</small>` : ''}
 						</div>
 					</td>
-					<td><span class="status-badge badge-working">${typeDisplayName}</span></td>
+					<td><span class="status-badge badge-working">${typeDisplayName}</span>${modifiedBadge}</td>
 					<td>${dateRangeStr}</td>
 					<td>${durationStr}</td>
 					<td>${absence.comment || `<span class="text-muted">${I18n.t('common.none')}</span>`}</td>

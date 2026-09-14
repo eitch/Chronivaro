@@ -75,13 +75,14 @@ public class ChronivaroMapper {
 				(type != null ? type.getName() : null);
 
 		String createdBy = absence.hasParameter(PARAM_CREATED_BY) ? absence.getString(PARAM_CREATED_BY) : null;
+		boolean modified = ch.eitchnet.chronivaro.core.model.ChronivaroVersionHelper.isModified(absence);
 
 		return new AbsenceDto(absence.getId(), employeeId, employeeName, personalNumber, teamName, absenceTypeCode,
 				absenceTypeName, absence.getDate(PARAM_START), absence.getDate(PARAM_END),
 				absence.getString(PARAM_DURATION_TYPE),
 				absence.hasParameter(PARAM_DAY_PART) ? absence.getString(PARAM_DAY_PART) : null,
 				absence.hasParameter(PARAM_MINUTES) ? absence.getInteger(PARAM_MINUTES) : null,
-				absence.getString(PARAM_COMMENT), absence.getString(PARAM_STATE), createdBy);
+				absence.getString(PARAM_COMMENT), absence.getString(PARAM_STATE), createdBy, modified);
 	}
 
 	public static AbsenceDto toDto(StrolchTransaction tx, Resource absence) {
@@ -91,11 +92,12 @@ public class ChronivaroMapper {
 
 	public static AbsenceDto toDto(Resource absence, String absenceTypeCode) {
 		String createdBy = absence.hasParameter(PARAM_CREATED_BY) ? absence.getString(PARAM_CREATED_BY) : null;
+		boolean modified = ch.eitchnet.chronivaro.core.model.ChronivaroVersionHelper.isModified(absence);
 		return new AbsenceDto(absence.getId(), absence.getRelationId(PARAM_EMPLOYEE), null, null, null, absenceTypeCode,
 				null, absence.getDate(PARAM_START), absence.getDate(PARAM_END), absence.getString(PARAM_DURATION_TYPE),
 				absence.hasParameter(PARAM_DAY_PART) ? absence.getString(PARAM_DAY_PART) : null,
 				absence.hasParameter(PARAM_MINUTES) ? absence.getInteger(PARAM_MINUTES) : null,
-				absence.getString(PARAM_COMMENT), absence.getString(PARAM_STATE), createdBy);
+				absence.getString(PARAM_COMMENT), absence.getString(PARAM_STATE), createdBy, modified);
 	}
 
 	public static DaySummaryDto toDto(DaySummary summary) {
@@ -420,7 +422,8 @@ public class ChronivaroMapper {
 						item.end() != null ? item.end().toString() : null, item.durationType(), item.dayPart(),
 						item.minutes(), item.state(), item.paid(), item.comment(),
 						item.submittedAt() != null ? item.submittedAt().toString() : null,
-						item.approvedAt() != null ? item.approvedAt().toString() : null, item.approvedBy()))
+						item.approvedAt() != null ? item.approvedAt().toString() : null, item.approvedBy(),
+						item.modified()))
 				.toList() : java.util.List.of();
 
 		return new AbsenceReportDto(itemDtos);
