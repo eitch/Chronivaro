@@ -77,6 +77,7 @@ public class ChronivaroTestHelper {
 		absenceType.setId(code);
 		absenceType.setName(name);
 		absenceType.setString(PARAM_CODE, code);
+		absenceType.setString(PARAM_NAME, name);
 		absenceType.setBoolean(PARAM_ACTIVE, true);
 		tx.add(absenceType);
 		return absenceType;

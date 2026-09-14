@@ -193,4 +193,59 @@ public class UpdateAbsenceServiceTest {
 			assertEquals("Draft updated comment", absence.getString(PARAM_COMMENT));
 		}
 	}
+
+	@Test
+	public void shouldFailWhenUpdatingAbsenceCausesOverlapWithDescriptiveMessage() {
+		String employeeId = "upd-overlap-emp";
+
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
+			createEmployee(tx, employeeId, "Update Overlap Emp");
+			ChronivaroTestHelper.createAbsenceType(tx, "VACATION4", "Vacation 4");
+			tx.commitOnClose();
+		}
+
+		ServiceHandler serviceHandler = runtimeMock.getServiceHandler();
+
+		// 1. Create first absence: 2026-12-01 to 2026-12-03
+		RequestAbsenceService.RequestAbsenceArgument req1 = new RequestAbsenceService.RequestAbsenceArgument();
+		req1.employeeId = employeeId;
+		req1.absenceTypeCode = "VACATION4";
+		req1.start = ZonedDateTime.parse("2026-12-01T00:00:00+01:00[Europe/Zurich]");
+		req1.end = ZonedDateTime.parse("2026-12-03T23:59:59+01:00[Europe/Zurich]");
+		req1.durationType = DURATION_FULL_DAY;
+		li.strolch.service.StringResult res1 = serviceHandler.doService(certificate, new RequestAbsenceService(), req1);
+		assertTrue(res1.getMessage(), res1.isOk());
+		String absence1Id = res1.getValue();
+
+		// 2. Create second absence: 2026-12-10 to 2026-12-12
+		RequestAbsenceService.RequestAbsenceArgument req2 = new RequestAbsenceService.RequestAbsenceArgument();
+		req2.employeeId = employeeId;
+		req2.absenceTypeCode = "VACATION4";
+		req2.start = ZonedDateTime.parse("2026-12-10T00:00:00+01:00[Europe/Zurich]");
+		req2.end = ZonedDateTime.parse("2026-12-12T23:59:59+01:00[Europe/Zurich]");
+		req2.durationType = DURATION_FULL_DAY;
+		li.strolch.service.StringResult res2 = serviceHandler.doService(certificate, new RequestAbsenceService(), req2);
+		assertTrue(res2.getMessage(), res2.isOk());
+		String absence2Id = res2.getValue();
+
+		// 3. Update second absence so it shifts to overlap first absence (2026-12-02 to 2026-12-05)
+		UpdateAbsenceService.UpdateAbsenceArgument updArg = new UpdateAbsenceService.UpdateAbsenceArgument();
+		updArg.absenceId = absence2Id;
+		updArg.start = ZonedDateTime.parse("2026-12-02T00:00:00+01:00[Europe/Zurich]");
+		updArg.end = ZonedDateTime.parse("2026-12-05T23:59:59+01:00[Europe/Zurich]");
+
+		ServiceResult updResult = serviceHandler.doService(certificate, new UpdateAbsenceService(), updArg);
+		assertTrue("Updating absence to overlap existing absence must fail", updResult.isNok());
+		String msg = updResult.getMessage();
+		assertTrue("Error message must contain 'Absence overlaps with an existing active absence:' but was: " + msg,
+				msg.contains("Absence overlaps with an existing active absence:"));
+		assertTrue("Error message must contain type name but was: " + msg,
+				msg.contains("Vacation 4"));
+		assertTrue("Error message must contain date range '2026-12-01 - 2026-12-03' but was: " + msg,
+				msg.contains("2026-12-01 - 2026-12-03"));
+		assertTrue("Error message must contain state 'SUBMITTED' but was: " + msg,
+				msg.contains("SUBMITTED"));
+		assertTrue("Error message must contain 'id: " + absence1Id + "' but was: " + msg,
+				msg.contains("id: " + absence1Id));
+	}
 }

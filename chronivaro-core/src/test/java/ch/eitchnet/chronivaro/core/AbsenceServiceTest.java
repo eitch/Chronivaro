@@ -470,7 +470,9 @@ public class AbsenceServiceTest {
 		req1.start = ZonedDateTime.parse("2026-05-11T00:00:00+02:00[Europe/Zurich]");
 		req1.end = ZonedDateTime.parse("2026-05-13T23:59:59+02:00[Europe/Zurich]");
 		req1.durationType = DURATION_FULL_DAY;
-		assertTrue(serviceHandler.doService(certificate, new RequestAbsenceService(), req1).isOk());
+		li.strolch.service.StringResult res1 = serviceHandler.doService(certificate, new RequestAbsenceService(), req1);
+		assertTrue(res1.getMessage(), res1.isOk());
+		String firstAbsenceId = res1.getValue();
 
 		// 2. Overlapping absence: May 12 to May 15 -> should fail
 		RequestAbsenceService.RequestAbsenceArgument req2 = new RequestAbsenceService.RequestAbsenceArgument();
@@ -479,8 +481,17 @@ public class AbsenceServiceTest {
 		req2.start = ZonedDateTime.parse("2026-05-12T00:00:00+02:00[Europe/Zurich]");
 		req2.end = ZonedDateTime.parse("2026-05-15T23:59:59+02:00[Europe/Zurich]");
 		req2.durationType = DURATION_FULL_DAY;
-		assertTrue("Overlapping absence must fail",
-				serviceHandler.doService(certificate, new RequestAbsenceService(), req2).isNok());
+		li.strolch.service.StringResult res2 = serviceHandler.doService(certificate, new RequestAbsenceService(), req2);
+		assertTrue("Overlapping absence must fail", res2.isNok());
+		String msg = res2.getMessage();
+		assertTrue("Error message must contain 'Absence overlaps with an existing active absence:' but was: " + msg,
+				msg.contains("Absence overlaps with an existing active absence:"));
+		assertTrue("Error message must contain date range '2026-05-11 - 2026-05-13' but was: " + msg,
+				msg.contains("2026-05-11 - 2026-05-13"));
+		assertTrue("Error message must contain state 'SUBMITTED' but was: " + msg,
+				msg.contains("SUBMITTED"));
+		assertTrue("Error message must contain 'id: " + firstAbsenceId + "' but was: " + msg,
+				msg.contains("id: " + firstAbsenceId));
 	}
 
 	@Test

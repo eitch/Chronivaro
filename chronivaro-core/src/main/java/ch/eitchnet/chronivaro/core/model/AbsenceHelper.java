@@ -130,9 +130,49 @@ public class AbsenceHelper {
 				.toList();
 
 		if (!overlapping.isEmpty()) {
+			String details = overlapping.stream()
+					.map(a -> formatAbsence(tx, a))
+					.collect(java.util.stream.Collectors.joining(", "));
 			throw new IllegalArgumentException(
-					"Absence overlaps with an existing active absence: " + overlapping.getFirst().getId());
+					"Absence overlaps with an existing active absence: " + details);
 		}
+	}
+
+	public static String formatAbsence(StrolchTransaction tx, Resource absence) {
+		LocalDate aStart = absence.getDate(PARAM_START).toLocalDate();
+		LocalDate aEnd = absence.getDate(PARAM_END).toLocalDate();
+		String dateStr = aStart.isEqual(aEnd) ? aStart.toString() : aStart + " - " + aEnd;
+
+		Resource absenceType = tx.getResourceByRelation(absence, PARAM_ABSENCE_TYPE, false);
+		String typeName;
+		if (absenceType != null) {
+			if (absenceType.hasParameter(PARAM_NAME) && !absenceType.getString(PARAM_NAME).isBlank()) {
+				typeName = absenceType.getString(PARAM_NAME);
+			} else if (absenceType.getName() != null && !absenceType.getName().isBlank()) {
+				typeName = absenceType.getName();
+			} else if (absenceType.hasParameter(PARAM_CODE) && !absenceType.getString(PARAM_CODE).isBlank()) {
+				typeName = absenceType.getString(PARAM_CODE);
+			} else {
+				typeName = absenceType.getId();
+			}
+		} else {
+			typeName = absence.getRelationId(PARAM_ABSENCE_TYPE);
+		}
+
+		String durationType = absence.hasParameter(PARAM_DURATION_TYPE) ? absence.getString(PARAM_DURATION_TYPE) : null;
+		String durationDetail = "";
+		if (DURATION_HALF_DAY.equals(durationType)) {
+			String dayPart = absence.hasParameter(PARAM_DAY_PART) ? absence.getString(PARAM_DAY_PART) : null;
+			durationDetail = dayPart != null ? ", " + durationType + " " + dayPart : ", " + durationType;
+		} else if (DURATION_HOURS.equals(durationType)) {
+			int minutes = absence.hasParameter(PARAM_MINUTES) ? absence.getInteger(PARAM_MINUTES) : 0;
+			durationDetail = minutes > 0 ? ", " + minutes + "m" : ", " + durationType;
+		}
+
+		String state = absence.hasParameter(PARAM_STATE) ? absence.getString(PARAM_STATE) : "";
+
+		return typeName + " (" + dateStr + durationDetail + (state.isEmpty() ? "" : ", " + state) + ", id: "
+				+ absence.getId() + ")";
 	}
 
 	public static boolean isHolidayAbsenceType(StrolchTransaction tx, Resource absType, String typeCode) {
