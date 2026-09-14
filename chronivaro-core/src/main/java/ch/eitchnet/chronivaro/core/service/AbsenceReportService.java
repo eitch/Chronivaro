@@ -1,5 +1,6 @@
 package ch.eitchnet.chronivaro.core.service;
 
+import ch.eitchnet.chronivaro.core.model.AbsenceHelper;
 import ch.eitchnet.chronivaro.core.model.ChronivaroModelHelper;
 import ch.eitchnet.chronivaro.core.model.ChronivaroVersionHelper;
 import ch.eitchnet.chronivaro.core.report.AbsenceReportItem;
@@ -80,28 +81,21 @@ public class AbsenceReportService extends AbstractService<AbsenceReportService.A
 				Resource emp = tx.getResourceBy(TYPE_EMPLOYEE, empId, false);
 				String empName = emp != null ? emp.getName() : empId;
 
-				String typeCode = absence.getString(PARAM_ABSENCE_TYPE);
-				Resource absType = tx.getResourceBy(TYPE_ABSENCE_TYPE, typeCode, false);
+				Resource absType = tx.getResourceByRelation(absence, PARAM_ABSENCE_TYPE, false);
+				String typeCode = absType != null ? absType.getId()
+						: (absence.hasRelation(PARAM_ABSENCE_TYPE) ? absence.getRelationId(PARAM_ABSENCE_TYPE)
+						: (absence.hasParameter(PARAM_ABSENCE_TYPE) ? absence.getString(PARAM_ABSENCE_TYPE) : ""));
 				String typeName = absType != null ? absType.getName() : typeCode;
 				boolean paid = absType != null && absType.hasParameter(PARAM_PAID) && absType.getBoolean(PARAM_PAID);
 
 				boolean isAdminOrHrOrSupervisor = tx.getPrivilegeContext().hasRole(ROLE_HR)
 						|| tx.getPrivilegeContext().hasRole(ROLE_ADMIN)
 						|| tx.getPrivilegeContext().hasRole(ROLE_ADMINISTRATOR)
+						|| tx.getPrivilegeContext().hasRole(ROLE_STROLCH_ADMIN)
+						|| tx.getPrivilegeContext().hasRole(ROLE_PRIVILEGE_ADMIN)
 						|| tx.getPrivilegeContext().hasRole(ROLE_SUPERVISOR);
 				Optional<Resource> currentCallerEmp = ChronivaroModelHelper.findEmployeeByUser(tx, tx.getCertificate().getUserId());
 				boolean isOwn = currentCallerEmp.isPresent() && currentCallerEmp.get().getId().equals(empId);
-
-				if (!isAdminOrHrOrSupervisor && !isOwn) {
-					boolean visibleOnPublic = absType != null && absType.hasParameter(PARAM_VISIBLE_ON_PUBLIC_STATUS)
-							&& absType.getBoolean(PARAM_VISIBLE_ON_PUBLIC_STATUS);
-					Restrictable restrictable = new SimpleRestrictable(PRIVILEGE_GET_ABSENCE_REASON, typeCode);
-					boolean hasPrivilege = tx.getPrivilegeContext().hasPrivilege(restrictable);
-					if (!hasPrivilege && !visibleOnPublic) {
-						typeCode = "ABSENT";
-						typeName = "Abwesend";
-					}
-				}
 
 				String durationType = absence.getString(PARAM_DURATION_TYPE);
 				String dayPart = absence.hasParameter(PARAM_DAY_PART) && !absence.getString(PARAM_DAY_PART).isEmpty()
@@ -113,6 +107,21 @@ public class AbsenceReportService extends AbstractService<AbsenceReportService.A
 				ZonedDateTime approvedAt = absence.hasParameter(PARAM_APPROVED_AT) ? absence.getDate(PARAM_APPROVED_AT) : null;
 				String approvedBy = absence.hasParameter(PARAM_APPROVED_BY) ? absence.getString(PARAM_APPROVED_BY) : "";
 				boolean modified = ChronivaroVersionHelper.isModified(absence);
+
+				if (!isAdminOrHrOrSupervisor && !isOwn) {
+					boolean isHoliday = AbsenceHelper.isHolidayAbsenceType(tx, absType, typeCode);
+					boolean visibleOnPublic = absType != null && absType.hasParameter(PARAM_VISIBLE_ON_PUBLIC_STATUS)
+							&& absType.getBoolean(PARAM_VISIBLE_ON_PUBLIC_STATUS);
+					Restrictable restrictable = new SimpleRestrictable(PRIVILEGE_GET_ABSENCE_REASON, typeCode);
+					boolean hasPrivilege = tx.getPrivilegeContext().hasPrivilege(restrictable);
+					if (!hasPrivilege && !visibleOnPublic && !isHoliday) {
+						typeCode = "ABSENT";
+						typeName = "Abwesend";
+					}
+					if (!hasPrivilege && !visibleOnPublic) {
+						comment = "";
+					}
+				}
 
 				items.add(new AbsenceReportItem(
 						absence.getId(),
@@ -143,7 +152,9 @@ public class AbsenceReportService extends AbstractService<AbsenceReportService.A
 	private List<String> resolveTargetEmployeeIds(StrolchTransaction tx, AbsenceReportArgument arg) {
 		boolean isAdminOrHr = tx.getPrivilegeContext().hasRole(ROLE_HR)
 				|| tx.getPrivilegeContext().hasRole(ROLE_ADMIN)
-				|| tx.getPrivilegeContext().hasRole(ROLE_ADMINISTRATOR);
+				|| tx.getPrivilegeContext().hasRole(ROLE_ADMINISTRATOR)
+				|| tx.getPrivilegeContext().hasRole(ROLE_STROLCH_ADMIN)
+				|| tx.getPrivilegeContext().hasRole(ROLE_PRIVILEGE_ADMIN);
 
 		if (isAdminOrHr) {
 			if (arg.employeeId != null && !arg.employeeId.isEmpty()) {
@@ -185,23 +196,32 @@ public class AbsenceReportService extends AbstractService<AbsenceReportService.A
 			throw new AccessDeniedException("Access denied: No employee profile found for user.");
 		}
 		String callerEmpId = callerEmp.get().getId();
+		String callerTeamId = callerEmp.get().hasRelation(PARAM_PRIMARY_TEAM) ? callerEmp.get().getRelationId(PARAM_PRIMARY_TEAM) : null;
+
+		Set<String> allowedEmpIds = new HashSet<>();
+		allowedEmpIds.add(callerEmpId);
+		if (callerTeamId != null) {
+			List<Resource> teammates = ChronivaroModelHelper.findEmployeesByTeam(tx, callerTeamId);
+			for (Resource teammate : teammates) {
+				allowedEmpIds.add(teammate.getId());
+			}
+		}
 
 		if (arg.employeeId != null && !arg.employeeId.isEmpty()) {
-			if (!arg.employeeId.equals(callerEmpId)) {
-				throw new AccessDeniedException("Access denied: You can only view your own absence reports.");
+			if (!allowedEmpIds.contains(arg.employeeId)) {
+				throw new AccessDeniedException("Access denied: You can only view absences for yourself or your teammates.");
 			}
-			return List.of(callerEmpId);
+			return List.of(arg.employeeId);
 		}
 
 		if (arg.teamId != null && !arg.teamId.isEmpty()) {
-			String callerTeamId = callerEmp.get().hasRelation(PARAM_PRIMARY_TEAM) ? callerEmp.get().getRelationId(PARAM_PRIMARY_TEAM) : null;
 			if (!arg.teamId.equals(callerTeamId)) {
 				throw new AccessDeniedException("Access denied: You can only view absences for your own team.");
 			}
-			return ChronivaroModelHelper.findEmployeesByTeam(tx, arg.teamId).stream().map(Resource::getId).toList();
+			return new ArrayList<>(allowedEmpIds);
 		}
 
-		return List.of(callerEmpId);
+		return new ArrayList<>(allowedEmpIds);
 	}
 
 	@Override

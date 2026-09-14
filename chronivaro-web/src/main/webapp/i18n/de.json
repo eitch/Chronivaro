@@ -938,6 +938,7 @@
     "newOnCallPeriod": "Pikettdienst planen",
     "createAbsencePrompt": "Abwesenheit erfassen für {name} am {date}",
     "createAbsenceTitle": "Abwesenheit erfassen",
+    "editAbsenceTitle": "Abwesenheit bearbeiten",
     "createOnCallTitle": "Pikettdienst erfassen",
     "editOnCallTitle": "Pikettdienst bearbeiten",
     "onCallDetails": "Pikettdienst-Details",
@@ -976,7 +977,8 @@
     "daysCount": "{count} Tage",
     "hoursCount": "{count} Stunden",
     "minutesCount": "{count} Min",
-    "emptyTimeline": "Keine Mitarbeiter für die ausgewählten Filter gefunden."
+    "emptyTimeline": "Keine Mitarbeiter für die ausgewählten Filter gefunden.",
+    "absent": "Abwesend"
   },
   "version": {
     "title": "Versionsinformationen",

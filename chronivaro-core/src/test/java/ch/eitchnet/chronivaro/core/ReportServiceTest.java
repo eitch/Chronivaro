@@ -150,7 +150,6 @@ public class ReportServiceTest {
 			absence.setName("Vacation Week");
 			absence.setRelation(PARAM_EMPLOYEE, emp);
 			absence.setRelationId(PARAM_ABSENCE_TYPE, "VACATION");
-			absence.setString(PARAM_ABSENCE_TYPE, "VACATION");
 			absence.setDate(PARAM_START, start.atStartOfDay(ChronivaroModelHelper.getEmployeeTimezone(emp)));
 			absence.setDate(PARAM_END, end.atTime(23, 59, 59).atZone(ChronivaroModelHelper.getEmployeeTimezone(emp)));
 			absence.setString(PARAM_DURATION_TYPE, DURATION_FULL_DAY);
@@ -277,5 +276,157 @@ public class ReportServiceTest {
 		assertEquals("\"Hello, World\"", CsvExportHelper.escapeCsv("Hello, World"));
 		assertEquals("\"Hello \"\"World\"\"\"", CsvExportHelper.escapeCsv("Hello \"World\""));
 		assertEquals("\"Line1\nLine2\"", CsvExportHelper.escapeCsv("Line1\nLine2"));
+	}
+
+	@Test
+	public void shouldMaskTeammateAbsencesForRegularEmployeeExceptVacation() {
+		String teamId = "report-team-masking";
+		String emp1Id = "report-emp-caller";
+		String emp2Id = "report-emp-teammate";
+		String emp3Id = "report-emp-otherteam";
+
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
+			// Ensure illness type exists
+			if (!tx.hasResource(TYPE_ABSENCE_TYPE, "ILLNESS")) {
+				Resource illnessType = new Resource("ILLNESS", "Illness", TYPE_ABSENCE_TYPE);
+				illnessType.setString(PARAM_CODE, "ILLNESS");
+				illnessType.setString(PARAM_NAME, "Illness");
+				illnessType.setBoolean(PARAM_PAID, true);
+				illnessType.setBoolean(PARAM_ACTIVE, true);
+				tx.add(illnessType);
+			}
+
+			// Create Team 1
+			Resource team1 = tx.getResourceTemplate(TYPE_TEAM, true);
+			team1.setId(teamId);
+			team1.setName("Masking Team");
+			team1.setString(PARAM_NAME, "Masking Team");
+			tx.add(team1);
+
+			// Create Team 2
+			Resource team2 = tx.getResourceTemplate(TYPE_TEAM, true);
+			team2.setId("report-other-team");
+			team2.setName("Other Team");
+			team2.setString(PARAM_NAME, "Other Team");
+			tx.add(team2);
+
+			// Create caller employee (in team 1)
+			Resource emp1 = createEmployee(tx, emp1Id, "Caller User");
+			emp1 = tx.readLock(emp1);
+			emp1.setRelationId(PARAM_PRIMARY_TEAM, teamId);
+			emp1.setString(PARAM_USERNAME, "employee");
+			emp1.setString(PARAM_USER_ID, "employee");
+			tx.update(emp1);
+
+			// Create teammate employee (in team 1)
+			Resource emp2 = createEmployee(tx, emp2Id, "Teammate User");
+			emp2 = tx.readLock(emp2);
+			emp2.setRelationId(PARAM_PRIMARY_TEAM, teamId);
+			tx.update(emp2);
+
+			// Create other employee (in team 2)
+			Resource emp3 = createEmployee(tx, emp3Id, "Other Team User");
+			emp3 = tx.readLock(emp3);
+			emp3.setRelationId(PARAM_PRIMARY_TEAM, "report-other-team");
+			tx.update(emp3);
+
+			// Add Illness absence for caller
+			Resource abs1 = tx.getResourceTemplate(TYPE_ABSENCE, true);
+			abs1.setId("abs-caller-ill");
+			abs1.setName("Caller Illness");
+			abs1.setRelation(PARAM_EMPLOYEE, emp1);
+			abs1.setRelationId(PARAM_ABSENCE_TYPE, "ILLNESS");
+			abs1.setDate(PARAM_START, LocalDate.of(2026, 8, 3).atStartOfDay(ChronivaroModelHelper.getEmployeeTimezone(emp1)));
+			abs1.setDate(PARAM_END, LocalDate.of(2026, 8, 3).atTime(23, 59, 59).atZone(ChronivaroModelHelper.getEmployeeTimezone(emp1)));
+			abs1.setString(PARAM_DURATION_TYPE, DURATION_FULL_DAY);
+			abs1.setInteger(PARAM_MINUTES, 480);
+			abs1.setString(PARAM_STATE, STATE_APPROVED);
+			abs1.setString(PARAM_COMMENT, "Caller secret illness comment");
+			tx.add(abs1);
+
+			// Add Vacation absence for teammate
+			Resource abs2 = tx.getResourceTemplate(TYPE_ABSENCE, true);
+			abs2.setId("abs-teammate-vac");
+			abs2.setName("Teammate Vacation");
+			abs2.setRelation(PARAM_EMPLOYEE, emp2);
+			abs2.setRelationId(PARAM_ABSENCE_TYPE, "VACATION");
+			abs2.setDate(PARAM_START, LocalDate.of(2026, 8, 4).atStartOfDay(ChronivaroModelHelper.getEmployeeTimezone(emp2)));
+			abs2.setDate(PARAM_END, LocalDate.of(2026, 8, 4).atTime(23, 59, 59).atZone(ChronivaroModelHelper.getEmployeeTimezone(emp2)));
+			abs2.setString(PARAM_DURATION_TYPE, DURATION_FULL_DAY);
+			abs2.setInteger(PARAM_MINUTES, 480);
+			abs2.setString(PARAM_STATE, STATE_APPROVED);
+			abs2.setString(PARAM_COMMENT, "Teammate vacation comment");
+			tx.add(abs2);
+
+			// Add Illness absence for teammate
+			Resource abs3 = tx.getResourceTemplate(TYPE_ABSENCE, true);
+			abs3.setId("abs-teammate-ill");
+			abs3.setName("Teammate Illness");
+			abs3.setRelation(PARAM_EMPLOYEE, emp2);
+			abs3.setRelationId(PARAM_ABSENCE_TYPE, "ILLNESS");
+			abs3.setDate(PARAM_START, LocalDate.of(2026, 8, 5).atStartOfDay(ChronivaroModelHelper.getEmployeeTimezone(emp2)));
+			abs3.setDate(PARAM_END, LocalDate.of(2026, 8, 5).atTime(23, 59, 59).atZone(ChronivaroModelHelper.getEmployeeTimezone(emp2)));
+			abs3.setString(PARAM_DURATION_TYPE, DURATION_FULL_DAY);
+			abs3.setInteger(PARAM_MINUTES, 480);
+			abs3.setString(PARAM_STATE, STATE_APPROVED);
+			abs3.setString(PARAM_COMMENT, "Teammate confidential doctor note");
+			tx.add(abs3);
+
+			// Add Vacation absence for other team employee
+			Resource abs4 = tx.getResourceTemplate(TYPE_ABSENCE, true);
+			abs4.setId("abs-other-vac");
+			abs4.setName("Other Vacation");
+			abs4.setRelation(PARAM_EMPLOYEE, emp3);
+			abs4.setRelationId(PARAM_ABSENCE_TYPE, "VACATION");
+			abs4.setDate(PARAM_START, LocalDate.of(2026, 8, 6).atStartOfDay(ChronivaroModelHelper.getEmployeeTimezone(emp3)));
+			abs4.setDate(PARAM_END, LocalDate.of(2026, 8, 6).atTime(23, 59, 59).atZone(ChronivaroModelHelper.getEmployeeTimezone(emp3)));
+			abs4.setString(PARAM_DURATION_TYPE, DURATION_FULL_DAY);
+			abs4.setInteger(PARAM_MINUTES, 480);
+			abs4.setString(PARAM_STATE, STATE_APPROVED);
+			tx.add(abs4);
+
+			tx.commitOnClose();
+		}
+
+		Certificate callerCert = runtimeMock.login("employee", "admin");
+		ServiceHandler serviceHandler = runtimeMock.getServiceHandler();
+
+		// 1. Caller queries without employeeId/teamId -> gets team absences (caller + teammate, NOT other team)
+		AbsenceReportService.AbsenceReportArgument argAll = new AbsenceReportService.AbsenceReportArgument();
+		argAll.from = LocalDate.of(2026, 8, 1);
+		argAll.to = LocalDate.of(2026, 8, 31);
+		AbsenceReportService.AbsenceReportResult resAll = serviceHandler.doService(callerCert, new AbsenceReportService(), argAll);
+		assertEquals(ServiceResult.success().getState(), resAll.getState());
+
+		List<AbsenceReportItem> items = resAll.items;
+		assertEquals(3, items.size());
+
+		// Caller's own illness: full type + comment visible
+		AbsenceReportItem callerItem = items.stream().filter(i -> i.id().equals("abs-caller-ill")).findFirst().orElseThrow();
+		assertEquals("ILLNESS", callerItem.absenceTypeCode());
+		assertEquals("Caller secret illness comment", callerItem.comment());
+
+		// Teammate's vacation: vacation type visible, comment masked
+		AbsenceReportItem teamVacItem = items.stream().filter(i -> i.id().equals("abs-teammate-vac")).findFirst().orElseThrow();
+		assertEquals("VACATION", teamVacItem.absenceTypeCode());
+		assertEquals("", teamVacItem.comment());
+
+		// Teammate's illness: masked to ABSENT / Abwesend, comment masked
+		AbsenceReportItem teamIllItem = items.stream().filter(i -> i.id().equals("abs-teammate-ill")).findFirst().orElseThrow();
+		assertEquals("ABSENT", teamIllItem.absenceTypeCode());
+		assertEquals("Abwesend", teamIllItem.absenceTypeName());
+		assertEquals("", teamIllItem.comment());
+
+		// 2. Caller queries other team's employee -> AccessDenied
+		AbsenceReportService.AbsenceReportArgument argOtherEmp = new AbsenceReportService.AbsenceReportArgument();
+		argOtherEmp.employeeId = emp3Id;
+		AbsenceReportService.AbsenceReportResult resOtherEmp = serviceHandler.doService(callerCert, new AbsenceReportService(), argOtherEmp);
+		assertTrue(resOtherEmp.isNok());
+
+		// 3. Caller queries other team -> AccessDenied
+		AbsenceReportService.AbsenceReportArgument argOtherTeam = new AbsenceReportService.AbsenceReportArgument();
+		argOtherTeam.teamId = "report-other-team";
+		AbsenceReportService.AbsenceReportResult resOtherTeam = serviceHandler.doService(callerCert, new AbsenceReportService(), argOtherTeam);
+		assertTrue(resOtherTeam.isNok());
 	}
 }

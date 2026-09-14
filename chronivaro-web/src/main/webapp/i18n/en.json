@@ -938,6 +938,7 @@
     "newOnCallPeriod": "Schedule On-Call",
     "createAbsencePrompt": "Create absence for {name} on {date}",
     "createAbsenceTitle": "Create Absence",
+    "editAbsenceTitle": "Edit Absence",
     "createOnCallTitle": "Schedule On-Call Period",
     "editOnCallTitle": "Edit On-Call Period",
     "onCallDetails": "On-Call Period Details",
@@ -976,7 +977,8 @@
     "daysCount": "{count} days",
     "hoursCount": "{count} hours",
     "minutesCount": "{count} min",
-    "emptyTimeline": "No employees found for the selected filters."
+    "emptyTimeline": "No employees found for the selected filters.",
+    "absent": "Absent"
   },
   "version": {
     "title": "Version Information",

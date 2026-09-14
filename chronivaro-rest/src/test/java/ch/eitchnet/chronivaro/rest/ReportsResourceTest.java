@@ -501,7 +501,50 @@ public class ReportsResourceTest extends AbstractChronivaroRestfulTest {
 		String employeeToken = authenticate("employee", "admin");
 		String supervisorToken = authenticate("supervisor", "admin");
 
-		// 1. Employee gets own absence report
+		// Add an illness absence for supervisor_emp (in team-1) and a vacation absence for other_emp (in team-2)
+		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(runtimeMock.loginAdmin())) {
+			Resource illnessType = tx.getResourceBy(TYPE_ABSENCE_TYPE, "illness");
+			if (illnessType == null) {
+				illnessType = tx.getResourceTemplate(TYPE_ABSENCE_TYPE, true);
+				illnessType.setId("illness");
+				illnessType.setName("Illness");
+				illnessType.setString(PARAM_CODE, "ILLNESS");
+				illnessType.setBoolean(PARAM_PAID, true);
+				illnessType.setBoolean(PARAM_ACTIVE, true);
+				tx.add(illnessType);
+			}
+
+			Resource supAbsence = tx.getResourceTemplate(TYPE_ABSENCE, true);
+			supAbsence.setId("abs-sup-ill");
+			supAbsence.setName("Illness");
+			supAbsence.setRelationId(PARAM_EMPLOYEE, "supervisor_emp");
+			supAbsence.setRelationId(PARAM_ABSENCE_TYPE, "illness");
+			supAbsence.setString(PARAM_ABSENCE_TYPE, "ILLNESS");
+			supAbsence.setDate(PARAM_START, LocalDate.of(2026, 8, 17).atStartOfDay(ZoneId.of(ZONE)));
+			supAbsence.setDate(PARAM_END, LocalDate.of(2026, 8, 17).atTime(23, 59, 59).atZone(ZoneId.of(ZONE)));
+			supAbsence.setString(PARAM_DURATION_TYPE, DURATION_FULL_DAY);
+			supAbsence.setInteger(PARAM_MINUTES, 480);
+			supAbsence.setString(PARAM_STATE, STATE_APPROVED);
+			supAbsence.setString(PARAM_COMMENT, "Confidential illness note");
+			tx.add(supAbsence);
+
+			Resource otherAbsence = tx.getResourceTemplate(TYPE_ABSENCE, true);
+			otherAbsence.setId("abs-other-vac");
+			otherAbsence.setName("Vacation");
+			otherAbsence.setRelationId(PARAM_EMPLOYEE, "other_emp");
+			otherAbsence.setRelationId(PARAM_ABSENCE_TYPE, "vacation");
+			otherAbsence.setString(PARAM_ABSENCE_TYPE, "VACATION");
+			otherAbsence.setDate(PARAM_START, LocalDate.of(2026, 8, 18).atStartOfDay(ZoneId.of(ZONE)));
+			otherAbsence.setDate(PARAM_END, LocalDate.of(2026, 8, 18).atTime(23, 59, 59).atZone(ZoneId.of(ZONE)));
+			otherAbsence.setString(PARAM_DURATION_TYPE, DURATION_FULL_DAY);
+			otherAbsence.setInteger(PARAM_MINUTES, 480);
+			otherAbsence.setString(PARAM_STATE, STATE_APPROVED);
+			tx.add(otherAbsence);
+
+			tx.commitOnClose();
+		}
+
+		// 1. Employee gets team absences (employee_emp + supervisor_emp, NOT other_emp)
 		try (Response resEmp = target()
 				.path("chronivaro/v1/reports/absences")
 				.queryParam("from", "2026-08-01")
@@ -513,11 +556,52 @@ public class ReportsResourceTest extends AbstractChronivaroRestfulTest {
 			assertEquals(200, resEmp.getStatus());
 			String jsonStr = resEmp.readEntity(String.class);
 			JsonObject report = JsonParser.parseString(jsonStr).getAsJsonObject();
-			assertEquals(1, report.get("items").getAsJsonArray().size());
-			assertEquals("employee_emp", report.get("items").getAsJsonArray().get(0).getAsJsonObject().get("employeeId").getAsString());
+			assertEquals(2, report.get("items").getAsJsonArray().size());
+
+			JsonObject ownItem = null;
+			JsonObject teammateItem = null;
+			for (var el : report.get("items").getAsJsonArray()) {
+				JsonObject item = el.getAsJsonObject();
+				if ("employee_emp".equals(item.get("employeeId").getAsString())) {
+					ownItem = item;
+				} else if ("supervisor_emp".equals(item.get("employeeId").getAsString())) {
+					teammateItem = item;
+				}
+			}
+
+			assertNotNull(ownItem);
+			assertEquals("vacation", ownItem.get("absenceTypeCode").getAsString());
+			assertEquals("Summer break", ownItem.get("comment").getAsString());
+
+			assertNotNull(teammateItem);
+			assertEquals("ABSENT", teammateItem.get("absenceTypeCode").getAsString());
+			assertEquals("Abwesend", teammateItem.get("absenceTypeName").getAsString());
+			assertEquals("", teammateItem.get("comment").getAsString());
 		}
 
-		// 2. Supervisor gets absences report for team
+		// 2. Employee queries other team's employee -> 403 Forbidden
+		try (Response resForbidden = target()
+				.path("chronivaro/v1/reports/absences")
+				.queryParam("employeeId", "other_emp")
+				.request(MediaType.APPLICATION_JSON)
+				.header("Authorization", employeeToken)
+				.get()) {
+
+			assertEquals(403, resForbidden.getStatus());
+		}
+
+		// 3. Employee queries other team -> 403 Forbidden
+		try (Response resForbidden = target()
+				.path("chronivaro/v1/reports/absences")
+				.queryParam("teamId", "team-2")
+				.request(MediaType.APPLICATION_JSON)
+				.header("Authorization", employeeToken)
+				.get()) {
+
+			assertEquals(403, resForbidden.getStatus());
+		}
+
+		// 4. Supervisor gets absences report for team
 		try (Response resSup = target()
 				.path("chronivaro/v1/reports/absences")
 				.queryParam("teamId", "team-1")
@@ -531,6 +615,7 @@ public class ReportsResourceTest extends AbstractChronivaroRestfulTest {
 			assertTrue(csvStr.startsWith(CsvExportHelper.UTF8_BOM));
 			assertTrue(csvStr.contains("AbsenceId,EmployeeId,EmployeeName,AbsenceTypeCode"));
 			assertTrue(csvStr.contains("employee_emp"));
+			assertTrue(csvStr.contains("supervisor_emp"));
 		}
 	}
 

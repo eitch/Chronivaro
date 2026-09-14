@@ -1,5 +1,6 @@
 import AuthApi from '../api/AuthApi.js';
 import EmployeeApi from '../api/EmployeeApi.js';
+import PresenceApi from '../api/PresenceApi.js';
 import TeamApi from '../api/TeamApi.js';
 import LocationApi from '../api/LocationApi.js';
 import AbsenceApi from '../api/AbsenceApi.js';
@@ -328,18 +329,60 @@ export default class AbsenceCalendarView {
         try {
             // Load current user employee profile
             const currentProfile = await EmployeeApi.getMyProfile().catch(() => null);
+            let userTeamId = null;
             if (currentProfile && currentProfile.id) {
                 this.currentUserEmployeeId = currentProfile.id;
                 this.currentUserEmployeeName = currentProfile.name || (currentProfile.firstname ? (currentProfile.firstname + ' ' + (currentProfile.lastname || '')).trim() : 'Me');
+                userTeamId = currentProfile.teamId || currentProfile.primaryTeamId || null;
+                this.currentUserPrimaryTeamId = userTeamId;
             }
 
-            // Load master data in parallel
-            const [teamsRes, locsRes, empsRes, typesRes] = await Promise.all([
-                TeamApi.getAll().catch(() => []),
-                LocationApi.getAll().catch(() => []),
-                EmployeeApi.getAll().catch(() => []),
-                AbsenceTypeApi.getAll().catch(() => [])
-            ]);
+            // Load master data
+            let teamsRes = [];
+            let locsRes = [];
+            let empsRes = [];
+            let typesRes = [];
+
+            if (this.isManager) {
+                [teamsRes, locsRes, empsRes, typesRes] = await Promise.all([
+                    TeamApi.getAll().catch(() => []),
+                    LocationApi.getAll().catch(() => []),
+                    EmployeeApi.getAll().catch(() => []),
+                    AbsenceTypeApi.getAll().catch(() => [])
+                ]);
+            } else {
+                const [presenceList, typesData] = await Promise.all([
+                    PresenceApi.getPresence().catch(() => []),
+                    AbsenceTypeApi.getAll().catch(() => [])
+                ]);
+                typesRes = typesData;
+                const teammates = Array.isArray(presenceList) ? presenceList : (presenceList.data || []);
+                empsRes = teammates.map(p => ({
+                    id: p.employeeId,
+                    name: `${p.firstname || ''} ${p.lastname || ''}`.trim() || p.employeeId,
+                    firstname: p.firstname,
+                    lastname: p.lastname,
+                    primaryTeamId: p.teamId || userTeamId,
+                    teamId: p.teamId || userTeamId,
+                    teamName: p.teamName
+                }));
+                if (this.currentUserEmployeeId && !empsRes.some(e => e.id === this.currentUserEmployeeId)) {
+                    empsRes.unshift({
+                        id: this.currentUserEmployeeId,
+                        name: this.currentUserEmployeeName || 'Me',
+                        firstname: currentProfile ? currentProfile.firstname : 'Me',
+                        lastname: currentProfile ? currentProfile.lastname : '',
+                        primaryTeamId: userTeamId,
+                        teamId: userTeamId,
+                        teamName: currentProfile ? currentProfile.teamName : ''
+                    });
+                }
+                if (userTeamId) {
+                    const tName = (currentProfile && currentProfile.teamName) || (empsRes[0] && empsRes[0].teamName) || userTeamId;
+                    teamsRes = [{ id: userTeamId, name: tName }];
+                    this.filterTeamId = userTeamId;
+                }
+            }
 
             this.teams = Array.isArray(teamsRes) ? teamsRes : (teamsRes.data || []);
             this.locations = Array.isArray(locsRes) ? locsRes : (locsRes.data || []);
@@ -361,13 +404,22 @@ export default class AbsenceCalendarView {
         // Teams
         const teamSelect = container.querySelector('#cal-filter-team');
         if (teamSelect) {
-            teamSelect.innerHTML = `<option value="">${I18n.t('calendar.allTeams')}</option>`;
-            this.teams.forEach(t => {
-                const opt = document.createElement('option');
-                opt.value = t.id;
-                opt.textContent = t.name || t.id;
-                teamSelect.appendChild(opt);
-            });
+            if (!this.isManager && this.teams.length <= 1) {
+                teamSelect.innerHTML = this.teams.length === 1
+                    ? `<option value="${this.teams[0].id}">${this.teams[0].name || this.teams[0].id}</option>`
+                    : `<option value="">${I18n.t('calendar.allTeams')}</option>`;
+                teamSelect.disabled = true;
+            } else {
+                teamSelect.disabled = false;
+                teamSelect.innerHTML = `<option value="">${I18n.t('calendar.allTeams')}</option>`;
+                this.teams.forEach(t => {
+                    const opt = document.createElement('option');
+                    opt.value = t.id;
+                    opt.textContent = t.name || t.id;
+                    if (t.id === this.filterTeamId) opt.selected = true;
+                    teamSelect.appendChild(opt);
+                });
+            }
         }
 
         // Locations
@@ -378,6 +430,7 @@ export default class AbsenceCalendarView {
                 const opt = document.createElement('option');
                 opt.value = l.id;
                 opt.textContent = l.name || l.id;
+                if (l.id === this.filterLocationId) opt.selected = true;
                 locSelect.appendChild(opt);
             });
         }
@@ -388,8 +441,9 @@ export default class AbsenceCalendarView {
             typeSelect.innerHTML = `<option value="">${I18n.t('calendar.allTypes')}</option>`;
             this.absenceTypes.forEach(t => {
                 const opt = document.createElement('option');
-                opt.value = t.id;
-                opt.textContent = t.name || t.id;
+                opt.value = t.code || t.id;
+                opt.textContent = t.name || t.code || t.id;
+                if ((t.code || t.id) === this.filterAbsenceTypeCode) opt.selected = true;
                 typeSelect.appendChild(opt);
             });
         }
@@ -402,11 +456,14 @@ export default class AbsenceCalendarView {
         if (!empSelect) return;
 
         let filtered = this.employees;
+        if (!this.isManager && this.currentUserPrimaryTeamId) {
+            filtered = filtered.filter(e => (e.primaryTeamId || e.teamId) === this.currentUserPrimaryTeamId || e.id === this.currentUserEmployeeId);
+        }
         if (this.filterTeamId) {
-            filtered = filtered.filter(e => e.primaryTeamId === this.filterTeamId);
+            filtered = filtered.filter(e => (e.primaryTeamId || e.teamId) === this.filterTeamId);
         }
         if (this.filterLocationId) {
-            filtered = filtered.filter(e => e.primaryLocationId === this.filterLocationId);
+            filtered = filtered.filter(e => (e.primaryLocationId || e.locationId) === this.filterLocationId);
         }
 
         empSelect.innerHTML = `<option value="">${I18n.t('calendar.allEmployees')}</option>`;
@@ -502,11 +559,14 @@ export default class AbsenceCalendarView {
 
     getEffectiveEmployees() {
         let list = this.employees;
+        if (!this.isManager && this.currentUserPrimaryTeamId) {
+            list = list.filter(e => (e.primaryTeamId || e.teamId) === this.currentUserPrimaryTeamId || e.id === this.currentUserEmployeeId);
+        }
         if (this.filterTeamId) {
-            list = list.filter(e => e.primaryTeamId === this.filterTeamId);
+            list = list.filter(e => (e.primaryTeamId || e.teamId) === this.filterTeamId);
         }
         if (this.filterLocationId) {
-            list = list.filter(e => e.primaryLocationId === this.filterLocationId);
+            list = list.filter(e => (e.primaryLocationId || e.locationId) === this.filterLocationId);
         }
         if (this.filterEmployeeId) {
             list = list.filter(e => e.id === this.filterEmployeeId);
@@ -679,10 +739,14 @@ export default class AbsenceCalendarView {
                 if (absencesOnDay.length > 0) {
                     for (const abs of absencesOnDay) {
                         const statusClass = this.getStatusClass(abs.state || abs.status);
-                        const typeClass = this.getAbsenceTypeClass(abs.absenceTypeCode);
+                        const typeCode = abs.absenceTypeCode || abs.type || abs.absenceTypeId || '';
+                        const typeClass = this.getAbsenceTypeClass(typeCode);
                         const label = this.getAbsenceShortLabel(abs);
+                        const displayType = (typeCode === 'ABSENT')
+                            ? (I18n.t('calendar.absent') || abs.absenceTypeName || 'Absent')
+                            : (abs.absenceTypeName || typeCode);
                         cellContent += `
-                            <div class="cal-badge ${typeClass} ${statusClass}" data-abs-id="${abs.id}" style="padding: 2px 4px; border-radius: 3px; font-size: 0.7rem; font-weight: 500; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 2px;" title="${abs.absenceTypeName || abs.absenceTypeCode} (${abs.state || 'APPROVED'}) - ${abs.comment || ''}">
+                            <div class="cal-badge ${typeClass} ${statusClass}" data-abs-id="${abs.id}" style="padding: 2px 4px; border-radius: 3px; font-size: 0.7rem; font-weight: 500; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 2px;" title="${displayType} (${abs.state || 'APPROVED'})${abs.comment ? ` - ${abs.comment}` : ''}">
                                 ${label}
                             </div>
                         `;
@@ -839,12 +903,16 @@ export default class AbsenceCalendarView {
             // Absences
             for (const abs of absencesOnDay) {
                 const statusClass = this.getStatusClass(abs.state || abs.status);
-                const typeClass = this.getAbsenceTypeClass(abs.absenceTypeCode);
+                const typeCode = abs.absenceTypeCode || abs.type || abs.absenceTypeId || '';
+                const typeClass = this.getAbsenceTypeClass(typeCode);
                 const empName = abs.employeeName || abs.employeeId;
                 const label = `${empName}: ${this.getAbsenceShortLabel(abs)}`;
+                const displayType = (typeCode === 'ABSENT')
+                    ? (I18n.t('calendar.absent') || abs.absenceTypeName || 'Absent')
+                    : (abs.absenceTypeName || typeCode);
 
                 badgesHtml += `
-                    <div class="cal-grid-badge ${typeClass} ${statusClass}" data-abs-id="${abs.id}" style="padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; margin-bottom: 3px; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${empName} - ${abs.absenceTypeName || abs.absenceTypeCode} (${abs.state || 'APPROVED'})">
+                    <div class="cal-grid-badge ${typeClass} ${statusClass}" data-abs-id="${abs.id}" style="padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; margin-bottom: 3px; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${empName} - ${displayType} (${abs.state || 'APPROVED'})">
                         ${label}
                     </div>
                 `;
@@ -940,6 +1008,7 @@ export default class AbsenceCalendarView {
     getAbsenceTypeClass(typeCode) {
         if (!typeCode) return 'type-other';
         const code = typeCode.toUpperCase();
+        if (code === 'ABSENT') return 'type-other';
         if (code.includes('VACATION') || code.includes('FERIEN')) return 'type-vacation';
         if (code.includes('ILLNESS') || code.includes('KRANK')) return 'type-illness';
         if (code.includes('ACCIDENT') || code.includes('UNFALL')) return 'type-accident';
@@ -950,7 +1019,10 @@ export default class AbsenceCalendarView {
     }
 
     getAbsenceShortLabel(abs) {
-        let label = abs.absenceTypeName || abs.absenceTypeCode || 'Absence';
+        const typeCode = abs.absenceTypeCode || abs.type || abs.absenceTypeId || '';
+        let label = (typeCode === 'ABSENT')
+            ? (I18n.t('calendar.absent') || abs.absenceTypeName || 'Absent')
+            : (abs.absenceTypeName || typeCode || 'Absence');
         if (abs.durationType === 'HALF_DAY') {
             const part = abs.dayPart === 'MORNING' ? 'AM' : 'PM';
             label = `½ ${part} ${label}`;
@@ -964,6 +1036,13 @@ export default class AbsenceCalendarView {
     openAbsenceDetailsModal(container, abs) {
         const modalsContainer = container.querySelector('#calendar-modals');
         if (!modalsContainer) return;
+
+        const isOwner = abs.employeeId === this.currentUserEmployeeId;
+        const canEdit = this.isManager || (isOwner && abs.state !== 'CANCELLED');
+        const typeCode = abs.absenceTypeCode || abs.type || abs.absenceTypeId || '';
+        const displayType = (typeCode === 'ABSENT')
+            ? (I18n.t('calendar.absent') || abs.absenceTypeName || 'Absent')
+            : (abs.absenceTypeName || typeCode || '');
 
         const modal = document.createElement('div');
         modal.className = 'modal-backdrop active';
@@ -981,7 +1060,7 @@ export default class AbsenceCalendarView {
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 0.75rem;">
                         <div>
                             <span style="font-weight: 600; color: var(--text-muted); display: block; font-size: 0.75rem;">${I18n.t('common.type')}:</span>
-                            <span>${abs.absenceTypeName || abs.absenceTypeCode}</span>
+                            <span>${displayType}</span>
                         </div>
                         <div>
                             <span style="font-weight: 600; color: var(--text-muted); display: block; font-size: 0.75rem;">${I18n.t('common.status')}:</span>
@@ -1016,6 +1095,9 @@ export default class AbsenceCalendarView {
                     ` : ''}
                 </div>
                 <div class="modal-footer" style="display: flex; justify-content: flex-end; gap: 0.5rem; padding: 1rem 1.5rem; border-top: 1px solid var(--border-color); background: var(--surface-bg, #f8fafc);">
+                    ${canEdit ? `
+                    <button type="button" class="secondary-btn modal-edit-abs-btn">${I18n.t('common.edit')}</button>
+                    ` : ''}
                     <button type="button" class="primary-btn modal-ok-btn">${I18n.t('common.close')}</button>
                 </div>
             </div>
@@ -1032,6 +1114,14 @@ export default class AbsenceCalendarView {
         modal.addEventListener('click', (e) => {
             if (e.target === modal) close();
         });
+
+        const editBtn = modal.querySelector('.modal-edit-abs-btn');
+        if (editBtn) {
+            editBtn.addEventListener('click', () => {
+                close();
+                this.openEditAbsenceModal(container, abs);
+            });
+        }
     }
 
     openOnCallDetailsModal(container, oc) {
@@ -1380,9 +1470,18 @@ export default class AbsenceCalendarView {
     }
 
     openCreateAbsenceModal(container, initialData = {}) {
+        this.openAbsenceFormModal(container, null, initialData);
+    }
+
+    openEditAbsenceModal(container, abs) {
+        this.openAbsenceFormModal(container, abs);
+    }
+
+    openAbsenceFormModal(container, existingAbs = null, initialData = {}) {
         const modalsContainer = container.querySelector('#calendar-modals');
         if (!modalsContainer) return;
 
+        const isEdit = !!existingAbs;
         const modal = document.createElement('div');
         modal.className = 'modal-backdrop active';
 
@@ -1393,24 +1492,51 @@ export default class AbsenceCalendarView {
             lastname: ''
         }];
 
-        const defaultStart = initialData.startDate || `${this.currentYear}-${String(this.currentMonth).padStart(2, '0')}-01`;
-        const defaultEnd = initialData.endDate || defaultStart;
-        const selectedEmpId = initialData.employeeId || this.currentUserEmployeeId || employees[0].id;
+        const defaultStart = existingAbs ? (existingAbs.start || existingAbs.startDate || '') : (initialData.startDate || `${this.currentYear}-${String(this.currentMonth).padStart(2, '0')}-01`);
+        const defaultEnd = existingAbs ? (existingAbs.end || existingAbs.endDate || defaultStart) : (initialData.endDate || defaultStart);
+        const selectedEmpId = existingAbs ? existingAbs.employeeId : (initialData.employeeId || this.currentUserEmployeeId || employees[0].id);
+        const selectedTypeCode = existingAbs ? (existingAbs.absenceTypeCode || existingAbs.absenceTypeId || existingAbs.type || '') : '';
+        const defaultComment = existingAbs ? (existingAbs.comment || '') : '';
+        const durationType = existingAbs ? (existingAbs.durationType || 'FULL_DAY') : 'FULL_DAY';
+        const dayPart = existingAbs ? (existingAbs.dayPart || existingAbs.halfDayPart || 'MORNING') : 'MORNING';
+        const hoursVal = existingAbs ? (existingAbs.hours || (existingAbs.minutes ? (existingAbs.minutes / 60) : 4.0)) : 4.0;
+
+        let selectedDurationVal = durationType;
+        if (durationType === 'HALF_DAY') {
+            selectedDurationVal = dayPart === 'AFTERNOON' ? 'HALF_DAY_AFTERNOON' : 'HALF_DAY_MORNING';
+        }
+
+        let hasSelectedType = false;
+        const absenceTypeOptionsHtml = this.absenceTypes.map(t => {
+            const val = t.code || t.id;
+            const isMatch = !!selectedTypeCode && (
+                val === selectedTypeCode ||
+                t.id === selectedTypeCode ||
+                (t.code && t.code.toUpperCase() === selectedTypeCode.toUpperCase()) ||
+                (t.id && t.id.toUpperCase() === selectedTypeCode.toUpperCase())
+            );
+            if (isMatch) hasSelectedType = true;
+            return `<option value="${val}" data-comment-req="${t.commentRequired ? 'true' : 'false'}" ${isMatch ? 'selected' : ''}>${t.name || t.code || t.id}</option>`;
+        }).join('');
+
+        const fallbackTypeOptionHtml = (existingAbs && selectedTypeCode && !hasSelectedType)
+            ? `<option value="${selectedTypeCode}" selected>${existingAbs.absenceTypeName || selectedTypeCode}</option>`
+            : '';
 
         modal.innerHTML = `
             <div class="modal-dialog" style="max-width: 550px; width: 90%; background: var(--card-bg, #fff); border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); overflow: hidden;">
                 <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border-color);">
-                    <h3 style="margin: 0; font-size: 1.15rem;">${I18n.t('calendar.createAbsenceTitle')}</h3>
+                    <h3 style="margin: 0; font-size: 1.15rem;">${isEdit ? (I18n.t('calendar.editAbsenceTitle') || I18n.t('absences.editAbsence')) : I18n.t('calendar.createAbsenceTitle')}</h3>
                     <button type="button" class="modal-close-btn" style="background: none; border: none; font-size: 1.25rem; cursor: pointer;">&times;</button>
                 </div>
-                <form id="create-absence-form">
+                <form id="absence-form">
                     <div class="modal-body" style="padding: 1.25rem 1.5rem; display: flex; flex-direction: column; gap: 1rem;">
-                        <div id="create-absence-error" class="error-banner" style="display: none;"></div>
+                        <div id="absence-form-error" class="error-banner" style="display: none;"></div>
 
                         <!-- Employee Selection (for Manager) -->
                         <div class="form-group">
                             <label for="modal-absence-emp" style="display: block; font-weight: 500; font-size: 0.85rem; margin-bottom: 0.25rem;">${I18n.t('calendar.employee')} *</label>
-                            <select id="modal-absence-emp" ${!this.isManager ? 'disabled' : 'required'} style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 4px;">
+                            <select id="modal-absence-emp" ${(!this.isManager || isEdit) ? 'disabled' : 'required'} style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 4px;">
                                 ${employees.map(e => `
                                     <option value="${e.id}" ${e.id === selectedEmpId ? 'selected' : ''}>
                                         ${`${e.firstname || ''} ${e.lastname || ''}`.trim() || e.name || e.id}
@@ -1424,9 +1550,8 @@ export default class AbsenceCalendarView {
                             <label for="modal-absence-type" style="display: block; font-weight: 500; font-size: 0.85rem; margin-bottom: 0.25rem;">${I18n.t('common.type')} *</label>
                             <select id="modal-absence-type" required style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 4px;">
                                 <option value="">${I18n.t('calendar.selectAbsenceType')}</option>
-                                ${this.absenceTypes.map(t => `
-                                    <option value="${t.id}" data-comment-req="${t.commentRequired ? 'true' : 'false'}">${t.name || t.id}</option>
-                                `).join('')}
+                                ${fallbackTypeOptionHtml}
+                                ${absenceTypeOptionsHtml}
                             </select>
                         </div>
 
@@ -1446,17 +1571,17 @@ export default class AbsenceCalendarView {
                         <div class="form-group">
                             <label for="modal-absence-duration-type" style="display: block; font-weight: 500; font-size: 0.85rem; margin-bottom: 0.25rem;">${I18n.t('common.duration')} *</label>
                             <select id="modal-absence-duration-type" required style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 4px;">
-                                <option value="FULL_DAY">${I18n.t('calendar.fullDay')}</option>
-                                <option value="HALF_DAY_MORNING">${I18n.t('calendar.halfDayMorning')}</option>
-                                <option value="HALF_DAY_AFTERNOON">${I18n.t('calendar.halfDayAfternoon')}</option>
-                                <option value="HOURS">${I18n.t('calendar.hours')}</option>
+                                <option value="FULL_DAY" ${selectedDurationVal === 'FULL_DAY' ? 'selected' : ''}>${I18n.t('calendar.fullDay')}</option>
+                                <option value="HALF_DAY_MORNING" ${selectedDurationVal === 'HALF_DAY_MORNING' ? 'selected' : ''}>${I18n.t('calendar.halfDayMorning')}</option>
+                                <option value="HALF_DAY_AFTERNOON" ${selectedDurationVal === 'HALF_DAY_AFTERNOON' ? 'selected' : ''}>${I18n.t('calendar.halfDayAfternoon')}</option>
+                                <option value="HOURS" ${selectedDurationVal === 'HOURS' ? 'selected' : ''}>${I18n.t('calendar.hours')}</option>
                             </select>
                         </div>
 
                         <!-- Hours/Minutes Row (Conditional) -->
-                        <div id="modal-hours-container" class="form-group" style="display: none;">
+                        <div id="modal-hours-container" class="form-group" style="${selectedDurationVal === 'HOURS' ? 'display: block;' : 'display: none;'}">
                             <label for="modal-absence-hours" style="display: block; font-weight: 500; font-size: 0.85rem; margin-bottom: 0.25rem;">${I18n.t('common.hours')} *</label>
-                            <input type="number" id="modal-absence-hours" min="0.5" max="24" step="0.5" value="4.0" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 4px;">
+                            <input type="number" id="modal-absence-hours" min="0.5" max="24" step="0.5" value="${hoursVal}" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 4px;">
                         </div>
 
                         <!-- Comment / Reason -->
@@ -1464,11 +1589,11 @@ export default class AbsenceCalendarView {
                             <label for="modal-absence-comment" style="display: block; font-weight: 500; font-size: 0.85rem; margin-bottom: 0.25rem;">
                                 ${I18n.t('common.comment')} <span id="modal-comment-required-indicator" style="color: var(--danger-color, #dc2626); display: none;">*</span>
                             </label>
-                            <textarea id="modal-absence-comment" rows="3" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 4px; box-sizing: border-box;"></textarea>
+                            <textarea id="modal-absence-comment" rows="3" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 4px; box-sizing: border-box;">${defaultComment}</textarea>
                         </div>
 
-                        <!-- Direct Approval (Manager only) -->
-                        ${this.isManager ? `
+                        <!-- Direct Approval (Manager only for create) -->
+                        ${(!isEdit && this.isManager) ? `
                         <div class="form-group" style="padding: 0.75rem; background: rgba(37,99,235,0.04); border: 1px solid var(--border-color); border-radius: 4px;">
                             <label style="display: flex; align-items: center; gap: 0.5rem; font-weight: 500; font-size: 0.85rem; cursor: pointer; margin: 0;">
                                 <input type="checkbox" id="modal-direct-approval" checked>
@@ -1480,10 +1605,10 @@ export default class AbsenceCalendarView {
                     </div>
                     <div class="modal-footer" style="display: flex; justify-content: flex-end; gap: 0.5rem; padding: 1rem 1.5rem; border-top: 1px solid var(--border-color); background: var(--surface-bg, #f8fafc);">
                         <button type="button" class="secondary-btn modal-cancel-btn">${I18n.t('common.cancel')}</button>
-                        ${!this.isManager ? `
+                        ${(!isEdit && !this.isManager) ? `
                         <button type="button" id="modal-draft-btn" class="secondary-btn">${I18n.t('calendar.saveAsDraft')}</button>
                         ` : ''}
-                        <button type="submit" class="primary-btn">${I18n.t('calendar.submitRequest')}</button>
+                        <button type="submit" class="primary-btn">${isEdit ? I18n.t('common.save') : I18n.t('calendar.submitRequest')}</button>
                     </div>
                 </form>
             </div>
@@ -1491,7 +1616,7 @@ export default class AbsenceCalendarView {
 
         modalsContainer.appendChild(modal);
 
-        const form = modal.querySelector('#create-absence-form');
+        const form = modal.querySelector('#absence-form');
         const startInput = modal.querySelector('#modal-absence-start');
         const endInput = modal.querySelector('#modal-absence-end');
         const durationSelect = modal.querySelector('#modal-absence-duration-type');
@@ -1499,7 +1624,7 @@ export default class AbsenceCalendarView {
         const typeSelect = modal.querySelector('#modal-absence-type');
         const commentReqIndicator = modal.querySelector('#modal-comment-required-indicator');
         const commentInput = modal.querySelector('#modal-absence-comment');
-        const errorBanner = modal.querySelector('#create-absence-error');
+        const errorBanner = modal.querySelector('#absence-form-error');
 
         [startInput, endInput].forEach(inp => {
             if (inp) {
@@ -1519,7 +1644,7 @@ export default class AbsenceCalendarView {
         });
 
         // Dynamic comment required indicator
-        typeSelect.addEventListener('change', () => {
+        const updateCommentReq = () => {
             const selectedOpt = typeSelect.selectedOptions[0];
             const isReq = selectedOpt && selectedOpt.getAttribute('data-comment-req') === 'true';
             commentReqIndicator.style.display = isReq ? 'inline' : 'none';
@@ -1528,7 +1653,9 @@ export default class AbsenceCalendarView {
             } else {
                 commentInput.removeAttribute('required');
             }
-        });
+        };
+        typeSelect.addEventListener('change', updateCommentReq);
+        updateCommentReq();
 
         const close = () => {
             if (modal.parentElement) modal.parentElement.removeChild(modal);
@@ -1597,24 +1724,43 @@ export default class AbsenceCalendarView {
                 halfDayPart: durationType === 'HALF_DAY' ? dayPart : undefined,
                 hours: durationType === 'HOURS' ? (minutes / 60) : undefined,
                 minutes: durationType === 'HOURS' ? minutes : undefined,
-                comment: comment || undefined,
-                state: isDraft ? 'DRAFT' : (isDirectApproval ? 'APPROVED' : 'SUBMITTED')
+                comment: comment || undefined
             };
 
             try {
-                if (this.isManager && empId !== this.currentUserEmployeeId) {
-                    await AbsenceApi.createEmployeeAbsence(empId, payload);
-                } else if (this.isManager && isDirectApproval) {
-                    await AbsenceApi.createEmployeeAbsence(empId, payload);
+                if (isEdit) {
+                    const isManagingOther = this.isManager && (empId !== this.currentUserEmployeeId);
+                    if (existingAbs.state === 'APPROVED') {
+                        if (isManagingOther) {
+                            await AbsenceApi.updateEmployeeAbsence(empId, existingAbs.id, payload, existingAbs.version);
+                        } else {
+                            await AbsenceApi.updateAbsence(existingAbs.id, payload, existingAbs.version);
+                        }
+                    } else {
+                        if (isManagingOther) {
+                            await AbsenceApi.updateEmployeeAbsence(empId, existingAbs.id, payload, existingAbs.version);
+                        } else {
+                            await AbsenceApi.updateAbsence(existingAbs.id, payload, existingAbs.version);
+                        }
+                    }
+                    close();
+                    NotificationDialog.show(I18n.t('absences.absenceUpdated') || I18n.t('common.saved'), I18n.t('common.success'));
                 } else {
-                    await AbsenceApi.requestAbsence(payload);
+                    payload.state = isDraft ? 'DRAFT' : (isDirectApproval ? 'APPROVED' : 'SUBMITTED');
+                    if (this.isManager && empId !== this.currentUserEmployeeId) {
+                        await AbsenceApi.createEmployeeAbsence(empId, payload);
+                    } else if (this.isManager && isDirectApproval) {
+                        await AbsenceApi.createEmployeeAbsence(empId, payload);
+                    } else {
+                        await AbsenceApi.requestAbsence(payload);
+                    }
+                    close();
+                    NotificationDialog.show(I18n.t('calendar.requestSuccess'), I18n.t('common.success'));
                 }
 
-                close();
-                NotificationDialog.show(I18n.t('calendar.requestSuccess'), I18n.t('common.success'));
                 await this.loadCalendarData(container);
             } catch (err) {
-                console.error('Failed to create absence:', err);
+                console.error(isEdit ? 'Failed to update absence:' : 'Failed to create absence:', err);
                 errorBanner.textContent = err.message || I18n.t('errors.unexpected');
                 errorBanner.style.display = 'block';
             }

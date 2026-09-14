@@ -49,14 +49,26 @@ public class WebAbsenceCalendarUiTest {
 		assertTrue("Must support cell click direct creation", js.contains("this.openCreateAbsenceModal(container, { employeeId: empId, startDate: dateStr, endDate: dateStr });"));
 		assertTrue("Must support manager direct approval", js.contains("modal-direct-approval"));
 
-		// Verify modal details inspection
+		// Verify modal details inspection and edit support
 		assertTrue("Must implement openAbsenceDetailsModal", js.contains("openAbsenceDetailsModal("));
+		assertTrue("Must implement openEditAbsenceModal", js.contains("openEditAbsenceModal("));
+		assertTrue("Must implement openAbsenceFormModal", js.contains("openAbsenceFormModal("));
+		assertTrue("Must have edit button in details modal", js.contains("modal-edit-abs-btn"));
+		assertTrue("Must select absence type in form modal", js.contains("absenceTypeOptionsHtml"));
+		assertTrue("Must handle fallback absence type option", js.contains("fallbackTypeOptionHtml"));
 
 		// Verify on-call period modal and default times outside office hours
 		assertTrue("Must implement openOnCallFormModal", js.contains("openOnCallFormModal("));
 		assertTrue("On-call start time default must be outside office hours (18:00)", js.contains("'18:00'"));
 		assertTrue("On-call end time default must be outside office hours (07:00)", js.contains("'07:00'"));
 		assertTrue("On-call delete must use NotificationDialog.confirm", js.contains("await NotificationDialog.confirm(I18n.t('calendar.deleteOnCallConfirm'"));
+
+		// Verify teammate scoping and absent masking
+		assertTrue("Must import PresenceApi for teammate loading", js.contains("import PresenceApi from '../api/PresenceApi.js'"));
+		assertTrue("Must load teammates via PresenceApi for non-managers", js.contains("PresenceApi.getPresence()"));
+		assertTrue("Must scope effective employees for non-managers", js.contains("!this.isManager && this.currentUserPrimaryTeamId"));
+		assertTrue("Must handle masked ABSENT type in getAbsenceShortLabel", js.contains("typeCode === 'ABSENT'"));
+		assertTrue("Must handle masked ABSENT type in openAbsenceDetailsModal", js.contains("displayType = (typeCode === 'ABSENT')"));
 	}
 
 	@Test

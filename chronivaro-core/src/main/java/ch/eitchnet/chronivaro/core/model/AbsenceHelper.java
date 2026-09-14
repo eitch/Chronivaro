@@ -134,4 +134,34 @@ public class AbsenceHelper {
 					"Absence overlaps with an existing active absence: " + overlapping.getFirst().getId());
 		}
 	}
+
+	public static boolean isHolidayAbsenceType(StrolchTransaction tx, Resource absType, String typeCode) {
+		if (absType != null) {
+			if (absType.hasParameter(PARAM_REDUCE_VACATION_CREDIT) && absType.getBoolean(PARAM_REDUCE_VACATION_CREDIT)) {
+				return true;
+			}
+			String code = absType.hasParameter(PARAM_CODE) ? absType.getString(PARAM_CODE) : absType.getId();
+			if (DEFAULT_VACATION_ABSENCE_TYPE_CODE.equalsIgnoreCase(code)
+					|| "HOLIDAY".equalsIgnoreCase(code)
+					|| "FERIEN".equalsIgnoreCase(code)) {
+				return true;
+			}
+		}
+		if (typeCode != null) {
+			if (DEFAULT_VACATION_ABSENCE_TYPE_CODE.equalsIgnoreCase(typeCode)
+					|| "HOLIDAY".equalsIgnoreCase(typeCode)
+					|| "FERIEN".equalsIgnoreCase(typeCode)) {
+				return true;
+			}
+		}
+		Resource config = tx.getResourceBy(TYPE_GLOBAL_CONFIGURATION, "configuration", false);
+		if (config != null && config.hasParameter(PARAM_VACATION_ABSENCE_TYPE_CODE)) {
+			String vacationCode = config.getString(PARAM_VACATION_ABSENCE_TYPE_CODE);
+			if (vacationCode != null && (vacationCode.equalsIgnoreCase(typeCode)
+					|| (absType != null && vacationCode.equalsIgnoreCase(absType.getId())))) {
+				return true;
+			}
+		}
+		return false;
+	}
 }
