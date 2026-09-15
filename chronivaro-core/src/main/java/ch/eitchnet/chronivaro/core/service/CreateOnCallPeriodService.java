@@ -17,8 +17,10 @@ import java.time.ZonedDateTime;
 
 import static ch.eitchnet.chronivaro.core.model.ChronivaroConstants.*;
 import static ch.eitchnet.chronivaro.core.model.ChronivaroVersionHelper.initVersion;
+import static java.text.MessageFormat.format;
 
-public class CreateOnCallPeriodService extends AbstractService<CreateOnCallPeriodService.CreateOnCallPeriodArgument, ServiceResult> {
+public class CreateOnCallPeriodService
+		extends AbstractService<CreateOnCallPeriodService.CreateOnCallPeriodArgument, ServiceResult> {
 
 	public static class CreateOnCallPeriodArgument extends ServiceArgument {
 		public String employeeId;
@@ -46,7 +48,11 @@ public class CreateOnCallPeriodService extends AbstractService<CreateOnCallPerio
 			LocalTime.parse(arg.endTime.trim());
 		}
 
-		if (arg.startDate.equals(arg.endDate) && arg.startTime != null && !arg.startTime.isBlank() && arg.endTime != null && !arg.endTime.isBlank()) {
+		if (arg.startDate.equals(arg.endDate)
+				&& arg.startTime != null
+				&& !arg.startTime.isBlank()
+				&& arg.endTime != null
+				&& !arg.endTime.isBlank()) {
 			LocalTime st = LocalTime.parse(arg.startTime.trim());
 			LocalTime et = LocalTime.parse(arg.endTime.trim());
 			if (et.isBefore(st)) {
@@ -81,7 +87,8 @@ public class CreateOnCallPeriodService extends AbstractService<CreateOnCallPerio
 			tx.add(onCallPeriod);
 
 			ChronivaroAuditHelper.audit(tx, TYPE_ON_CALL_PERIOD, id, AUDIT_ACTION_CREATE,
-					"Created on-call period for employee " + arg.employeeId + " (" + arg.startDate + " - " + arg.endDate + ")");
+					format("Created on-call period for employee {0} ({1} - {2})",
+							employee.getString(PARAM_PERSONAL_NUMBER), arg.startDate, arg.endDate));
 
 			tx.commitOnClose();
 		}

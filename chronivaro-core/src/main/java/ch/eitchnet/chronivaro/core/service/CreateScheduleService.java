@@ -1,6 +1,7 @@
 package ch.eitchnet.chronivaro.core.service;
 
 import ch.eitchnet.chronivaro.core.model.ChronivaroAuditHelper;
+import ch.eitchnet.chronivaro.core.model.ChronivaroModelHelper;
 import ch.eitchnet.chronivaro.core.model.VacationHelper;
 import li.strolch.model.Resource;
 import li.strolch.persistence.api.StrolchTransaction;
@@ -24,8 +25,9 @@ public class CreateScheduleService
 		try (StrolchTransaction tx = openArgOrUserTx(arg)) {
 			validateNoOverlap(tx, arg);
 
+			Resource employee = ChronivaroModelHelper.getEmployee(tx, arg.employeeId);
 			Resource schedule = tx.getResourceTemplate(TYPE_EMPLOYMENT_SCHEDULE, true);
-			schedule.setName("Schedule for " + arg.employeeId);
+			schedule.setName("Schedule for " + employee.getString(PARAM_PERSONAL_NUMBER));
 
 			schedule.setRelation(PARAM_EMPLOYEE, tx.getResourceBy(TYPE_EMPLOYEE, arg.employeeId, true));
 			schedule.setDate(PARAM_VALID_FROM, arg.validFrom);
@@ -40,7 +42,13 @@ public class CreateScheduleService
 			schedule.setInteger(PARAM_DAILY_TARGET_MINUTES_SATURDAY, arg.saturday);
 			schedule.setInteger(PARAM_DAILY_TARGET_MINUTES_SUNDAY, arg.sunday);
 
-			int weeklyMinutes = arg.monday + arg.tuesday + arg.wednesday + arg.thursday + arg.friday + arg.saturday + arg.sunday;
+			int weeklyMinutes = arg.monday
+					+ arg.tuesday
+					+ arg.wednesday
+					+ arg.thursday
+					+ arg.friday
+					+ arg.saturday
+					+ arg.sunday;
 			schedule.setInteger(PARAM_WEEKLY_TARGET_MINUTES, weeklyMinutes);
 			int minPerDay = VacationHelper.getMinutesPerVacationDay(tx);
 			schedule.setDouble(PARAM_EMPLOYMENT_RATE, (double) weeklyMinutes / (5.0 * minPerDay));
@@ -48,8 +56,9 @@ public class CreateScheduleService
 			initVersion(schedule, tx);
 			tx.add(schedule);
 			ChronivaroAuditHelper.audit(tx, TYPE_EMPLOYMENT_SCHEDULE, schedule.getId(), AUDIT_ACTION_CREATE,
-					"Created schedule for employee " + arg.employeeId + " validFrom=" + arg.validFrom
-							+ (arg.validTo != null ? " to " + arg.validTo : ""));
+					format("Created schedule for employee {0} validFrom={1}{2}",
+							employee.getString(PARAM_PERSONAL_NUMBER), arg.validFrom,
+							arg.validTo != null ? " to " + arg.validTo : ""));
 			updateEmployeeCurrentSchedule(tx, arg.employeeId, schedule, arg.validFrom, arg.validTo);
 
 			Set<Integer> years = new TreeSet<>();
@@ -57,8 +66,10 @@ public class CreateScheduleService
 			if (arg.validTo != null) {
 				years.add(arg.validTo.getYear());
 			}
-			tx.streamResources(TYPE_VACATION_ACCOUNT_ENTRY)
-					.filter(e -> e.hasRelation(PARAM_EMPLOYEE) && arg.employeeId.equals(e.getRelationId(PARAM_EMPLOYEE))
+			tx
+					.streamResources(TYPE_VACATION_ACCOUNT_ENTRY)
+					.filter(e -> e.hasRelation(PARAM_EMPLOYEE)
+							&& arg.employeeId.equals(e.getRelationId(PARAM_EMPLOYEE))
 							&& VACATION_ENTITLEMENT.equals(e.getString(PARAM_VACATION_TYPE)))
 					.map(e -> e.getDate(PARAM_DATE).getYear())
 					.forEach(years::add);

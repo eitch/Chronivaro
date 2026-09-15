@@ -35,12 +35,16 @@ public class ChronivaroModelHelper {
 			return Optional.empty();
 		return tx
 				.streamResources(TYPE_EMPLOYEE)
-				.filter(e -> (e.hasParameter(PARAM_USER_ID) && userId.equals(e.getString(PARAM_USER_ID)))
-						|| (e.hasParameter(PARAM_USERNAME) && userId.equals(e.getString(PARAM_USERNAME)))
-						|| (tx.getCertificate() != null && tx.getCertificate().getUsername() != null && (
-								(e.hasParameter(PARAM_USER_ID) && tx.getCertificate().getUsername().equals(e.getString(PARAM_USER_ID)))
-								|| (e.hasParameter(PARAM_USERNAME) && tx.getCertificate().getUsername().equals(e.getString(PARAM_USERNAME)))
-						)))
+				.filter(e -> e.hasParameter(PARAM_USER_ID) && userId.equals(e.getString(PARAM_USER_ID))
+						|| e.hasParameter(PARAM_USERNAME) && userId.equals(e.getString(PARAM_USERNAME))
+						|| e.hasParameter(PARAM_USER_ID) && tx
+						.getCertificate()
+						.getUsername()
+						.equals(e.getString(PARAM_USER_ID))
+						|| e.hasParameter(PARAM_USERNAME) && tx
+						.getCertificate()
+						.getUsername()
+						.equals(e.getString(PARAM_USERNAME)))
 				.findFirst();
 	}
 
@@ -52,11 +56,11 @@ public class ChronivaroModelHelper {
 	}
 
 	public static List<String> getSupervisedEmployeeIds(StrolchTransaction tx, Certificate cert) {
-		if (tx.getPrivilegeContext().hasRole(ROLE_HR)
-				|| tx.getPrivilegeContext().hasRole(ROLE_ADMIN)
-				|| tx.getPrivilegeContext().hasRole(ROLE_ADMINISTRATOR)
-				|| tx.getPrivilegeContext().hasRole(ROLE_STROLCH_ADMIN)
-				|| tx.getPrivilegeContext().hasRole(ROLE_PRIVILEGE_ADMIN)) {
+		if (tx.getPrivilegeContext().hasRole(ROLE_HR) || tx.getPrivilegeContext().hasRole(ROLE_ADMIN) || tx
+				.getPrivilegeContext()
+				.hasRole(ROLE_ADMINISTRATOR) || tx.getPrivilegeContext().hasRole(ROLE_STROLCH_ADMIN) || tx
+				.getPrivilegeContext()
+				.hasRole(ROLE_PRIVILEGE_ADMIN)) {
 			return tx.streamResources(TYPE_EMPLOYEE).map(Resource::getId).toList();
 		}
 
@@ -72,15 +76,17 @@ public class ChronivaroModelHelper {
 				tx.streamResources(TYPE_TEAM).forEach(t -> {
 					if (t.hasRelation(PARAM_LEADER) && supervisorId.equals(t.getRelationId(PARAM_LEADER))) {
 						supervisedTeamIds.add(t.getId());
-					} else if (t.hasParameter(PARAM_LEADER) && (supervisorId.equals(t.getString(PARAM_LEADER))
-							|| cert.getUsername().equals(t.getString(PARAM_LEADER)))) {
+					} else if (t.hasParameter(PARAM_LEADER) && (
+							supervisorId.equals(t.getString(PARAM_LEADER)) || cert
+									.getUsername()
+									.equals(t.getString(PARAM_LEADER)))) {
 						supervisedTeamIds.add(t.getId());
 					}
 				});
 			} else {
 				tx.streamResources(TYPE_TEAM).forEach(t -> {
-					if ((t.hasParameter(PARAM_LEADER) && cert.getUsername().equals(t.getString(PARAM_LEADER)))
-							|| (t.hasRelation(PARAM_LEADER) && cert.getUsername().equals(t.getRelationId(PARAM_LEADER)))) {
+					if ((t.hasParameter(PARAM_LEADER) && cert.getUsername().equals(t.getString(PARAM_LEADER))) || (
+							t.hasRelation(PARAM_LEADER) && cert.getUsername().equals(t.getRelationId(PARAM_LEADER)))) {
 						supervisedTeamIds.add(t.getId());
 					}
 				});
@@ -89,8 +95,10 @@ public class ChronivaroModelHelper {
 			if (supervisedTeamIds.isEmpty())
 				return Collections.emptyList();
 
-			return tx.streamResources(TYPE_EMPLOYEE)
-					.filter(e -> e.hasRelation(PARAM_PRIMARY_TEAM) && supervisedTeamIds.contains(e.getRelationId(PARAM_PRIMARY_TEAM)))
+			return tx
+					.streamResources(TYPE_EMPLOYEE)
+					.filter(e -> e.hasRelation(PARAM_PRIMARY_TEAM) && supervisedTeamIds.contains(
+							e.getRelationId(PARAM_PRIMARY_TEAM)))
 					.map(Resource::getId)
 					.toList();
 		}
@@ -99,19 +107,19 @@ public class ChronivaroModelHelper {
 	}
 
 	public static void assertCanManageEmployee(StrolchTransaction tx, String targetEmployeeId) {
-		if (tx.getPrivilegeContext().hasRole(ROLE_HR)
-				|| tx.getPrivilegeContext().hasRole(ROLE_ADMIN)
-				|| tx.getPrivilegeContext().hasRole(ROLE_ADMINISTRATOR)
-				|| tx.getPrivilegeContext().hasRole(ROLE_STROLCH_ADMIN)
-				|| tx.getPrivilegeContext().hasRole(ROLE_PRIVILEGE_ADMIN)) {
+		if (tx.getPrivilegeContext().hasRole(ROLE_HR) || tx.getPrivilegeContext().hasRole(ROLE_ADMIN) || tx
+				.getPrivilegeContext()
+				.hasRole(ROLE_ADMINISTRATOR) || tx.getPrivilegeContext().hasRole(ROLE_STROLCH_ADMIN) || tx
+				.getPrivilegeContext()
+				.hasRole(ROLE_PRIVILEGE_ADMIN)) {
 			return;
 		}
 
 		if (tx.getPrivilegeContext().hasRole(ROLE_SUPERVISOR)) {
 			List<String> supervised = getSupervisedEmployeeIds(tx, tx.getCertificate());
 			if (!supervised.contains(targetEmployeeId)) {
-				throw new AccessDeniedException("Access denied: Employee " + targetEmployeeId
-						+ " is not in your supervised team(s).");
+				throw new AccessDeniedException(
+						"Access denied: Employee " + targetEmployeeId + " is not in your supervised team(s).");
 			}
 
 			// Self-approval restriction

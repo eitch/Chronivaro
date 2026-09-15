@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.Set;
 
 import static ch.eitchnet.chronivaro.core.model.ChronivaroConstants.*;
+import static java.text.MessageFormat.format;
 import static li.strolch.privilege.model.UserState.ENABLED;
 
 public class ReactivateEmployeeService extends AbstractService<StringArgument, ServiceResult> {
@@ -35,7 +36,8 @@ public class ReactivateEmployeeService extends AbstractService<StringArgument, S
 			employee = tx.readLock(employee);
 
 			if (employee.getBoolean(PARAM_ACTIVE)) {
-				return ServiceResult.error("Employee " + employee.getName() + " is already active!");
+				return ServiceResult.error(
+						"Employee " + employee.getString(PARAM_PERSONAL_NUMBER) + " is already active!");
 			}
 
 			employee.setBoolean(PARAM_ACTIVE, true);
@@ -96,10 +98,10 @@ public class ReactivateEmployeeService extends AbstractService<StringArgument, S
 			VacationHelper.creditOrRecalculateEntitlement(tx, employee.getId(), now.getYear(), false);
 
 			ChronivaroAuditHelper.audit(tx, TYPE_EMPLOYEE, employee.getId(), AUDIT_ACTION_REACTIVATE,
-					"Reactivated employee " + employee.getName());
+					"Reactivated employee " + employee.getString(PARAM_PERSONAL_NUMBER));
 			ChronivaroAuditHelper.audit(tx, "User", userRep.getUserId(), AUDIT_ACTION_CREATE,
-					"Created/Restored user account " + userRep.getUsername() + " for reactivated employee "
-							+ employee.getName());
+					format("Created/Restored user account {0} for reactivated employee {1}", userRep.getUsername(),
+							employee.getString(PARAM_PERSONAL_NUMBER)));
 
 			tx.commitOnClose();
 		}

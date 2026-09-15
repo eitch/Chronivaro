@@ -1,6 +1,7 @@
 package ch.eitchnet.chronivaro.core.service;
 
 import ch.eitchnet.chronivaro.core.model.ChronivaroAuditHelper;
+import ch.eitchnet.chronivaro.core.model.ChronivaroModelHelper;
 import ch.eitchnet.chronivaro.core.model.PeriodHelper;
 import li.strolch.model.Resource;
 import li.strolch.persistence.api.StrolchTransaction;
@@ -33,11 +34,12 @@ public class SubmitPeriodService extends AbstractService<PeriodActionArgument, S
 
 			String currentState = period.getString(PARAM_STATE);
 			if (!currentState.equals(STATE_OPEN) && !currentState.equals(STATE_REJECTED)) {
-				throw new IllegalStateException("Period is in state " + currentState +
-						", but only OPEN or REJECTED periods can be submitted!");
+				throw new IllegalStateException(
+						"Period is in state " + currentState + ", but only OPEN or REJECTED periods can be submitted!");
 			}
 
 			String employeeId = period.getRelationId(PARAM_EMPLOYEE);
+			Resource employee = ChronivaroModelHelper.getEmployee(tx, employeeId);
 			YearMonth ym = YearMonth.parse(period.getString(PARAM_YEAR_MONTH));
 
 			period.setString(PARAM_STATE, STATE_SUBMITTED);
@@ -52,7 +54,8 @@ public class SubmitPeriodService extends AbstractService<PeriodActionArgument, S
 			tx.update(period);
 
 			ChronivaroAuditHelper.audit(tx, TYPE_TIME_PERIOD, period.getId(), AUDIT_ACTION_SUBMIT, arg.comment,
-					"Submitted time period " + period.getId() + " for employee " + employeeId);
+					"Submitted time period " + period.getName() + " for employee " + employee.getString(
+							PARAM_PERSONAL_NUMBER));
 
 			tx.commitOnClose();
 		}

@@ -10,7 +10,6 @@ import li.strolch.service.api.AbstractService;
 import li.strolch.service.api.ServiceArgument;
 import li.strolch.service.api.ServiceResult;
 import li.strolch.service.api.ServiceResultState;
-import li.strolch.utils.dbc.DBC;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -21,8 +20,8 @@ import static ch.eitchnet.chronivaro.core.model.ChronivaroConstants.*;
 import static ch.eitchnet.chronivaro.core.model.ChronivaroVersionHelper.initVersion;
 import static li.strolch.utils.helper.StringHelper.isNotEmpty;
 
-public class YearEndVacationCarryOverService
-		extends AbstractService<YearEndVacationCarryOverService.YearEndVacationCarryOverArgument, YearEndVacationCarryOverService.YearEndVacationCarryOverResult> {
+public class YearEndVacationCarryOverService extends
+		AbstractService<YearEndVacationCarryOverService.YearEndVacationCarryOverArgument, YearEndVacationCarryOverService.YearEndVacationCarryOverResult> {
 
 	public static class YearEndVacationCarryOverArgument extends ServiceArgument {
 		public String employeeId;
@@ -84,9 +83,7 @@ public class YearEndVacationCarryOverService
 				}
 				employees = List.of(employee);
 			} else {
-				employees = tx.streamResources(TYPE_EMPLOYEE)
-						.filter(e -> e.getBoolean(PARAM_ACTIVE))
-						.toList();
+				employees = tx.streamResources(TYPE_EMPLOYEE).filter(e -> e.getBoolean(PARAM_ACTIVE)).toList();
 			}
 
 			LocalDate srcYearEnd = LocalDate.of(srcYear, 12, 31);
@@ -107,9 +104,8 @@ public class YearEndVacationCarryOverService
 				int remainingMinutes = summary.remainingMinutes();
 
 				Optional<Resource> existingCarryOver = VacationHelper.findCarryOverEntry(tx, emp.getId(), tgtYear);
-				String empName = emp.hasParameter(PARAM_FIRSTNAME) && emp.hasParameter(PARAM_LASTNAME)
-						? emp.getString(PARAM_FIRSTNAME) + " " + emp.getString(PARAM_LASTNAME)
-						: emp.getName();
+				String empName = emp.hasParameter(PARAM_FIRSTNAME) && emp.hasParameter(PARAM_LASTNAME) ?
+						emp.getString(PARAM_FIRSTNAME) + " " + emp.getString(PARAM_LASTNAME) : emp.getName();
 
 				if (existingCarryOver.isPresent()) {
 					if (arg.force) {
@@ -119,8 +115,11 @@ public class YearEndVacationCarryOverService
 							Resource corr = tx.getResourceTemplate(TYPE_VACATION_ACCOUNT_ENTRY, true);
 							corr.setName("Carry-Over Adjustment " + tgtYear + " (" + empName + ")");
 							corr.setString(PARAM_VACATION_TYPE, VACATION_CORRECTION);
-							corr.setDate(PARAM_DATE, LocalDate.of(tgtYear, 1, 1).atStartOfDay(ChronivaroModelHelper.getEmployeeTimezone(emp)));
-							corr.setDate(PARAM_CREATED_AT, java.time.ZonedDateTime.now(ChronivaroModelHelper.getEmployeeTimezone(emp)));
+							corr.setDate(PARAM_DATE, LocalDate
+									.of(tgtYear, 1, 1)
+									.atStartOfDay(ChronivaroModelHelper.getEmployeeTimezone(emp)));
+							corr.setDate(PARAM_CREATED_AT,
+									java.time.ZonedDateTime.now(ChronivaroModelHelper.getEmployeeTimezone(emp)));
 							corr.setInteger(PARAM_VALUE, delta);
 							corr.setString(PARAM_COMMENT, "Carry-over adjustment from " + srcYear + " to " + tgtYear);
 							corr.setString(PARAM_CREATED_BY, tx.getCertificate().getUsername());
@@ -129,8 +128,14 @@ public class YearEndVacationCarryOverService
 							initVersion(corr, tx);
 							tx.add(corr);
 							result.createdEntryIds.add(corr.getId());
-							ChronivaroAuditHelper.audit(tx, TYPE_VACATION_ACCOUNT_ENTRY, corr.getId(), AUDIT_ACTION_CREATE,
-									"Created carry-over adjustment entry for year " + tgtYear + " (delta: " + delta + " minutes from " + srcYear + ")");
+							ChronivaroAuditHelper.audit(tx, TYPE_VACATION_ACCOUNT_ENTRY, corr.getId(),
+									AUDIT_ACTION_CREATE, "Created carry-over adjustment entry for year "
+											+ tgtYear
+											+ " (delta: "
+											+ delta
+											+ " minutes from "
+											+ srcYear
+											+ ")");
 						}
 					}
 				} else {
@@ -138,8 +143,11 @@ public class YearEndVacationCarryOverService
 						Resource entry = tx.getResourceTemplate(TYPE_VACATION_ACCOUNT_ENTRY, true);
 						entry.setName("Vacation Carry-Over " + tgtYear + " (" + empName + ")");
 						entry.setString(PARAM_VACATION_TYPE, VACATION_CARRY_OVER);
-						entry.setDate(PARAM_DATE, LocalDate.of(tgtYear, 1, 1).atStartOfDay(ChronivaroModelHelper.getEmployeeTimezone(emp)));
-						entry.setDate(PARAM_CREATED_AT, java.time.ZonedDateTime.now(ChronivaroModelHelper.getEmployeeTimezone(emp)));
+						entry.setDate(PARAM_DATE, LocalDate
+								.of(tgtYear, 1, 1)
+								.atStartOfDay(ChronivaroModelHelper.getEmployeeTimezone(emp)));
+						entry.setDate(PARAM_CREATED_AT,
+								java.time.ZonedDateTime.now(ChronivaroModelHelper.getEmployeeTimezone(emp)));
 						entry.setInteger(PARAM_VALUE, remainingMinutes);
 						entry.setString(PARAM_COMMENT, "Vacation carry-over from " + srcYear + " to " + tgtYear);
 						entry.setString(PARAM_CREATED_BY, tx.getCertificate().getUsername());
@@ -151,7 +159,13 @@ public class YearEndVacationCarryOverService
 						result.totalCarryOverMinutes += remainingMinutes;
 
 						ChronivaroAuditHelper.audit(tx, TYPE_VACATION_ACCOUNT_ENTRY, entry.getId(), AUDIT_ACTION_CREATE,
-								"Created vacation carry-over for year " + tgtYear + " (" + remainingMinutes + " minutes from " + srcYear + ")");
+								"Created vacation carry-over for year "
+										+ tgtYear
+										+ " ("
+										+ remainingMinutes
+										+ " minutes from "
+										+ srcYear
+										+ ")");
 					}
 				}
 

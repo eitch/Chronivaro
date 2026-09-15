@@ -29,7 +29,8 @@ public class SubmitAbsenceService extends AbstractService<StringArgument, Servic
 
 			String currentState = absence.getString(PARAM_STATE);
 			if (!currentState.equals(STATE_DRAFT)) {
-				throw new IllegalStateException("Only draft absences can be submitted! Current state is " + currentState);
+				throw new IllegalStateException(
+						"Only draft absences can be submitted! Current state is " + currentState);
 			}
 
 			Resource employee = tx.getResourceByRelation(absence, PARAM_EMPLOYEE, true);
@@ -65,7 +66,8 @@ public class SubmitAbsenceService extends AbstractService<StringArgument, Servic
 			tx.update(absence);
 
 			ChronivaroAuditHelper.audit(tx, TYPE_ABSENCE, absence.getId(), AUDIT_ACTION_SUBMIT, comment,
-					"Submitted draft absence " + absence.getId() + " for employee " + employee.getId());
+					"Submitted draft absence " + absence.getName() + " for employee " + employee.getString(
+							PARAM_PERSONAL_NUMBER));
 
 			tx.commitOnClose();
 		}

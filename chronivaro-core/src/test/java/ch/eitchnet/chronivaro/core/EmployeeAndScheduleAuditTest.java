@@ -117,7 +117,7 @@ public class EmployeeAndScheduleAuditTest {
 			assertEquals(AUDIT_ACTION_CREATE, createEvent.getString(PARAM_ACTION));
 			assertEquals(correlationId, createEvent.getString(PARAM_CORRELATION_ID));
 			assertEquals("admin", createEvent.getString(PARAM_CREATED_BY));
-			assertTrue(createEvent.getString(PARAM_DETAILS).contains("Alice Smith"));
+			assertTrue(createEvent.getString(PARAM_DETAILS).contains("EMP-001"));
 		}
 
 		// 2. Update Employee
@@ -149,7 +149,7 @@ public class EmployeeAndScheduleAuditTest {
 					.findFirst()
 					.orElseThrow();
 			assertEquals(correlationId, updateEvent.getString(PARAM_CORRELATION_ID));
-			assertTrue(updateEvent.getString(PARAM_DETAILS).contains("Alice Johnson"));
+			assertTrue(updateEvent.getString(PARAM_DETAILS).contains("EMP-001"));
 		}
 
 		// 3. Remove Employee
@@ -169,7 +169,7 @@ public class EmployeeAndScheduleAuditTest {
 					.findFirst()
 					.orElseThrow();
 			assertEquals(correlationId, removeEvent.getString(PARAM_CORRELATION_ID));
-			assertTrue(removeEvent.getString(PARAM_DETAILS).contains("Alice Johnson"));
+			assertTrue(removeEvent.getString(PARAM_DETAILS).contains("EMP-001"));
 		}
 	}
 

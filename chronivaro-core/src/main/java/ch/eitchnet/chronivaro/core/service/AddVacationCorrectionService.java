@@ -14,6 +14,7 @@ import java.time.ZonedDateTime;
 
 import static ch.eitchnet.chronivaro.core.model.ChronivaroConstants.*;
 import static ch.eitchnet.chronivaro.core.model.ChronivaroVersionHelper.initVersion;
+import static java.text.MessageFormat.format;
 
 public class AddVacationCorrectionService
 		extends AbstractService<AddVacationCorrectionService.AddVacationCorrectionArgument, ServiceResult> {
@@ -25,9 +26,9 @@ public class AddVacationCorrectionService
 		DBC.PRE.assertNotEmpty("comment must be set", arg.comment);
 
 		try (StrolchTransaction tx = openArgOrUserTx(arg)) {
-			if (!tx.getPrivilegeContext().hasRole(ROLE_HR)
-					&& !tx.getPrivilegeContext().hasRole(ROLE_ADMIN)
-					&& !tx.getPrivilegeContext().hasRole(ROLE_ADMINISTRATOR)) {
+			if (!tx.getPrivilegeContext().hasRole(ROLE_HR) && !tx.getPrivilegeContext().hasRole(ROLE_ADMIN) && !tx
+					.getPrivilegeContext()
+					.hasRole(ROLE_ADMINISTRATOR)) {
 				ChronivaroModelHelper.assertCanManageEmployee(tx, arg.employeeId);
 			}
 
@@ -44,8 +45,9 @@ public class AddVacationCorrectionService
 				VacationHelper.assertSufficientVacationBalance(tx, arg.employeeId, requestedDeduction, entryDate);
 				int currentBalance = VacationHelper.getVacationBalance(tx, arg.employeeId);
 				if (currentBalance < requestedDeduction) {
-					throw new IllegalStateException("Insufficient vacation balance for employee " + arg.employeeId
-							+ ": current balance is " + currentBalance + " minutes, but correction is " + arg.value + " minutes.");
+					throw new IllegalStateException(
+							format("Insufficient vacation balance for employee {0}: current balance is {1} minutes, but correction is {2} minutes.",
+									employee.getString(PARAM_PERSONAL_NUMBER), currentBalance, arg.value));
 				}
 			}
 
@@ -60,8 +62,9 @@ public class AddVacationCorrectionService
 			initVersion(entry, tx);
 			tx.add(entry);
 
-			ChronivaroAuditHelper.audit(tx, TYPE_VACATION_ACCOUNT_ENTRY, entry.getId(), AUDIT_ACTION_CREATE, arg.comment,
-					"Added vacation correction of " + arg.value + " minutes for employee " + arg.employeeId);
+			ChronivaroAuditHelper.audit(tx, TYPE_VACATION_ACCOUNT_ENTRY, entry.getId(), AUDIT_ACTION_CREATE,
+					arg.comment, format("Added vacation correction of {0} minutes for employee {1}", arg.value,
+							employee.getString(PARAM_PERSONAL_NUMBER)));
 
 			tx.commitOnClose();
 		}

@@ -14,6 +14,7 @@ import java.time.ZonedDateTime;
 
 import static ch.eitchnet.chronivaro.core.model.ChronivaroConstants.*;
 import static ch.eitchnet.chronivaro.core.model.ChronivaroVersionHelper.bumpVersion;
+import static java.text.MessageFormat.format;
 import static li.strolch.utils.helper.StringHelper.isNotEmpty;
 
 public class ApprovePeriodService extends AbstractService<PeriodActionArgument, ServiceResult> {
@@ -34,11 +35,12 @@ public class ApprovePeriodService extends AbstractService<PeriodActionArgument, 
 
 			String currentState = period.getString(PARAM_STATE);
 			if (!currentState.equals(STATE_SUBMITTED)) {
-				throw new IllegalStateException("Period is in state " + currentState +
-						", but only SUBMITTED periods can be approved!");
+				throw new IllegalStateException(
+						"Period is in state " + currentState + ", but only SUBMITTED periods can be approved!");
 			}
 
 			String employeeId = period.getRelationId(PARAM_EMPLOYEE);
+			Resource employee = ChronivaroModelHelper.getEmployee(tx, employeeId);
 			ChronivaroModelHelper.assertCanManageEmployee(tx, employeeId);
 
 			YearMonth ym = YearMonth.parse(period.getString(PARAM_YEAR_MONTH));
@@ -56,7 +58,8 @@ public class ApprovePeriodService extends AbstractService<PeriodActionArgument, 
 			tx.update(period);
 
 			ChronivaroAuditHelper.audit(tx, TYPE_TIME_PERIOD, period.getId(), AUDIT_ACTION_APPROVE, arg.comment,
-					"Approved time period " + period.getId() + " for employee " + employeeId);
+					format("Approved time period {0} for employee {1}", period.getName(),
+							employee.getString(PARAM_PERSONAL_NUMBER)));
 
 			tx.commitOnClose();
 		}

@@ -35,11 +35,12 @@ public class RejectPeriodService extends AbstractService<PeriodActionArgument, S
 
 			String currentState = period.getString(PARAM_STATE);
 			if (!currentState.equals(STATE_SUBMITTED)) {
-				throw new IllegalStateException("Period is in state " + currentState +
-						", but only SUBMITTED periods can be rejected!");
+				throw new IllegalStateException(
+						"Period is in state " + currentState + ", but only SUBMITTED periods can be rejected!");
 			}
 
 			String employeeId = period.getRelationId(PARAM_EMPLOYEE);
+			Resource employee = ChronivaroModelHelper.getEmployee(tx, employeeId);
 			ChronivaroModelHelper.assertCanManageEmployee(tx, employeeId);
 
 			YearMonth ym = YearMonth.parse(period.getString(PARAM_YEAR_MONTH));
@@ -56,7 +57,8 @@ public class RejectPeriodService extends AbstractService<PeriodActionArgument, S
 			tx.update(period);
 
 			ChronivaroAuditHelper.audit(tx, TYPE_TIME_PERIOD, period.getId(), AUDIT_ACTION_REJECT, arg.comment,
-					"Rejected time period " + period.getId() + " for employee " + employeeId);
+					"Rejected time period " + period.getName() + " for employee " + employee.getString(
+							PARAM_PERSONAL_NUMBER));
 
 			tx.commitOnClose();
 		}

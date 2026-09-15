@@ -1,6 +1,5 @@
 package ch.eitchnet.chronivaro.core.service;
 
-import ch.eitchnet.chronivaro.core.model.AbsenceHelper;
 import ch.eitchnet.chronivaro.core.model.ChronivaroAuditHelper;
 import ch.eitchnet.chronivaro.core.model.ChronivaroModelHelper;
 import ch.eitchnet.chronivaro.core.model.PeriodHelper;
@@ -19,6 +18,7 @@ import java.util.Optional;
 import static ch.eitchnet.chronivaro.core.model.ChronivaroConstants.*;
 import static ch.eitchnet.chronivaro.core.model.ChronivaroVersionHelper.bumpVersion;
 import static ch.eitchnet.chronivaro.core.model.ChronivaroVersionHelper.initVersion;
+import static java.text.MessageFormat.format;
 
 public class CancelAbsenceService extends AbstractService<StringArgument, ServiceResult> {
 
@@ -31,7 +31,8 @@ public class CancelAbsenceService extends AbstractService<StringArgument, Servic
 			tx.readLock(absence);
 
 			String currentState = absence.getString(PARAM_STATE);
-			if (!currentState.equals(STATE_DRAFT) && !currentState.equals(STATE_SUBMITTED) && !currentState.equals(STATE_APPROVED)) {
+			if (!currentState.equals(STATE_DRAFT) && !currentState.equals(STATE_SUBMITTED) && !currentState.equals(
+					STATE_APPROVED)) {
 				throw new IllegalStateException("Absence in state " + currentState + " cannot be cancelled!");
 			}
 
@@ -44,10 +45,10 @@ public class CancelAbsenceService extends AbstractService<StringArgument, Servic
 
 			// Authorization: Employee can only cancel own absence.
 			// Supervisors/HR can cancel based on their UpdateResource privilege on Employee
-			if (!tx.getPrivilegeContext().hasRole(ROLE_HR)
-					&& !tx.getPrivilegeContext().hasRole(ROLE_ADMIN)) {
+			if (!tx.getPrivilegeContext().hasRole(ROLE_HR) && !tx.getPrivilegeContext().hasRole(ROLE_ADMIN)) {
 
-				Optional<Resource> currentEmployee = ChronivaroModelHelper.findEmployeeByUser(tx, tx.getCertificate().getUserId());
+				Optional<Resource> currentEmployee = ChronivaroModelHelper.findEmployeeByUser(tx,
+						tx.getCertificate().getUserId());
 				if (currentEmployee.isPresent() && currentEmployee.get().getId().equals(employee.getId())) {
 					// Self-service: allowed
 				} else {
@@ -69,7 +70,8 @@ public class CancelAbsenceService extends AbstractService<StringArgument, Servic
 			bumpVersion(absence, tx);
 			tx.update(absence);
 			ChronivaroAuditHelper.audit(tx, TYPE_ABSENCE, absence.getId(), AUDIT_ACTION_CANCEL,
-					"Cancelled absence " + absence.getId() + " for employee " + employee.getId());
+					format("Cancelled absence {0} for employee {1}", absence.getName(),
+							employee.getString(PARAM_PERSONAL_NUMBER)));
 
 			// If it was APPROVED and reduced vacation, we need to add back the vacation minutes
 			if (oldState.equals(STATE_APPROVED)) {
@@ -86,7 +88,7 @@ public class CancelAbsenceService extends AbstractService<StringArgument, Servic
 
 					if (totalMinutes > 0) {
 						Resource entry = tx.getResourceTemplate(TYPE_VACATION_ACCOUNT_ENTRY, true);
-						entry.setName("Vacation Cancellation " + absence.getId());
+						entry.setName("Vacation Cancellation for absense " + absence.getName());
 
 						entry.setRelation(PARAM_EMPLOYEE, employee);
 						entry.setRelation(PARAM_ABSENCE, absence);
@@ -94,13 +96,14 @@ public class CancelAbsenceService extends AbstractService<StringArgument, Servic
 						entry.setDate(PARAM_CREATED_AT, java.time.ZonedDateTime.now());
 						entry.setString(PARAM_VACATION_TYPE, VACATION_CORRECTION);
 						entry.setInteger(PARAM_VALUE, totalMinutes);
-						entry.setString(PARAM_COMMENT, "Vacation cancellation refund for absence " + absence.getId());
+						entry.setString(PARAM_COMMENT, "Vacation cancellation refund for absence " + absence.getName());
 						entry.setString(PARAM_CREATED_BY, tx.getCertificate().getUsername());
 
 						initVersion(entry, tx);
 						tx.add(entry);
 						ChronivaroAuditHelper.audit(tx, TYPE_VACATION_ACCOUNT_ENTRY, entry.getId(), AUDIT_ACTION_CREATE,
-								"Created vacation cancellation refund entry for absence " + absence.getId() + " (" + totalMinutes + " minutes)");
+								format("Created vacation cancellation refund entry for absence {0} ({1} minutes)",
+										absence.getName(), totalMinutes));
 					}
 				}
 			}

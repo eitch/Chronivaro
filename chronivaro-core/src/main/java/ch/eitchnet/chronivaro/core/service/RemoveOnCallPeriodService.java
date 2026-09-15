@@ -22,12 +22,14 @@ public class RemoveOnCallPeriodService extends AbstractService<StringArgument, S
 			tx.readLock(onCallPeriod);
 
 			String employeeId = onCallPeriod.getRelationId(PARAM_EMPLOYEE);
+			Resource employee = ChronivaroModelHelper.getEmployee(tx, employeeId);
 			ChronivaroModelHelper.assertCanManageEmployee(tx, employeeId);
 
 			tx.remove(onCallPeriod);
 
 			ChronivaroAuditHelper.audit(tx, TYPE_ON_CALL_PERIOD, arg.value, AUDIT_ACTION_REMOVE,
-					"Removed on-call period " + arg.value + " for employee " + employeeId);
+					"Removed on-call period " + arg.value + " for employee " + employee.getString(
+							PARAM_PERSONAL_NUMBER));
 
 			tx.commitOnClose();
 		}

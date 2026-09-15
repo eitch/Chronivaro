@@ -1,11 +1,6 @@
 package ch.eitchnet.chronivaro.core.service;
 
-import ch.eitchnet.chronivaro.core.model.AbsenceHelper;
-import ch.eitchnet.chronivaro.core.model.ChronivaroAuditHelper;
-import ch.eitchnet.chronivaro.core.model.ChronivaroModelHelper;
-import ch.eitchnet.chronivaro.core.model.PeriodHelper;
-import ch.eitchnet.chronivaro.core.model.ScheduleHelper;
-import ch.eitchnet.chronivaro.core.model.VacationHelper;
+import ch.eitchnet.chronivaro.core.model.*;
 import li.strolch.model.Resource;
 import li.strolch.persistence.api.StrolchTransaction;
 import li.strolch.service.StringResult;
@@ -20,9 +15,9 @@ import java.util.Optional;
 
 import static ch.eitchnet.chronivaro.core.model.ChronivaroConstants.*;
 import static ch.eitchnet.chronivaro.core.model.ChronivaroVersionHelper.initVersion;
+import static java.text.MessageFormat.format;
 
-public class RequestAbsenceService
-		extends AbstractService<RequestAbsenceService.RequestAbsenceArgument, StringResult> {
+public class RequestAbsenceService extends AbstractService<RequestAbsenceService.RequestAbsenceArgument, StringResult> {
 
 	public static class RequestAbsenceArgument extends ServiceArgument {
 		public String employeeId;
@@ -49,12 +44,12 @@ public class RequestAbsenceService
 		String absenceId;
 		try (StrolchTransaction tx = openArgOrUserTx(arg)) {
 			// Check if actor is acting on behalf of another employee
-			Optional<Resource> currentEmp = ChronivaroModelHelper.findEmployeeByUser(tx, tx.getCertificate().getUserId());
-			boolean isSelf = currentEmp.isPresent() && currentEmp.get().getId().equals(arg.employeeId);
-
-			if (!isSelf) {
+			Optional<Resource> userEmployeeO = ChronivaroModelHelper.findEmployeeByUser(tx,
+					tx.getCertificate().getUserId());
+			String employeeName = userEmployeeO.map(e -> e.getString(PARAM_PERSONAL_NUMBER)).orElse(arg.employeeId);
+			boolean isSelf = userEmployeeO.isPresent() && userEmployeeO.get().getId().equals(arg.employeeId);
+			if (!isSelf)
 				ChronivaroModelHelper.assertCanManageEmployee(tx, arg.employeeId);
-			}
 
 			boolean isApproved = arg.directApprove || STATE_APPROVED.equalsIgnoreCase(arg.state);
 			if (isApproved && isSelf) {
@@ -109,10 +104,11 @@ public class RequestAbsenceService
 					}
 
 					if (totalMinutes > 0) {
-						VacationHelper.assertSufficientVacationBalance(tx, arg.employeeId, totalMinutes, absence.getDate(PARAM_START));
+						VacationHelper.assertSufficientVacationBalance(tx, arg.employeeId, totalMinutes,
+								absence.getDate(PARAM_START));
 
 						Resource entry = tx.getResourceTemplate(TYPE_VACATION_ACCOUNT_ENTRY, true);
-						entry.setName("Vacation Usage " + absence.getId());
+						entry.setName("Vacation Usage " + absence.getName());
 
 						entry.setRelation(PARAM_EMPLOYEE, tx.getResourceBy(TYPE_EMPLOYEE, arg.employeeId, true));
 						entry.setRelation(PARAM_ABSENCE, absence);
@@ -120,27 +116,29 @@ public class RequestAbsenceService
 						entry.setDate(PARAM_CREATED_AT, java.time.ZonedDateTime.now());
 						entry.setString(PARAM_VACATION_TYPE, VACATION_USAGE);
 						entry.setInteger(PARAM_VALUE, -totalMinutes);
-						entry.setString(PARAM_COMMENT, "Vacation usage for absence " + absence.getId());
+						entry.setString(PARAM_COMMENT, "Vacation usage for absence " + absence.getName());
 						entry.setString(PARAM_CREATED_BY, tx.getCertificate().getUsername());
 
 						initVersion(entry, tx);
 						tx.add(entry);
 						ChronivaroAuditHelper.audit(tx, TYPE_VACATION_ACCOUNT_ENTRY, entry.getId(), AUDIT_ACTION_CREATE,
-								"Created vacation usage entry for absence " + absence.getId() + " (" + totalMinutes + " minutes)");
+								format("Created vacation usage entry for absence {0} ({1} minutes)", absence.getName(),
+										totalMinutes));
 					}
 				}
 
 				ChronivaroAuditHelper.audit(tx, TYPE_ABSENCE, absence.getId(), AUDIT_ACTION_CREATE, arg.comment,
-						"Created and approved absence for employee " + arg.employeeId + " (" + arg.absenceTypeCode + " from "
-								+ arg.start + " to " + arg.end + ") by " + tx.getCertificate().getUsername());
+						format("Created and approved absence for employee {0} ({1} from {2} to {3}) by {4}",
+								employeeName, arg.absenceTypeCode, arg.start, arg.end,
+								tx.getCertificate().getUsername()));
 			} else if (isDraft) {
 				ChronivaroAuditHelper.audit(tx, TYPE_ABSENCE, absence.getId(), AUDIT_ACTION_CREATE, arg.comment,
-						"Created draft absence for employee " + arg.employeeId + " (" + arg.absenceTypeCode + " from "
-								+ arg.start + " to " + arg.end + ") by " + tx.getCertificate().getUsername());
+						format("Created draft absence for employee {0} ({1} from {2} to {3}) by {4}", employeeName,
+								arg.absenceTypeCode, arg.start, arg.end, tx.getCertificate().getUsername()));
 			} else {
 				ChronivaroAuditHelper.audit(tx, TYPE_ABSENCE, absence.getId(), AUDIT_ACTION_SUBMIT, arg.comment,
-						"Requested absence for employee " + arg.employeeId + " (" + arg.absenceTypeCode + " from "
-								+ arg.start + " to " + arg.end + ") by " + tx.getCertificate().getUsername());
+						format("Requested absence for employee {0} ({1} from {2} to {3}) by {4}", employeeName,
+								arg.absenceTypeCode, arg.start, arg.end, tx.getCertificate().getUsername()));
 			}
 
 			tx.commitOnClose();

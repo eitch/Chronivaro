@@ -300,6 +300,7 @@ public class VacationJournalTest {
 
 		// Request 3 days vacation (1440 min: Mon 2026-06-01 to Wed 2026-06-03)
 		String absenceId;
+		String absenceName;
 		try (StrolchTransaction tx = runtimeMock.openUserTx(adminCert, false)) {
 			Resource absence = tx.getResourceTemplate(TYPE_ABSENCE, true);
 			absence.setId("abs-cancel-01");
@@ -312,6 +313,7 @@ public class VacationJournalTest {
 			absence.setString(PARAM_STATE, STATE_SUBMITTED);
 			tx.add(absence);
 			absenceId = absence.getId();
+			absenceName = absence.getName();
 			tx.commitOnClose();
 		}
 
@@ -352,7 +354,7 @@ public class VacationJournalTest {
 			assertEquals(1, cancelEntries.size());
 			Resource refund = cancelEntries.getFirst();
 			assertEquals(1440, (int) refund.getInteger(PARAM_VALUE));
-			assertEquals("Vacation cancellation refund for absence " + absenceId, refund.getString(PARAM_COMMENT));
+			assertEquals("Vacation cancellation refund for absence " + absenceName, refund.getString(PARAM_COMMENT));
 		}
 	}
 

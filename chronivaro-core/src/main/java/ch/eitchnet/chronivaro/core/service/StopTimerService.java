@@ -1,10 +1,6 @@
 package ch.eitchnet.chronivaro.core.service;
 
-import ch.eitchnet.chronivaro.core.model.ChronivaroAuditHelper;
-import ch.eitchnet.chronivaro.core.model.ChronivaroModelHelper;
-import ch.eitchnet.chronivaro.core.model.ScheduleHelper;
-import ch.eitchnet.chronivaro.core.model.WorkDayHelper;
-import ch.eitchnet.chronivaro.core.model.WorkEntryHelper;
+import ch.eitchnet.chronivaro.core.model.*;
 import li.strolch.model.Resource;
 import li.strolch.persistence.api.StrolchTransaction;
 import li.strolch.service.api.AbstractService;
@@ -12,11 +8,11 @@ import li.strolch.service.api.ServiceArgument;
 import li.strolch.service.api.ServiceResult;
 import li.strolch.utils.dbc.DBC;
 
-import java.time.LocalTime;
 import java.time.ZonedDateTime;
 import java.util.Optional;
 
 import static ch.eitchnet.chronivaro.core.model.ChronivaroConstants.*;
+import static java.text.MessageFormat.format;
 
 public class StopTimerService extends AbstractService<StopTimerService.StopTimerArgument, ServiceResult> {
 
@@ -36,7 +32,8 @@ public class StopTimerService extends AbstractService<StopTimerService.StopTimer
 			ZonedDateTime systemNow = ZonedDateTime.now(ChronivaroModelHelper.getEmployeeTimezone(employee));
 
 			if (arg.time == null && !start.toLocalDate().equals(systemNow.toLocalDate())) {
-				throw new IllegalStateException("Stop time must be explicitly supplied when stopping a timer from a previous day!");
+				throw new IllegalStateException(
+						"Stop time must be explicitly supplied when stopping a timer from a previous day!");
 			}
 
 			ZonedDateTime now = arg.time != null ? arg.time : systemNow;
@@ -57,7 +54,8 @@ public class StopTimerService extends AbstractService<StopTimerService.StopTimer
 				WorkEntryHelper.validateNoOverlap(tx, arg.employeeId, start, now, workEntryClone.getId());
 				tx.update(workEntryClone);
 				ChronivaroAuditHelper.audit(tx, TYPE_WORK_ENTRY, workEntryClone.getId(), AUDIT_ACTION_STOP,
-						"Stopped timer for employee " + arg.employeeId + " at " + now + (comment != null ? " (comment: " + comment + ")" : ""));
+						"Stopped timer for employee " + employee.getString(PARAM_PERSONAL_NUMBER) + " at " + now + (
+								comment != null ? " (comment: " + comment + ")" : ""));
 			} else if (now.toLocalDate().equals(start.toLocalDate().plusDays(1))) {
 				// Next day carry-over
 				ZonedDateTime midnight = start.toLocalDate().plusDays(1).atStartOfDay(start.getZone());
@@ -70,7 +68,13 @@ public class StopTimerService extends AbstractService<StopTimerService.StopTimer
 				}
 				tx.update(workEntryClone);
 				ChronivaroAuditHelper.audit(tx, TYPE_WORK_ENTRY, workEntryClone.getId(), AUDIT_ACTION_STOP,
-						"Split timer at midnight for employee " + arg.employeeId + " (start=" + start + ", end=" + midnight + ")");
+						"Split timer at midnight for employee "
+								+ employee.getString(PARAM_PERSONAL_NUMBER)
+								+ " (start="
+								+ start
+								+ ", end="
+								+ midnight
+								+ ")");
 
 				// 2. Create new WorkEntry on the next day
 				Resource workDay = WorkDayHelper.getOrCreateWorkDay(tx, employee, now);
@@ -91,7 +95,7 @@ public class StopTimerService extends AbstractService<StopTimerService.StopTimer
 				if (workEntry.hasParameter(PARAM_IS_ON_CALL)) {
 					nextWorkEntry.setBoolean(PARAM_IS_ON_CALL, workEntry.getBoolean(PARAM_IS_ON_CALL));
 				}
-				
+
 				Resource scheduleVersion = ScheduleHelper.findScheduleVersion(tx, arg.employeeId).orElseThrow();
 				nextWorkEntry.setRelation(PARAM_SCHEDULE, scheduleVersion);
 
@@ -99,15 +103,19 @@ public class StopTimerService extends AbstractService<StopTimerService.StopTimer
 				workDay.addRelation(PARAM_WORK_ENTRIES, nextWorkEntry);
 				tx.update(workDay);
 				ChronivaroAuditHelper.audit(tx, TYPE_WORK_ENTRY, nextWorkEntry.getId(), AUDIT_ACTION_CREATE,
-						"Created split timer entry for employee " + arg.employeeId + " (start=" + midnight + ", end=" + now + ")");
+						format("Created split timer entry for employee {0} (start={1}, end={2})",
+								employee.getString(PARAM_PERSONAL_NUMBER), midnight, now));
 			} else {
 				// Forgotten timer (more than one day)
 				// Cap at daily target, but no later than midnight
 				int targetMinutes = ScheduleHelper.getTargetMinutes(tx, arg.employeeId, start.toLocalDate());
-				int currentMinutes = tx.getResourcesByRelation(WorkDayHelper.getOrCreateWorkDay(tx, employee, start), PARAM_WORK_ENTRIES, true)
+				int currentMinutes = tx
+						.getResourcesByRelation(WorkDayHelper.getOrCreateWorkDay(tx, employee, start),
+								PARAM_WORK_ENTRIES, true)
 						.stream()
 						.filter(we -> we.hasParameter(PARAM_END) && we.getDate(PARAM_END).getYear() != 1970)
-						.mapToInt(we -> (int) (we.getDate(PARAM_END).toEpochSecond() - we.getDate(PARAM_START).toEpochSecond()) / 60)
+						.mapToInt(we -> (int) (
+								we.getDate(PARAM_END).toEpochSecond() - we.getDate(PARAM_START).toEpochSecond()) / 60)
 						.sum();
 
 				int remainingMinutes = Math.max(0, targetMinutes - currentMinutes);
@@ -123,7 +131,8 @@ public class StopTimerService extends AbstractService<StopTimerService.StopTimer
 				workEntryClone.setString(PARAM_COMMENT, comment != null ? autoComment + ": " + comment : autoComment);
 				tx.update(workEntryClone);
 				ChronivaroAuditHelper.audit(tx, TYPE_WORK_ENTRY, workEntryClone.getId(), AUDIT_ACTION_STOP,
-						"Capped forgotten timer for employee " + arg.employeeId + " at " + end);
+						format("Capped forgotten timer for employee {0} at {1}",
+								employee.getString(PARAM_PERSONAL_NUMBER), end));
 			}
 
 			tx.commitOnClose();

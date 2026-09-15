@@ -16,6 +16,7 @@ import java.time.LocalDate;
 import static ch.eitchnet.chronivaro.core.model.ChronivaroConstants.*;
 import static ch.eitchnet.chronivaro.core.model.ChronivaroVersionHelper.bumpVersion;
 import static ch.eitchnet.chronivaro.core.model.ChronivaroVersionHelper.initVersion;
+import static java.text.MessageFormat.format;
 
 public class ApproveAbsenceService extends AbstractService<StringArgument, ServiceResult> {
 
@@ -31,13 +32,14 @@ public class ApproveAbsenceService extends AbstractService<StringArgument, Servi
 			}
 
 			String employeeId = absence.getRelationId(PARAM_EMPLOYEE);
+			Resource employee = ChronivaroModelHelper.getEmployee(tx, employeeId);
 			ChronivaroModelHelper.assertCanManageEmployee(tx, employeeId);
 
 			absence.setString(PARAM_STATE, STATE_APPROVED);
 			bumpVersion(absence, tx);
 			tx.update(absence);
 			ChronivaroAuditHelper.audit(tx, TYPE_ABSENCE, absence.getId(), AUDIT_ACTION_APPROVE,
-					"Approved absence " + absence.getId() + " for employee " + employeeId);
+					"Approved " + absence.getName() + " for employee " + employee.getString(PARAM_PERSONAL_NUMBER));
 
 			// If it's a vacation absence, check balance and create a vacation account entry
 			if (VacationHelper.isVacationAbsence(tx, absence)) {
@@ -50,7 +52,8 @@ public class ApproveAbsenceService extends AbstractService<StringArgument, Servi
 				}
 
 				if (totalMinutes > 0) {
-					VacationHelper.assertSufficientVacationBalance(tx, employeeId, totalMinutes, absence.getDate(PARAM_START));
+					VacationHelper.assertSufficientVacationBalance(tx, employeeId, totalMinutes,
+							absence.getDate(PARAM_START));
 
 					Resource entry = tx.getResourceTemplate(TYPE_VACATION_ACCOUNT_ENTRY, true);
 					entry.setName("Vacation Usage " + absence.getId());
@@ -67,7 +70,8 @@ public class ApproveAbsenceService extends AbstractService<StringArgument, Servi
 					initVersion(entry, tx);
 					tx.add(entry);
 					ChronivaroAuditHelper.audit(tx, TYPE_VACATION_ACCOUNT_ENTRY, entry.getId(), AUDIT_ACTION_CREATE,
-							"Created vacation usage entry for absence " + absence.getId() + " (" + totalMinutes + " minutes)");
+							format("Created vacation usage entry for {0} ({1} minutes)", absence.getName(),
+									totalMinutes));
 				}
 			}
 

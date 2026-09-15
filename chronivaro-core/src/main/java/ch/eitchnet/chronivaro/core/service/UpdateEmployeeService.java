@@ -18,6 +18,7 @@ import java.util.TreeSet;
 import static ch.eitchnet.chronivaro.core.model.ChronivaroConstants.*;
 import static ch.eitchnet.chronivaro.core.model.ChronivaroVersionHelper.bumpVersion;
 import static ch.eitchnet.chronivaro.core.service.CreateEmployeeService.createOrUpdateUser;
+import static java.text.MessageFormat.format;
 
 public class UpdateEmployeeService
 		extends AbstractService<CreateEmployeeService.UpdateEmployeeArgument, ServiceResult> {
@@ -54,7 +55,7 @@ public class UpdateEmployeeService
 			bumpVersion(employee, tx);
 			tx.update(employee);
 			ChronivaroAuditHelper.audit(tx, TYPE_EMPLOYEE, employee.getId(), AUDIT_ACTION_UPDATE,
-					"Updated employee " + employee.getName());
+					"Updated employee " + employee.getString(PARAM_PERSONAL_NUMBER));
 
 			UserRep userRep = createOrUpdateUser(tx, arg);
 			employee.setString(PARAM_USER_ID, userRep.getUserId());
@@ -67,24 +68,27 @@ public class UpdateEmployeeService
 			if (arg.exitDate != null && arg.exitDate.getYear() != 9999) {
 				years.add(arg.exitDate.getYear());
 			}
-			tx.streamResources(TYPE_VACATION_ACCOUNT_ENTRY)
+			tx
+					.streamResources(TYPE_VACATION_ACCOUNT_ENTRY)
 					.filter(e -> e.getRelationId(PARAM_EMPLOYEE).equals(employee.getId())
 							&& VACATION_ENTITLEMENT.equals(e.getString(PARAM_VACATION_TYPE)))
 					.map(e -> e.getDate(PARAM_DATE).getYear())
 					.forEach(years::add);
 
 			String reason;
-			boolean exitDateChanged = (oldExitDate.isEmpty() && arg.exitDate != null)
-					|| (oldExitDate.isPresent() && arg.exitDate == null)
-					|| (oldExitDate.isPresent() && !oldExitDate.get().equals(arg.exitDate));
+			boolean exitDateChanged = (oldExitDate.isEmpty() && arg.exitDate != null) || (oldExitDate.isPresent()
+																								  && arg.exitDate
+					== null) || (
+					oldExitDate.isPresent() && !oldExitDate
+							.get()
+							.equals(arg.exitDate));
 			boolean joinDateChanged = !oldJoinDate.equals(arg.joinDate);
 
 			if (exitDateChanged && joinDateChanged) {
-				reason = "join date and exit date update (joinDate: " + arg.joinDate + ", exitDate: " + arg.exitDate + ")";
+				reason = format("join date and exit date update (joinDate: {0}, exitDate: {1})", arg.joinDate,
+						arg.exitDate);
 			} else if (exitDateChanged) {
-				reason = arg.exitDate != null
-						? "exit date update to " + arg.exitDate
-						: "exit date removal";
+				reason = arg.exitDate != null ? "exit date update to " + arg.exitDate : "exit date removal";
 			} else if (joinDateChanged) {
 				reason = "join date update from " + oldJoinDate + " to " + arg.joinDate;
 			} else {

@@ -184,7 +184,7 @@ public class OperationalServicesAuditTest {
 			Resource event = events.getFirst();
 			assertEquals(corrId, event.getString(PARAM_CORRELATION_ID));
 			assertEquals("admin", event.getString(PARAM_CREATED_BY));
-			assertTrue(event.getString(PARAM_DETAILS).contains(employeeId));
+			assertTrue(event.getString(PARAM_DETAILS).contains("OP-001"));
 		}
 
 		// 2. Stop Timer
@@ -204,7 +204,7 @@ public class OperationalServicesAuditTest {
 			assertEquals(1, events.size());
 			Resource event = events.getFirst();
 			assertEquals(corrId, event.getString(PARAM_CORRELATION_ID));
-			assertTrue(event.getString(PARAM_DETAILS).contains(employeeId));
+			assertTrue(event.getString(PARAM_DETAILS).contains("OP-001"));
 		}
 	}
 
@@ -350,7 +350,7 @@ public class OperationalServicesAuditTest {
 					.search(tx)
 					.toList();
 			assertEquals(1, vacEvents.size());
-			assertTrue(vacEvents.getFirst().getString(PARAM_DETAILS).contains(absenceId));
+			assertTrue(vacEvents.getFirst().getString(PARAM_DETAILS).contains("Absence "));
 		}
 
 		// 4. Cancel Absence

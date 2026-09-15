@@ -16,8 +16,10 @@ import java.time.ZonedDateTime;
 
 import static ch.eitchnet.chronivaro.core.model.ChronivaroConstants.*;
 import static ch.eitchnet.chronivaro.core.model.ChronivaroVersionHelper.bumpVersion;
+import static java.text.MessageFormat.format;
 
-public class UpdateOnCallPeriodService extends AbstractService<UpdateOnCallPeriodService.UpdateOnCallPeriodArgument, ServiceResult> {
+public class UpdateOnCallPeriodService
+		extends AbstractService<UpdateOnCallPeriodService.UpdateOnCallPeriodArgument, ServiceResult> {
 
 	public static class UpdateOnCallPeriodArgument extends ServiceArgument {
 		public String id;
@@ -45,7 +47,11 @@ public class UpdateOnCallPeriodService extends AbstractService<UpdateOnCallPerio
 			LocalTime.parse(arg.endTime.trim());
 		}
 
-		if (arg.startDate.equals(arg.endDate) && arg.startTime != null && !arg.startTime.isBlank() && arg.endTime != null && !arg.endTime.isBlank()) {
+		if (arg.startDate.equals(arg.endDate)
+				&& arg.startTime != null
+				&& !arg.startTime.isBlank()
+				&& arg.endTime != null
+				&& !arg.endTime.isBlank()) {
 			LocalTime st = LocalTime.parse(arg.startTime.trim());
 			LocalTime et = LocalTime.parse(arg.endTime.trim());
 			if (et.isBefore(st)) {
@@ -77,7 +83,8 @@ public class UpdateOnCallPeriodService extends AbstractService<UpdateOnCallPerio
 			tx.update(onCallPeriod);
 
 			ChronivaroAuditHelper.audit(tx, TYPE_ON_CALL_PERIOD, arg.id, AUDIT_ACTION_UPDATE,
-					"Updated on-call period for employee " + employeeId + " (" + arg.startDate + " - " + arg.endDate + ")");
+					format("Updated on-call period for employee {0} ({1} - {2})",
+							employee.getString(PARAM_PERSONAL_NUMBER), arg.startDate, arg.endDate));
 
 			tx.commitOnClose();
 		}

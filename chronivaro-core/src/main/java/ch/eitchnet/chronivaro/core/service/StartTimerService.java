@@ -1,11 +1,6 @@
 package ch.eitchnet.chronivaro.core.service;
 
-import ch.eitchnet.chronivaro.core.model.ChronivaroAuditHelper;
-import ch.eitchnet.chronivaro.core.model.ChronivaroModelHelper;
-import ch.eitchnet.chronivaro.core.model.PeriodHelper;
-import ch.eitchnet.chronivaro.core.model.WorkDayHelper;
-import ch.eitchnet.chronivaro.core.model.WorkEntryHelper;
-import ch.eitchnet.chronivaro.core.model.WorkingLocation;
+import ch.eitchnet.chronivaro.core.model.*;
 import li.strolch.model.Resource;
 import li.strolch.persistence.api.StrolchTransaction;
 import li.strolch.service.api.AbstractService;
@@ -29,7 +24,8 @@ public class StartTimerService extends AbstractService<StartTimerService.Argumen
 		try (StrolchTransaction tx = openArgOrUserTx(arg)) {
 			Resource employee = ChronivaroModelHelper.getEmployee(tx, arg.employeeId);
 
-			ZonedDateTime now = arg.time != null ? arg.time : ZonedDateTime.now(ChronivaroModelHelper.getEmployeeTimezone(employee));
+			ZonedDateTime now = arg.time != null ? arg.time :
+					ZonedDateTime.now(ChronivaroModelHelper.getEmployeeTimezone(employee));
 			PeriodHelper.assertPeriodOpen(tx, employee.getId(), now.toLocalDate());
 			String username = tx.getCertificate().getUsername();
 
@@ -68,7 +64,7 @@ public class StartTimerService extends AbstractService<StartTimerService.Argumen
 			tx.update(workDay);
 
 			ChronivaroAuditHelper.audit(tx, TYPE_WORK_ENTRY, workEntry.getId(), AUDIT_ACTION_START,
-					"Started timer for employee " + employee.getId() + " at " + now);
+					"Started timer for employee " + employee.getString(PARAM_PERSONAL_NUMBER) + " at " + now);
 
 			tx.commitOnClose();
 		}
@@ -115,7 +111,8 @@ public class StartTimerService extends AbstractService<StartTimerService.Argumen
 			this.isOnCall = isOnCall;
 		}
 
-		public Argument(String employeeId, WorkingLocation workingLocation, ZonedDateTime time, Boolean isOnCall, String comment) {
+		public Argument(String employeeId, WorkingLocation workingLocation, ZonedDateTime time, Boolean isOnCall,
+				String comment) {
 			this.employeeId = employeeId;
 			this.workingLocation = workingLocation;
 			this.time = time;

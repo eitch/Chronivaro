@@ -13,6 +13,7 @@ import java.time.DayOfWeek;
 import java.util.Set;
 
 import static ch.eitchnet.chronivaro.core.model.ChronivaroConstants.*;
+import static java.text.MessageFormat.format;
 
 public class AddOrUpdateWorkingLocationDefaultService
 		extends AbstractService<AddOrUpdateWorkingLocationDefaultService.Argument, ServiceResult> {
@@ -33,7 +34,7 @@ public class AddOrUpdateWorkingLocationDefaultService
 			Resource employee = tx.getResourceBy(TYPE_EMPLOYEE, arg.employeeId, true);
 			Resource existing = tx
 					.streamResources(TYPE_WORKING_LOCATION_DEFAULT)
-					.filter(r -> arg.id == null || !r.getId().equals(arg.id))
+					.filter(r -> !r.getId().equals(arg.id))
 					.filter(r -> arg.employeeId.equals(r.getRelationId(PARAM_EMPLOYEE)))
 					.filter(r -> weekday.name().equals(r.getString(PARAM_WEEKDAY)))
 					.filter(r -> durationType.name().equals(r.getString(PARAM_DURATION_TYPE)))
@@ -52,13 +53,13 @@ public class AddOrUpdateWorkingLocationDefaultService
 			if (arg.id == null) {
 				tx.add(resource);
 				ChronivaroAuditHelper.audit(tx, TYPE_WORKING_LOCATION_DEFAULT, resource.getId(), AUDIT_ACTION_CREATE,
-						"Added working location default " + weekday.name() + " -> " + arg.workingLocation
-								+ " for employee " + arg.employeeId);
+						format("Added working location default {0} -> {1} for employee {2}", weekday.name(),
+								arg.workingLocation, employee.getString(PARAM_PERSONAL_NUMBER)));
 			} else {
 				tx.update(resource);
 				ChronivaroAuditHelper.audit(tx, TYPE_WORKING_LOCATION_DEFAULT, resource.getId(), AUDIT_ACTION_UPDATE,
-						"Updated working location default " + weekday.name() + " -> " + arg.workingLocation
-								+ " for employee " + arg.employeeId);
+						format("Updated working location default {0} -> {1} for employee {2}", weekday.name(),
+								arg.workingLocation, employee.getString(PARAM_PERSONAL_NUMBER)));
 			}
 			tx.commitOnClose();
 		}

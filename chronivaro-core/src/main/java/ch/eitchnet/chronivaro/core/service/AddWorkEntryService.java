@@ -1,12 +1,6 @@
 package ch.eitchnet.chronivaro.core.service;
 
-import ch.eitchnet.chronivaro.core.model.ChronivaroAuditHelper;
-import ch.eitchnet.chronivaro.core.model.ChronivaroModelHelper;
-import ch.eitchnet.chronivaro.core.model.PeriodHelper;
-import ch.eitchnet.chronivaro.core.model.ScheduleHelper;
-import ch.eitchnet.chronivaro.core.model.WorkingLocation;
-import ch.eitchnet.chronivaro.core.model.WorkDayHelper;
-import ch.eitchnet.chronivaro.core.model.WorkEntryHelper;
+import ch.eitchnet.chronivaro.core.model.*;
 import li.strolch.model.Resource;
 import li.strolch.persistence.api.StrolchTransaction;
 import li.strolch.service.StringResult;
@@ -19,6 +13,7 @@ import java.time.ZonedDateTime;
 
 import static ch.eitchnet.chronivaro.core.model.ChronivaroConstants.*;
 import static ch.eitchnet.chronivaro.core.model.ChronivaroVersionHelper.initVersion;
+import static java.text.MessageFormat.format;
 
 public class AddWorkEntryService extends AbstractService<AddWorkEntryService.AddWorkEntryArgument, StringResult> {
 
@@ -30,9 +25,9 @@ public class AddWorkEntryService extends AbstractService<AddWorkEntryService.Add
 
 		String workEntryId;
 		try (StrolchTransaction tx = openArgOrUserTx(arg)) {
-			boolean isAdminOrHr = tx.getPrivilegeContext().hasRole(ROLE_HR)
-					|| tx.getPrivilegeContext().hasRole(ROLE_ADMIN)
-					|| tx.getPrivilegeContext().hasRole(ROLE_ADMINISTRATOR);
+			boolean isAdminOrHr = tx.getPrivilegeContext().hasRole(ROLE_HR) || tx
+					.getPrivilegeContext()
+					.hasRole(ROLE_ADMIN) || tx.getPrivilegeContext().hasRole(ROLE_ADMINISTRATOR);
 
 			if (!isAdminOrHr) {
 				ChronivaroModelHelper.assertCanManageEmployee(tx, arg.employeeId);
@@ -43,7 +38,8 @@ public class AddWorkEntryService extends AbstractService<AddWorkEntryService.Add
 
 			boolean spansMidnight = arg.end.toLocalDate().equals(arg.start.toLocalDate().plusDays(1));
 			if (!arg.start.toLocalDate().equals(arg.end.toLocalDate()) && !spansMidnight) {
-				throw new IllegalArgumentException("Work entry must start and end on the same day or end on the next day!");
+				throw new IllegalArgumentException(
+						"Work entry must start and end on the same day or end on the next day!");
 			}
 
 			PeriodHelper.assertPeriodOpen(tx, arg.employeeId, arg.start.toLocalDate());
@@ -76,12 +72,16 @@ public class AddWorkEntryService extends AbstractService<AddWorkEntryService.Add
 				workEntry1.setString(PARAM_CREATED_BY, tx.getCertificate().getUsername());
 				if (arg.comment != null)
 					workEntry1.setString(PARAM_COMMENT, arg.comment.trim());
-				workEntry1.setString(PARAM_WORKING_LOCATION, arg.workingLocation == null ? "" : arg.workingLocation.name());
+				workEntry1.setString(PARAM_WORKING_LOCATION,
+						arg.workingLocation == null ? "" : arg.workingLocation.name());
 				workEntry1.setBoolean(PARAM_IS_ON_CALL, Boolean.TRUE.equals(arg.isOnCall));
 
-				Resource scheduleVersion1 = ScheduleHelper.findScheduleVersion(tx, arg.employeeId, arg.start.toLocalDate())
-						.orElseThrow(() -> new IllegalStateException("No schedule version found for employee " + arg.employeeId
-								+ " on " + arg.start.toLocalDate()));
+				Resource scheduleVersion1 = ScheduleHelper
+						.findScheduleVersion(tx, arg.employeeId, arg.start.toLocalDate())
+						.orElseThrow(() -> new IllegalStateException("No schedule version found for employee "
+								+ arg.employeeId
+								+ " on "
+								+ arg.start.toLocalDate()));
 				workEntry1.setRelation(PARAM_SCHEDULE, scheduleVersion1);
 
 				initVersion(workEntry1, tx);
@@ -92,7 +92,8 @@ public class AddWorkEntryService extends AbstractService<AddWorkEntryService.Add
 				workEntryId = workEntry1.getId();
 
 				ChronivaroAuditHelper.audit(tx, TYPE_WORK_ENTRY, workEntry1.getId(), AUDIT_ACTION_CREATE, arg.comment,
-						"Added manual work entry for employee " + arg.employeeId + " from " + arg.start + " to " + midnight);
+						format("Added manual work entry for employee {0} from {1} to {2}",
+								employee.getString(PARAM_PERSONAL_NUMBER), arg.start, midnight));
 
 				// Entry 2 on next day
 				Resource workDay2 = WorkDayHelper.getOrCreateWorkDay(tx, employee, arg.end);
@@ -106,12 +107,15 @@ public class AddWorkEntryService extends AbstractService<AddWorkEntryService.Add
 				workEntry2.setString(PARAM_CREATED_BY, tx.getCertificate().getUsername());
 				if (arg.comment != null)
 					workEntry2.setString(PARAM_COMMENT, arg.comment.trim());
-				workEntry2.setString(PARAM_WORKING_LOCATION, arg.workingLocation == null ? "" : arg.workingLocation.name());
+				workEntry2.setString(PARAM_WORKING_LOCATION,
+						arg.workingLocation == null ? "" : arg.workingLocation.name());
 				workEntry2.setBoolean(PARAM_IS_ON_CALL, Boolean.TRUE.equals(arg.isOnCall));
 
-				Resource scheduleVersion2 = ScheduleHelper.findScheduleVersion(tx, arg.employeeId, arg.end.toLocalDate())
-						.orElseThrow(() -> new IllegalStateException("No schedule version found for employee " + arg.employeeId
-								+ " on " + arg.end.toLocalDate()));
+				Resource scheduleVersion2 = ScheduleHelper
+						.findScheduleVersion(tx, arg.employeeId, arg.end.toLocalDate())
+						.orElseThrow(() -> new IllegalStateException(
+								format("No schedule version found for employee {0} on {1}",
+										employee.getString(PARAM_PERSONAL_NUMBER), arg.end.toLocalDate())));
 				workEntry2.setRelation(PARAM_SCHEDULE, scheduleVersion2);
 
 				initVersion(workEntry2, tx);
@@ -120,7 +124,8 @@ public class AddWorkEntryService extends AbstractService<AddWorkEntryService.Add
 				tx.update(workDay2);
 
 				ChronivaroAuditHelper.audit(tx, TYPE_WORK_ENTRY, workEntry2.getId(), AUDIT_ACTION_CREATE, arg.comment,
-						"Added split manual work entry for employee " + arg.employeeId + " from " + midnight + " to " + arg.end);
+						format("Added split manual work entry for employee {0} from {1} to {2}",
+								employee.getString(PARAM_PERSONAL_NUMBER), midnight, arg.end));
 
 			} else {
 				WorkEntryHelper.validateNoOverlap(tx, arg.employeeId, arg.start, arg.end, null);
@@ -140,12 +145,15 @@ public class AddWorkEntryService extends AbstractService<AddWorkEntryService.Add
 				workEntry.setString(PARAM_CREATED_BY, tx.getCertificate().getUsername());
 				if (arg.comment != null)
 					workEntry.setString(PARAM_COMMENT, arg.comment.trim());
-				workEntry.setString(PARAM_WORKING_LOCATION, arg.workingLocation == null ? "" : arg.workingLocation.name());
+				workEntry.setString(PARAM_WORKING_LOCATION,
+						arg.workingLocation == null ? "" : arg.workingLocation.name());
 				workEntry.setBoolean(PARAM_IS_ON_CALL, Boolean.TRUE.equals(arg.isOnCall));
 
-				Resource scheduleVersion = ScheduleHelper.findScheduleVersion(tx, arg.employeeId, arg.start.toLocalDate())
-						.orElseThrow(() -> new IllegalStateException("No schedule version found for employee " + arg.employeeId
-								+ " on " + arg.start.toLocalDate()));
+				Resource scheduleVersion = ScheduleHelper
+						.findScheduleVersion(tx, arg.employeeId, arg.start.toLocalDate())
+						.orElseThrow(() -> new IllegalStateException(
+								format("No schedule version found for employee {0} on {1}",
+										employee.getString(PARAM_PERSONAL_NUMBER), arg.start.toLocalDate())));
 				workEntry.setRelation(PARAM_SCHEDULE, scheduleVersion);
 
 				initVersion(workEntry, tx);
@@ -156,7 +164,8 @@ public class AddWorkEntryService extends AbstractService<AddWorkEntryService.Add
 				workEntryId = workEntry.getId();
 
 				ChronivaroAuditHelper.audit(tx, TYPE_WORK_ENTRY, workEntry.getId(), AUDIT_ACTION_CREATE, arg.comment,
-						"Added manual work entry for employee " + arg.employeeId + " from " + arg.start + " to " + arg.end);
+						format("Added manual work entry for employee {0} from {1} to {2}",
+								employee.getString(PARAM_PERSONAL_NUMBER), arg.start, arg.end));
 			}
 
 			tx.commitOnClose();

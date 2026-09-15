@@ -6,7 +6,6 @@ import ch.eitchnet.chronivaro.core.model.VacationHelper;
 import com.google.gson.JsonObject;
 import li.strolch.model.Resource;
 import li.strolch.persistence.api.StrolchTransaction;
-import li.strolch.privilege.base.PrivilegeConstants;
 import li.strolch.privilege.handler.PrivilegeHandler;
 import li.strolch.privilege.model.UserRep;
 import li.strolch.service.StringResult;
@@ -25,6 +24,9 @@ import java.util.Set;
 
 import static ch.eitchnet.chronivaro.core.model.ChronivaroConstants.*;
 import static ch.eitchnet.chronivaro.core.model.ChronivaroVersionHelper.initVersion;
+import static java.text.MessageFormat.format;
+import static li.strolch.privilege.base.PrivilegeConstants.EMAIL;
+import static li.strolch.privilege.base.PrivilegeConstants.ORGANISATION;
 import static li.strolch.privilege.model.UserState.ENABLED;
 
 public class CreateEmployeeService extends AbstractService<CreateEmployeeService.EmployeeArgument, StringResult> {
@@ -70,7 +72,7 @@ public class CreateEmployeeService extends AbstractService<CreateEmployeeService
 			initVersion(employee, tx);
 			tx.add(employee);
 			ChronivaroAuditHelper.audit(tx, TYPE_EMPLOYEE, employee.getId(), AUDIT_ACTION_CREATE,
-					"Created employee " + employee.getName());
+					"Created employee " + employee.getString(PARAM_PERSONAL_NUMBER));
 
 			LocalDate scheduleValidFrom = arg.scheduleValidFrom != null ? arg.scheduleValidFrom : arg.joinDate;
 
@@ -81,13 +83,20 @@ public class CreateEmployeeService extends AbstractService<CreateEmployeeService
 				schedule.setRelation(PARAM_EMPLOYEE, employee);
 				schedule.setDate(PARAM_VALID_FROM, scheduleValidFrom.atStartOfDay(zoneId));
 
-				schedule.setInteger(PARAM_DAILY_TARGET_MINUTES_MONDAY, template.getInteger(PARAM_DAILY_TARGET_MINUTES_MONDAY));
-				schedule.setInteger(PARAM_DAILY_TARGET_MINUTES_TUESDAY, template.getInteger(PARAM_DAILY_TARGET_MINUTES_TUESDAY));
-				schedule.setInteger(PARAM_DAILY_TARGET_MINUTES_WEDNESDAY, template.getInteger(PARAM_DAILY_TARGET_MINUTES_WEDNESDAY));
-				schedule.setInteger(PARAM_DAILY_TARGET_MINUTES_THURSDAY, template.getInteger(PARAM_DAILY_TARGET_MINUTES_THURSDAY));
-				schedule.setInteger(PARAM_DAILY_TARGET_MINUTES_FRIDAY, template.getInteger(PARAM_DAILY_TARGET_MINUTES_FRIDAY));
-				schedule.setInteger(PARAM_DAILY_TARGET_MINUTES_SATURDAY, template.getInteger(PARAM_DAILY_TARGET_MINUTES_SATURDAY));
-				schedule.setInteger(PARAM_DAILY_TARGET_MINUTES_SUNDAY, template.getInteger(PARAM_DAILY_TARGET_MINUTES_SUNDAY));
+				schedule.setInteger(PARAM_DAILY_TARGET_MINUTES_MONDAY,
+						template.getInteger(PARAM_DAILY_TARGET_MINUTES_MONDAY));
+				schedule.setInteger(PARAM_DAILY_TARGET_MINUTES_TUESDAY,
+						template.getInteger(PARAM_DAILY_TARGET_MINUTES_TUESDAY));
+				schedule.setInteger(PARAM_DAILY_TARGET_MINUTES_WEDNESDAY,
+						template.getInteger(PARAM_DAILY_TARGET_MINUTES_WEDNESDAY));
+				schedule.setInteger(PARAM_DAILY_TARGET_MINUTES_THURSDAY,
+						template.getInteger(PARAM_DAILY_TARGET_MINUTES_THURSDAY));
+				schedule.setInteger(PARAM_DAILY_TARGET_MINUTES_FRIDAY,
+						template.getInteger(PARAM_DAILY_TARGET_MINUTES_FRIDAY));
+				schedule.setInteger(PARAM_DAILY_TARGET_MINUTES_SATURDAY,
+						template.getInteger(PARAM_DAILY_TARGET_MINUTES_SATURDAY));
+				schedule.setInteger(PARAM_DAILY_TARGET_MINUTES_SUNDAY,
+						template.getInteger(PARAM_DAILY_TARGET_MINUTES_SUNDAY));
 
 				int weeklyMin = template.getInteger(PARAM_DAILY_TARGET_MINUTES_MONDAY)
 						+ template.getInteger(PARAM_DAILY_TARGET_MINUTES_TUESDAY)
@@ -135,30 +144,33 @@ public class CreateEmployeeService extends AbstractService<CreateEmployeeService
 
 				period.setString(PARAM_CALCULATION_SNAPSHOT, json.toString());
 				ChronivaroAuditHelper.audit(tx, TYPE_TIME_PERIOD, period.getId(), AUDIT_ACTION_CREATE,
-						"Created baseline period snapshot for " + employee.getName() + " with opening balance "
-								+ arg.initialOvertimeMinutes + " minutes");
+						format("Created baseline period snapshot for {0} with opening balance {1} minutes",
+								employee.getString(PARAM_PERSONAL_NUMBER), arg.initialOvertimeMinutes));
 			}
 
 			if (arg.initialVacationDays != null && arg.initialVacationDays != 0.0) {
 				int minutesPerDay = VacationHelper.getMinutesPerVacationDay(tx);
 				int carryOverMinutes = (int) Math.round(arg.initialVacationDays * minutesPerDay);
 				Resource carryOver = tx.getResourceTemplate(TYPE_VACATION_ACCOUNT_ENTRY, true);
-				String empName = employee.hasParameter(PARAM_FIRSTNAME) && employee.hasParameter(PARAM_LASTNAME)
-						? employee.getString(PARAM_FIRSTNAME) + " " + employee.getString(PARAM_LASTNAME)
-						: employee.getName();
+				String empName = employee.hasParameter(PARAM_FIRSTNAME) && employee.hasParameter(PARAM_LASTNAME) ?
+						employee.getString(PARAM_FIRSTNAME) + " " + employee.getString(PARAM_LASTNAME) :
+						employee.getName();
 				carryOver.setName("Initial Vacation Carry-Over " + scheduleValidFrom.getYear() + " (" + empName + ")");
 				carryOver.setRelation(PARAM_EMPLOYEE, employee);
 				carryOver.setString(PARAM_VACATION_TYPE, VACATION_CARRY_OVER);
 				carryOver.setDate(PARAM_DATE, scheduleValidFrom.atStartOfDay(zoneId));
 				carryOver.setDate(PARAM_CREATED_AT, ZonedDateTime.now(zoneId));
 				carryOver.setInteger(PARAM_VALUE, carryOverMinutes);
-				carryOver.setString(PARAM_COMMENT, "Initial vacation carry-over from onboarding (" + arg.initialVacationDays + " days)");
-				carryOver.setString(PARAM_CREATED_BY, tx.getCertificate() != null ? tx.getCertificate().getUsername() : "system");
+				carryOver.setString(PARAM_COMMENT,
+						"Initial vacation carry-over from onboarding (" + arg.initialVacationDays + " days)");
+				carryOver.setString(PARAM_CREATED_BY,
+						tx.getCertificate() != null ? tx.getCertificate().getUsername() : "system");
 
 				initVersion(carryOver, tx);
 				tx.add(carryOver);
 				ChronivaroAuditHelper.audit(tx, TYPE_VACATION_ACCOUNT_ENTRY, carryOver.getId(), AUDIT_ACTION_CREATE,
-						"Credited initial vacation carry-over for " + empName + " (" + carryOverMinutes + " minutes)");
+						format("Credited initial vacation carry-over for {0} ({1} minutes)",
+								employee.getString(PARAM_PERSONAL_NUMBER), carryOverMinutes));
 			}
 
 			VacationHelper.creditOrRecalculateEntitlement(tx, employeeId, scheduleValidFrom.getYear(), false);
@@ -173,9 +185,9 @@ public class CreateEmployeeService extends AbstractService<CreateEmployeeService
 		Map<String, String> properties = new HashMap<>();
 		String organisation = tx.getCertificate().getOrganisation();
 		if (organisation != null)
-			properties.put(PrivilegeConstants.ORGANISATION, organisation);
+			properties.put(ORGANISATION, organisation);
 		if (arg.email != null && !arg.email.isBlank())
-			properties.put(PrivilegeConstants.EMAIL, arg.email);
+			properties.put(EMAIL, arg.email);
 		UserRep userRep = new UserRep(null, arg.username, arg.firstname, arg.lastname, ENABLED, null,
 				Set.of(ROLE_EMPLOYEE, ROLE_MODEL_ACCESSOR), tx.getCertificate().getLocale(), properties, null);
 		UserRep existingUser = privilegeHandler.getUser(tx.getCertificate(), userRep.getUsername());

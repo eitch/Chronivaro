@@ -3,7 +3,6 @@ package ch.eitchnet.chronivaro.core.service;
 import ch.eitchnet.chronivaro.core.model.ChronivaroAuditHelper;
 import ch.eitchnet.chronivaro.core.model.ChronivaroModelHelper;
 import li.strolch.model.Resource;
-import li.strolch.persistence.api.Operation;
 import li.strolch.persistence.api.StrolchTransaction;
 import li.strolch.service.api.AbstractService;
 import li.strolch.service.api.ServiceArgument;
@@ -12,6 +11,7 @@ import li.strolch.utils.dbc.DBC;
 
 import static ch.eitchnet.chronivaro.core.model.ChronivaroConstants.*;
 import static ch.eitchnet.chronivaro.core.model.ChronivaroVersionHelper.bumpVersion;
+import static java.text.MessageFormat.format;
 
 public class RejectAbsenceService extends AbstractService<RejectAbsenceService.RejectAbsenceArgument, ServiceResult> {
 
@@ -30,6 +30,7 @@ public class RejectAbsenceService extends AbstractService<RejectAbsenceService.R
 
 			// Authorisation check: supervisor may only act on employees within their permitted scope
 			String employeeId = absence.getRelationId(PARAM_EMPLOYEE);
+			Resource employee = ChronivaroModelHelper.getEmployee(tx, employeeId);
 			ChronivaroModelHelper.assertCanManageEmployee(tx, employeeId);
 
 			absence = absence.getClone();
@@ -39,7 +40,8 @@ public class RejectAbsenceService extends AbstractService<RejectAbsenceService.R
 			tx.update(absence);
 
 			ChronivaroAuditHelper.audit(tx, TYPE_ABSENCE, absence.getId(), AUDIT_ACTION_REJECT, arg.comment,
-					"Rejected absence " + absence.getId() + " for employee " + absence.getRelationId(PARAM_EMPLOYEE));
+					format("Rejected absence {0} for employee {1}", absence.getName(),
+							employee.getString(PARAM_PERSONAL_NUMBER)));
 
 			tx.commitOnClose();
 		}

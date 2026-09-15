@@ -1,6 +1,7 @@
 package ch.eitchnet.chronivaro.core.service;
 
 import ch.eitchnet.chronivaro.core.model.ChronivaroAuditHelper;
+import ch.eitchnet.chronivaro.core.model.ChronivaroModelHelper;
 import ch.eitchnet.chronivaro.core.model.VacationHelper;
 import li.strolch.model.Resource;
 import li.strolch.persistence.api.StrolchTransaction;
@@ -8,6 +9,7 @@ import li.strolch.service.api.AbstractService;
 import li.strolch.service.api.ServiceArgument;
 import li.strolch.service.api.ServiceResult;
 
+import java.text.MessageFormat;
 import java.time.ZonedDateTime;
 import java.util.Set;
 import java.util.TreeSet;
@@ -25,6 +27,7 @@ public class UpdateScheduleService
 			Resource schedule = tx.getResourceBy(TYPE_EMPLOYMENT_SCHEDULE, arg.id, true);
 
 			String employeeId = schedule.getRelationId(PARAM_EMPLOYEE);
+			Resource employee = ChronivaroModelHelper.getEmployee(tx, employeeId);
 			ZonedDateTime oldValidFrom = schedule.getDate(PARAM_VALID_FROM);
 
 			boolean hasWorkEntries = hasWorkEntries(tx, employeeId, schedule);
@@ -38,18 +41,20 @@ public class UpdateScheduleService
 					bumpVersion(schedule, tx);
 					tx.update(schedule);
 					ChronivaroAuditHelper.audit(tx, TYPE_EMPLOYMENT_SCHEDULE, schedule.getId(), AUDIT_ACTION_UPDATE,
-							"Closed previous schedule version " + schedule.getId() + " validTo=" + schedule.getDate(PARAM_VALID_TO));
+							"Closed previous schedule version " + schedule.getName() + " validTo=" + schedule.getDate(
+									PARAM_VALID_TO));
 
 					// Create new version
 					Resource newVersion = tx.getResourceTemplate(TYPE_EMPLOYMENT_SCHEDULE, true);
-					newVersion.setName("Schedule for " + employeeId);
+					newVersion.setName("Schedule for " + employee.getString(PARAM_PERSONAL_NUMBER));
 					newVersion.setRelationId(PARAM_EMPLOYEE, employeeId);
 					updateSchedule(tx, newVersion, arg);
 					initVersion(newVersion, tx);
 					tx.add(newVersion);
 					ChronivaroAuditHelper.audit(tx, TYPE_EMPLOYMENT_SCHEDULE, newVersion.getId(), AUDIT_ACTION_CREATE,
-							"Created new schedule version for employee " + employeeId + " validFrom=" + arg.validFrom
-									+ (arg.validTo != null ? " to " + arg.validTo : ""));
+							MessageFormat.format("Created new schedule version for employee {0} validFrom={1}{2}",
+									employee.getString(PARAM_PERSONAL_NUMBER), arg.validFrom,
+									arg.validTo != null ? " to " + arg.validTo : ""));
 				} else {
 					// If new validFrom is before or same, we just update the existing one if no work entries,
 					// but here we know hasWorkEntries is true or validFrom changed.
@@ -75,7 +80,8 @@ public class UpdateScheduleService
 					bumpVersion(schedule, tx);
 					tx.update(schedule);
 					ChronivaroAuditHelper.audit(tx, TYPE_EMPLOYMENT_SCHEDULE, schedule.getId(), AUDIT_ACTION_UPDATE,
-							"Updated schedule " + schedule.getId() + " for employee " + employeeId);
+							"Updated schedule " + schedule.getName() + " for employee " + employee.getString(
+									PARAM_PERSONAL_NUMBER));
 				}
 			} else {
 				// No work entries and same validFrom, just update
@@ -83,7 +89,8 @@ public class UpdateScheduleService
 				bumpVersion(schedule, tx);
 				tx.update(schedule);
 				ChronivaroAuditHelper.audit(tx, TYPE_EMPLOYMENT_SCHEDULE, schedule.getId(), AUDIT_ACTION_UPDATE,
-						"Updated schedule " + schedule.getId() + " for employee " + employeeId);
+						"Updated schedule " + schedule.getName() + " for employee " + employee.getString(
+								PARAM_PERSONAL_NUMBER));
 			}
 
 			updateEmployeeCurrentSchedule(tx, employeeId);
@@ -99,8 +106,10 @@ public class UpdateScheduleService
 			if (arg.validTo != null) {
 				years.add(arg.validTo.getYear());
 			}
-			tx.streamResources(TYPE_VACATION_ACCOUNT_ENTRY)
-					.filter(e -> e.hasRelation(PARAM_EMPLOYEE) && employeeId.equals(e.getRelationId(PARAM_EMPLOYEE))
+			tx
+					.streamResources(TYPE_VACATION_ACCOUNT_ENTRY)
+					.filter(e -> e.hasRelation(PARAM_EMPLOYEE)
+							&& employeeId.equals(e.getRelationId(PARAM_EMPLOYEE))
 							&& VACATION_ENTITLEMENT.equals(e.getString(PARAM_VACATION_TYPE)))
 					.map(e -> e.getDate(PARAM_DATE).getYear())
 					.forEach(years::add);
@@ -163,7 +172,13 @@ public class UpdateScheduleService
 		schedule.setInteger(PARAM_DAILY_TARGET_MINUTES_SATURDAY, arg.saturday);
 		schedule.setInteger(PARAM_DAILY_TARGET_MINUTES_SUNDAY, arg.sunday);
 
-		int weeklyMinutes = arg.monday + arg.tuesday + arg.wednesday + arg.thursday + arg.friday + arg.saturday + arg.sunday;
+		int weeklyMinutes = arg.monday
+				+ arg.tuesday
+				+ arg.wednesday
+				+ arg.thursday
+				+ arg.friday
+				+ arg.saturday
+				+ arg.sunday;
 		schedule.setInteger(PARAM_WEEKLY_TARGET_MINUTES, weeklyMinutes);
 		if (arg.employmentRate != null) {
 			schedule.setDouble(PARAM_EMPLOYMENT_RATE, arg.employmentRate);

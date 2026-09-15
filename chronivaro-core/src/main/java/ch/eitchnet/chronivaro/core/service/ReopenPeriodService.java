@@ -1,6 +1,7 @@
 package ch.eitchnet.chronivaro.core.service;
 
 import ch.eitchnet.chronivaro.core.model.ChronivaroAuditHelper;
+import ch.eitchnet.chronivaro.core.model.ChronivaroModelHelper;
 import ch.eitchnet.chronivaro.core.model.PeriodHelper;
 import li.strolch.model.Resource;
 import li.strolch.persistence.api.StrolchTransaction;
@@ -37,6 +38,7 @@ public class ReopenPeriodService extends AbstractService<PeriodActionArgument, S
 			}
 
 			String employeeId = period.getRelationId(PARAM_EMPLOYEE);
+			Resource employee = ChronivaroModelHelper.getEmployee(tx, employeeId);
 			YearMonth ym = YearMonth.parse(period.getString(PARAM_YEAR_MONTH));
 
 			period.setString(PARAM_STATE, STATE_OPEN);
@@ -49,7 +51,8 @@ public class ReopenPeriodService extends AbstractService<PeriodActionArgument, S
 			tx.update(period);
 
 			ChronivaroAuditHelper.audit(tx, TYPE_TIME_PERIOD, period.getId(), AUDIT_ACTION_REOPEN, arg.comment,
-					"Reopened time period " + period.getId() + " for employee " + employeeId);
+					"Reopened time period " + period.getName() + " for employee " + employee.getString(
+							PARAM_PERSONAL_NUMBER));
 
 			tx.commitOnClose();
 		}

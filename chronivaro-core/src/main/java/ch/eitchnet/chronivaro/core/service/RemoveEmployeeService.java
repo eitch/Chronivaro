@@ -20,17 +20,22 @@ public class RemoveEmployeeService extends AbstractService<StringArgument, Servi
 		try (StrolchTransaction tx = openArgOrUserTx(arg)) {
 			Resource employee = ChronivaroModelHelper.getEmployee(tx, arg.value);
 
-			boolean hasHistoricalBookings = tx.streamResources(TYPE_WORK_DAY)
+			boolean hasHistoricalBookings = tx
+					.streamResources(TYPE_WORK_DAY)
 					.anyMatch(r -> r.hasRelation(PARAM_EMPLOYEE) && r.getRelationId(PARAM_EMPLOYEE).equals(arg.value))
-					|| tx.streamResources(TYPE_WORK_ENTRY)
+					|| tx
+					.streamResources(TYPE_WORK_ENTRY)
 					.anyMatch(r -> r.hasRelation(PARAM_EMPLOYEE) && r.getRelationId(PARAM_EMPLOYEE).equals(arg.value))
-					|| tx.streamResources(TYPE_ABSENCE)
+					|| tx
+					.streamResources(TYPE_ABSENCE)
 					.anyMatch(r -> r.hasRelation(PARAM_EMPLOYEE) && r.getRelationId(PARAM_EMPLOYEE).equals(arg.value))
-					|| tx.streamResources(TYPE_TIME_PERIOD)
+					|| tx
+					.streamResources(TYPE_TIME_PERIOD)
 					.anyMatch(r -> r.hasRelation(PARAM_EMPLOYEE) && r.getRelationId(PARAM_EMPLOYEE).equals(arg.value));
 
 			if (hasHistoricalBookings) {
-				return ServiceResult.error("Cannot physically delete employee " + employee.getName()
+				return ServiceResult.error("Cannot physically delete employee "
+						+ employee.getName()
 						+ " because historical bookings exist. Deactivate the employee or user instead.");
 			}
 
@@ -40,9 +45,7 @@ public class RemoveEmployeeService extends AbstractService<StringArgument, Servi
 			for (String type : types) {
 				tx
 						.streamResources(type)
-						.filter(r -> r.hasRelation(PARAM_EMPLOYEE) && r
-								.getRelationId(PARAM_EMPLOYEE)
-								.equals(arg.value))
+						.filter(r -> r.hasRelation(PARAM_EMPLOYEE) && r.getRelationId(PARAM_EMPLOYEE).equals(arg.value))
 						.forEach(tx::remove);
 			}
 
@@ -62,7 +65,7 @@ public class RemoveEmployeeService extends AbstractService<StringArgument, Servi
 
 			tx.remove(employee);
 			ChronivaroAuditHelper.audit(tx, TYPE_EMPLOYEE, employee.getId(), AUDIT_ACTION_REMOVE,
-					"Removed employee " + employee.getName());
+					"Removed employee " + employee.getString(PARAM_PERSONAL_NUMBER));
 			tx.commitOnClose();
 		}
 		return ServiceResult.success();

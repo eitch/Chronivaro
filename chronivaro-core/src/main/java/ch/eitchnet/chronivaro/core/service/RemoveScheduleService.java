@@ -1,6 +1,7 @@
 package ch.eitchnet.chronivaro.core.service;
 
 import ch.eitchnet.chronivaro.core.model.ChronivaroAuditHelper;
+import ch.eitchnet.chronivaro.core.model.ChronivaroModelHelper;
 import ch.eitchnet.chronivaro.core.model.VacationHelper;
 import li.strolch.exception.StrolchUserMessageException;
 import li.strolch.model.Resource;
@@ -15,6 +16,7 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import static ch.eitchnet.chronivaro.core.model.ChronivaroConstants.*;
+import static java.text.MessageFormat.format;
 
 public class RemoveScheduleService extends AbstractService<StringArgument, ServiceResult> {
 
@@ -24,22 +26,26 @@ public class RemoveScheduleService extends AbstractService<StringArgument, Servi
 			Resource schedule = tx.getResourceBy(TYPE_EMPLOYMENT_SCHEDULE, arg.value, true);
 
 			String employeeId = schedule.getRelationId(PARAM_EMPLOYEE);
+			Resource employee = ChronivaroModelHelper.getEmployee(tx, employeeId);
 			ZonedDateTime validFrom = schedule.getDate(PARAM_VALID_FROM);
 			ZonedDateTime validTo = schedule.getDate(PARAM_VALID_TO);
 
-			long workDays = tx.streamResources(TYPE_WORK_DAY)
-					.filter(wd -> wd.hasRelation(PARAM_SCHEDULE) && schedule.getId().equals(wd.getRelationId(PARAM_SCHEDULE)))
+			long workDays = tx
+					.streamResources(TYPE_WORK_DAY)
+					.filter(wd -> wd.hasRelation(PARAM_SCHEDULE) && schedule
+							.getId()
+							.equals(wd.getRelationId(PARAM_SCHEDULE)))
 					.count();
 
 			if (workDays > 0) {
 				throw new StrolchUserMessageException(
 						new I18nMessage("chronivaro", "chronivaro.schedule.delete.fail.workdays", null,
-								"Cannot delete schedule because it has " + workDays
-										+ " work days associated with it. Please update the schedule instead.")
-								.value("count", workDays));
+								format("Cannot delete schedule because it has {0} work days associated with it. Please update the schedule instead.",
+										workDays)).value("count", workDays));
 			}
 
-			long workEntries = tx.streamResources(TYPE_WORK_ENTRY)
+			long workEntries = tx
+					.streamResources(TYPE_WORK_ENTRY)
 					.filter(e -> e.getRelationId(PARAM_EMPLOYEE).equals(employeeId))
 					.filter(e -> {
 						ZonedDateTime start = e.getDate(PARAM_START);
@@ -52,14 +58,14 @@ public class RemoveScheduleService extends AbstractService<StringArgument, Servi
 			if (workEntries > 0) {
 				throw new StrolchUserMessageException(
 						new I18nMessage("chronivaro", "chronivaro.schedule.delete.fail.workentries", null,
-								"Cannot delete schedule because it has " + workEntries
-										+ " work entries associated with it. Please update the schedule instead.")
-								.value("count", workEntries));
+								format("Cannot delete schedule because it has {0} work entries associated with it. Please update the schedule instead.",
+										workEntries)).value("count", workEntries));
 			}
 
 			tx.remove(schedule);
 			ChronivaroAuditHelper.audit(tx, TYPE_EMPLOYMENT_SCHEDULE, schedule.getId(), AUDIT_ACTION_REMOVE,
-					"Removed schedule " + schedule.getId() + " for employee " + employeeId);
+					"Removed schedule " + schedule.getName() + " for employee " + employee.getString(
+							PARAM_PERSONAL_NUMBER));
 
 			updateEmployeeCurrentSchedule(tx, employeeId);
 
@@ -68,8 +74,10 @@ public class RemoveScheduleService extends AbstractService<StringArgument, Servi
 			if (validTo != null) {
 				years.add(validTo.getYear());
 			}
-			tx.streamResources(TYPE_VACATION_ACCOUNT_ENTRY)
-					.filter(e -> e.hasRelation(PARAM_EMPLOYEE) && employeeId.equals(e.getRelationId(PARAM_EMPLOYEE))
+			tx
+					.streamResources(TYPE_VACATION_ACCOUNT_ENTRY)
+					.filter(e -> e.hasRelation(PARAM_EMPLOYEE)
+							&& employeeId.equals(e.getRelationId(PARAM_EMPLOYEE))
 							&& VACATION_ENTITLEMENT.equals(e.getString(PARAM_VACATION_TYPE)))
 					.map(e -> e.getDate(PARAM_DATE).getYear())
 					.forEach(years::add);

@@ -14,6 +14,7 @@ import java.time.ZonedDateTime;
 import java.util.Optional;
 
 import static ch.eitchnet.chronivaro.core.model.ChronivaroConstants.*;
+import static java.text.MessageFormat.format;
 
 public class RemoveWorkEntryService extends AbstractService<StringArgument, ServiceResult> {
 
@@ -24,13 +25,15 @@ public class RemoveWorkEntryService extends AbstractService<StringArgument, Serv
 		try (StrolchTransaction tx = openArgOrUserTx(arg)) {
 			Resource workEntry = tx.getResourceBy(TYPE_WORK_ENTRY, arg.value, true);
 			String employeeId = workEntry.getRelationId(PARAM_EMPLOYEE);
+			Resource employee = ChronivaroModelHelper.getEmployee(tx, employeeId);
 
-			boolean isAdminOrHr = tx.getPrivilegeContext().hasRole(ROLE_HR)
-					|| tx.getPrivilegeContext().hasRole(ROLE_ADMIN)
-					|| tx.getPrivilegeContext().hasRole(ROLE_ADMINISTRATOR);
+			boolean isAdminOrHr = tx.getPrivilegeContext().hasRole(ROLE_HR) || tx
+					.getPrivilegeContext()
+					.hasRole(ROLE_ADMIN) || tx.getPrivilegeContext().hasRole(ROLE_ADMINISTRATOR);
 
 			if (!isAdminOrHr) {
-				Optional<Resource> callerEmployee = ChronivaroModelHelper.findEmployeeByUser(tx, tx.getCertificate().getUserId());
+				Optional<Resource> callerEmployee = ChronivaroModelHelper.findEmployeeByUser(tx,
+						tx.getCertificate().getUserId());
 				boolean isSelf = callerEmployee.isPresent() && callerEmployee.get().getId().equals(employeeId);
 
 				if (!isSelf) {
@@ -52,7 +55,8 @@ public class RemoveWorkEntryService extends AbstractService<StringArgument, Serv
 
 			tx.remove(workEntry);
 			ChronivaroAuditHelper.audit(tx, TYPE_WORK_ENTRY, workEntry.getId(), AUDIT_ACTION_REMOVE,
-					"Removed work entry " + workEntry.getId() + " for employee " + employeeId + " (" + start + " to " + end + ")");
+					format("Removed work entry {0} for employee {1} ({2} to {3})", workEntry.getName(),
+							employee.getString(PARAM_PERSONAL_NUMBER), start, end));
 
 			tx.commitOnClose();
 		}
