@@ -12,6 +12,7 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import li.strolch.model.Resource;
 import li.strolch.persistence.api.StrolchTransaction;
+import li.strolch.privilege.base.AccessDeniedException;
 import li.strolch.privilege.base.PrivilegeConstants;
 import li.strolch.privilege.handler.PrivilegeHandler;
 import li.strolch.privilege.model.Certificate;
@@ -158,6 +159,56 @@ public class UserResource {
 		ServiceHandler serviceHandler = ChronivaroRestHelper.getServiceHandler();
 		ServiceResult result = serviceHandler.doService(cert, new RemoveUserService(), new StringArgument(id));
 		return ChronivaroRestHelper.toResponse(result);
+	}
+
+	@GET
+	@Path("{id}/tokens")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response getUserTokens(@Context HttpServletRequest request, @PathParam("id") String id) {
+		Certificate cert = (Certificate) request.getAttribute(StrolchRestfulConstants.STROLCH_CERTIFICATE);
+		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
+			PrivilegeHandler privilegeHandler = tx.getContainer().getPrivilegeHandler().getPrivilegeHandler();
+			UserRep user = findUser(privilegeHandler, tx.getCertificate(), id);
+			if (user == null) {
+				return ChronivaroRestHelper.toErrorResponse(Response.Status.NOT_FOUND, "NOT_FOUND", "User " + id + " not found");
+			}
+
+			List<li.strolch.privilege.model.PersonalAccessTokenRep> reps =
+					privilegeHandler.getPersonalAccessTokens(tx.getCertificate(), user.getUsername());
+			List<ch.eitchnet.chronivaro.rest.dto.PersonalAccessTokenDto> dtos =
+					reps.stream().map(PersonalAccessTokenHelper::toDto).toList();
+			return Response.ok(ChronivaroRestHelper.createGson().toJson(dtos), MediaType.APPLICATION_JSON).build();
+		} catch (AccessDeniedException | li.strolch.exception.StrolchAccessDeniedException e) {
+			return ChronivaroRestHelper.toErrorResponse(Response.Status.FORBIDDEN, "ACCESS_DENIED", e.getMessage());
+		}
+	}
+
+	@DELETE
+	@Path("{id}/tokens/{tokenId}")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response deleteUserToken(@Context HttpServletRequest request, @PathParam("id") String id, @PathParam("tokenId") String tokenId) {
+		Certificate cert = (Certificate) request.getAttribute(StrolchRestfulConstants.STROLCH_CERTIFICATE);
+		if (tokenId == null || tokenId.isBlank()) {
+			return ChronivaroRestHelper.toErrorResponse(Response.Status.BAD_REQUEST, "INVALID_ARGUMENT", "Token ID is required");
+		}
+
+		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
+			PrivilegeHandler privilegeHandler = tx.getContainer().getPrivilegeHandler().getPrivilegeHandler();
+			UserRep user = findUser(privilegeHandler, tx.getCertificate(), id);
+			if (user == null) {
+				return ChronivaroRestHelper.toErrorResponse(Response.Status.NOT_FOUND, "NOT_FOUND", "User " + id + " not found");
+			}
+
+			privilegeHandler.removePersonalAccessToken(tx.getCertificate(), tokenId);
+
+			com.google.gson.JsonObject json = new com.google.gson.JsonObject();
+			json.addProperty("msg", "Personal access token removed");
+			return Response.ok(ChronivaroRestHelper.createGson().toJson(json), MediaType.APPLICATION_JSON).build();
+		} catch (AccessDeniedException | li.strolch.exception.StrolchAccessDeniedException e) {
+			return ChronivaroRestHelper.toErrorResponse(Response.Status.FORBIDDEN, "ACCESS_DENIED", e.getMessage());
+		} catch (li.strolch.privilege.base.PrivilegeModelException e) {
+			return ChronivaroRestHelper.toErrorResponse(Response.Status.NOT_FOUND, "NOT_FOUND", e.getMessage());
+		}
 	}
 
 	private static boolean filterUser(UserRep u, String query) {

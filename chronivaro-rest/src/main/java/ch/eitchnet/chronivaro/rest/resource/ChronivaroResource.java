@@ -37,6 +37,7 @@ import java.time.ZonedDateTime;
 import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import static ch.eitchnet.chronivaro.core.model.ChronivaroConstants.*;
 import static li.strolch.rest.StrolchRestfulConstants.STROLCH_CERTIFICATE;
@@ -1170,5 +1171,127 @@ public class ChronivaroResource {
 
 		ServiceResult result = serviceHandler.doService(cert, new UpdateUserLanguageService(), arg);
 		return ChronivaroRestHelper.toResponse(result);
+	}
+
+	@GET
+	@Path("me/tokens")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response getMyPersonalAccessTokens(@Context HttpServletRequest request) {
+		Certificate cert = (Certificate) request.getAttribute(STROLCH_CERTIFICATE);
+		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
+			li.strolch.privilege.handler.PrivilegeHandler privilegeHandler =
+					tx.getContainer().getPrivilegeHandler().getPrivilegeHandler();
+			List<li.strolch.privilege.model.PersonalAccessTokenRep> reps =
+					privilegeHandler.getPersonalAccessTokens(tx.getCertificate());
+			List<ch.eitchnet.chronivaro.rest.dto.PersonalAccessTokenDto> dtos =
+					reps.stream().map(PersonalAccessTokenHelper::toDto).toList();
+			return Response.ok(ChronivaroRestHelper.createGson().toJson(dtos), MediaType.APPLICATION_JSON).build();
+		} catch (AccessDeniedException | li.strolch.exception.StrolchAccessDeniedException e) {
+			return ChronivaroRestHelper.toErrorResponse(Response.Status.FORBIDDEN, "ACCESS_DENIED", e.getMessage());
+		}
+	}
+
+	@POST
+	@Path("me/tokens")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response createMyPersonalAccessToken(@Context HttpServletRequest request, String data) {
+		Certificate cert = (Certificate) request.getAttribute(STROLCH_CERTIFICATE);
+		ch.eitchnet.chronivaro.rest.dto.CreatePersonalAccessTokenRequestDto requestDto;
+		try {
+			requestDto = ChronivaroRestHelper.createGson().fromJson(data,
+					ch.eitchnet.chronivaro.rest.dto.CreatePersonalAccessTokenRequestDto.class);
+		} catch (Exception e) {
+			return ChronivaroRestHelper.toErrorResponse(Response.Status.BAD_REQUEST, "INVALID_ARGUMENT",
+					"Invalid JSON payload");
+		}
+
+		String name = requestDto != null ? requestDto.name() : null;
+		if (name == null || name.isBlank()) {
+			return ChronivaroRestHelper.toErrorResponse(Response.Status.BAD_REQUEST, "INVALID_ARGUMENT",
+					"Token name is required");
+		}
+
+		String preset = requestDto.preset();
+		if (preset != null && !preset.isBlank() && !PersonalAccessTokenHelper.SUPPORTED_PRESETS.contains(preset.trim().toUpperCase())) {
+			return ChronivaroRestHelper.toErrorResponse(Response.Status.BAD_REQUEST, "INVALID_ARGUMENT",
+					"Unsupported preset: " + preset);
+		}
+		if (preset == null || preset.isBlank()) {
+			preset = PersonalAccessTokenHelper.PRESET_FULL_PERSONAL;
+		} else {
+			preset = preset.trim().toUpperCase();
+		}
+
+		ZonedDateTime validFrom = ZonedDateTime.now();
+		ZonedDateTime validTo = requestDto.validTo();
+		if (validTo == null && (data == null || !data.contains("\"validTo\""))) {
+			validTo = validFrom.plusYears(1);
+		}
+
+		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
+			li.strolch.privilege.handler.PrivilegeHandler privilegeHandler =
+					tx.getContainer().getPrivilegeHandler().getPrivilegeHandler();
+
+			Set<String> roles = PersonalAccessTokenHelper.getRolesForPreset(preset);
+			Set<String> privileges = PersonalAccessTokenHelper.getPrivilegesForPreset(preset);
+
+			String token = privilegeHandler.createPersonalAccessToken(
+					tx.getCertificate(),
+					name.trim(),
+					validFrom,
+					validTo,
+					roles,
+					privileges
+			);
+
+			String tokenId = token.contains(":") ? token.substring(0, token.indexOf(':')) : token;
+
+			ch.eitchnet.chronivaro.rest.dto.PersonalAccessTokenCreatedDto createdDto =
+					new ch.eitchnet.chronivaro.rest.dto.PersonalAccessTokenCreatedDto(
+							tokenId,
+							cert.getUsername(),
+							name.trim(),
+							preset,
+							validFrom,
+							validTo,
+							token
+					);
+
+			return Response.status(Response.Status.CREATED)
+					.entity(ChronivaroRestHelper.createGson().toJson(createdDto))
+					.type(MediaType.APPLICATION_JSON)
+					.build();
+		} catch (AccessDeniedException | li.strolch.exception.StrolchAccessDeniedException e) {
+			return ChronivaroRestHelper.toErrorResponse(Response.Status.FORBIDDEN, "ACCESS_DENIED", e.getMessage());
+		} catch (IllegalArgumentException e) {
+			return ChronivaroRestHelper.toErrorResponse(Response.Status.BAD_REQUEST, "INVALID_ARGUMENT", e.getMessage());
+		}
+	}
+
+	@DELETE
+	@Path("me/tokens/{tokenId}")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response deleteMyPersonalAccessToken(@Context HttpServletRequest request, @PathParam("tokenId") String tokenId) {
+		Certificate cert = (Certificate) request.getAttribute(STROLCH_CERTIFICATE);
+		if (tokenId == null || tokenId.isBlank()) {
+			return ChronivaroRestHelper.toErrorResponse(Response.Status.BAD_REQUEST, "INVALID_ARGUMENT",
+					"Token ID is required");
+		}
+
+		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
+			li.strolch.privilege.handler.PrivilegeHandler privilegeHandler =
+					tx.getContainer().getPrivilegeHandler().getPrivilegeHandler();
+
+			privilegeHandler.removePersonalAccessToken(tx.getCertificate(), tokenId);
+
+			JsonObject json = new JsonObject();
+			json.addProperty("msg", "Personal access token removed");
+			return Response.ok(ChronivaroRestHelper.createGson().toJson(json), MediaType.APPLICATION_JSON).build();
+		} catch (AccessDeniedException | li.strolch.exception.StrolchAccessDeniedException e) {
+			return ChronivaroRestHelper.toErrorResponse(Response.Status.FORBIDDEN, "ACCESS_DENIED", e.getMessage());
+		} catch (li.strolch.privilege.base.PrivilegeModelException e) {
+			return ChronivaroRestHelper.toErrorResponse(Response.Status.NOT_FOUND, "NOT_FOUND", e.getMessage());
+		}
 	}
 }

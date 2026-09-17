@@ -36,6 +36,9 @@
         <Roles>
             <Role>Employee</Role>
             <Role>ModelAccessor</Role>
+            <Role>FullPersonalAccess</Role>
+            <Role>DesktopTimerAccess</Role>
+            <Role>ReadOnlyTimesAccess</Role>
         </Roles>
         <Properties>
             <Property name="realm" value="strolch"/>
@@ -51,6 +54,9 @@
             <Role>Supervisor</Role>
             <Role>Employee</Role>
             <Role>ModelAccessor</Role>
+            <Role>FullPersonalAccess</Role>
+            <Role>DesktopTimerAccess</Role>
+            <Role>ReadOnlyTimesAccess</Role>
         </Roles>
         <Properties>
             <Property name="realm" value="strolch"/>
@@ -66,6 +72,9 @@
             <Role>HR</Role>
             <Role>Employee</Role>
             <Role>ModelAccessor</Role>
+            <Role>FullPersonalAccess</Role>
+            <Role>DesktopTimerAccess</Role>
+            <Role>ReadOnlyTimesAccess</Role>
         </Roles>
         <Properties>
             <Property name="realm" value="strolch"/>

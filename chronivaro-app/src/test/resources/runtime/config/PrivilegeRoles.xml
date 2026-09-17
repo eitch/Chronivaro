@@ -44,6 +44,12 @@
         <Privilege name="RequirePasswordChange" policy="UserAccessPrivilege">
             <AllAllowed>true</AllAllowed>
         </Privilege>
+        <Privilege name="PrivilegePersonalAccessToken" policy="UserAccessPrivilege">
+            <AllAllowed>true</AllAllowed>
+        </Privilege>
+        <Privilege name="PrivilegePersonalAccessTokenUser" policy="UserAccessPrivilege">
+            <AllAllowed>true</AllAllowed>
+        </Privilege>
     </Role>
 
     <Role name="StrolchAdmin">
@@ -87,6 +93,12 @@
             <AllAllowed>true</AllAllowed>
         </Privilege>
         <Privilege name="PrivilegeSetUserPassword" policy="UserAccessPrivilege">
+            <AllAllowed>true</AllAllowed>
+        </Privilege>
+        <Privilege name="PrivilegePersonalAccessToken" policy="UserAccessPrivilege">
+            <AllAllowed>true</AllAllowed>
+        </Privilege>
+        <Privilege name="PrivilegePersonalAccessTokenUser" policy="UserAccessPrivilege">
             <AllAllowed>true</AllAllowed>
         </Privilege>
     </Role>
@@ -168,6 +180,9 @@
         <Privilege name="PrivilegeSetUserLocale" policy="DefaultPrivilege">
             <AllAllowed>true</AllAllowed>
         </Privilege>
+        <Privilege name="PrivilegePersonalAccessToken" policy="DefaultPrivilege">
+            <AllAllowed>true</AllAllowed>
+        </Privilege>
     </Role>
 
     <Role name="Supervisor">
@@ -208,6 +223,9 @@
             <AllAllowed>true</AllAllowed>
         </Privilege>
         <Privilege name="PrivilegeSetUserLocale" policy="DefaultPrivilege">
+            <AllAllowed>true</AllAllowed>
+        </Privilege>
+        <Privilege name="PrivilegePersonalAccessToken" policy="DefaultPrivilege">
             <AllAllowed>true</AllAllowed>
         </Privilege>
     </Role>
@@ -251,6 +269,62 @@
         </Privilege>
         <Privilege name="PrivilegeSetUserLocale" policy="DefaultPrivilege">
             <AllAllowed>true</AllAllowed>
+        </Privilege>
+        <Privilege name="PrivilegePersonalAccessToken" policy="DefaultPrivilege">
+            <AllAllowed>true</AllAllowed>
+        </Privilege>
+    </Role>
+    <Role name="FullPersonalAccess">
+        <Privilege name="li.strolch.service.api.Service" policy="DefaultPrivilege">
+            <Allow>ch.eitchnet.chronivaro.core.service.StartTimerService</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.service.StopTimerService</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.service.DaySummaryService</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.service.MonthSummaryService</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.service.PresenceService</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.service.GetVacationAccountSummaryService</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.service.RequestAbsenceService</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.service.SubmitAbsenceService</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.service.UpdateAbsenceService</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.service.CancelAbsenceService</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.service.CorrectWorkEntryService</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.service.RemoveWorkEntryService</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.service.SubmitPeriodService</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.service.CalculateVacationEntitlementService</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.service.AbsenceReportService</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.service.OnCallReportService</Allow>
+        </Privilege>
+        <Privilege name="li.strolch.search.StrolchSearch" policy="DefaultPrivilege">
+            <Allow>ch.eitchnet.chronivaro.core.search.AbsenceSearch</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.search.TimePeriodSearch</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.search.VacationAccountEntrySearch</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.search.OnCallPeriodSearch</Allow>
+        </Privilege>
+    </Role>
+
+    <Role name="DesktopTimerAccess">
+        <Privilege name="li.strolch.service.api.Service" policy="DefaultPrivilege">
+            <Allow>ch.eitchnet.chronivaro.core.service.StartTimerService</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.service.StopTimerService</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.service.DaySummaryService</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.service.MonthSummaryService</Allow>
+        </Privilege>
+        <Privilege name="li.strolch.search.StrolchSearch" policy="DefaultPrivilege">
+            <Allow>ch.eitchnet.chronivaro.core.search.TimePeriodSearch</Allow>
+        </Privilege>
+    </Role>
+
+    <Role name="ReadOnlyTimesAccess">
+        <Privilege name="li.strolch.service.api.Service" policy="DefaultPrivilege">
+            <Allow>ch.eitchnet.chronivaro.core.service.DaySummaryService</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.service.MonthSummaryService</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.service.PresenceService</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.service.GetVacationAccountSummaryService</Allow>
+        </Privilege>
+        <Privilege name="li.strolch.search.StrolchSearch" policy="DefaultPrivilege">
+            <Allow>ch.eitchnet.chronivaro.core.search.AbsenceSearch</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.search.TimePeriodSearch</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.search.VacationAccountEntrySearch</Allow>
+            <Allow>ch.eitchnet.chronivaro.core.search.OnCallPeriodSearch</Allow>
         </Privilege>
     </Role>
 </Roles>
