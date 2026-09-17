@@ -571,4 +571,77 @@ public class ChronivaroResourceTest extends AbstractChronivaroRestfulTest {
 			assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
 		}
 	}
+
+	@Test
+	public void shouldGetMyTimerStatus() {
+		String authToken = authenticate("employee", "admin");
+
+		// When timer is not running
+		try (Response response = target()
+				.path("chronivaro/v1/me/timer/status")
+				.request(MediaType.APPLICATION_JSON)
+				.header("Authorization", authToken)
+				.get()) {
+			assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+			com.google.gson.JsonObject obj = ChronivaroRestHelper.createGson().fromJson(response.readEntity(String.class), com.google.gson.JsonObject.class);
+			org.junit.Assert.assertFalse(obj.get("running").getAsBoolean());
+			org.junit.Assert.assertTrue(obj.get("currentWorkEntry") == null || obj.get("currentWorkEntry").isJsonNull());
+			org.junit.Assert.assertNotNull(obj.get("today"));
+			org.junit.Assert.assertNotNull(obj.get("month"));
+		}
+
+		// Start timer
+		String startJson = """
+				{
+				  "workingLocation": "OFFICE",
+				  "comment": "Working on task"
+				}
+				""";
+		try (Response response = target()
+				.path("chronivaro/v1/me/timer/start")
+				.request(MediaType.APPLICATION_JSON)
+				.header("Authorization", authToken)
+				.post(Entity.json(startJson))) {
+			assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+		}
+
+		// Verify timer status is running
+		try (Response response = target()
+				.path("chronivaro/v1/me/timer/status")
+				.request(MediaType.APPLICATION_JSON)
+				.header("Authorization", authToken)
+				.get()) {
+			assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+			com.google.gson.JsonObject obj = ChronivaroRestHelper.createGson().fromJson(response.readEntity(String.class), com.google.gson.JsonObject.class);
+			org.junit.Assert.assertTrue(obj.get("running").getAsBoolean());
+			org.junit.Assert.assertNotNull(obj.get("currentWorkEntry"));
+			org.junit.Assert.assertFalse(obj.get("currentWorkEntry").isJsonNull());
+			com.google.gson.JsonObject currentEntry = obj.getAsJsonObject("currentWorkEntry");
+			org.junit.Assert.assertNotNull(currentEntry.get("id"));
+			org.junit.Assert.assertNotNull(currentEntry.get("start"));
+			org.junit.Assert.assertEquals("OFFICE", currentEntry.get("workingLocation").getAsString());
+			org.junit.Assert.assertEquals("Working on task", currentEntry.get("comment").getAsString());
+		}
+
+		// Stop timer
+		try (Response response = target()
+				.path("chronivaro/v1/me/timer/stop")
+				.request(MediaType.APPLICATION_JSON)
+				.header("Authorization", authToken)
+				.post(Entity.json("{}"))) {
+			assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+		}
+
+		// Verify timer status stopped
+		try (Response response = target()
+				.path("chronivaro/v1/me/timer/status")
+				.request(MediaType.APPLICATION_JSON)
+				.header("Authorization", authToken)
+				.get()) {
+			assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+			com.google.gson.JsonObject obj = ChronivaroRestHelper.createGson().fromJson(response.readEntity(String.class), com.google.gson.JsonObject.class);
+			org.junit.Assert.assertFalse(obj.get("running").getAsBoolean());
+			org.junit.Assert.assertTrue(obj.get("currentWorkEntry") == null || obj.get("currentWorkEntry").isJsonNull());
+		}
+	}
 }

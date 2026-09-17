@@ -885,6 +885,81 @@ public class ChronivaroResource {
 	}
 
 	@GET
+	@Path("me/timer/status")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response getTimerStatus(@Context HttpServletRequest request) {
+		Certificate cert = (Certificate) request.getAttribute(STROLCH_CERTIFICATE);
+		ServiceHandler serviceHandler = ChronivaroRestHelper.getServiceHandler();
+
+		String employeeId;
+		boolean running;
+		ch.eitchnet.chronivaro.rest.dto.CurrentWorkEntryDto currentWorkEntry = null;
+
+		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
+			Optional<Resource> employeeOpt = ChronivaroModelHelper.findEmployeeByUser(tx, cert.getUserId());
+			if (employeeOpt.isEmpty())
+				return ChronivaroRestHelper.toErrorResponse(Response.Status.NOT_FOUND, "NOT_FOUND",
+						"Employee not found for current user");
+
+			Resource employee = employeeOpt.get();
+			employeeId = employee.getId();
+
+			Optional<Resource> openWorkEntryOpt = WorkEntryHelper.findActiveWorkEntry(tx, employeeId);
+			running = openWorkEntryOpt.isPresent();
+			if (openWorkEntryOpt.isPresent()) {
+				Resource openWorkEntry = openWorkEntryOpt.get();
+				ZonedDateTime start = openWorkEntry.getDate(PARAM_START);
+				String workingLocation = openWorkEntry.hasParameter(PARAM_WORKING_LOCATION) ?
+						openWorkEntry.getString(PARAM_WORKING_LOCATION) : null;
+				String comment = openWorkEntry.hasParameter(PARAM_COMMENT) ?
+						openWorkEntry.getString(PARAM_COMMENT) : null;
+				currentWorkEntry = new ch.eitchnet.chronivaro.rest.dto.CurrentWorkEntryDto(
+						openWorkEntry.getId(), start, workingLocation, comment);
+			}
+		}
+
+		LocalDate today = LocalDate.now();
+		YearMonth currentMonth = YearMonth.from(today);
+
+		DaySummaryService.DaySummaryArgument dayArg = new DaySummaryService.DaySummaryArgument();
+		dayArg.employeeId = employeeId;
+		dayArg.date = today;
+		DaySummaryService.DaySummaryResult dayResult = serviceHandler.doService(cert, new DaySummaryService(), dayArg);
+		if (dayResult.isNok())
+			return ChronivaroRestHelper.toResponse(dayResult);
+
+		MonthSummaryService.MonthSummaryArgument monthArg = new MonthSummaryService.MonthSummaryArgument();
+		monthArg.employeeId = employeeId;
+		monthArg.yearMonth = currentMonth;
+		MonthSummaryService.MonthSummaryResult monthResult = serviceHandler.doService(cert, new MonthSummaryService(), monthArg);
+		if (monthResult.isNok())
+			return ChronivaroRestHelper.toResponse(monthResult);
+
+		ch.eitchnet.chronivaro.rest.dto.DayStatusDto dayStatus = new ch.eitchnet.chronivaro.rest.dto.DayStatusDto(
+				today,
+				dayResult.daySummary.targetMinutes(),
+				dayResult.daySummary.actualMinutes(),
+				dayResult.daySummary.getBalance()
+		);
+
+		ch.eitchnet.chronivaro.rest.dto.MonthStatusDto monthStatus = new ch.eitchnet.chronivaro.rest.dto.MonthStatusDto(
+				currentMonth,
+				monthResult.monthSummary.targetMinutesToDate(),
+				monthResult.monthSummary.actualMinutesToDate(),
+				monthResult.monthSummary.periodBalanceMinutes()
+		);
+
+		ch.eitchnet.chronivaro.rest.dto.TimerStatusDto statusDto = new ch.eitchnet.chronivaro.rest.dto.TimerStatusDto(
+				running,
+				currentWorkEntry,
+				dayStatus,
+				monthStatus
+		);
+
+		return Response.ok(ChronivaroRestHelper.createGson().toJson(statusDto), MediaType.APPLICATION_JSON).build();
+	}
+
+	@GET
 	@Path("me/periods/{yearMonth}")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getMyPeriodStatus(@Context HttpServletRequest request, @PathParam("yearMonth") String yearMonthStr) {

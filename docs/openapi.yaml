@@ -496,6 +496,33 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
 
+  /chronivaro/v1/me/timer/status:
+    get:
+      summary: Get current timer and summary status
+      description: Returns the status of the current user's timer, current work entry (if running), day status, and month status.
+      operationId: getMyTimerStatus
+      tags:
+        - Time Tracking
+      security:
+        - CookieAuth: []
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Timer and summary status retrieved successfully
+          headers:
+            X-Correlation-Id:
+              $ref: '#/components/headers/X-Correlation-Id'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TimerStatusDto'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
   /chronivaro/v1/work-entries:
     post:
       summary: Add work entry manually
@@ -4466,23 +4493,74 @@ components:
 
     TimerStatusDto:
       type: object
+      required:
+        - running
+        - today
+        - month
       properties:
-        active:
+        running:
           type: boolean
           example: true
-        startTime:
+        currentWorkEntry:
+          $ref: '#/components/schemas/CurrentWorkEntryDto'
+        today:
+          $ref: '#/components/schemas/DayStatusDto'
+        month:
+          $ref: '#/components/schemas/MonthStatusDto'
+
+    CurrentWorkEntryDto:
+      type: object
+      nullable: true
+      properties:
+        id:
+          type: string
+          example: 'we-20260818-01'
+        start:
           type: string
           format: date-time
-          nullable: true
           example: '2026-08-18T08:30:00+02:00'
         workingLocation:
           type: string
           enum: [OFFICE, REMOTE, CLIENT, TRANSIT]
           nullable: true
           example: 'OFFICE'
-        minutesToday:
+        comment:
+          type: string
+          nullable: true
+          example: 'Morning development session'
+
+    DayStatusDto:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+          example: '2026-08-18'
+        targetMinutes:
           type: integer
-          example: 210
+          example: 480
+        actualMinutes:
+          type: integer
+          example: 240
+        dayBalanceMinutes:
+          type: integer
+          example: -240
+
+    MonthStatusDto:
+      type: object
+      properties:
+        yearMonth:
+          type: string
+          example: '2026-08'
+        targetMinutesToDate:
+          type: integer
+          example: 4800
+        actualMinutesToDate:
+          type: integer
+          example: 4920
+        periodBalanceMinutes:
+          type: integer
+          example: 120
 
     WorkEntryDto:
       type: object
