@@ -1,4 +1,6 @@
 import UserApi from '../api/UserApi.js';
+import TokenApi from '../api/TokenApi.js';
+import Format from '../utils/Format.js';
 import NotificationDialog from '../utils/NotificationDialog.js';
 import I18n from '../i18n/I18n.js';
 
@@ -120,6 +122,39 @@ export default class UsersView {
 					</form>
 				</div>
 			</div>
+
+			<!-- User Tokens Modal (Admin Inspection & Revocation) -->
+			<div id="user-tokens-modal" class="modal" style="display: none;">
+				<div class="modal-content" style="max-width: 750px; width: 90%;">
+					<div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border-color); padding-bottom: 1rem;">
+						<h3 id="user-tokens-modal-title" style="margin: 0;">${I18n.t('tokens.userTokensTitle')}</h3>
+						<button type="button" id="user-tokens-close-icon" class="close-btn" style="background: none; border: none; font-size: 1.5rem; cursor: pointer;">&times;</button>
+					</div>
+					<div class="modal-body">
+						<div class="table-container" style="overflow: visible; margin-bottom: 1rem;">
+							<table id="user-tokens-table" class="data-table" style="width: 100%;">
+								<thead>
+									<tr>
+										<th>${I18n.t('tokens.name')}</th>
+										<th>${I18n.t('tokens.preset')}</th>
+										<th>${I18n.t('tokens.validFrom')}</th>
+										<th>${I18n.t('tokens.validTo')}</th>
+										<th>${I18n.t('tokens.lastUsed')}</th>
+										<th>${I18n.t('common.status')}</th>
+										<th>${I18n.t('common.actions')}</th>
+									</tr>
+								</thead>
+								<tbody>
+									<tr><td colspan="7" class="loading-cell" style="text-align: center; padding: 2rem;">${I18n.t('common.loading')}</td></tr>
+								</tbody>
+							</table>
+						</div>
+					</div>
+					<div class="modal-actions" style="display: flex; justify-content: flex-end; border-top: 1px solid var(--border-color); padding-top: 1rem;">
+						<button type="button" id="user-tokens-close-btn" class="secondary-btn">${I18n.t('common.close')}</button>
+					</div>
+				</div>
+			</div>
 		`;
 
         const tbody = container.querySelector('tbody');
@@ -184,6 +219,7 @@ export default class UsersView {
 								<button class="ghost dropdown-toggle" data-id="${user.id}" title="${I18n.t('common.actions')}" aria-label="${I18n.t('common.actions')}">&#8942;</button>
 								<div class="dropdown-content">
 									<button class="edit-user-btn" data-id="${user.id}">${I18n.t('common.edit')}</button>
+									<button class="tokens-user-btn" data-id="${user.id}">${I18n.t('tokens.manageTokens')}</button>
 									<button class="invite-user-btn" data-id="${user.id}">${I18n.t('users.sendInvitation')}</button>
 									<button class="delete-btn delete-user-btn" data-id="${user.id}">${I18n.t('common.delete')}</button>
 								</div>
@@ -205,6 +241,9 @@ export default class UsersView {
 
                 container.querySelectorAll('.edit-user-btn').forEach(btn => {
                     btn.addEventListener('click', () => editUser(btn.dataset.id));
+                });
+                container.querySelectorAll('.tokens-user-btn').forEach(btn => {
+                    btn.addEventListener('click', () => openUserTokens(btn.dataset.id));
                 });
                 container.querySelectorAll('.invite-user-btn').forEach(btn => {
                     btn.addEventListener('click', () => inviteUser(btn.dataset.id));
@@ -283,6 +322,109 @@ export default class UsersView {
             form.reset();
             editingUserId = null;
         };
+
+        const userTokensModal = container.querySelector('#user-tokens-modal');
+        const userTokensModalTitle = container.querySelector('#user-tokens-modal-title');
+        const userTokensTbody = container.querySelector('#user-tokens-table tbody');
+        const userTokensCloseIcon = container.querySelector('#user-tokens-close-icon');
+        const userTokensCloseBtn = container.querySelector('#user-tokens-close-btn');
+
+        let currentTokensUserId = null;
+
+        const openUserTokens = async (userId) => {
+            const user = this.users.find(u => u.id === userId || u.username === userId);
+            const username = user ? user.username : userId;
+            currentTokensUserId = userId;
+
+            userTokensModalTitle.textContent = I18n.t('tokens.userTokensFor', { username });
+            userTokensModal.style.display = 'block';
+
+            await loadUserTokens(userId);
+        };
+
+        const loadUserTokens = async (userId) => {
+            try {
+                userTokensTbody.innerHTML = `<tr><td colspan="7" class="loading-cell" style="text-align: center; padding: 2rem;">${I18n.t('common.loading')}</td></tr>`;
+                const tokens = await TokenApi.getUserTokens(userId);
+                renderUserTokensTable(Array.isArray(tokens) ? tokens : []);
+            } catch (err) {
+                console.error('Failed to load user tokens', err);
+                userTokensTbody.innerHTML = `<tr><td colspan="7" class="error-cell" style="text-align: center; color: var(--error-color); padding: 2rem;">${err.message || I18n.t('app.error')}</td></tr>`;
+            }
+        };
+
+        const renderUserTokensTable = (tokens) => {
+            userTokensTbody.innerHTML = '';
+            if (tokens.length === 0) {
+                userTokensTbody.innerHTML = `<tr><td colspan="7" class="empty-cell" style="text-align: center; padding: 2rem; color: var(--text-muted);">${I18n.t('tokens.noTokens')}</td></tr>`;
+                return;
+            }
+
+            const now = new Date();
+
+            tokens.forEach(tok => {
+                const tr = document.createElement('tr');
+
+                const presetKey = `tokens.preset${tok.preset === 'DESKTOP_TIMER' ? 'DesktopTimer' : tok.preset === 'READ_ONLY_TIMES' ? 'ReadOnlyTimes' : 'FullPersonal'}`;
+                const presetLabel = I18n.t(presetKey) || tok.preset;
+
+                const validFrom = tok.validFrom ? Format.date(tok.validFrom) : '-';
+                const validTo = tok.validTo ? Format.date(tok.validTo) : I18n.t('tokens.noExpiry');
+                const lastUsed = tok.lastUsed ? Format.dateTime(tok.lastUsed) : `<span class="text-muted">${I18n.t('tokens.neverUsed')}</span>`;
+
+                let isExpired = false;
+                if (tok.validTo) {
+                    const toDate = new Date(tok.validTo);
+                    if (toDate < now) {
+                        isExpired = true;
+                    }
+                }
+
+                const statusBadge = isExpired
+                    ? `<span class="badge badge-expired" style="background: #fed7d7; color: #9b2c2c; padding: 0.2rem 0.5rem; border-radius: 3px; font-size: 0.8rem;">${I18n.t('tokens.statusExpired')}</span>`
+                    : `<span class="badge badge-active" style="background: #c6f6d5; color: #22543d; padding: 0.2rem 0.5rem; border-radius: 3px; font-size: 0.8rem;">${I18n.t('tokens.statusActive')}</span>`;
+
+                tr.innerHTML = `
+                    <td><strong>${tok.name}</strong></td>
+                    <td><span class="badge badge-preset" style="background: var(--bg-hover, #edf2f7); padding: 0.2rem 0.5rem; border-radius: 3px; font-size: 0.8rem;">${presetLabel}</span></td>
+                    <td>${validFrom}</td>
+                    <td>${validTo}</td>
+                    <td>${lastUsed}</td>
+                    <td>${statusBadge}</td>
+                    <td>
+                        <button class="delete-btn revoke-user-token-btn" data-token-id="${tok.tokenId}" style="color: var(--error-color, #e53e3e); background: none; border: 1px solid var(--border-color); padding: 0.3rem 0.6rem; border-radius: 4px; cursor: pointer; font-size: 0.85rem;">
+                            ${I18n.t('tokens.revoke')}
+                        </button>
+                    </td>
+                `;
+                userTokensTbody.appendChild(tr);
+            });
+
+            container.querySelectorAll('.revoke-user-token-btn').forEach(btn => {
+                btn.addEventListener('click', () => revokeUserToken(btn.dataset.tokenId));
+            });
+        };
+
+        const revokeUserToken = async (tokenId) => {
+            if (await NotificationDialog.confirm(I18n.t('tokens.confirmRevokeUserToken'))) {
+                try {
+                    await TokenApi.deleteUserToken(currentTokensUserId, tokenId);
+                    await NotificationDialog.info(I18n.t('tokens.revokeSuccess'), I18n.t('common.success'));
+                    await loadUserTokens(currentTokensUserId);
+                } catch (err) {
+                    console.error('Failed to revoke token', err);
+                    await NotificationDialog.error(err.message || I18n.t('app.error'));
+                }
+            }
+        };
+
+        const closeUserTokensModal = () => {
+            userTokensModal.style.display = 'none';
+            currentTokensUserId = null;
+        };
+
+        userTokensCloseIcon.addEventListener('click', closeUserTokensModal);
+        userTokensCloseBtn.addEventListener('click', closeUserTokensModal);
 
         addBtn.addEventListener('click', () => {
             editingUserId = null;

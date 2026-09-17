@@ -19,6 +19,7 @@ import ConfigurationView from './pages/ConfigurationView.js';
 import UsersView from './pages/UsersView.js';
 import AuditLogView from './pages/AuditLogView.js';
 import ProfileView from './pages/ProfileView.js';
+import TokensView from './pages/TokensView.js';
 import VersionView from './pages/VersionView.js';
 import ConfigurationApi from './api/ConfigurationApi.js';
 import CompleteRegistrationView from './pages/CompleteRegistrationView.js';
@@ -49,6 +50,15 @@ class ChronivaroApp {
                 e.preventDefault();
                 this.closeNavGroups();
                 this.navigate('profile');
+            });
+        }
+
+        const tokensBtn = document.getElementById('tokens-btn');
+        if (tokensBtn) {
+            tokensBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.closeNavGroups();
+                this.navigate('tokens');
             });
         }
 
@@ -516,6 +526,9 @@ class ChronivaroApp {
                 break;
             case 'profile':
                 view = new ProfileView(this);
+                break;
+            case 'tokens':
+                view = new TokensView(this);
                 break;
             case 'schedules':
                 view = new SchedulesView(this);

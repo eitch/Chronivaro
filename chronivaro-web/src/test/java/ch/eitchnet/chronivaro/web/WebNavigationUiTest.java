@@ -181,4 +181,23 @@ public class WebNavigationUiTest {
 		assertTrue("app.js must navigate to profile", appJs.contains("this.navigate('profile')"));
 		assertTrue("app.js must have profile route", appJs.contains("case 'profile':"));
 	}
+
+	@Test
+	public void shouldVerifyTokensButtonInUserDropdown() throws IOException {
+		File htmlFile = new File(getWebappDir(), "index.html");
+		assertTrue("index.html must exist", htmlFile.exists());
+		String html = Files.readString(htmlFile.toPath());
+
+		assertTrue("index.html must contain tokens-btn inside user dropdown",
+				html.contains("id=\"tokens-btn\"") && html.contains("data-i18n=\"nav.tokens\""));
+
+		File appJsFile = new File(getWebappDir(), "js/app.js");
+		assertTrue("app.js must exist", appJsFile.exists());
+		String appJs = Files.readString(appJsFile.toPath());
+
+		assertTrue("app.js must import TokensView", appJs.contains("import TokensView from './pages/TokensView.js'"));
+		assertTrue("app.js must handle tokens-btn click", appJs.contains("document.getElementById('tokens-btn')"));
+		assertTrue("app.js must navigate to tokens", appJs.contains("this.navigate('tokens')"));
+		assertTrue("app.js must have tokens route", appJs.contains("case 'tokens':"));
+	}
 }

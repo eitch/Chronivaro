@@ -178,22 +178,13 @@ The following foundational areas are verified as fully implemented in the reposi
 - **Current Period Balance as of Yesterday / Balance to Date Calculation & Display (Backlog Task 6, Sections 2.11, 4.3.2, 5.2.2, 6.2, 7.3.1, 11.1):** Implemented balance calculation as of yesterday (`date < today`) for ongoing/in-progress months avoiding artificial morning deficit distortions while retaining full-month calculations for closed periods; added to-date metric fields (`targetMinutesToDate`, `actualMinutesToDate`, `holidayMinutesToDate`, `absenceMinutesToDate`, `balanceToDateMinutes`, `endBalanceToDateMinutes`, `fullPeriodBalanceMinutes`, `fullEndBalanceMinutes`) in `MonthSummary`, `MonthSummaryDto`, `PeriodHelper`, and `openapi.yaml`; updated `MyPeriodsView.js` monthly summary cards with dynamic labels ("Balance (as of yesterday)" / "Saldo (per Vortag)", "Total Balance (as of yesterday)" / "Gesamtsaldo (per Vortag)"); updated German and English translation dictionaries with 100% key parity; verified with unit tests in `MonthSummaryServiceTest`, REST/OpenAPI integration tests, and UI tests.
 - **Aggregated Timer Status REST Endpoint for Third-Party Clients (Backlog Task 7, Section 7, Section 1.2 in Process Spec):** Implemented DTO records (`TimerStatusDto`, `CurrentWorkEntryDto`, `DayStatusDto`, `MonthStatusDto`) and REST endpoint `GET /rest/chronivaro/v1/me/timer/status` in `ChronivaroResource` returning running timer status, current work entry details (id, start, workingLocation, comment), daily target/actual/balance metrics, and month-to-date target/actual/balance metrics; documented in `openapi.yaml`; verified with integration tests in `ChronivaroResourceTest` and `OpenApiSpecTest`.
 - **Personal Access Token (PAT) Backend Services & Privilege Scoping (Backlog Task 8, Sections 1.1 & 2 in Security Spec, Section 7 in REST Spec):** Implemented DTO records (`PersonalAccessTokenDto`, `PersonalAccessTokenCreatedDto`, `CreatePersonalAccessTokenRequestDto`) and helper logic (`PersonalAccessTokenHelper`) in `chronivaro-rest`; updated `PrivilegeRoles.xml` across all runtime and test environments configuring `PrivilegePersonalAccessToken` for authenticated roles (`Employee`, `Supervisor`, `HR`, `Admin`) and `PrivilegePersonalAccessTokenUser` for `Admin`; implemented preset privilege scoping (`DESKTOP_TIMER`, `READ_ONLY_TIMES`, `FULL_PERSONAL`) and 1-year default validity; exposed REST endpoints `GET /rest/chronivaro/v1/me/tokens`, `POST /rest/chronivaro/v1/me/tokens`, `DELETE /rest/chronivaro/v1/me/tokens/{tokenId}`, `GET /rest/chronivaro/v1/admin/users/{id}/tokens`, and `DELETE /rest/chronivaro/v1/admin/users/{id}/tokens/{tokenId}`; verified with integration tests in `PersonalAccessTokenResourceTest`.
+- **Personal Access Tokens (PAT) Web UI & Management (Backlog Task 9, Section 2.9 in UI Spec, Section 4.6 Localization):** Implemented API client `TokenApi.js` in `chronivaro-web`; added `TokensView.js` (`#tokens`) accessible from user dropdown and profile view; built tokens table displaying names, presets, valid ranges, last used timestamps, status badges, and revocation actions; implemented token creation modal supporting presets (`DESKTOP_TIMER`, `READ_ONLY_TIMES`, `FULL_PERSONAL`), 1-year default expiry, and no-expiration checkbox; implemented secure one-time secret display modal with copy-to-clipboard functionality and security warning; integrated admin user token inspection and revocation modal into `UsersView.js`; added full i18n translation key coverage across `de.json` and `en.json`; verified with comprehensive unit and UI test suites in `WebTokensUiTest`, `WebNavigationUiTest`, and `I18nKeyParityTest`.
 
 ---
 
 ## Prioritized Implementation Backlog
 
-### Task 9: Personal Access Tokens (PAT) Web UI & Management (Section 2.9 in UI Spec, Section 4.6 Localization)
-- **Goal:** Provide web interface for employees to view, create, and revoke their Personal Access Tokens, and for administrators to inspect and revoke tokens per user.
-- **Scope & Requirements:**
-  - Add API client `TokenApi.js` in `chronivaro-web`.
-  - Create `TokensView.js` (accessible via User Dropdown `#tokens` or Profile settings).
-  - Implement table of active/expired tokens (Name, Preset, Valid From/To, Revoke button).
-  - Implement "Create Token" modal dialog with Name, Preset selection (`DESKTOP_TIMER`, `READ_ONLY_TIMES`, `FULL_PERSONAL`), 1-year default expiry, and "No expiration date" checkbox.
-  - Implement One-Time Secret modal dialog displaying `<tokenId>:<tokenValue>` with copy-to-clipboard button and security notice.
-  - Add admin token inspection and revocation controls in `UsersView.js` / employee administration.
-  - Ensure 100% i18n translation key coverage in `de.json` and `en.json`.
-  - Verify with automated UI tests.
+*(All active backlog items completed. See IMPLEMENTATION_STATUS.md for summary.)*
 
 ---
 

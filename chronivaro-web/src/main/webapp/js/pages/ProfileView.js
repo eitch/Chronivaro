@@ -113,6 +113,14 @@ export default class ProfileView {
                             <span class="profile-label">${I18n.t('user.roles')}:</span>
                             <div class="profile-value profile-roles-container">${roleBadges}</div>
                         </div>
+                        <div class="profile-row" style="margin-top: 0.5rem; padding-top: 0.75rem; border-top: 1px solid var(--border-color);">
+                            <span class="profile-label">${I18n.t('tokens.title')}:</span>
+                            <div class="profile-value">
+                                <a href="#tokens" class="primary-btn" style="display: inline-block; padding: 0.35rem 0.75rem; font-size: 0.85rem; text-decoration: none;">
+                                    🔑 ${I18n.t('tokens.manageTokens')}
+                                </a>
+                            </div>
+                        </div>
                     </div>
                 </div>
         `;
