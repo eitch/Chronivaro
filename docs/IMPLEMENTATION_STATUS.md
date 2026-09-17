@@ -54,7 +54,9 @@ Audit date: 2026-08-28. `IMPLEMENTATION_SPECIFICATION.md` is authoritative; the 
 
 ## Incomplete Requirements / Active Backlog Tasks
 
-*All currently identified backlog tasks are complete.*
+- **Task 7: Aggregated Timer Status REST Endpoint for Third-Party Clients** (`GET /rest/chronivaro/v1/me/timer/status` returning running status, current work entry, today's balance, and month's balance to date for third-party desktop/mobile apps and widgets).
+- **Task 8: Personal Access Token (PAT) Backend Services & Privilege Scoping** (Strolch privilege roles, `CreatePersonalAccessTokenService`, `GetPersonalAccessTokensService`, `RevokePersonalAccessTokenService`, preset privilege scoping `DESKTOP_TIMER` / `READ_ONLY_TIMES` / `FULL_PERSONAL`, default 1-year expiration, bearer token authentication, REST endpoints under `/me/tokens` and `/admin/users/{id}/tokens`).
+- **Task 9: Personal Access Tokens (PAT) Web UI & Management** (Web UI `TokensView.js`, user dropdown navigation, token creation modal with preset and expiration selectors, one-time secret display modal, revocation actions, admin token inspection in `UsersView.js`, and i18n localization keys).
 
 ---
 

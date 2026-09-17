@@ -181,7 +181,42 @@ The following foundational areas are verified as fully implemented in the reposi
 
 ## Prioritized Implementation Backlog
 
-*All currently identified backlog tasks are complete.*
+### Task 7: Aggregated Timer Status REST Endpoint for Third-Party Clients (Section 7, Section 1.2 in Process Spec)
+- **Goal:** Provide a single, lightweight aggregate endpoint `GET /rest/chronivaro/v1/me/timer/status` allowing third-party desktop apps, widgets, and integrations to poll current timer status and balance metrics without issuing multiple distinct REST requests.
+- **Scope & Requirements:**
+  - Create DTOs (`TimerStatusDto`, `CurrentWorkEntryDto`, `DayStatusDto`, `MonthStatusDto`).
+  - Calculate whether the employee has an active/running timer (`running: boolean`), the active `currentWorkEntry` (id, start, location, comment, onCall), `today` summary metrics (date, targetMinutes, actualMinutes, dayBalanceMinutes), and `month` summary metrics (yearMonth, targetMinutesToDate, actualMinutesToDate, periodBalanceMinutes).
+  - Implement service / query logic in `chronivaro-core` and expose endpoint `GET /me/timer/status` in `chronivaro-rest` (`ChronivaroResource`).
+  - Add comprehensive unit and integration tests.
+
+### Task 8: Personal Access Token (PAT) Backend Services & Privilege Scoping (Sections 1.1 & 2 in Security Spec, Section 7 in REST Spec)
+- **Goal:** Implement core services, role privilege configuration, and REST endpoints for Personal Access Token (PAT) lifecycle management based on Strolch Privilege (`PersonalAccessToken`, `PrivilegeHandler`).
+- **Scope & Requirements:**
+  - Update `PrivilegeRoles.xml` to assign `PrivilegePersonalAccessToken` to standard roles (`Employee`, `Supervisor`, `HR`, `Admin`) and `PrivilegePersonalAccessTokenUser` to `Admin`.
+  - Implement token generation logic supporting presets:
+    - `DESKTOP_TIMER`: Privileges for timer start/stop (`StartTimerService`, `StopTimerService`), status (`GET /me/timer/status`), profile (`GET /me/profile`), work entries (`GET /me/work-entries`), day and month summaries.
+    - `READ_ONLY_TIMES`: Read-only queries (`GET /me/*`, `GET /presence`).
+    - `FULL_PERSONAL`: Full personal access privileges of the user.
+  - Implement backend services: `CreatePersonalAccessTokenService`, `GetPersonalAccessTokensService`, `RevokePersonalAccessTokenService` (with admin support for revoking user tokens).
+  - Expose REST endpoints in `chronivaro-rest`:
+    - `GET /rest/chronivaro/v1/me/tokens`
+    - `POST /rest/chronivaro/v1/me/tokens` (returns full `<tokenId>:<tokenValue>` secret once on creation)
+    - `DELETE /rest/chronivaro/v1/me/tokens/{tokenId}`
+    - `GET /rest/chronivaro/v1/admin/users/{id}/tokens`
+    - `DELETE /rest/chronivaro/v1/admin/users/{id}/tokens/{tokenId}`
+  - Unit and integration testing for token creation, preset role/privilege scoping, expiration defaulting (1 year / optional no expiry), authentication via `Authorization: Bearer <tokenId>:<tokenValue>`, and revocation.
+
+### Task 9: Personal Access Tokens (PAT) Web UI & Management (Section 2.9 in UI Spec, Section 4.6 Localization)
+- **Goal:** Provide web interface for employees to view, create, and revoke their Personal Access Tokens, and for administrators to inspect and revoke tokens per user.
+- **Scope & Requirements:**
+  - Add API client `TokenApi.js` in `chronivaro-web`.
+  - Create `TokensView.js` (accessible via User Dropdown `#tokens` or Profile settings).
+  - Implement table of active/expired tokens (Name, Preset, Valid From/To, Revoke button).
+  - Implement "Create Token" modal dialog with Name, Preset selection (`DESKTOP_TIMER`, `READ_ONLY_TIMES`, `FULL_PERSONAL`), 1-year default expiry, and "No expiration date" checkbox.
+  - Implement One-Time Secret modal dialog displaying `<tokenId>:<tokenValue>` with copy-to-clipboard button and security notice.
+  - Add admin token inspection and revocation controls in `UsersView.js` / employee administration.
+  - Ensure 100% i18n translation key coverage in `de.json` and `en.json`.
+  - Verify with automated UI tests.
 
 ---
 

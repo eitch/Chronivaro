@@ -8,6 +8,32 @@ Dieses Dokument spezifiziert die Anforderungen an Authentifizierung, feingranula
 - **Keine anonymen Endpunkte:** Alle fachlichen und administrativen REST-Endpunkte unter `/rest/chronivaro/v1` erfordern eine gültige Authentifizierung.
 - **Passwortinitialisierung und Onboarding:** Passwörter werden niemals im Klartext übertragen oder manuell von Administratoren vergeben. Das Onboarding erfolgt über zeitlich befristete Strolch-Challenges (`Usage.SET_PASSWORD`) mit sicher generierten Registrierungstokens.
 
+### 1.1 Personal Access Tokens (PAT) für Drittanbieter-Integrationen
+
+Chronivaro unterstützt Personal Access Tokens (PAT) auf Basis des Strolch-Privilege-Sicherheitsmodells, um Drittanbieter-Anwendungen (z. B. Desktop-Timer-Apps, Widgets, CLI-Tools) einen sicheren, berechtigungslimitierten API-Zugriff zu ermöglichen:
+
+- **Token-Format:** `<tokenId>:<tokenValue>`, wobei `tokenId` eine UUID und `tokenValue` ein kryptographisch starker Zufallswert ist.
+- **Übertragung im HTTP-Header:**
+  ```http
+  Authorization: Bearer <tokenId>:<tokenValue>
+  ```
+  *(Alternativ wird auch `Authorization: <tokenId>:<tokenValue>` und HTTP Basic Auth mit `tokenId` als Benutzer und `tokenValue` als Passwort unterstützt).*
+- **Sichere Speicherung:** Im Strolch-Privilege-Speicher werden ausschliesslich gesalzene PBKDF2-Hashes von `tokenValue` persistiert. Der Klartext-Token-Wert wird nur ein einziges Mal bei der Erstellung angezeigt und kann danach nicht wiederhergestellt werden.
+- **Gültigkeitsdauer (Ablaufdatum):**
+  - Standardmässig ist die Gültigkeitsdauer auf **1 Jahr** (`validTo = jetzt + 1 Jahr`) vordefiniert.
+  - Das Ablaufdatum wird **nicht zwingend erzwungen** (Benutzer können bei Bedarf ein Token ohne Ablaufdatum / unbegrenzte Gültigkeit erstellen).
+- **Berechtigungs-Scoping (Privilege Scoping):**
+  - Jedes Token besitzt einen explizit eingeschränkten Satz an Rollen/Privilegien.
+  - Strolch erzwingt strikte Teilmengen-Validierung: Ein PAT darf zu keinem Zeitpunkt mehr Berechtigungen erhalten, als der besitzende Benutzer aktuell besitzt (Schutz vor Privilege Escalation).
+- **Vordefinierte Scopes / Presets:**
+  - `DESKTOP_TIMER` (*Desktop-Timer & Saldo*): Berechtigt ausschliesslich für `POST /me/timer/start`, `POST /me/timer/stop`, `GET /me/timer/status`, `GET /me/profile`, `GET /me/day-summary/{date}`, `GET /me/month-summary/{yearMonth}` und `GET /me/work-entries`.
+  - `READ_ONLY_TIMES` (*Nur Lesezugriff auf Zeiten & Saldi*): Berechtigt ausschliesslich für Leseendpunkte (`GET /me/*`, `GET /presence`).
+  - `FULL_PERSONAL` (*Vollständiger persönlicher API-Zugriff*): Entspricht dem vollen Berechtigungsumfang des jeweiligen Benutzers für alle `/me/*`-Endpunkte.
+- **Widerruf (Revocation):**
+  - Benutzer können eigene Tokens jederzeit mit sofortiger Wirkung widerrufen.
+  - Administratoren können kompromittierte Tokens beliebiger Benutzer über die Administration einsehen und widerrufen.
+  - Das Deaktivieren oder Löschen eines Benutzers invalidiert sofort sämtliche zugehörigen PATs.
+
 ---
 
 ## 2. Rollenmodell und Autorisierung
@@ -45,6 +71,8 @@ Die Core-Logik prüft folgende Berechtigungen strikt getrennt:
 13. **Sensible Abwesenheitsgründe:** Einsicht in vertrauliche Abwesenheitsarten (z. B. Krankheit, Unfall).
 14. **Systemkonfiguration:** Globale Einstellungen (Firmenname, Logo, Bürozeiten) verwalten.
 15. **Audit-Log-Einsicht:** Abfrage und Filterung revisionssicherer Systemprotokolle.
+16. **Personal Access Tokens (PAT) - Eigenverwaltung:** Eigene Tokens erstellen, auflisten und widerrufen (`PrivilegePersonalAccessToken`).
+17. **Personal Access Tokens (PAT) - Administration:** Tokens beliebiger Benutzer auflisten und administrativ widerrufen (`PrivilegePersonalAccessTokenUser`).
 
 ---
 

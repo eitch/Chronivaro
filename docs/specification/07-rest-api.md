@@ -55,6 +55,7 @@ Tritt bei der Verarbeitung ein fachlicher oder Validierungsfehler auf, antwortet
 | `DELETE` | `/me/work-entries/{id}` | Eigene Buchung in offener Periode löschen | Angemeldeter Mitarbeiter |
 | `POST` | `/me/timer/start` | Arbeitszeiterfassung (Timer) starten | Angemeldeter Mitarbeiter |
 | `POST` | `/me/timer/stop` | Laufenden Timer stoppen (mit optionalem Kommentar) | Angemeldeter Mitarbeiter |
+| `GET` | `/me/timer/status` | Aggregierter Status für Desktop-Apps & Clients (Laufstatus, Startzeit, Tagessaldo, Monatssaldo) | Angemeldeter Mitarbeiter |
 | `GET` | `/me/day-summary/{date}` | Tageszusammenfassung (Soll/Ist/Saldo/Unterbrüche) | Angemeldeter Mitarbeiter |
 | `GET` | `/me/month-summary/{yearMonth}` | Monatszusammenfassung für den Mitarbeiter (enthält Vollmonats-Soll/Ist sowie Saldo per Vortag `periodBalanceMinutes` / `endBalanceMinutes` und Stichtagswerte `targetMinutesToDate`, `actualMinutesToDate`, etc.) | Angemeldeter Mitarbeiter |
 | `GET` | `/employees/{id}/work-entries?from={date}&to={date}` | Arbeitszeitbuchungen eines Mitarbeiters abrufen | Supervisor (Team), HR, Admin |
@@ -147,6 +148,62 @@ Tritt bei der Verarbeitung ein fachlicher oder Validierungsfehler auf, antwortet
 | `GET` / `POST` / `PUT` | `/employees/{id}/schedule-versions` | Arbeitspläne versionieren | HR, Admin |
 | `GET` / `POST` / `PUT` | `/configuration` | Globale Einstellungen (Firmenname, Logo, Bürozeiten) | Admin |
 | `GET` | `/audits` | Audit-Log mit Filterparametern und Pagination abrufen | Admin, Revisor |
+| `GET` | `/me/tokens` | Liste der eigenen Personal Access Tokens (PAT) | Angemeldeter Benutzer |
+| `POST` | `/me/tokens` | Neues Personal Access Token (PAT) erstellen (Preset, optionales Ablaufdatum) | Angemeldeter Benutzer |
+| `DELETE` | `/me/tokens/{tokenId}` | Eigenes Personal Access Token widerrufen | Angemeldeter Benutzer |
+| `GET` | `/users/{id}/tokens` | Personal Access Tokens eines Benutzers einsehen | Admin |
+| `DELETE` | `/users/{id}/tokens/{tokenId}` | Personal Access Token eines Benutzers administrativ widerrufen | Admin |
+
+#### Schema `GET /me/timer/status` (Aggregierter Desktop-Status)
+
+```json
+{
+  "running": true,
+  "currentWorkEntry": {
+    "id": "we-12345",
+    "start": "2026-09-17T08:15:00+02:00",
+    "workingLocation": "OFFICE",
+    "comment": ""
+  },
+  "today": {
+    "date": "2026-09-17",
+    "targetMinutes": 504,
+    "actualMinutes": 240,
+    "dayBalanceMinutes": -264
+  },
+  "month": {
+    "yearMonth": "2026-09",
+    "targetMinutesToDate": 6048,
+    "actualMinutesToDate": 6120,
+    "periodBalanceMinutes": 72
+  }
+}
+```
+
+#### Schema `POST /me/tokens` (Token-Erstellung)
+
+Request:
+```json
+{
+  "name": "Desktop Timer macOS",
+  "preset": "DESKTOP_TIMER",
+  "validTo": "2027-09-17T23:59:59+02:00"
+}
+```
+*Hinweis:* `validTo` ist optional (Standardwert 1 Jahr ab Erstellung; `null` für unbegrenzte Gültigkeit). Unterstützte `preset`-Werte: `DESKTOP_TIMER`, `READ_ONLY_TIMES`, `FULL_PERSONAL`.
+
+Response (`201 Created`):
+```json
+{
+  "tokenId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "name": "Desktop Timer macOS",
+  "preset": "DESKTOP_TIMER",
+  "validFrom": "2026-09-17T20:30:00+02:00",
+  "validTo": "2027-09-17T23:59:59+02:00",
+  "token": "3fa85f64-5717-4562-b3fc-2c963f66afa6:s3cr3t-t0k3n-v4lu3"
+}
+```
+*Wichtig:* Das Attribut `token` (`<tokenId>:<tokenValue>`) wird ausschliesslich in der Erstellungsantwort zurückgegeben. In nachfolgenden `GET /me/tokens`-Listen wird das Secret niemals zurückgeliefert.
 
 #### Request-Schema `POST /employees` (Mitarbeiter erstellen mit Onboarding-Parametern)
 

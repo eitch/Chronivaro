@@ -37,6 +37,7 @@ chronivaro-web/src/main/webapp/
 - **Benutzer-Dropdown-Menü:**
   - Enthält Profilinformationen (Anzeigename, Benutzername, Personalnummer, Eintrittsdatum, Pensum, Arbeitsplan, Team, Standort, Zeitzone).
   - Sprachumschaltung für die aktive Sitzung.
+  - Zugriff auf persönliche Einstellungen / Personal Access Tokens (PAT).
   - **Abmelde-Button ("Logout"):** Befindet sich fest innerhalb des Benutzer-Dropdowns (nicht als freistehender Button in der Hauptnavigation).
 
 ### 2.1 Dashboard
@@ -115,6 +116,25 @@ chronivaro-web/src/main/webapp/
 - Arbeitspläne, Standorte, Feiertagskalender, Abwesenheitsarten.
 - Globale Einstellungen (zentrierter Einstellungsbereich mit Beschreibungstext, Firmenname, Logo-Upload).
 - Audit-Log-Ansicht mit Filterung und Detailmodal.
+
+---
+
+### 2.9 Persönliche Einstellungen & Personal Access Tokens (PAT)
+
+- **Zugang:** Erreichbar über das Benutzer-Dropdown ("Einstellungen" / "Personal Access Tokens").
+- **Token-Übersicht:** Tabelle aller aktiven und abgelaufenen Tokens des Benutzers:
+  - Token-Name / Beschreibung (z. B. "macOS Desktop Timer")
+  - Gültigkeitsdauer (`validFrom` – `validTo`, oder "Unbegrenzt")
+  - Vordefiniertes Preset (z. B. "Desktop-Timer & Saldo")
+  - Aktionen: Token widerrufen (mit Sicherheitsbestätigung).
+- **Dialog "Token erstellen":**
+  - Name / Verwendungszweck (Pflichtfeld)
+  - Scope-Auswahl über vordefinierte Presets:
+    1. *Desktop-Timer & Saldo* (`DESKTOP_TIMER`) – Standardauswahl
+    2. *Nur Lesezugriff auf Zeiten & Saldi* (`READ_ONLY_TIMES`)
+    3. *Vollständiger persönlicher API-Zugriff* (`FULL_PERSONAL`)
+  - Gültigkeitsdauer: Vorbelegt mit **1 Jahr** ab heute; Checkbox "Kein Ablaufdatum" zur optionalen Deaktivierung der zeitlichen Befristung.
+- **One-Time Token-Modal:** Nach dem Erstellen wird das vollständige Token `<tokenId>:<tokenValue>` in einem modalen Dialog mit Copy-to-Clipboard-Schaltfläche und deutlichem Sicherheitshinweis angezeigt ("Token jetzt kopieren – es kann später nicht mehr angezeigt werden").
 
 ---
 
@@ -208,4 +228,22 @@ Für die erweiterten Dialogfelder und Hinweise bei der Mitarbeitererstellung gel
 | `employees.fields.initialOvertime` | Anfangssaldo Überzeit (Std/Min) | Opening overtime balance (hrs/min) |
 | `employees.fields.initialOvertimePlaceholder` | z. B. +15:30 oder -04:00 | e.g. +15:30 or -04:00 |
 | `employees.fields.initialVacationDays` | Anfangs-Ferienübertrag (Tage) | Opening vacation carry-over (days) |
-| `employees.fields.initialVacationDaysPlaceholder` | z. B. 5.0 | e.g. 5.0 |
+
+---
+
+### 4.6 Lokalisierungsschlüssel für Personal Access Tokens (PAT)
+
+| Schlüssel (Key) | Deutsch (`de`) | Englisch (`en`) |
+|---|---|---|
+| `tokens.title` | Personal Access Tokens | Personal Access Tokens |
+| `tokens.description` | Tokens für Drittanbieter-Anwendungen (z. B. Desktop-Timer) | Tokens for third-party apps (e.g. desktop timer) |
+| `tokens.create` | Neues Token erstellen | Create New Token |
+| `tokens.fields.name` | Name / Beschreibung | Name / Description |
+| `tokens.fields.preset` | Berechtigungs-Preset | Permission Preset |
+| `tokens.fields.validTo` | Gültig bis | Valid until |
+| `tokens.fields.noExpiration` | Kein Ablaufdatum | No expiration date |
+| `tokens.presets.desktopTimer` | Desktop-Timer & Saldo | Desktop Timer & Balance |
+| `tokens.presets.readOnlyTimes` | Nur Lesezugriff (Zeiten & Saldi) | Read-only (Times & Balance) |
+| `tokens.presets.fullPersonal` | Vollständiger persönlicher API-Zugriff | Full Personal API Access |
+| `tokens.modal.copyNotice` | Bitte kopieren Sie das Token jetzt. Aus Sicherheitsgründen wird es nie wieder angezeigt! | Please copy your token now. For security reasons, it will never be displayed again! |
+| `tokens.revokeConfirm` | Möchten Sie das Token "{name}" wirklich unwiderruflich widerrufen? | Are you sure you want to permanently revoke token "{name}"? |

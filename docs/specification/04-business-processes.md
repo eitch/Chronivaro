@@ -40,7 +40,16 @@ Dieses Dokument beschreibt alle fachlichen und administrativen Interaktions- und
 
 ---
 
-### 1.2 Manuelle Zeiterfassung, Bearbeitung und administrative Korrekturen
+### 1.2 Zeiterfassung über Drittanbieter-Apps (Desktop-Timer, Widgets) via Personal Access Tokens (PAT)
+
+1. **Token-Erstellung:** Der Mitarbeiter erstellt in seinem Benutzerprofil ein Personal Access Token mit dem vordefinierten Preset "Desktop-Timer & Saldo" (`DESKTOP_TIMER`).
+2. **App-Authentifizierung:** Die Desktop-App/das Drittanbieter-Tool sendet das Token im Header: `Authorization: Bearer <tokenId>:<tokenValue>`.
+3. **Status- und Saldoabfrage:** Die App ruft periodisch `GET /rest/chronivaro/v1/me/timer/status` auf und erhält in einer einzelnen Payload den aktuellen Laufstatus (inkl. Startzeitpunkt), Tagessaldo sowie Monatssaldo.
+4. **Timer-Aktionen:** Die App startet (`POST /rest/chronivaro/v1/me/timer/start`) oder stoppt (`POST /rest/chronivaro/v1/me/timer/stop`) den Timer, wobei dieselben Geschäftsregeln (z. B. Mitternacht-Splits, Validierungen) gelten wie bei der Weboberfläche.
+
+---
+
+### 1.3 Manuelle Zeiterfassung, Bearbeitung und administrative Korrekturen
 
 1. **Bearbeitung durch den Mitarbeiter:**
    - Mitarbeiter öffnet die Zeiterfassungsansicht ("Meine Zeiten") für einen Tag in einer **offenen Periode**.

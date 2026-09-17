@@ -97,6 +97,7 @@ Folgende Erweiterungen gehören zum aktuellen Produktscope und sind als regulär
 - native PDF-Exporte für Monatsreport, Ferienübersicht und Abwesenheitsreport (siehe [Reports und Exporte](05-reports-and-exports.md))
 - globale Unternehmensdarstellung mit Firmenname und optionalem Firmenlogo (siehe [UI und Lokalisierung](06-ui-and-localization.md) und [Reports und Exporte](05-reports-and-exports.md))
 - Pikettdienst / Rufbereitschaft (`OnCallPeriod`) und Ausweisung von Einsätzen ausserhalb der regulären Bürozeiten (siehe [Fachliches Domänenmodell](02-domain-model.md) und [Reports und Exporte](05-reports-and-exports.md))
+- Personal Access Tokens (PAT) und Drittanbieter-Integrationen (z. B. Desktop-Timer-App, mobile Widgets) zur sicheren, berechtigungslimitierten Zeiterfassung und Saldoabfrage (siehe [Sicherheit und Datenschutz](09-security-and-privacy.md), [REST-API-Spezifikation](07-rest-api.md) und [UI und Lokalisierung](06-ui-and-localization.md))
 
 ### 4.3 Spätere Ausbaustufen (Explizit Out of Scope)
 
