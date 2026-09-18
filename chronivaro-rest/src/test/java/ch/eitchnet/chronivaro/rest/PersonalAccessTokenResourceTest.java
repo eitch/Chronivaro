@@ -70,11 +70,12 @@ public class PersonalAccessTokenResourceTest extends AbstractChronivaroRestfulTe
 			desktopTokenSecret = created.token();
 		}
 
-		// 4. Create another token with FULL_PERSONAL preset and null validTo (unlimited)
+		// 4. Create another token with FULL_PERSONAL preset and explicit null validTo (should default to 1 year and not throw server error)
 		String createJson2 = """
 				{
 				  "name": "Full Access CLI",
-				  "preset": "FULL_PERSONAL"
+				  "preset": "FULL_PERSONAL",
+				  "validTo": null
 				}
 				""";
 		String fullTokenId;
@@ -89,6 +90,7 @@ public class PersonalAccessTokenResourceTest extends AbstractChronivaroRestfulTe
 					PersonalAccessTokenCreatedDto.class
 			);
 			assertNotNull(created);
+			assertNotNull(created.validTo());
 			fullTokenId = created.tokenId();
 			assertEquals("FULL_PERSONAL", created.preset());
 		}

@@ -36,6 +36,7 @@
     "logout": "Abmelden"
   },
   "common": {
+    "done": "Fertig",
     "self": "Selbst",
     "save": "Speichern",
     "cancel": "Abbrechen",
@@ -1011,6 +1012,10 @@
     "presetFullPersonalDesc": "Gewährt alle persönlichen Berechtigungen des eigenen Benutzerkontos für API-Zugriffe.",
     "validFrom": "Gültig ab",
     "validTo": "Gültig bis",
+    "duration": "Gültigkeitsdauer",
+    "durationDays": "Tage",
+    "durationMonths": "Monate",
+    "durationYears": "Jahre",
     "noExpiry": "Unbegrenzt gültig",
     "lastUsed": "Zuletzt verwendet",
     "neverUsed": "Noch nie",

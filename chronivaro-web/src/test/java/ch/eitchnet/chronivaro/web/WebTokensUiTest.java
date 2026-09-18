@@ -36,6 +36,7 @@ public class WebTokensUiTest {
 		assertTrue("TokensView must render create modal", content.contains("create-token-modal"));
 		assertTrue("TokensView must render secret display modal", content.contains("token-secret-modal"));
 		assertTrue("TokensView must support presets", content.contains("DESKTOP_TIMER") && content.contains("READ_ONLY_TIMES") && content.contains("FULL_PERSONAL"));
+		assertTrue("TokensView must support duration in days, months, years", content.contains("token-duration-value") && content.contains("token-duration-unit"));
 		assertTrue("TokensView must support no-expiry checkbox", content.contains("token-no-expiry"));
 		assertTrue("TokensView must support copy to clipboard", content.contains("navigator.clipboard.writeText"));
 	}

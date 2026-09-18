@@ -67,6 +67,17 @@ export default class TokensView {
                             </small>
                         </div>
                         <div class="form-group" style="margin-bottom: 1rem;">
+                            <label style="display: block; margin-bottom: 0.25rem; font-weight: 500;">${I18n.t('tokens.duration')}</label>
+                            <div style="display: flex; gap: 0.5rem; align-items: center;">
+                                <input type="number" id="token-duration-value" min="1" value="1" style="width: 80px; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 4px;">
+                                <select id="token-duration-unit" style="flex: 1; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 4px;">
+                                    <option value="days">${I18n.t('tokens.durationDays')}</option>
+                                    <option value="months">${I18n.t('tokens.durationMonths')}</option>
+                                    <option value="years" selected>${I18n.t('tokens.durationYears')}</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 1rem;">
                             <label for="token-valid-to" style="display: block; margin-bottom: 0.25rem; font-weight: 500;">${I18n.t('tokens.validTo')}</label>
                             <input type="date" id="token-valid-to" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 4px;">
                         </div>
@@ -116,6 +127,8 @@ export default class TokensView {
         const createForm = container.querySelector('#create-token-form');
         const presetSelect = container.querySelector('#token-preset');
         const presetDesc = container.querySelector('#token-preset-desc');
+        const durationValueInput = container.querySelector('#token-duration-value');
+        const durationUnitSelect = container.querySelector('#token-duration-unit');
         const validToInput = container.querySelector('#token-valid-to');
         const noExpiryCheckbox = container.querySelector('#token-no-expiry');
 
@@ -130,18 +143,38 @@ export default class TokensView {
             }
         };
 
+        const updateValidToFromDuration = () => {
+            if (noExpiryCheckbox.checked) return;
+            const val = parseInt(durationValueInput.value, 10);
+            if (isNaN(val) || val <= 0) return;
+
+            const unit = durationUnitSelect.value;
+            const d = new Date();
+            if (unit === 'days') {
+                d.setDate(d.getDate() + val);
+            } else if (unit === 'months') {
+                d.setMonth(d.getMonth() + val);
+            } else if (unit === 'years') {
+                d.setFullYear(d.getFullYear() + val);
+            }
+            validToInput.value = d.toISOString().substring(0, 10);
+        };
+
         presetSelect.addEventListener('change', updatePresetDesc);
+        durationValueInput.addEventListener('input', updateValidToFromDuration);
+        durationUnitSelect.addEventListener('change', updateValidToFromDuration);
 
         noExpiryCheckbox.addEventListener('change', () => {
             if (noExpiryCheckbox.checked) {
                 validToInput.value = '';
                 validToInput.disabled = true;
+                durationValueInput.disabled = true;
+                durationUnitSelect.disabled = true;
             } else {
                 validToInput.disabled = false;
-                // Default to 1 year from now
-                const d = new Date();
-                d.setFullYear(d.getFullYear() + 1);
-                validToInput.value = d.toISOString().substring(0, 10);
+                durationValueInput.disabled = false;
+                durationUnitSelect.disabled = false;
+                updateValidToFromDuration();
             }
         });
 
@@ -216,6 +249,10 @@ export default class TokensView {
 
         const openCreateModal = () => {
             createForm.reset();
+            durationValueInput.value = '1';
+            durationUnitSelect.value = 'years';
+            durationValueInput.disabled = false;
+            durationUnitSelect.disabled = false;
             const d = new Date();
             d.setFullYear(d.getFullYear() + 1);
             validToInput.value = d.toISOString().substring(0, 10);

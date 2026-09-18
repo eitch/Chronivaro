@@ -36,6 +36,7 @@
     "logout": "Logout"
   },
   "common": {
+    "done": "Done",
     "self": "Self",
     "save": "Save",
     "cancel": "Cancel",
@@ -1011,6 +1012,10 @@
     "presetFullPersonalDesc": "Grants the full permission scope of your own user account for personal API access.",
     "validFrom": "Valid From",
     "validTo": "Valid To",
+    "duration": "Validity Period",
+    "durationDays": "Days",
+    "durationMonths": "Months",
+    "durationYears": "Years",
     "noExpiry": "No expiration date",
     "lastUsed": "Last Used",
     "neverUsed": "Never",

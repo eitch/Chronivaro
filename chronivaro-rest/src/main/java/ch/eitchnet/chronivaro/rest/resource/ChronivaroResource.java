@@ -1225,7 +1225,7 @@ public class ChronivaroResource {
 
 		ZonedDateTime validFrom = ZonedDateTime.now();
 		ZonedDateTime validTo = requestDto.validTo();
-		if (validTo == null && (data == null || !data.contains("\"validTo\""))) {
+		if (validTo == null) {
 			validTo = validFrom.plusYears(1);
 		}
 
