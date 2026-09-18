@@ -190,7 +190,7 @@ Request:
   "validTo": "2027-09-17T23:59:59+02:00"
 }
 ```
-*Hinweis:* `validTo` ist optional (Standardwert 1 Jahr ab Erstellung; `null` für unbegrenzte Gültigkeit). Unterstützte `preset`-Werte: `DESKTOP_TIMER`, `READ_ONLY_TIMES`, `FULL_PERSONAL`.
+*Hinweis:* `validTo` ist optional (Standardwert 1 Jahr ab Erstellung; `null` für unbegrenzte Gültigkeit; in der UI kann die Gültigkeitsdauer komfortabel in Tagen, Monaten oder Jahren angegeben werden). Unterstützte `preset`-Werte: `DESKTOP_TIMER`, `READ_ONLY_TIMES`, `FULL_PERSONAL`.
 
 Response (`201 Created`):
 ```json
@@ -204,6 +204,28 @@ Response (`201 Created`):
 }
 ```
 *Wichtig:* Das Attribut `token` (`<tokenId>:<tokenValue>`) wird ausschliesslich in der Erstellungsantwort zurückgegeben. In nachfolgenden `GET /me/tokens`-Listen wird das Secret niemals zurückgeliefert.
+
+#### cURL-Testbeispiele für Benutzer (PAT)
+
+Mitarbeitende und Entwickler können ihre PATs mit einfachen cURL-Befehlen testen:
+
+```bash
+# 1. Status und Saldi abfragen (GET)
+curl -X GET "http://localhost:8080/rest/chronivaro/v1/me/timer/status" \
+  -H "Authorization: Bearer <tokenId>:<tokenValue>"
+
+# 2. Timer starten (POST)
+curl -X POST "http://localhost:8080/rest/chronivaro/v1/me/timer/start" \
+  -H "Authorization: Bearer <tokenId>:<tokenValue>" \
+  -H "Content-Type: application/json" \
+  -d '{"workingLocation": "OFFICE", "comment": "Start working"}'
+
+# 3. Timer stoppen (POST)
+curl -X POST "http://localhost:8080/rest/chronivaro/v1/me/timer/stop" \
+  -H "Authorization: Bearer <tokenId>:<tokenValue>" \
+  -H "Content-Type: application/json" \
+  -d '{"comment": "Feierabend"}'
+```
 
 #### Request-Schema `POST /employees` (Mitarbeiter erstellen mit Onboarding-Parametern)
 

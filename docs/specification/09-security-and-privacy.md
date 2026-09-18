@@ -21,6 +21,7 @@ Chronivaro unterstützt Personal Access Tokens (PAT) auf Basis des Strolch-Privi
 - **Sichere Speicherung:** Im Strolch-Privilege-Speicher werden ausschliesslich gesalzene PBKDF2-Hashes von `tokenValue` persistiert. Der Klartext-Token-Wert wird nur ein einziges Mal bei der Erstellung angezeigt und kann danach nicht wiederhergestellt werden.
 - **Gültigkeitsdauer (Ablaufdatum):**
   - Standardmässig ist die Gültigkeitsdauer auf **1 Jahr** (`validTo = jetzt + 1 Jahr`) vordefiniert.
+  - In der Benutzeroberfläche kann die Gültigkeitsdauer frei in **Tagen, Monaten oder Jahren** gewählt werden.
   - Das Ablaufdatum wird **nicht zwingend erzwungen** (Benutzer können bei Bedarf ein Token ohne Ablaufdatum / unbegrenzte Gültigkeit erstellen).
 - **Berechtigungs-Scoping (Privilege Scoping):**
   - Jedes Token besitzt einen explizit eingeschränkten Satz an Rollen/Privilegien.

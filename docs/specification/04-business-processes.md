@@ -42,10 +42,27 @@ Dieses Dokument beschreibt alle fachlichen und administrativen Interaktions- und
 
 ### 1.2 Zeiterfassung über Drittanbieter-Apps (Desktop-Timer, Widgets) via Personal Access Tokens (PAT)
 
-1. **Token-Erstellung:** Der Mitarbeiter erstellt in seinem Benutzerprofil ein Personal Access Token mit dem vordefinierten Preset "Desktop-Timer & Saldo" (`DESKTOP_TIMER`).
+1. **Token-Erstellung:** Der Mitarbeiter erstellt in seinem Benutzerprofil ein Personal Access Token mit dem vordefinierten Preset "Desktop-Timer & Saldo" (`DESKTOP_TIMER`), wählt eine Gültigkeitsdauer (in Tagen, Monaten oder Jahren) oder optional unbegrenzte Gültigkeit.
 2. **App-Authentifizierung:** Die Desktop-App/das Drittanbieter-Tool sendet das Token im Header: `Authorization: Bearer <tokenId>:<tokenValue>`.
-3. **Status- und Saldoabfrage:** Die App ruft periodisch `GET /rest/chronivaro/v1/me/timer/status` auf und erhält in einer einzelnen Payload den aktuellen Laufstatus (inkl. Startzeitpunkt), Tagessaldo sowie Monatssaldo.
-4. **Timer-Aktionen:** Die App startet (`POST /rest/chronivaro/v1/me/timer/start`) oder stoppt (`POST /rest/chronivaro/v1/me/timer/stop`) den Timer, wobei dieselben Geschäftsregeln (z. B. Mitternacht-Splits, Validierungen) gelten wie bei der Weboberfläche.
+3. **Status- und Saldoabfrage:** Die App ruft periodisch `GET /rest/chronivaro/v1/me/timer/status` auf und erhält in einer einzelnen Payload den aktuellen Laufstatus (inkl. Startzeitpunkt), Tagessaldo sowie Monatssaldo:
+   ```bash
+   curl -X GET "http://localhost:8080/rest/chronivaro/v1/me/timer/status" \
+     -H "Authorization: Bearer <tokenId>:<tokenValue>"
+   ```
+4. **Timer-Aktionen:** Die App startet (`POST /rest/chronivaro/v1/me/timer/start`) oder stoppt (`POST /rest/chronivaro/v1/me/timer/stop`) den Timer, wobei dieselben Geschäftsregeln (z. B. Mitternacht-Splits, Validierungen) gelten wie bei der Weboberfläche:
+   ```bash
+   # Timer starten
+   curl -X POST "http://localhost:8080/rest/chronivaro/v1/me/timer/start" \
+     -H "Authorization: Bearer <tokenId>:<tokenValue>" \
+     -H "Content-Type: application/json" \
+     -d '{"workingLocation": "OFFICE", "comment": "Feature X"}'
+
+   # Timer stoppen
+   curl -X POST "http://localhost:8080/rest/chronivaro/v1/me/timer/stop" \
+     -H "Authorization: Bearer <tokenId>:<tokenValue>" \
+     -H "Content-Type: application/json" \
+     -d '{"comment": "Pause"}'
+   ```
 
 ---
 

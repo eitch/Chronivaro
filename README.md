@@ -428,6 +428,57 @@ Clients can supply custom correlation IDs via the `X-Correlation-Id` request hea
 
 ---
 
+## 🔑 Personal Access Tokens (PAT) & API Integration
+
+Chronivaro supports Personal Access Tokens (PAT) for third-party integrations (e.g. desktop widgets, CLI scripts, mobile timers):
+
+- **Generation & Management**: Users can generate and revoke tokens in the Web UI under **Profile -> Personal Access Tokens** (`#tokens`).
+- **Validity & Expiration**: Tokens can be created with custom validity periods (specified in days, months, or years; defaulting to 1 year) or configured with no expiration.
+- **Preset Scopes**:
+  - `DESKTOP_TIMER`: Permissions to start/stop timers, fetch status/summaries, and read personal entries.
+  - `READ_ONLY_TIMES`: Read-only access to `/me/*` entries, summaries, and presence.
+  - `FULL_PERSONAL`: Full scope of the user's personal `/me/*` permissions.
+- **Authentication**: Pass the token via the `Authorization` header:
+  ```http
+  Authorization: Bearer <tokenId>:<tokenSecret>
+  ```
+  *(Or `Authorization: <tokenId>:<tokenSecret>` or HTTP Basic Auth with username `<tokenId>` and password `<tokenSecret>`)*
+
+### Testing PAT with cURL
+
+Users can test their PAT against the REST API with standard `curl` commands (assuming the server is hosted at `http://localhost:8080`):
+
+#### 1. Check Current Timer & Summary Status
+```bash
+curl -X GET "http://localhost:8080/rest/chronivaro/v1/me/timer/status" \
+  -H "Authorization: Bearer <tokenId>:<tokenSecret>" \
+  -H "Accept: application/json"
+```
+
+#### 2. Start Timer
+```bash
+curl -X POST "http://localhost:8080/rest/chronivaro/v1/me/timer/start" \
+  -H "Authorization: Bearer <tokenId>:<tokenSecret>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "workingLocation": "OFFICE",
+    "comment": "Working on feature implementation",
+    "isOnCall": false
+  }'
+```
+
+#### 3. Stop Timer
+```bash
+curl -X POST "http://localhost:8080/rest/chronivaro/v1/me/timer/stop" \
+  -H "Authorization: Bearer <tokenId>:<tokenSecret>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "comment": "Lunch break"
+  }'
+```
+
+---
+
 ## 📚 Documentation
 
 - 🖼️ **[Screenshots Gallery](docs/SCREENSHOTS.md)**: Comprehensive visual tour of all application views and administration screens.

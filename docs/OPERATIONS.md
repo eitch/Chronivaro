@@ -541,6 +541,37 @@ Returns runtime memory, thread pool, and CPU telemetry:
 }
 ```
 
+### 4.4 Personal Access Tokens (PAT) Integration & Verification
+
+Users and external tools can authenticate against Chronivaro using Personal Access Tokens (PAT):
+
+1. **Header Format**:
+   ```http
+   Authorization: Bearer <tokenId>:<tokenSecret>
+   ```
+2. **Preset Profiles**:
+   - `DESKTOP_TIMER`: Timer control and summary status.
+   - `READ_ONLY_TIMES`: Read-only queries for times, summaries, and presence.
+   - `FULL_PERSONAL`: Full personal account permissions.
+3. **Command-Line Smoke Test with cURL**:
+   ```bash
+   # Get live timer & balance status
+   curl -s -X GET "http://localhost:8080/rest/chronivaro/v1/me/timer/status" \
+     -H "Authorization: Bearer ${PAT_TOKEN}" | jq .
+
+   # Start the timer
+   curl -s -X POST "http://localhost:8080/rest/chronivaro/v1/me/timer/start" \
+     -H "Authorization: Bearer ${PAT_TOKEN}" \
+     -H "Content-Type: application/json" \
+     -d '{"workingLocation": "OFFICE", "comment": "Started working"}'
+
+   # Stop the timer
+   curl -s -X POST "http://localhost:8080/rest/chronivaro/v1/me/timer/stop" \
+     -H "Authorization: Bearer ${PAT_TOKEN}" \
+     -H "Content-Type: application/json" \
+     -d '{"comment": "Break"}'
+   ```
+
 ---
 
 ## 5. Structured Logging & Distributed Tracing
