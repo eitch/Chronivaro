@@ -1,17 +1,8 @@
 package ch.eitchnet.chronivaro.rest.resource;
 
-import ch.eitchnet.chronivaro.core.model.ChronivaroModelHelper;
-import ch.eitchnet.chronivaro.core.model.PeriodHelper;
-import ch.eitchnet.chronivaro.core.model.WorkEntryHelper;
-import ch.eitchnet.chronivaro.core.model.WorkingLocation;
-import ch.eitchnet.chronivaro.core.model.WorkingLocationDurationType;
+import ch.eitchnet.chronivaro.core.model.*;
 import ch.eitchnet.chronivaro.core.service.*;
-import ch.eitchnet.chronivaro.rest.dto.AbsenceDto;
-import ch.eitchnet.chronivaro.rest.dto.ChronivaroMapper;
-import ch.eitchnet.chronivaro.rest.dto.PeriodActionRequestDto;
-import ch.eitchnet.chronivaro.rest.dto.VacationAccountSummaryDto;
-import ch.eitchnet.chronivaro.rest.dto.WorkEntryDto;
-import ch.eitchnet.chronivaro.rest.dto.WorkingLocationDefaultDto;
+import ch.eitchnet.chronivaro.rest.dto.*;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import jakarta.servlet.http.HttpServletRequest;
@@ -30,11 +21,7 @@ import li.strolch.service.StringResult;
 import li.strolch.service.api.ServiceHandler;
 import li.strolch.service.api.ServiceResult;
 
-import java.time.LocalDate;
-import java.time.YearMonth;
-import java.time.DayOfWeek;
-import java.time.ZonedDateTime;
-import java.time.ZoneId;
+import java.time.*;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -62,8 +49,7 @@ public class ChronivaroResource {
 
 		PresenceService.PresenceResult result = serviceHandler.doService(cert, new PresenceService(), arg);
 		if (result.isOk()) {
-			return PaginationHelper.toPagedOrListResponse(result.presenceInfos, offset, limit,
-					ChronivaroMapper::toDto);
+			return PaginationHelper.toPagedOrListResponse(result.presenceInfos, offset, limit, ChronivaroMapper::toDto);
 		}
 		return ChronivaroRestHelper.toResponse(result);
 	}
@@ -109,8 +95,7 @@ public class ChronivaroResource {
 	@Path("me/work-entries")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getMyWorkEntries(@Context HttpServletRequest request, @QueryParam("from") String fromStr,
-			@QueryParam("to") String toStr, @QueryParam("offset") Integer offset,
-			@QueryParam("limit") Integer limit) {
+			@QueryParam("to") String toStr, @QueryParam("offset") Integer offset, @QueryParam("limit") Integer limit) {
 
 		Certificate cert = (Certificate) request.getAttribute(STROLCH_CERTIFICATE);
 		String employeeId;
@@ -125,7 +110,8 @@ public class ChronivaroResource {
 		ZonedDateTime from = null;
 		if (isNotEmpty(fromStr)) {
 			try {
-				from = fromStr.contains("T") ? ZonedDateTime.parse(fromStr) : LocalDate.parse(fromStr).atStartOfDay(ZoneId.of("UTC"));
+				from = fromStr.contains("T") ? ZonedDateTime.parse(fromStr) :
+						LocalDate.parse(fromStr).atStartOfDay(ZoneId.of("UTC"));
 			} catch (Exception e) {
 				return ChronivaroRestHelper.toErrorResponse(Response.Status.BAD_REQUEST, "INVALID_PARAMETER",
 						"Invalid 'from' date format: " + fromStr);
@@ -135,7 +121,8 @@ public class ChronivaroResource {
 		ZonedDateTime to = null;
 		if (isNotEmpty(toStr)) {
 			try {
-				to = toStr.contains("T") ? ZonedDateTime.parse(toStr) : LocalDate.parse(toStr).atTime(23, 59, 59, 999999999).atZone(ZoneId.of("UTC"));
+				to = toStr.contains("T") ? ZonedDateTime.parse(toStr) :
+						LocalDate.parse(toStr).atTime(23, 59, 59, 999999999).atZone(ZoneId.of("UTC"));
 			} catch (Exception e) {
 				return ChronivaroRestHelper.toErrorResponse(Response.Status.BAD_REQUEST, "INVALID_PARAMETER",
 						"Invalid 'to' date format: " + toStr);
@@ -159,14 +146,16 @@ public class ChronivaroResource {
 			if (employee.isEmpty())
 				return Response.status(Response.Status.NOT_FOUND).build();
 			String employeeId = employee.get().getId();
-			List<WorkingLocationDefaultDto> defaults = tx.streamResources(TYPE_WORKING_LOCATION_DEFAULT)
+			List<WorkingLocationDefaultDto> defaults = tx
+					.streamResources(TYPE_WORKING_LOCATION_DEFAULT)
 					.filter(r -> employeeId.equals(r.getRelationId(PARAM_EMPLOYEE)))
 					.map(r -> new WorkingLocationDefaultDto(r.getId(), employeeId,
 							DayOfWeek.valueOf(r.getString(PARAM_WEEKDAY)),
 							WorkingLocationDurationType.valueOf(r.getString(PARAM_DURATION_TYPE)),
 							r.getString(PARAM_DAY_PART), r.getString(PARAM_WORKING_LOCATION)))
 					.toList();
-			return PaginationHelper.toPagedOrListResponse(defaults, offset, limit, java.util.function.Function.identity());
+			return PaginationHelper.toPagedOrListResponse(defaults, offset, limit,
+					java.util.function.Function.identity());
 		}
 	}
 
@@ -190,7 +179,8 @@ public class ChronivaroResource {
 		ServiceHandler serviceHandler = ChronivaroRestHelper.getServiceHandler();
 		WorkEntryDto dto = ChronivaroRestHelper.createGson().fromJson(data, WorkEntryDto.class);
 
-		if (dto.start() != null && dto.end() != null && (dto.end().isBefore(dto.start()) || dto.end().isEqual(dto.start()))) {
+		if (dto.start() != null && dto.end() != null && (
+				dto.end().isBefore(dto.start()) || dto.end().isEqual(dto.start()))) {
 			return ChronivaroRestHelper.toErrorResponse(Response.Status.BAD_REQUEST, "INVALID_ENTRY_DURATION",
 					"Work entry end time must be strictly after start time");
 		}
@@ -236,7 +226,8 @@ public class ChronivaroResource {
 		ServiceHandler serviceHandler = ChronivaroRestHelper.getServiceHandler();
 		WorkEntryDto dto = ChronivaroRestHelper.createGson().fromJson(data, WorkEntryDto.class);
 
-		if (dto.start() != null && dto.end() != null && (dto.end().isBefore(dto.start()) || dto.end().isEqual(dto.start()))) {
+		if (dto.start() != null && dto.end() != null && (
+				dto.end().isBefore(dto.start()) || dto.end().isEqual(dto.start()))) {
 			return ChronivaroRestHelper.toErrorResponse(Response.Status.BAD_REQUEST, "INVALID_ENTRY_DURATION",
 					"Work entry end time must be strictly after start time");
 		}
@@ -288,7 +279,8 @@ public class ChronivaroResource {
 		ServiceHandler serviceHandler = ChronivaroRestHelper.getServiceHandler();
 		WorkEntryDto dto = ChronivaroRestHelper.createGson().fromJson(data, WorkEntryDto.class);
 
-		if (dto.start() != null && dto.end() != null && (dto.end().isBefore(dto.start()) || dto.end().isEqual(dto.start()))) {
+		if (dto.start() != null && dto.end() != null && (
+				dto.end().isBefore(dto.start()) || dto.end().isEqual(dto.start()))) {
 			return ChronivaroRestHelper.toErrorResponse(Response.Status.BAD_REQUEST, "INVALID_ENTRY_DURATION",
 					"Work entry end time must be strictly after start time");
 		}
@@ -330,15 +322,16 @@ public class ChronivaroResource {
 	@Path("employees/{id}/work-entries")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getEmployeeWorkEntries(@Context HttpServletRequest request, @PathParam("id") String employeeId,
-			@QueryParam("from") String fromStr, @QueryParam("to") String toStr,
-			@QueryParam("offset") Integer offset, @QueryParam("limit") Integer limit) {
+			@QueryParam("from") String fromStr, @QueryParam("to") String toStr, @QueryParam("offset") Integer offset,
+			@QueryParam("limit") Integer limit) {
 
 		Certificate cert = (Certificate) request.getAttribute(STROLCH_CERTIFICATE);
 
 		ZonedDateTime from = null;
 		if (isNotEmpty(fromStr)) {
 			try {
-				from = fromStr.contains("T") ? ZonedDateTime.parse(fromStr) : LocalDate.parse(fromStr).atStartOfDay(ZoneId.of("UTC"));
+				from = fromStr.contains("T") ? ZonedDateTime.parse(fromStr) :
+						LocalDate.parse(fromStr).atStartOfDay(ZoneId.of("UTC"));
 			} catch (Exception e) {
 				return ChronivaroRestHelper.toErrorResponse(Response.Status.BAD_REQUEST, "INVALID_PARAMETER",
 						"Invalid 'from' date format: " + fromStr);
@@ -348,7 +341,8 @@ public class ChronivaroResource {
 		ZonedDateTime to = null;
 		if (isNotEmpty(toStr)) {
 			try {
-				to = toStr.contains("T") ? ZonedDateTime.parse(toStr) : LocalDate.parse(toStr).atTime(23, 59, 59, 999999999).atZone(ZoneId.of("UTC"));
+				to = toStr.contains("T") ? ZonedDateTime.parse(toStr) :
+						LocalDate.parse(toStr).atTime(23, 59, 59, 999999999).atZone(ZoneId.of("UTC"));
 			} catch (Exception e) {
 				return ChronivaroRestHelper.toErrorResponse(Response.Status.BAD_REQUEST, "INVALID_PARAMETER",
 						"Invalid 'to' date format: " + toStr);
@@ -372,7 +366,8 @@ public class ChronivaroResource {
 		ServiceHandler serviceHandler = ChronivaroRestHelper.getServiceHandler();
 		WorkEntryDto dto = ChronivaroRestHelper.createGson().fromJson(data, WorkEntryDto.class);
 
-		if (dto.start() != null && dto.end() != null && (dto.end().isBefore(dto.start()) || dto.end().isEqual(dto.start()))) {
+		if (dto.start() != null && dto.end() != null && (
+				dto.end().isBefore(dto.start()) || dto.end().isEqual(dto.start()))) {
 			return ChronivaroRestHelper.toErrorResponse(Response.Status.BAD_REQUEST, "INVALID_ENTRY_DURATION",
 					"Work entry end time must be strictly after start time");
 		}
@@ -396,9 +391,9 @@ public class ChronivaroResource {
 	}
 
 	private void assertCanAccessEmployeeWorkEntries(StrolchTransaction tx, Certificate cert, String employeeId) {
-		if (tx.getPrivilegeContext().hasRole(ROLE_HR)
-				|| tx.getPrivilegeContext().hasRole(ROLE_ADMIN)
-				|| tx.getPrivilegeContext().hasRole(ROLE_ADMINISTRATOR)) {
+		if (tx.getPrivilegeContext().hasRole(ROLE_HR) || tx.getPrivilegeContext().hasRole(ROLE_ADMIN) || tx
+				.getPrivilegeContext()
+				.hasRole(ROLE_ADMINISTRATOR)) {
 			return;
 		}
 
@@ -432,13 +427,14 @@ public class ChronivaroResource {
 		}
 
 		ServiceHandler serviceHandler = ChronivaroRestHelper.getServiceHandler();
-		GetVacationAccountSummaryService.GetVacationAccountSummaryArgument arg =
-				new GetVacationAccountSummaryService.GetVacationAccountSummaryArgument(employeeId, year);
-		GetVacationAccountSummaryService.GetVacationAccountSummaryResult result =
-				serviceHandler.doService(cert, new GetVacationAccountSummaryService(), arg);
+		GetVacationAccountSummaryService.GetVacationAccountSummaryArgument arg
+				= new GetVacationAccountSummaryService.GetVacationAccountSummaryArgument(employeeId, year);
+		GetVacationAccountSummaryService.GetVacationAccountSummaryResult result = serviceHandler.doService(cert,
+				new GetVacationAccountSummaryService(), arg);
 		if (result.isOk()) {
 			try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
-				VacationAccountSummaryDto dto = ChronivaroMapper.vacationSummaryToDto(tx, result.summary, result.entries);
+				VacationAccountSummaryDto dto = ChronivaroMapper.vacationSummaryToDto(tx, result.summary,
+						result.entries);
 				return Response.ok(ChronivaroRestHelper.createGson().toJson(dto), MediaType.APPLICATION_JSON).build();
 			}
 		}
@@ -448,12 +444,9 @@ public class ChronivaroResource {
 	@GET
 	@Path("me/absences")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response getMyAbsences(@Context HttpServletRequest request,
-			@QueryParam("from") String fromStr,
-			@QueryParam("to") String toStr,
-			@QueryParam("absenceTypeCode") String absenceTypeCode,
-			@QueryParam("status") String status,
-			@QueryParam("offset") Integer offset,
+	public Response getMyAbsences(@Context HttpServletRequest request, @QueryParam("from") String fromStr,
+			@QueryParam("to") String toStr, @QueryParam("absenceTypeCode") String absenceTypeCode,
+			@QueryParam("status") String status, @QueryParam("offset") Integer offset,
 			@QueryParam("limit") Integer limit) {
 		Certificate cert = (Certificate) request.getAttribute(STROLCH_CERTIFICATE);
 		String employeeId;
@@ -468,7 +461,8 @@ public class ChronivaroResource {
 		LocalDate fromDate = null;
 		if (isNotEmpty(fromStr)) {
 			try {
-				fromDate = fromStr.contains("T") ? ZonedDateTime.parse(fromStr).toLocalDate() : LocalDate.parse(fromStr);
+				fromDate = fromStr.contains("T") ? ZonedDateTime.parse(fromStr).toLocalDate() :
+						LocalDate.parse(fromStr);
 			} catch (Exception e) {
 				return ChronivaroRestHelper.toErrorResponse(Response.Status.BAD_REQUEST, "INVALID_PARAMETER",
 						"Invalid 'from' date format: " + fromStr);
@@ -539,16 +533,17 @@ public class ChronivaroResource {
 	@Path("employees/{id}/absences")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getEmployeeAbsences(@Context HttpServletRequest request, @PathParam("id") String employeeId,
-			@QueryParam("from") String fromStr, @QueryParam("to") String toStr,
-			@QueryParam("status") String status, @QueryParam("absenceTypeCode") String absenceTypeCode,
-			@QueryParam("offset") Integer offset, @QueryParam("limit") Integer limit) {
+			@QueryParam("from") String fromStr, @QueryParam("to") String toStr, @QueryParam("status") String status,
+			@QueryParam("absenceTypeCode") String absenceTypeCode, @QueryParam("offset") Integer offset,
+			@QueryParam("limit") Integer limit) {
 
 		Certificate cert = (Certificate) request.getAttribute(STROLCH_CERTIFICATE);
 
 		LocalDate fromDate = null;
 		if (isNotEmpty(fromStr)) {
 			try {
-				fromDate = fromStr.contains("T") ? ZonedDateTime.parse(fromStr).toLocalDate() : LocalDate.parse(fromStr);
+				fromDate = fromStr.contains("T") ? ZonedDateTime.parse(fromStr).toLocalDate() :
+						LocalDate.parse(fromStr);
 			} catch (Exception e) {
 				return ChronivaroRestHelper.toErrorResponse(Response.Status.BAD_REQUEST, "INVALID_PARAMETER",
 						"Invalid 'from' date format: " + fromStr);
@@ -894,7 +889,7 @@ public class ChronivaroResource {
 
 		String employeeId;
 		boolean running;
-		ch.eitchnet.chronivaro.rest.dto.CurrentWorkEntryDto currentWorkEntry = null;
+		CurrentWorkEntryDto currentWorkEntry = null;
 
 		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
 			Optional<Resource> employeeOpt = ChronivaroModelHelper.findEmployeeByUser(tx, cert.getUserId());
@@ -912,10 +907,9 @@ public class ChronivaroResource {
 				ZonedDateTime start = openWorkEntry.getDate(PARAM_START);
 				String workingLocation = openWorkEntry.hasParameter(PARAM_WORKING_LOCATION) ?
 						openWorkEntry.getString(PARAM_WORKING_LOCATION) : null;
-				String comment = openWorkEntry.hasParameter(PARAM_COMMENT) ?
-						openWorkEntry.getString(PARAM_COMMENT) : null;
-				currentWorkEntry = new ch.eitchnet.chronivaro.rest.dto.CurrentWorkEntryDto(
-						openWorkEntry.getId(), start, workingLocation, comment);
+				String comment = openWorkEntry.hasParameter(PARAM_COMMENT) ? openWorkEntry.getString(PARAM_COMMENT) :
+						null;
+				currentWorkEntry = new CurrentWorkEntryDto(openWorkEntry.getId(), start, workingLocation, comment);
 			}
 		}
 
@@ -932,30 +926,16 @@ public class ChronivaroResource {
 		MonthSummaryService.MonthSummaryArgument monthArg = new MonthSummaryService.MonthSummaryArgument();
 		monthArg.employeeId = employeeId;
 		monthArg.yearMonth = currentMonth;
-		MonthSummaryService.MonthSummaryResult monthResult = serviceHandler.doService(cert, new MonthSummaryService(), monthArg);
+		MonthSummaryService.MonthSummaryResult monthResult = serviceHandler.doService(cert, new MonthSummaryService(),
+				monthArg);
 		if (monthResult.isNok())
 			return ChronivaroRestHelper.toResponse(monthResult);
 
-		ch.eitchnet.chronivaro.rest.dto.DayStatusDto dayStatus = new ch.eitchnet.chronivaro.rest.dto.DayStatusDto(
-				today,
-				dayResult.daySummary.targetMinutes(),
-				dayResult.daySummary.actualMinutes(),
-				dayResult.daySummary.getBalance()
-		);
-
-		ch.eitchnet.chronivaro.rest.dto.MonthStatusDto monthStatus = new ch.eitchnet.chronivaro.rest.dto.MonthStatusDto(
-				currentMonth,
-				monthResult.monthSummary.targetMinutesToDate(),
-				monthResult.monthSummary.actualMinutesToDate(),
-				monthResult.monthSummary.periodBalanceMinutes()
-		);
-
-		ch.eitchnet.chronivaro.rest.dto.TimerStatusDto statusDto = new ch.eitchnet.chronivaro.rest.dto.TimerStatusDto(
-				running,
-				currentWorkEntry,
-				dayStatus,
-				monthStatus
-		);
+		DayStatusDto dayStatus = new DayStatusDto(today, dayResult.daySummary.targetMinutes(),
+				dayResult.daySummary.actualMinutes(), dayResult.daySummary.getBalance());
+		MonthStatusDto monthStatus = new MonthStatusDto(currentMonth, monthResult.monthSummary.targetMinutesToDate(),
+				monthResult.monthSummary.actualMinutesToDate(), monthResult.monthSummary.periodBalanceMinutes());
+		TimerStatusDto statusDto = new TimerStatusDto(running, currentWorkEntry, dayStatus, monthStatus);
 
 		return Response.ok(ChronivaroRestHelper.createGson().toJson(statusDto), MediaType.APPLICATION_JSON).build();
 	}
@@ -963,7 +943,8 @@ public class ChronivaroResource {
 	@GET
 	@Path("me/periods/{yearMonth}")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response getMyPeriodStatus(@Context HttpServletRequest request, @PathParam("yearMonth") String yearMonthStr) {
+	public Response getMyPeriodStatus(@Context HttpServletRequest request,
+			@PathParam("yearMonth") String yearMonthStr) {
 		Certificate cert = (Certificate) request.getAttribute(STROLCH_CERTIFICATE);
 		YearMonth ym;
 		try {
@@ -981,9 +962,10 @@ public class ChronivaroResource {
 
 			Optional<Resource> period = PeriodHelper.findPeriod(tx, employee.get().getId(), ym);
 			if (period.isPresent()) {
-				return ConcurrencyHelper.toResponseWithETag(period.get(), ChronivaroMapper.periodToDto(tx, period.get()));
+				return ConcurrencyHelper.toResponseWithETag(period.get(),
+						ChronivaroMapper.periodToDto(tx, period.get()));
 			}
-			ch.eitchnet.chronivaro.rest.dto.PeriodStatusDto openDto = ChronivaroMapper.createOpenPeriodDto(tx, employee.get().getId(), ym);
+			PeriodStatusDto openDto = ChronivaroMapper.createOpenPeriodDto(tx, employee.get().getId(), ym);
 			return Response.ok(ChronivaroRestHelper.createGson().toJson(openDto), MediaType.APPLICATION_JSON).build();
 		}
 	}
@@ -992,9 +974,7 @@ public class ChronivaroResource {
 	@Path("me/periods/{yearMonth}/submit")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response submitMyPeriod(
-			@Context HttpServletRequest request,
-			@PathParam("yearMonth") String yearMonthStr,
+	public Response submitMyPeriod(@Context HttpServletRequest request, @PathParam("yearMonth") String yearMonthStr,
 			String data) {
 
 		Certificate cert = (Certificate) request.getAttribute(STROLCH_CERTIFICATE);
@@ -1166,7 +1146,8 @@ public class ChronivaroResource {
 					"Language must not be empty");
 		}
 
-		UpdateUserLanguageService.UpdateUserLanguageArgument arg = new UpdateUserLanguageService.UpdateUserLanguageArgument();
+		UpdateUserLanguageService.UpdateUserLanguageArgument arg
+				= new UpdateUserLanguageService.UpdateUserLanguageArgument();
 		arg.language = language;
 
 		ServiceResult result = serviceHandler.doService(cert, new UpdateUserLanguageService(), arg);
@@ -1179,12 +1160,16 @@ public class ChronivaroResource {
 	public Response getMyPersonalAccessTokens(@Context HttpServletRequest request) {
 		Certificate cert = (Certificate) request.getAttribute(STROLCH_CERTIFICATE);
 		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
-			li.strolch.privilege.handler.PrivilegeHandler privilegeHandler =
-					tx.getContainer().getPrivilegeHandler().getPrivilegeHandler();
-			List<li.strolch.privilege.model.PersonalAccessTokenRep> reps =
-					privilegeHandler.getPersonalAccessTokens(tx.getCertificate());
-			List<ch.eitchnet.chronivaro.rest.dto.PersonalAccessTokenDto> dtos =
-					reps.stream().map(PersonalAccessTokenHelper::toDto).toList();
+			li.strolch.privilege.handler.PrivilegeHandler privilegeHandler = tx
+					.getContainer()
+					.getPrivilegeHandler()
+					.getPrivilegeHandler();
+			List<li.strolch.privilege.model.PersonalAccessTokenRep> reps = privilegeHandler.getPersonalAccessTokens(
+					tx.getCertificate());
+			List<ch.eitchnet.chronivaro.rest.dto.PersonalAccessTokenDto> dtos = reps
+					.stream()
+					.map(PersonalAccessTokenHelper::toDto)
+					.toList();
 			return Response.ok(ChronivaroRestHelper.createGson().toJson(dtos), MediaType.APPLICATION_JSON).build();
 		} catch (AccessDeniedException | li.strolch.exception.StrolchAccessDeniedException e) {
 			return ChronivaroRestHelper.toErrorResponse(Response.Status.FORBIDDEN, "ACCESS_DENIED", e.getMessage());
@@ -1199,8 +1184,9 @@ public class ChronivaroResource {
 		Certificate cert = (Certificate) request.getAttribute(STROLCH_CERTIFICATE);
 		ch.eitchnet.chronivaro.rest.dto.CreatePersonalAccessTokenRequestDto requestDto;
 		try {
-			requestDto = ChronivaroRestHelper.createGson().fromJson(data,
-					ch.eitchnet.chronivaro.rest.dto.CreatePersonalAccessTokenRequestDto.class);
+			requestDto = ChronivaroRestHelper
+					.createGson()
+					.fromJson(data, ch.eitchnet.chronivaro.rest.dto.CreatePersonalAccessTokenRequestDto.class);
 		} catch (Exception e) {
 			return ChronivaroRestHelper.toErrorResponse(Response.Status.BAD_REQUEST, "INVALID_ARGUMENT",
 					"Invalid JSON payload");
@@ -1213,7 +1199,8 @@ public class ChronivaroResource {
 		}
 
 		String preset = requestDto.preset();
-		if (preset != null && !preset.isBlank() && !PersonalAccessTokenHelper.SUPPORTED_PRESETS.contains(preset.trim().toUpperCase())) {
+		if (preset != null && !preset.isBlank() && !PersonalAccessTokenHelper.SUPPORTED_PRESETS.contains(
+				preset.trim().toUpperCase())) {
 			return ChronivaroRestHelper.toErrorResponse(Response.Status.BAD_REQUEST, "INVALID_ARGUMENT",
 					"Unsupported preset: " + preset);
 		}
@@ -1230,49 +1217,41 @@ public class ChronivaroResource {
 		}
 
 		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
-			li.strolch.privilege.handler.PrivilegeHandler privilegeHandler =
-					tx.getContainer().getPrivilegeHandler().getPrivilegeHandler();
+			li.strolch.privilege.handler.PrivilegeHandler privilegeHandler = tx
+					.getContainer()
+					.getPrivilegeHandler()
+					.getPrivilegeHandler();
 
 			Set<String> roles = PersonalAccessTokenHelper.getRolesForPreset(preset);
 			Set<String> privileges = PersonalAccessTokenHelper.getPrivilegesForPreset(preset);
 
-			String token = privilegeHandler.createPersonalAccessToken(
-					tx.getCertificate(),
-					name.trim(),
-					validFrom,
-					validTo,
-					roles,
-					privileges
-			);
+			String token = privilegeHandler.createPersonalAccessToken(tx.getCertificate(), name.trim(), validFrom,
+					validTo, roles, privileges);
 
 			String tokenId = token.contains(":") ? token.substring(0, token.indexOf(':')) : token;
 
-			ch.eitchnet.chronivaro.rest.dto.PersonalAccessTokenCreatedDto createdDto =
-					new ch.eitchnet.chronivaro.rest.dto.PersonalAccessTokenCreatedDto(
-							tokenId,
-							cert.getUsername(),
-							name.trim(),
-							preset,
-							validFrom,
-							validTo,
-							token
-					);
+			ch.eitchnet.chronivaro.rest.dto.PersonalAccessTokenCreatedDto createdDto
+					= new ch.eitchnet.chronivaro.rest.dto.PersonalAccessTokenCreatedDto(tokenId, cert.getUsername(),
+					name.trim(), preset, validFrom, validTo, token);
 
-			return Response.status(Response.Status.CREATED)
+			return Response
+					.status(Response.Status.CREATED)
 					.entity(ChronivaroRestHelper.createGson().toJson(createdDto))
 					.type(MediaType.APPLICATION_JSON)
 					.build();
 		} catch (AccessDeniedException | li.strolch.exception.StrolchAccessDeniedException e) {
 			return ChronivaroRestHelper.toErrorResponse(Response.Status.FORBIDDEN, "ACCESS_DENIED", e.getMessage());
 		} catch (IllegalArgumentException e) {
-			return ChronivaroRestHelper.toErrorResponse(Response.Status.BAD_REQUEST, "INVALID_ARGUMENT", e.getMessage());
+			return ChronivaroRestHelper.toErrorResponse(Response.Status.BAD_REQUEST, "INVALID_ARGUMENT",
+					e.getMessage());
 		}
 	}
 
 	@DELETE
 	@Path("me/tokens/{tokenId}")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response deleteMyPersonalAccessToken(@Context HttpServletRequest request, @PathParam("tokenId") String tokenId) {
+	public Response deleteMyPersonalAccessToken(@Context HttpServletRequest request,
+			@PathParam("tokenId") String tokenId) {
 		Certificate cert = (Certificate) request.getAttribute(STROLCH_CERTIFICATE);
 		if (tokenId == null || tokenId.isBlank()) {
 			return ChronivaroRestHelper.toErrorResponse(Response.Status.BAD_REQUEST, "INVALID_ARGUMENT",
@@ -1280,8 +1259,10 @@ public class ChronivaroResource {
 		}
 
 		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
-			li.strolch.privilege.handler.PrivilegeHandler privilegeHandler =
-					tx.getContainer().getPrivilegeHandler().getPrivilegeHandler();
+			li.strolch.privilege.handler.PrivilegeHandler privilegeHandler = tx
+					.getContainer()
+					.getPrivilegeHandler()
+					.getPrivilegeHandler();
 
 			privilegeHandler.removePersonalAccessToken(tx.getCertificate(), tokenId);
 
