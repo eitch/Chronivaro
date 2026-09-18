@@ -59,12 +59,13 @@ PlasmoidItem {
             path: "/modules/kwalletd6",
             iface: "org.kde.KWallet",
             member: member,
-            signature: signature,
+            signature: "(" + signature + ")",
             arguments: args
         }, function(reply) {
             const val = (reply && reply.value !== undefined) ? reply.value : reply
-            if (resolve) resolve(val)
+            if (resolve) resolve(val !== null && typeof val === "object" && val.value !== undefined ? val.value : val)
         }, function(err) {
+            if (err && err.error) err = err.error
             let msg = ""
             if (err) {
                 if (err.message) {
@@ -96,7 +97,7 @@ PlasmoidItem {
         callDBus("networkWallet", "", [], function(walletName) {
             const name = (walletName && walletName.length > 0) ? walletName : "kdewallet"
             callDBus("open", "sxs", [name, 0, walletAppId], function(handle) {
-                if (!handle || handle <= 0) {
+                if (typeof handle !== "number" || handle < 0) {
                     fallbackConfigToken(callback)
                     return
                 }

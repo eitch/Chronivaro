@@ -11,7 +11,7 @@
     "Id": "ch.eitchnet.chronivaro.status",
     "License": "AGPL",
     "Name": "Chronivaro Status",
-    "Version": "1.1.2"
+    "Version": "1.1.4"
   },
   "KPackageStructure": "Plasma/Applet",
   "X-Plasma-API-Minimum-Version": "6.0"

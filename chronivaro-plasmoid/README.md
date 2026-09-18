@@ -36,6 +36,36 @@ Add **Chronivaro Status** to your Plasma panel and configure:
 
 ## Maintenance & Development
 
+### Automated Tests
+
+Prerequisite: Node.js (`node` on your PATH). The tests use only built-in Node.js modules; no `npm install`, running Chronivaro server, KWallet, or Plasma session is required.
+
+From the repository root, run both test scripts:
+
+```bash
+node chronivaro-plasmoid/tests/connection.js && node chronivaro-plasmoid/tests/regression.js
+```
+
+Alternatively, from the `chronivaro-plasmoid` directory:
+
+```bash
+node tests/connection.js && node tests/regression.js
+```
+
+You can also run either script individually. Successful runs print:
+
+```text
+Connection test checks passed
+Plasmoid regression checks passed
+```
+
+An assertion failure prints an error and exits with a non-zero status.
+
+- `tests/connection.js` checks URL/token validation, request headers, successful and failed responses, timeout handling, duplicate requests, and send failures using simulated requests.
+- `tests/regression.js` checks D-Bus signatures, reply/error handling, zero-valued wallet handles, and configuration-page declarations.
+
+These scripts execute extracted JavaScript and inspect QML source; they do not render the UI or contact real services. After installing or upgrading the widget, manually verify saving/loading a token through KWallet, **Test Connection** with valid and invalid credentials, result dialogs, and switching settings pages in Plasma.
+
 ### Test Outside Panel
 
 ```bash
