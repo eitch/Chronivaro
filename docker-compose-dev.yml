@@ -11,6 +11,7 @@ services:
     user: "${UID:-1000}:${GID:-1000}"
     volumes:
       - ./runtime:/chronivaro-runtime
+      - ./logs:/chronivaro-logs
     environment:
       - TZ=Europe/Zurich
       - STROLCH_ENVIRONMENT=dev

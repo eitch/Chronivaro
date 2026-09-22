@@ -1,6 +1,7 @@
 package ch.eitchnet.chronivaro.app;
 
 import ch.eitchnet.chronivaro.rest.ChronivaroRestfulClasses;
+import li.strolch.agent.api.LoggingLoader;
 import li.strolch.agent.api.StrolchAgent;
 import li.strolch.agent.api.StrolchBootstrapper;
 import li.strolch.rest.RestfulStrolchComponent;
@@ -204,6 +205,7 @@ public class ChronivaroApp {
 				logger.error("Failed to stop Strolch Agent cleanly: {}", e.getMessage(), e);
 			} finally {
 				this.agent = null;
+				LoggingLoader.reset();
 			}
 		}
 

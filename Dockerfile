@@ -6,9 +6,9 @@ ARG GID=1000
 
 RUN addgroup -g "$GID" chronivaro \
     && adduser -D -u "$UID" -G chronivaro chronivaro \
-    && mkdir -p /app /chronivaro-runtime \
-    && chown -R "$UID:$GID" /app /chronivaro-runtime \
-    && chmod 775 /chronivaro-runtime
+    && mkdir -p /app /chronivaro-runtime /chronivaro-logs \
+    && chown -R "$UID:$GID" /app /chronivaro-runtime /chronivaro-logs \
+    && chmod 775 /chronivaro-runtime /chronivaro-logs
 
 WORKDIR /app
 

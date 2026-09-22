@@ -234,13 +234,14 @@ Configuration can be provided via flags, environment variables (`GITHUB_TOKEN`, 
 1. Prepare directory structure on host:
    ```bash
    mkdir chronivaro && cd chronivaro
-   mkdir -p runtime/{config,data,temp}
+   mkdir -p logs runtime/{config,data,temp}
    ```
 2. Copy configuration files from `runtime/` into `runtime/` (`config/`, `data/`, `temp/`).
 3. Set secure values for `secretKey` and `secretSalt` in `runtime/config/PrivilegeConfig.xml`.
 4. Configure mail delivery in `runtime/config/StrolchConfiguration.xml` (see [Email Delivery & MailHandler Configuration](#-email-delivery--user-challenge-configuration-mailhandler) below).
-5. Copy `docker-compose.yml` to the directory.
-6. Launch the container:
+5. Optional: Configure file logging in `runtime/config/logback.xml` to persist logs to `/chronivaro-logs` (mounted to `./logs`).
+6. Copy `docker-compose.yml` to the directory.
+7. Launch the container:
    ```bash
    docker compose up -d
    docker compose logs -f
@@ -413,6 +414,19 @@ Chronivaro uses SLF4J with Logback for structured logging. Every HTTP request ca
 ```
 
 Clients can supply custom correlation IDs via the `X-Correlation-Id` request header; otherwise, the server automatically generates and returns a UUID correlation ID in the response headers.
+
+### File Logging & Docker Mount Point
+
+Logging configuration can be customized dynamically by placing `logback.xml` in `runtime/config/`. When the Strolch agent starts, `LoggingLoader.reloadLogging(this.configPathF)` reloads Logback configuration from `runtime/config/logback.xml`.
+
+By default, the standard Docker container provides `/chronivaro-logs` as a mount point for persistent log files. To persist logs:
+1. Ensure `runtime/config/logback.xml` contains a `RollingFileAppender` pointing to `/chronivaro-logs/chronivaro.log` (or `${LOG_DIR:-/chronivaro-logs}/chronivaro.log`).
+2. Mount the log directory in Docker Compose:
+   ```yaml
+   volumes:
+     - ./runtime:/chronivaro-runtime
+     - ./logs:/chronivaro-logs
+   ```
 
 ---
 

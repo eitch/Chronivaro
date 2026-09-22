@@ -112,13 +112,15 @@ When Docker launches the container, it mounts `./runtime` from the host to `/chr
 ```text
 chronivaro/
 ├── docker-compose.yml (or compose.yaml)
+├── logs/                              # Mounted to /chronivaro-logs for log files
 └── runtime/
     ├── config/
     │   ├── PrivilegeConfig.xml        # Secret key/salt and hashing parameters
     │   ├── PrivilegeRoles.xml         # Role-to-privilege mappings
     │   ├── PrivilegeUsers.xml         # User accounts and credentials
     │   ├── StrolchConfiguration.xml   # Core agent & realm configuration
-    │   └── StrolchPolicies.xml        # Policy definitions (break & holiday policies)
+    │   ├── StrolchPolicies.xml        # Policy definitions (break & holiday policies)
+    │   └── logback.xml                # Custom Logback logging configuration
     ├── data/
     │   ├── templates.xml              # Resource and Order element schema definitions
     │   └── Model.xml                  # Initial tenant master data and domain entities
@@ -134,12 +136,13 @@ Before running `docker compose up -d`, prepare the runtime directory on the host
    ```bash
    mkdir -p chronivaro && cd chronivaro
    tar -xzvf /path/to/runtime.tar.gz
+   mkdir -p logs
    ```
    This creates a clean `runtime/` directory containing all configuration and data files with filtered user accounts (`admin` and `SYSTEM` users only).
 
 2. **Option B: Manual Runtime Directory Setup**:
    ```bash
-   mkdir -p chronivaro/runtime/{config,data,temp}
+   mkdir -p chronivaro/{logs,runtime/{config,data,temp}}
    cd chronivaro
    ```
    Copy the seed configuration and data files from the Chronivaro repository (`Chronivaro/runtime/`) into `./runtime/`:
@@ -208,10 +211,10 @@ Before running `docker compose up -d`, prepare the runtime directory on the host
    - `recipientPublicKeys`: Comma-separated list of PGP public key files stored in `runtime/config/`.
 
 5. **Adjust Directory Ownership & Permissions**:
-   The Docker container runs as a non-root user (`UID 1000` / `GID 1000` by default). Ensure the runtime directory is readable and writable by this user:
+   The Docker container runs as a non-root user (`UID 1000` / `GID 1000` by default). Ensure the runtime and log directories are readable and writable by this user:
    ```bash
-   chmod -R 775 runtime/
-   chown -R 1000:1000 runtime/
+   chmod -R 775 runtime/ logs/
+   chown -R 1000:1000 runtime/ logs/
    ```
 
 #### 2.2.5 Starting Chronivaro with Docker Compose
@@ -233,6 +236,7 @@ services:
       - PORT=8080
     volumes:
       - ./runtime:/chronivaro-runtime
+      - ./logs:/chronivaro-logs
     restart: unless-stopped
 ```
 
@@ -581,6 +585,56 @@ Chronivaro attaches a correlation ID to every request through `CorrelationIdFilt
 - **MDC Key**: `correlationId`
 - **HTTP Header**: `X-Correlation-Id`
 - **Pattern**: `%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] [corrId=%X{correlationId:-NONE}] %-5level %logger{36} - %msg%n`
+
+### 5.1 Configuring File Logging & Logback Reloading
+
+Strolch provides dynamic log reconfiguration via:
+```java
+LoggingLoader.reloadLogging(this.configPathF);
+```
+When bootstrapping the Strolch agent (or reloading configuration), Strolch checks for the presence of `logback.xml` in the runtime configuration directory (`runtime/config/logback.xml`). If present, the Logback `LoggerContext` is dynamically reloaded using this configuration.
+
+### 5.2 Standard Log Directory & Docker Mount Point
+
+By default, Docker containers provide `/chronivaro-logs` as the standard mount point for persistent application logs. 
+
+To configure file logging with daily rotation, include `runtime/config/logback.xml`:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] [corrId=%X{correlationId:-NONE}] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_DIR:-/chronivaro-logs}/chronivaro.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_DIR:-/chronivaro-logs}/chronivaro.%d{yyyy-MM-dd}.log.gz</fileNamePattern>
+            <maxHistory>30</maxHistory>
+            <totalSizeCap>1GB</totalSizeCap>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] [corrId=%X{correlationId:-NONE}] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <root level="INFO">
+        <appender-ref ref="STDOUT" />
+        <appender-ref ref="FILE" />
+    </root>
+</configuration>
+```
+
+In your `docker-compose.yml`, mount a host directory (e.g. `./logs`) to `/chronivaro-logs`:
+
+```yaml
+    volumes:
+      - ./runtime:/chronivaro-runtime
+      - ./logs:/chronivaro-logs
+```
 
 ### Error Response Format
 
