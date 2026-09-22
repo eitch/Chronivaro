@@ -1,4 +1,4 @@
-FROM eclipse-temurin:26-jre
+FROM eclipse-temurin:27-jre
 
 # Create a non-root user
 ARG UID=1000
