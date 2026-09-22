@@ -885,11 +885,6 @@ public class ChronivaroResource {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getTimerStatus(@Context HttpServletRequest request) {
 		Certificate cert = (Certificate) request.getAttribute(STROLCH_CERTIFICATE);
-		ServiceHandler serviceHandler = ChronivaroRestHelper.getServiceHandler();
-
-		String employeeId;
-		boolean running;
-		CurrentWorkEntryDto currentWorkEntry = null;
 
 		try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
 			Optional<Resource> employeeOpt = ChronivaroModelHelper.findEmployeeByUser(tx, cert.getUserId());
@@ -898,10 +893,11 @@ public class ChronivaroResource {
 						"Employee not found for current user");
 
 			Resource employee = employeeOpt.get();
-			employeeId = employee.getId();
+			String employeeId = employee.getId();
 
 			Optional<Resource> openWorkEntryOpt = WorkEntryHelper.findActiveWorkEntry(tx, employeeId);
-			running = openWorkEntryOpt.isPresent();
+			boolean running = openWorkEntryOpt.isPresent();
+			CurrentWorkEntryDto currentWorkEntry = null;
 			if (openWorkEntryOpt.isPresent()) {
 				Resource openWorkEntry = openWorkEntryOpt.get();
 				ZonedDateTime start = openWorkEntry.getDate(PARAM_START);
@@ -911,33 +907,21 @@ public class ChronivaroResource {
 						null;
 				currentWorkEntry = new CurrentWorkEntryDto(openWorkEntry.getId(), start, workingLocation, comment);
 			}
+
+			LocalDate today = LocalDate.now();
+			YearMonth currentMonth = YearMonth.from(today);
+
+			DaySummary daySummary = DaySummaryService.getDaySummary(tx, employeeId, today);
+			MonthSummary monthSummary = MonthSummaryService.getMonthSummary(tx, employeeId, currentMonth);
+
+			DayStatusDto dayStatus = new DayStatusDto(today, daySummary.targetMinutes(), daySummary.actualMinutes(),
+					daySummary.getBalance());
+			MonthStatusDto monthStatus = new MonthStatusDto(currentMonth, monthSummary.targetMinutesToDate(),
+					monthSummary.actualMinutesToDate(), monthSummary.periodBalanceMinutes());
+			TimerStatusDto statusDto = new TimerStatusDto(running, currentWorkEntry, dayStatus, monthStatus);
+
+			return Response.ok(ChronivaroRestHelper.createGson().toJson(statusDto), MediaType.APPLICATION_JSON).build();
 		}
-
-		LocalDate today = LocalDate.now();
-		YearMonth currentMonth = YearMonth.from(today);
-
-		DaySummaryService.DaySummaryArgument dayArg = new DaySummaryService.DaySummaryArgument();
-		dayArg.employeeId = employeeId;
-		dayArg.date = today;
-		DaySummaryService.DaySummaryResult dayResult = serviceHandler.doService(cert, new DaySummaryService(), dayArg);
-		if (dayResult.isNok())
-			return ChronivaroRestHelper.toResponse(dayResult);
-
-		MonthSummaryService.MonthSummaryArgument monthArg = new MonthSummaryService.MonthSummaryArgument();
-		monthArg.employeeId = employeeId;
-		monthArg.yearMonth = currentMonth;
-		MonthSummaryService.MonthSummaryResult monthResult = serviceHandler.doService(cert, new MonthSummaryService(),
-				monthArg);
-		if (monthResult.isNok())
-			return ChronivaroRestHelper.toResponse(monthResult);
-
-		DayStatusDto dayStatus = new DayStatusDto(today, dayResult.daySummary.targetMinutes(),
-				dayResult.daySummary.actualMinutes(), dayResult.daySummary.getBalance());
-		MonthStatusDto monthStatus = new MonthStatusDto(currentMonth, monthResult.monthSummary.targetMinutesToDate(),
-				monthResult.monthSummary.actualMinutesToDate(), monthResult.monthSummary.periodBalanceMinutes());
-		TimerStatusDto statusDto = new TimerStatusDto(running, currentWorkEntry, dayStatus, monthStatus);
-
-		return Response.ok(ChronivaroRestHelper.createGson().toJson(statusDto), MediaType.APPLICATION_JSON).build();
 	}
 
 	@GET
