@@ -1,28 +1,27 @@
-FROM azul-zulu:27-jre-headless
+FROM azul-zulu:27-jre-headless-alpine
 
 # Create a non-root user
 ARG UID=1000
 ARG GID=1000
-RUN if ! getent group $GID >/dev/null; then groupadd -g $GID chronivaro; fi && \
-    if ! getent passwd $UID >/dev/null; then useradd -u $UID -m -g $GID chronivaro; else usermod -g $GID $(getent passwd $UID | cut -d: -f1); fi
 
-# Create the application and runtime directories and set ownership
-RUN mkdir -p /app /chronivaro-runtime && chown -R $UID:$GID /app /chronivaro-runtime && chmod 775 /chronivaro-runtime
+RUN addgroup -g "$GID" chronivaro \
+    && adduser -D -u "$UID" -G chronivaro chronivaro \
+    && mkdir -p /app /chronivaro-runtime \
+    && chown -R "$UID:$GID" /app /chronivaro-runtime \
+    && chmod 775 /chronivaro-runtime
 
 WORKDIR /app
 
-COPY chronivaro-app/target/chronivaro.jar /app/chronivaro.jar
-COPY chronivaro-app/target/lib /app/lib
+COPY --chown=$UID:$GID chronivaro-app/target/chronivaro.jar /app/chronivaro.jar
+COPY --chown=$UID:$GID chronivaro-app/target/lib /app/lib
 
-# Ensure the application files are owned by chronivaro
-RUN chown -R $UID:$GID /app
-
-USER $UID
+USER $UID:$GID
 
 EXPOSE 8080
-ENV PORT=8080
-ENV CHRONIVARO_PORT=8080
-ENV STROLCH_PATH=/chronivaro-runtime
-ENV STROLCH_ENVIRONMENT=dev
+
+ENV PORT=8080 \
+    CHRONIVARO_PORT=8080 \
+    STROLCH_PATH=/chronivaro-runtime \
+    STROLCH_ENVIRONMENT=dev
 
 ENTRYPOINT ["java", "-jar", "/app/chronivaro.jar"]
