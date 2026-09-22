@@ -1,4 +1,4 @@
-FROM eclipse-temurin:27-jre
+FROM azul-zulu:27-jre-headless
 
 # Create a non-root user
 ARG UID=1000
