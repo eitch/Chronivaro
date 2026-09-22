@@ -31,7 +31,10 @@ export default class LoginView {
 					<input type="password" id="password" required>
 				</div>
 				<div id="login-error" class="error" style="display: none;"></div>
-				<button type="submit">${I18n.t('auth.loginButton')}</button>
+				<button type="submit">
+					<span class="spinner" style="display: none;"></span>
+					<span class="button-text">${I18n.t('auth.loginButton')}</span>
+				</button>
 				<div style="margin-top: 1rem; text-align: center;">
 					<a href="#complete-registration">${I18n.t('auth.completeRegistrationTitle')}</a>
 				</div>
@@ -43,6 +46,8 @@ export default class LoginView {
         const errorDiv = container.querySelector('#login-error');
         const langSelect = container.querySelector('#login-language-select');
         const versionDiv = container.querySelector('#login-app-version');
+        const spinner = container.querySelector('.spinner');
+        const buttons = container.querySelectorAll('button');
 
         VersionApi.getVersion().then(data => {
             if (data && data.appVersion && data.appVersion.artifactVersion) {
@@ -60,8 +65,16 @@ export default class LoginView {
 
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
+            errorDiv.style.display = 'none';
+            errorDiv.textContent = '';
+
             const username = form.username.value;
             const password = form.password.value;
+
+            buttons.forEach(btn => btn.disabled = true);
+            if (spinner) {
+                spinner.style.display = 'inline-block';
+            }
 
             try {
                 const result = await AuthApi.login(username, password);
@@ -76,6 +89,11 @@ export default class LoginView {
             } catch (err) {
                 errorDiv.textContent = err.message || I18n.t('auth.invalidCredentials');
                 errorDiv.style.display = 'block';
+            } finally {
+                buttons.forEach(btn => btn.disabled = false);
+                if (spinner) {
+                    spinner.style.display = 'none';
+                }
             }
         });
 

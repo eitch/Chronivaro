@@ -450,6 +450,10 @@ main:has(#audit-log-view) {
     margin-top: 1.5rem;
     padding: 0.875rem;
     font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
 }
 
 h2 {
@@ -520,6 +524,25 @@ button.ghost:hover {
     background-color: #eef2ff;
     transform: none;
     box-shadow: none;
+}
+
+/* Spinner */
+.spinner {
+    display: inline-block;
+    width: 1rem;
+    height: 1rem;
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: spin 0.75s linear infinite;
+    box-sizing: border-box;
+    flex-shrink: 0;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 #working-location-group {
