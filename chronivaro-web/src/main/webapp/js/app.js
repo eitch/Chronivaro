@@ -35,8 +35,12 @@ class ChronivaroApp {
         this.headerActions = document.getElementById('header-actions');
         this.currentHash = '';
         this.currentViewName = '';
+        this.currentRenderId = 0;
 
         window.addEventListener('unauthorized', () => {
+            AuthApi.logout();
+            this.updateUserMenu();
+            this.updateNavigation();
             this.navigate('login');
         });
 
@@ -422,15 +426,20 @@ class ChronivaroApp {
     }
 
     navigate(page, params) {
+        let targetHash = page;
         if (params) {
             const query = Object.keys(params).map(k => `${encodeURIComponent(k)}=${encodeURIComponent(params[k])}`).join('&');
-            window.location.hash = `${page}?${query}`;
+            targetHash = `${page}?${query}`;
+        }
+        if (window.location.hash === `#${targetHash}` || (!window.location.hash && targetHash === '')) {
+            this.route();
         } else {
-            window.location.hash = page;
+            window.location.hash = targetHash;
         }
     }
 
     async showView(hash) {
+        const renderId = ++this.currentRenderId;
         this.currentHash = hash;
         let viewName = hash;
         let params = {};
@@ -445,7 +454,6 @@ class ChronivaroApp {
         }
         this.currentViewName = viewName;
 
-        this.appContainer.innerHTML = '';
         const isAuthView = (viewName === 'login' || viewName === 'complete-registration');
         this.nav.style.display = isAuthView ? 'none' : 'block';
         if (this.headerActions) {
@@ -537,12 +545,24 @@ class ChronivaroApp {
                 view = new CompleteRegistrationView(this);
                 break;
             default:
-                this.appContainer.innerHTML = `<h2>404</h2><p>View ${viewName} not found.</p>`;
+                if (this.currentRenderId === renderId) {
+                    this.appContainer.innerHTML = `<h2>404</h2><p>View ${viewName} not found.</p>`;
+                }
                 return;
         }
 
-        const renderedView = await view.render(params);
-        this.appContainer.appendChild(renderedView);
+        try {
+            const renderedView = await view.render(params);
+            if (this.currentRenderId !== renderId) {
+                return;
+            }
+            this.appContainer.replaceChildren(renderedView);
+        } catch (err) {
+            if (this.currentRenderId !== renderId) {
+                return;
+            }
+            console.error('Failed to render view:', err);
+        }
     }
 }
 
