@@ -159,19 +159,12 @@
                         <target>${jdk.version}</target>
                         <release>${jdk.version}</release>
                         <encoding>${project.build.sourceEncoding}</encoding>
-                        <compilerArgs>
-                            <arg>-parameters</arg>
-                            <arg>--enable-preview</arg>
-                        </compilerArgs>
                     </configuration>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-surefire-plugin</artifactId>
                     <version>${maven-surefire-plugin.version}</version>
-                    <configuration>
-                        <argLine>--enable-preview</argLine>
-                    </configuration>
                 </plugin>
             </plugins>
         </pluginManagement>
