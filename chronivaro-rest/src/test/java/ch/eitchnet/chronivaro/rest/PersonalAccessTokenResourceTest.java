@@ -11,6 +11,7 @@ import jakarta.ws.rs.core.Response;
 import org.junit.Test;
 
 import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 import static org.junit.Assert.*;
@@ -39,13 +40,14 @@ public class PersonalAccessTokenResourceTest extends AbstractChronivaroRestfulTe
 		}
 
 		// 3. Create a token with DESKTOP_TIMER preset
+		String validTo = ZonedDateTime.now().plusYears(1).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
 		String createJson = """
 				{
 				  "name": "Desktop Timer Mac",
 				  "preset": "DESKTOP_TIMER",
-				  "validTo": "2027-09-17T23:59:59+02:00"
+				  "validTo": "%s"
 				}
-				""";
+				""".formatted(validTo);
 		String desktopTokenSecret;
 		String desktopTokenId;
 		try (Response response = target()
