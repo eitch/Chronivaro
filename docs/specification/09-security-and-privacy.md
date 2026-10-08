@@ -48,7 +48,7 @@ Chronivaro erzwingt ein rollenbasiertes Zugriffskontrollmodell (Role-Based Acces
 | `Employee` | Regulärer Mitarbeiter | Eigene Arbeitszeiten, eigene Abwesenheiten, eigenes Profil, eigene Saldi |
 | `Supervisor` | Teamleiter / Vorgesetzter | Zeiteinsicht und -korrektur für zugeordnete Teams, Abwesenheits- und Periodengenehmigungen |
 | `HR` | Personaladministration | Unternehmensweite Pflege von Mitarbeiterstammdaten, Arbeitsmodellen, Ferienkonten und Reports |
-| `Admin` | Systemadministrator | Globale Konfiguration, Benutzerverwaltung (auch reine Systembenutzer), Stammdaten, Audit-Log |
+| `Admin` | Systemadministrator | Globale Konfiguration, Benutzerverwaltung (auch reine Systembenutzer), Stammdaten, Audit-Log, Selbstgenehmigung von eigenen Abwesenheiten und Perioden |
 | `Reader` | Revisor / Leseberechtigter | Lesender Zugriff auf freigegebene Berichte und Auswertungen ohne Änderungsrechte |
 
 ---
@@ -62,8 +62,8 @@ Die Core-Logik prüft folgende Berechtigungen strikt getrennt:
 3. **Eigene Abwesenheiten:** Eigene Abwesenheiten als Entwurf erfassen, einreichen und stornieren.
 4. **Fremde Zeitbuchungen:** Arbeitszeitbuchungen fremder Mitarbeiter einsehen, manuell erfassen, korrigieren und löschen (Vorgesetzte für zugeordnete Mitarbeitende/Teams; HR und Admin unternehmensweit).
 5. **Abwesenheiten im Namen anderer:** Abwesenheiten für Mitarbeitende fremderfassen (Vorgesetzte teambezogen, HR/Admin unternehmensweit).
-6. **Abwesenheitsgenehmigung:** Abwesenheitsanträge von Mitarbeitenden genehmigen oder ablehnen.
-7. **Periodengenehmigung & Wiedereröffnung:** Monatsperioden prüfen, genehmigen, sperren sowie gesperrte Perioden begründet wiedereröffnen.
+6. **Abwesenheitsgenehmigung:** Abwesenheitsanträge von Mitarbeitenden genehmigen oder ablehnen. Benutzer mit Administratorrollen (`Admin`, `Administrator`, `StrolchAdmin`, `PrivilegeAdmin`) dürfen zudem eigene Anträge selbst genehmigen (Befreiung von der Vier-Augen-Restriktion).
+7. **Periodengenehmigung & Wiedereröffnung:** Monatsperioden prüfen, genehmigen, sperren (inkl. Selbstgenehmigung für Inhaber von Administratorrollen) sowie gesperrte Perioden begründet wiedereröffnen.
 8. **Ferienkontokorrektur:** Manuelle `CORRECTION`-Buchungen auf dem Ferienkonto vornehmen.
 9. **Benutzer- & Rollenadministration:** Strolch-Benutzer anlegen, Rollen zuweisen, Benutzer löschen und Passwort-Challenges initiieren (auch für reine Systembenutzer).
 10. **Mitarbeiter-Reaktivierung:** Inaktive Mitarbeiter reaktivieren und Ferienansprüche initialisieren.

@@ -70,15 +70,15 @@ Tritt bei der Verarbeitung ein fachlicher oder Validierungsfehler auf, antwortet
 | Methode | Pfad | Beschreibung | Rollen / Berechtigung |
 |---|---|---|---|
 | `GET` | `/me/absences` | Eigene Abwesenheiten abrufen | Angemeldeter Mitarbeiter |
-| `POST` | `/me/absences` | Eigenen Abwesenheitsantrag erfassen (Entwurf oder einreichen) | Angemeldeter Mitarbeiter |
+| `POST` | `/me/absences` | Eigenen Abwesenheitsantrag erfassen (Entwurf oder einreichen; direkte Freigabe `directApprove=true` für Admins zulässig) | Angemeldeter Mitarbeiter |
 | `PUT` | `/me/absences/{id}` | Abwesenheitsentwurf (`DRAFT`) bearbeiten | Angemeldeter Mitarbeiter |
 | `POST` | `/me/absences/{id}/submit` | Abwesenheitsentwurf einreichen (`DRAFT` -> `SUBMITTED`) | Angemeldeter Mitarbeiter |
-| `POST` | `/me/absences/{id}/cancel` | Abwesenheit stornieren (`CANCELLED`) | Angemeldeter Mitarbeiter |
+| `POST` | `/me/absences/{id}/cancel` | Abwesenheit stornieren (`CANCELLED`; bei genehmigten Ferien erfolgt automatische Gutschrift via `CORRECTION`) | Angemeldeter Mitarbeiter |
 | `GET` | `/employees/{id}/absences` | Abwesenheiten eines Mitarbeiters einsehen | Supervisor (Team), HR, Admin |
-| `POST` | `/employees/{id}/absences` | Abwesenheit im Namen eines Mitarbeiters erfassen | Supervisor (Team), HR, Admin |
+| `POST` | `/employees/{id}/absences` | Abwesenheit im Namen eines Mitarbeiters erfassen (wahlweise direkt `APPROVED` oder `SUBMITTED`) | Supervisor (Team), HR, Admin |
 | `GET` | `/absence-types` | Liste der aktiven Abwesenheitsarten abrufen | Alle authentifizierten Benutzer |
 | `GET` | `/approvals/absences` | Liste offener Abwesenheitsanträge zur Genehmigung | Supervisor, HR, Admin |
-| `POST` | `/approvals/absences/{id}/approve` | Abwesenheitsantrag genehmigen | Supervisor, HR, Admin |
+| `POST` | `/approvals/absences/{id}/approve` | Abwesenheitsantrag genehmigen (Admins dürfen eigene Anträge genehmigen; reguläre Mitarbeiter/Supervisoren keine Selbstgenehmigung) | Supervisor, HR, Admin |
 | `POST` | `/approvals/absences/{id}/reject` | Abwesenheitsantrag mit Begründung ablehnen | Supervisor, HR, Admin |
 
 ---
@@ -111,7 +111,7 @@ Tritt bei der Verarbeitung ein fachlicher oder Validierungsfehler auf, antwortet
 | `POST` | `/me/periods/{yearMonth}/submit` | Eigene Monatsperiode einreichen | Angemeldeter Mitarbeiter |
 | `GET` | `/approvals/periods` | Liste der eingereichten Monatsperioden zur Genehmigung | Supervisor, HR, Admin |
 | `GET` | `/approvals/periods/{id}` | Vollständiger Monatsreport zur Genehmigungsinspektion | Supervisor, HR, Admin |
-| `POST` | `/approvals/periods/{id}/approve` | Monatsperiode genehmigen und sperren (`LOCKED`) | Supervisor, HR, Admin |
+| `POST` | `/approvals/periods/{id}/approve` | Monatsperiode genehmigen und sperren (`LOCKED`; Admins dürfen eigene Perioden genehmigen, reguläre Mitarbeiter/Supervisoren nicht) | Supervisor, HR, Admin |
 | `POST` | `/approvals/periods/{id}/reject` | Monatsperiode mit Begründung ablehnen | Supervisor, HR, Admin |
 | `POST` | `/periods/{id}/reopen` | Gesperrte Periode mit Begründung wiedereröffnen | HR, Admin |
 

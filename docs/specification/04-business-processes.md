@@ -18,7 +18,7 @@ Dieses Dokument beschreibt alle fachlichen und administrativen Interaktions- und
 
 #### Ablauf
 
-1. **Arbeit starten:** Mitarbeiter klickt auf "Start" im Dashboard (optional mit Arbeitsort und Kommentar).
+1. **Arbeit starten:** Mitarbeiter klickt auf "Start" im Dashboard (mit frei gewähltem Arbeitsort `HOME_OFFICE`, `REMOTE`, `OFFICE` oder `FIELD` und optionalem Kommentar).
 2. **WorkDay prüfen:** Das System prüft, ob für das heutige Kalenderdatum bereits ein `WorkDay` beim Mitarbeiter existiert.
 3. **WorkDay initialisieren (falls neu):**
    - Erstellt einen neuen `WorkDay` für das aktuelle Tagesdatum.
@@ -36,7 +36,7 @@ Dieses Dokument beschreibt alle fachlichen und administrativen Interaktions- und
        `Endzeit = Startzeit + max(0, Sollzeit - bisherige_Istzeit)`.
      - Die Endzeit wird auf maximal `24:00 Uhr` des Starttages gedeckelt; überschüssige Zeit wird verworfen.
      - Der `WorkEntry` erhält automatisch den Kommentar `"Timer vergessen - auf Sollzeit begrenzt"`.
-7. **Weiterer Arbeitsblock:** Beginnt der Mitarbeiter später am selben Tag erneut zu arbeiten, startet er einen neuen `WorkEntry` auf demselben `WorkDay`. Die Lücke dazwischen wird als Arbeitsunterbruch ausgewiesen.
+7. **Weiterer Arbeitsblock & flexibler Arbeitsortwechsel:** Beginnt der Mitarbeiter später am selben Tag erneut zu arbeiten oder wechselt er im Tagesverlauf den Arbeitsort (z. B. Start zu Hause im `HOME_OFFICE`, Weiterarbeit im Zug als `REMOTE`, Eintreffen im `OFFICE` und anschliessender Kundenbesuch im `FIELD`), startet er einen neuen `WorkEntry` auf demselben `WorkDay` mit dem entsprechenden Arbeitsort. Jeder Wechsel wird als separater Zeitblock geführt; zeitliche Lücken dazwischen werden als Arbeitsunterbruch ausgewiesen.
 
 ---
 
@@ -70,7 +70,7 @@ Dieses Dokument beschreibt alle fachlichen und administrativen Interaktions- und
 
 1. **Bearbeitung durch den Mitarbeiter:**
    - Mitarbeiter öffnet die Zeiterfassungsansicht ("Meine Zeiten") für einen Tag in einer **offenen Periode**.
-   - Kann Start- und Endzeiten anpassen, Arbeitsort ändern oder Kommentare erfassen.
+   - Kann Start- und Endzeiten anpassen, Arbeitsort beliebig für einzelne Buchungsblöcke ändern oder Kommentare erfassen.
    - Das System validiert, dass keine Überlappungen entstehen, das Ende nach dem Start liegt und die Buchung innerhalb der offenen Periode liegt.
 2. **Administrative Korrekturen durch Vorgesetzte, HR und Administratoren:**
    - Vorgesetzte (für zugeordnete Mitarbeitende/Teams) und HR/Administratoren (unternehmensweit) können Zeitbuchungen für beliebige Tage in offenen Perioden manuell erfassen, vollständig bearbeiten (Start, Ende, Ort, Kommentar) oder löschen.
@@ -113,8 +113,8 @@ Dieses Dokument beschreibt alle fachlichen und administrativen Interaktions- und
 5. **Entscheidung durch Vorgesetzten:**
    - **Genehmigung (`APPROVED`):** Der Antrag wird genehmigt. Handelt es sich um den Typ `VACATION`, wird sofort ein `USAGE`-Journaleintrag auf dem Ferienkonto erstellt.
    - **Ablehnung (`REJECTED`):** Der Vorgesetzte lehnt den Antrag mit verpflichtendem Begründungskommentar ab.
-6. **Stornierung genehmigter Abwesenheiten:** Die Stornierung einer bereits genehmigten Abwesenheit erzeugt eine `CORRECTION`-Gegenbuchung im Ferienkonto; historische Einträge werden nicht gelöscht.
-7. **Fremderfassung durch Vorgesetzte und HR:** Vorgesetzte (für zugeordnete Teams) und HR/Administratoren (unternehmensweit) können Abwesenheiten im Namen von Mitarbeitenden erfassen (wahlweise direkt als `APPROVED` genehmigt oder regulär als `SUBMITTED` eingereicht). Bei direkt genehmigten Ferien wird die Ferienabbuchung unmittelbar ausgelöst. Der Ersteller (`createdBy`) wird transparent dokumentiert.
+6. **Stornierung genehmigter Abwesenheiten und Ferien:** Mitarbeitende können ihre eingereichten oder bereits genehmigten Abwesenheiten in offenen Perioden selbstständig stornieren. Beim Stornieren wechselt der Status zu `CANCELLED`. Handelt es sich um eine Ferienabwesenheit (`VACATION`), erzeugt das System automatisch eine `CORRECTION`-Gegenbuchung im `VacationAccountEntry`-Journal, welche die bezogenen Ferienminuten wieder vollständig gutschreibt. Zudem werden stornierte Abwesenheiten aus allen Kalenderansichten (`AbsenceCalendarView`, Monatsübersicht) ausgeblendet; historische Journal-Einträge bleiben revisionssicher erhalten.
+7. **Fremderfassung und Administrator-Selbstgenehmigung:** Vorgesetzte (für zugeordnete Teams) und HR/Administratoren (unternehmensweit) können Abwesenheiten im Namen von Mitarbeitenden erfassen (wahlweise direkt als `APPROVED` genehmigt oder regulär als `SUBMITTED` eingereicht). Benutzer mit Administratorrollen (`Admin`, `Administrator`, `StrolchAdmin`, `PrivilegeAdmin`) können zudem ihre eigenen Abwesenheitsanträge direkt bei Erstellung genehmigen (`directApprove = true`) sowie über den Genehmigungsbereich freigeben. Für reguläre Mitarbeitende und nicht-administrative Vorgesetzte ist die Genehmigung eigener Anträge blockiert. Bei direkt genehmigten Ferien wird die Ferienabbuchung unmittelbar ausgelöst. Der Ersteller (`createdBy`) wird transparent dokumentiert.
 8. **Abwesenheits- und Pikettkalender:** Über eine zentrale Kalenderansicht können Vorgesetzte, HR und Mitarbeitende Abwesenheiten visualisieren, direkt neue Abwesenheiten für Mitarbeitende eintragen sowie Pikettbereitschaften (`OnCallPeriod`) für definierte Zeitspannen (z. B. Wochenblöcke oder n-Tage) festlegen.
 
 ---
@@ -142,6 +142,7 @@ Dieses Dokument beschreibt alle fachlichen und administrativen Interaktions- und
    - Über eine detaillierte Inspektionsansicht (`GET /approvals/periods/{id}`) sieht der Vorgesetzte den vollständigen Monatsreport mit allen Tagen, Zeitblöcken, Unterbrüchen, Abwesenheiten, Saldi und Kommentaren.
 4. **Genehmigung oder Ablehnung:**
    - **Genehmigung (`APPROVED`):** Die Periode wird genehmigt. Das System erzeugt einen unveränderlichen `calculationSnapshot` und sperrt die Periode für weitere Bearbeitungen (`LOCKED`).
+   - **Selbstgenehmigung durch Administratoren:** Benutzer mit Administratorrechten (`Admin`, `Administrator`, `StrolchAdmin`, `PrivilegeAdmin`) können ihre eigenen eingereichten Monatsabschlüsse selbst genehmigen. Für alle anderen Benutzer gilt zwingend das Vier-Augen-Prinzip (Selbstgenehmigung wird mit einem Validierungsfehler abgewiesen).
    - **Ablehnung (`REJECTED`):** Vorgesetzter lehnt die Periode mit Begründung ab. Der Mitarbeiter kann Korrekturen vornehmen und die Periode erneut einreichen.
 5. **Wiedereröffnung (`REOPEN`):** Eine gesperrte Periode kann durch HR/Administration mit expliziter Begründung wiedereröffnet werden (`POST /periods/{id}/reopen`), wodurch sie wieder den Status `OPEN` erhält.
 

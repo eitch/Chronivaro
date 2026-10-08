@@ -56,6 +56,7 @@ Historische Auswertungen müssen auch dann reproduzierbar bleiben, wenn sich Arb
 - Benutzer, Rollen und Berechtigungen verwalten (auch für Nicht-Mitarbeiter)
 - Abwesenheitsarten, Feiertage und Standorte konfigurieren
 - technische Administration durchführen
+- eigene Abwesenheiten und Monatsabschlüsse selbst genehmigen (Befreiung von der Vier-Augen-Restriktion für Inhaber von Administratorrollen)
 
 ### 3.5 Leseberechtigter Benutzer – optional
 
@@ -77,14 +78,14 @@ Der funktionale Grundumfang enthält:
 1. Mitarbeiter-, Benutzer- und Teamverwaltung (einschliesslich reiner Systembenutzer ohne Mitarbeiterprofil, Benutzerlöschung und Mitarbeiterdeaktivierung/-reaktivierung)
 2. versionierte Arbeitsmodelle mit individuellen Sollzeiten
 3. Feiertagskalender
-4. Arbeitszeiterfassung mit mehreren Arbeitsblöcken pro Tag und Kommentarfunktion
+4. Arbeitszeiterfassung mit mehreren Arbeitsblöcken pro Tag, flexiblen Arbeitsortwechseln (`HOME_OFFICE`, `REMOTE`, `OFFICE`, `FIELD`) ohne Tageshälftenbegrenzung und Kommentarfunktion
 5. Arbeitszeitanpassungen durch Mitarbeitende (Start- und Endzeit, Arbeitsort, Kommentar in offenen Perioden) sowie administrative und supervisorische Zeitkorrekturen (Erfassen, Bearbeiten und Löschen von Arbeitszeitbuchungen durch Vorgesetzte für zugeordnete Mitarbeitende und durch HR/Administratoren für alle Mitarbeitenden), inklusive visueller Hervorhebung aller modifizierten und manuell erstellten Buchungen sowie transparenter Ausweisung des Erstellers bei Fremderfassung
-6. konfigurierbare und vordefinierte Abwesenheitsarten sowie Erfassung von Abwesenheiten durch Mitarbeitende und im Namen von Mitarbeitenden durch Vorgesetzte und Personaladministration
+6. konfigurierbare und vordefinierte Abwesenheitsarten sowie Erfassung und Stornierung von Abwesenheiten durch Mitarbeitende (inkl. automatischer Ferienrückerstattung und Kalenderausblendung stornierter Abwesenheiten) und im Namen von Mitarbeitenden durch Vorgesetzte und Personaladministration
 7. halb- und ganztägige sowie stundenweise Abwesenheiten
 8. Ferienkonten mit nachvollziehbaren Kontobuchungen
 9. Anwesenheitsstatus
 10. Soll-/Ist-Auswertung und Zeitsaldo
-11. Monatsabschluss mit Genehmigungsworkflow und detaillierter Inspektionsansicht für Vorgesetzte
+11. Monatsabschluss mit Genehmigungsworkflow (inkl. Administrator-Selbstgenehmigung) und detaillierter Inspektionsansicht für Vorgesetzte
 12. Rollen und Berechtigungen
 13. Audit-Log mit UI-Ansicht zur Einsichtnahme und Filterung von Revisionsereignissen
 14. CSV-Export

@@ -144,15 +144,17 @@ $$\text{Anspruch (Minuten)} = \text{round}\left( 25 \times 480 \times \frac{\tex
 - Übertragene Ferien verfallen im Standard nicht (`EXPIRY` nur bei expliziter administrativer Buchung).
 - **FIFO-Verbrauch:** Beim Ferienbezug wird stets das älteste verfügbare Guthaben zuerst verbraucht.
 
-### 6.6 Ferienbezug und Verbot negativer Feriensaldi
+### 6.6 Ferienbezug, Stornierung und Verbot negativer Feriensaldi
 
 - Nur der vorkonfigurierte Abwesenheitstyp mit dem Code `VACATION` erzeugt `USAGE`-Buchungen auf dem Ferienkonto.
 - **Verbot negativer Saldi:** Die Genehmigung eines Ferienantrags wird blockiert, wenn der Bezug das verfügbare Ferienguthaben übersteigen würde. Negative Feriensaldi sind unzulässig.
+- **Stornierung genehmigter Ferien (Rückerstattung):** Wird ein genehmigter Ferienbezug (`APPROVED`) in einer offenen Periode storniert, wechselt die `Absence` in den Status `CANCELLED`. Das System bucht unverzüglich eine automatische `CORRECTION`-Gutschrift im `VacationAccountEntry`-Journal in Höhe der exakt zuvor per `USAGE` abgebuchten Minuten (`amountMinutes = +bezogene Minuten`, `relatedAbsenceId = absenceId`). Dadurch wird der Feriensaldo vollständig wiederhergestellt. Stornierte Abwesenheiten werden zudem aus allen Kalendern (`AbsenceCalendarView`) entfernt.
 
-### 6.7 Manuelle Ferienkorrekturen
+### 6.7 Manuelle Ferienkorrekturen und Administrator-Selbstgenehmigung
 
 - Personaladministration und Vorgesetzte können manuelle Korrekturbuchungen (`entryType = CORRECTION`) vornehmen.
 - Jede manuelle Korrektur erfordert zwingend einen aussagekräftigen Begründungskommentar (`comment`).
+- **Administrator-Selbstgenehmigung:** Benutzer mit Administratorrollen (`Admin`, `Administrator`, `StrolchAdmin`, `PrivilegeAdmin`) können eigene Ferienanträge direkt (`directApprove = true`) sowie über die Genehmigungs-Queue freigeben und eigene Monatsperioden abschliessen. Für reguläre Mitarbeitende und Standard-Vorgesetzte ist die Selbstgenehmigung untersagt.
 
 ---
 
@@ -211,6 +213,7 @@ Folgende Zustände sind unzulässig und führen zur Ablehnung der Aktion mit sta
 8. **Modifikation gesperrter Perioden:** Änderungen an Zeitbuchungen in Perioden mit Status `APPROVED` oder `LOCKED` (erfordern vorherige Wiedereröffnung).
 9. **Unzureichendes Ferienguthaben:** Ferienanträge oder -genehmigungen, die zu einem negativen Feriensaldo führen würden.
 10. **Fehlender Arbeitsplan:** Fehlende `EmploymentScheduleVersion` für einen relevanten Arbeitstag.
+11. **Unzulässige Selbstgenehmigung:** Versuch der Genehmigung eigener Abwesenheitsanträge oder eigener Monatsabschlüsse (`TimePeriod`) durch Benutzer ohne Administratorrolle (`Admin`, `Administrator`, `StrolchAdmin`, `PrivilegeAdmin`).
 
 ### 9.2 Nicht-blockierende Warnungen
 

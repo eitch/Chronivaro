@@ -154,7 +154,7 @@ Ein `WorkEntry` bildet ausschliesslich einen tatsächlich gearbeiteten, kontinui
 - **Visuelle Hervorhebung und Ausweisung des Erstellers:**
   - Alle nachträglich modifizierten sowie manuell erstellten Arbeitszeitbuchungen (`source = MANUAL` oder modifizierter Status) werden in der UI und in Berichten/Exporten visuell hervorgehoben (z. B. Badge/Badge-Kennzeichnung).
   - Wurde eine Arbeitszeitbuchung nicht durch den Mitarbeiter selbst erstellt (Fremderfassung), wird transparent ausgewiesen, von wem (`createdBy`) der Eintrag erstellt wurde.
-- **Arbeitsort:** Jeder `WorkEntry` besitzt einen Arbeitsort (`HOME_OFFICE`, `OFFICE`, `FIELD`, `REMOTE`). Ein Arbeitstag darf höchstens einen Arbeitsort am Vormittag und einen Arbeitsort am Nachmittag haben. Ein Wechsel des Arbeitsorts erzeugt separate Zeitblöcke.
+- **Arbeitsort:** Jeder `WorkEntry` besitzt einen Arbeitsort (`HOME_OFFICE`, `OFFICE`, `FIELD`, `REMOTE`). Mitarbeitende können ihren Arbeitsort im Tagesverlauf beliebig oft und flexibel wechseln (z. B. Arbeitsbeginn im Home Office, Weiterarbeit als Remote im Zug, Arbeiten im Büro und anschliessender Kundeneinsatz im Aussendienst). Jeder Wechsel des Arbeitsorts wird durch einen separaten `WorkEntry`-Zeitblock abgebildet. Es gibt keine Einschränkung auf maximal einen Arbeitsort am Vormittag oder Nachmittag.
 - **Dauerbereiche im Dashboard:** Für die Schnellauswahl im Dashboard werden `HALF_DAY` (`MORNING` oder `AFTERNOON`) und `FULL_DAY` unterstützt.
 
 ---
@@ -256,7 +256,11 @@ Repräsentiert einen konkreten Abwesenheitsantrag oder eine erfasste Abwesenheit
 - **Keine Überschneidungen:** Sich überschneidende Abwesenheiten sind unzulässig.
 - **Entwurfsstatus (`DRAFT`):** Abwesenheiten können als Entwurf gespeichert, vor dem Einreichen beliebig bearbeitet oder verworfen (`CANCELLED`) werden. Das Verwerfen eines Entwurfs löst keine Ferienkontobuchung aus.
 - **Einreichung (`SUBMITTED`):** Überführt den Antrag in den Genehmigungsworkflow für Vorgesetzte.
+- **Stornierung genehmigter Abwesenheiten (`CANCELLED`):** Mitarbeitende können ihre eingereichten oder bereits genehmigten Abwesenheiten und Ferien (`APPROVED`) in offenen Erfassungsperioden stornieren. Beim Stornieren wechselt der Status zu `CANCELLED`.
+- **Rückerstattung bei Ferien-Stornierung:** Handelt es sich bei der stornierten Abwesenheit um Ferien (`VACATION`), wird automatisch eine Gegenbuchung (`entryType = CORRECTION`) im `VacationAccountEntry`-Journal erzeugt, welche die zuvor per `USAGE` abgebuchten Minuten wieder vollumfänglich gutschreibt.
+- **Kalenderausschluss stornierter Abwesenheiten:** Stornierte Abwesenheiten (`CANCELLED`) werden in allen Kalenderansichten (u. a. `AbsenceCalendarView`, Monats- und Jahreskalender, Team-Matrix) ausgeblendet und nicht mehr dargestellt.
 - **Fremderfassung:** Vorgesetzte (für zugeordnete Teams) und HR/Administration (unternehmensweit) können Abwesenheiten im Namen von Mitarbeitenden erfassen (wahlweise direkt `APPROVED` oder regulär `SUBMITTED`). Der Ersteller (`createdBy`) wird transparent protokolliert.
+- **Selbstgenehmigung für Administratoren:** Benutzer mit Administrationsrollen (`Admin`, `Administrator`, `StrolchAdmin`, `PrivilegeAdmin`) können ihre eigenen Abwesenheiten selbst genehmigen (sowohl direkt beim Erstellen via `directApprove = true` als auch nachträglich über den Genehmigungsbereich). Für reguläre Mitarbeitende und nicht-administrative Vorgesetzte ist die Selbstgenehmigung eigener Anträge strikt verboten.
 - **Abwesenheits- und Pikettkalender:** Abwesenheiten sowie Pikettperioden (`OnCallPeriod`) können in einer gemeinsamen Kalenderansicht visualisiert und direkt für Mitarbeitende erfasst/zugewiesen werden (z. B. Wochen- oder n-Tage-Blöcke).
 
 ---
@@ -348,6 +352,7 @@ Repräsentiert die monatliche Zeiterfassungs- und Genehmigungsperiode eines Mita
 #### Regeln und Invarianten
 
 - **Abschluss und Sperre:** Sobald eine Periode den Status `APPROVED` oder `LOCKED` erreicht, wird ein unveränderlicher `calculationSnapshot` gespeichert, der für nachfolgende Monatsberechnungen als verbindlicher Anfangssaldo dient.
+- **Selbstgenehmigung von Monatsperioden für Administratoren:** Benutzer mit Administrationsberechtigungen (`Admin`, `Administrator`, `StrolchAdmin`, `PrivilegeAdmin`) dürfen ihre eigenen eingereichten Monatsabschlüsse (`TimePeriod`) selbst genehmigen. Für Standardmitarbeiter und nicht-administrative Vorgesetzte ist die Genehmigung der eigenen Periode strikt untersagt.
 - **Baseline-Perioden-Snapshots für Altsaldi (Migration / Onboarding):** Wird bei der Neuerstellung eines Mitarbeiters mit historischem Eintritt oder Systemstart ein Anfangsüberzeit-/-unterzeitsaldo (`initialOvertimeMinutes`) übergeben, generiert das System automatisch eine Baseline-`TimePeriod` für den Vormonat von `EmploymentScheduleVersion.validFrom` im Status `LOCKED`. Dieser enthält einen minimalen `calculationSnapshot` mit `endBalanceMinutes = initialOvertimeMinutes`. Dadurch stoppt die historische Rückwärtssaldoberechnung deterministisch bei dieser Baseline-Periode und übernimmt exakt den übergebenen Anfangssaldo als Vormonatssaldo für den ersten operativen Erfassungsmonat.
 - **Saldo per Vortag für offene/laufende Perioden:** Für den aktuellen in-progress Monat liefert die Saldenberechnung stabil den Saldo per Vortag (`date < heute`), um tageszeitabhängige künstliche Defizite zu vermeiden.
 

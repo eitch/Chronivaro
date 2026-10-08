@@ -13,7 +13,7 @@ Folgende fachliche Fragestellungen sind vor oder während künftiger Ausbaustufe
 3. **Wer ist Genehmiger, wenn ein Mitarbeiter mehreren Teams zugeordnet ist?**
    - *Aktuelle Regelung:* Ein Mitarbeiter gehört zu genau einem primären Team (`teamId`).
 4. **Darf ein Mitarbeiter genehmigte Abwesenheiten selbst stornieren?**
-   - *Aktuelle Regelung:* Genehmigte Abwesenheiten können über einen Stornierungsprozess (`POST /me/absences/{id}/cancel`) storniert werden, was eine Gegenbuchung erzeugt.
+   - *Aktuelle Regelung:* Genehmigte Abwesenheiten und Ferien können über einen Stornierungsprozess (`POST /me/absences/{id}/cancel`) in offenen Perioden storniert werden. Bei Ferien wird automatisch eine `CORRECTION`-Gutschrift im Ferienkonto erzeugt; stornierte Abwesenheiten werden aus allen Kalendern ausgeblendet.
 5. **Wie wird Krankheit während bereits genehmigter Ferien behandelt?**
    - *Offener Punkt:* Automatische Umwandlung / Rückvergütung von Ferienkontingenten vs. manuelle Stornierung und Neuerfassung von Krankheitstagen.
 6. **Wie viele Ferien dürfen ins Folgejahr übertragen werden und wann verfallen sie?**
@@ -39,15 +39,17 @@ Bis zur formellen Entscheidung abweichender Richtlinien gelten im gesamten Syste
 - **Negative Zeitsaldi:** Sind erlaubt.
 - **Negative Feriensaldi:** Sind strikt verboten (Genehmigung bei unzureichendem Guthaben wird blockiert).
 - **Primäres Team:** Jeder Mitarbeiter ist genau einem Team zugeordnet.
-- **Stornierungsworkflow:** Einmal genehmigte Abwesenheiten können nicht still editiert, sondern nur storniert werden.
+- **Stornierungsworkflow:** Einmal genehmigte Abwesenheiten können nicht still editiert, sondern nur storniert werden (mit automatischer Ferienerstattung bei `VACATION`).
 - **Standardzeitzone:** `Europe/Zurich`.
-- **Arbeitsortanzeige:** `HOME_OFFICE`, `OFFICE`, `FIELD` und `REMOTE` sind als Arbeitsorte verfügbar.
+- **Flexible Arbeitsortwahl:** Mitarbeitende können ihren Arbeitsort im Tagesverlauf beliebig oft und frei wechseln (`HOME_OFFICE`, `OFFICE`, `FIELD`, `REMOTE`) ohne Begrenzung auf Tageshälften.
+- **Kalenderausschluss stornierter Abwesenheiten:** Stornierte Abwesenheiten (`status == CANCELLED`) werden in allen Kalenderansichten ausgeblendet.
+- **Administrator-Selbstgenehmigung:** Inhaber von Administratorrollen (`Admin`, `Administrator`, `StrolchAdmin`, `PrivilegeAdmin`) können eigene Abwesenheiten und Monatsabschlüsse selbst genehmigen.
 
 ---
 
 ## 3. Im Rahmen der Spezifikation geklärte Punkte
 
-1. **Halbtags-Grenze für Arbeitsorte:** Die Grenze zwischen Vormittag (`MORNING`) und Nachmittag (`AFTERNOON`) ist auf 12:30 Uhr (bzw. die Mitte des täglichen Arbeitsplans) festgelegt.
+1. **Flexibler Arbeitsortwechsel ohne Halbtagsgrenze:** Die frühere Einschränkung auf maximal einen Arbeitsort am Vormittag und einen am Nachmittag (12:30 Uhr) wurde aufgehoben. Ein Arbeitstag kann beliebig viele `WorkEntry`-Blöcke mit jeweils individuellem Arbeitsort (`HOME_OFFICE`, `REMOTE`, `OFFICE`, `FIELD`) enthalten.
 2. **REST-Exportpfade und Aliase:** Exportendpunkte unterstützen sowohl Datei-Endungen (z. B. `.pdf`, `.csv`), Query-Parameter (`?format=pdf`) als auch Standard-`Accept`-Header.
 3. **Eintritt/Austritt unter dem Monat:** Tage vor `entryDate` und nach `exitDate` besitzen 0 Sollminuten und erzeugen keine Fehlermeldungen oder Warnungen vor fehlenden Buchungen.
 4. **Ferienanspruchs-Gutschrift:** Der volle Jahresanspruch wird per 1. Januar (oder anteilig per `entryDate`) als `ENTITLEMENT` gebucht. Pensumsanpassungen oder Austritte erzeugen `CORRECTION`-Gegenbuchungen.
@@ -63,3 +65,5 @@ Bis zur formellen Entscheidung abweichender Richtlinien gelten im gesamten Syste
      3. Optionale Angabe von Anfangssaldi beim Erstellen (`initialOvertimeMinutes`, `initialVacationDays`).
      4. Automatische Anlage eines Baseline-Perioden-Snapshots für den Vormonat von `scheduleValidFrom` im Status `LOCKED` zur nahtlosen Übernahme des Überzeit-/Unterzeitsaldos.
      5. Automatische Buchung von Anfangs-Ferientagen als `CARRY_OVER`-Journaleintrag für das aktive Erfassungsjahr sowie Pro-rata-Anspruchsgutschrift (`ENTITLEMENT`) für das aktive Erfassungsjahr.
+10. **Stornierung genehmigter Ferien & Kalenderausschluss:** Genehmigte Ferien (`APPROVED`) können in offenen Perioden storniert werden. Der Status wechselt auf `CANCELLED`, das bezogene Ferienguthaben wird per automatischer `CORRECTION`-Buchung im Ferienjournal erstattet und die Abwesenheit wird in allen Kalendern (`AbsenceCalendarView`, Monatsansichten) ausgeblendet.
+11. **Administrator-Selbstgenehmigung:** Benutzer mit Administratorrollen (`Admin`, `Administrator`, `StrolchAdmin`, `PrivilegeAdmin`) dürfen eigene Abwesenheitsanträge direkt (`directApprove = true`) sowie über die Genehmigungs-Queue freigeben und eigene Monatsperioden abschliessen. Für reguläre Mitarbeitende und Standard-Vorgesetzte bleibt die Selbstgenehmigung strikt blockiert.

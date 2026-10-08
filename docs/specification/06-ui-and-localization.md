@@ -70,10 +70,12 @@ chronivaro-web/src/main/webapp/
 
 - Erfassung von Abwesenheitsanträgen (als Entwurf speichern oder direkt einreichen).
 - Verwaltung von Entwürfen (`DRAFT`): Bearbeiten, Einreichen (`Submit`) oder Verwerfen (`Cancel`).
+- **Stornierung von Anträgen & genehmigten Ferien:** Mitarbeitende können eingereichte oder bereits genehmigte Abwesenheiten (`APPROVED`) in offenen Perioden stornieren. Beim Stornieren werden allfällige Ferienabzüge sofort erstattet.
 - Genehmigungshistorie und tabellarische/kartenbasierte Übersicht.
 - **Fremderfassung von Abwesenheiten:** Vorgesetzte (für zugeordnete Teammitglieder) und HR/Administratoren (unternehmensweit) können Abwesenheiten im Namen von Mitarbeitenden erfassen (wahlweise direkt genehmigt `APPROVED` oder als Antrag eingereicht `SUBMITTED`).
 - **Abwesenheitskalender (Team-/Mitarbeiter-Kalenderansicht):**
-  - Dedizierte interaktive Kalenderansicht zur visuellen Darstellung aller Abwesenheiten von Mitarbeitenden (Monats-, Wochen- oder Mehrwochenansicht mit Filterung nach Team/Standort/Mitarbeiter).
+  - Dedizierte interaktive Kalenderansicht zur visuellen Darstellung aller aktiven und genehmigten Abwesenheiten von Mitarbeitenden (Monats-, Wochen- oder Mehrwochenansicht mit Filterung nach Team/Standort/Mitarbeiter).
+  - **Ausschluss stornierter Abwesenheiten:** Stornierte Abwesenheiten (`status == CANCELLED`) werden im Abwesenheitskalender (`AbsenceCalendarView` Matrix und Monatsraster) explizit herausgefiltert und nicht visualisiert.
   - Direkte Erfassung von Abwesenheiten aus dem Kalender heraus per Klick auf Kalendertage/Zeitspannen für ausgewählte Mitarbeitende.
   - **Pikettstatus im Kalender:** Möglichkeit, im Kalender direkt den Pikettstatus / die Pikettperiode (`OnCallPeriod`) für einen Mitarbeiter über einen gewünschten Zeitraum (z. B. eine Woche oder n-Tage) einzutragen und zu verwalten.
 - Hohe visuelle Kontraste für alle Aktionsschaltflächen gemäss Barrierefreiheitsstandard (WCAG AA).
@@ -82,7 +84,7 @@ chronivaro-web/src/main/webapp/
 
 - Kontoübersicht mit Name und Personalnummer/Benutzername (keine rohe ID).
 - Jahresanspruch, Übertrag, bezogene und genehmigte zukünftige Ferien sowie Restguthaben.
-- Vollständige Kontobuchungstabelle mit sauber lokalisierten Buchungstypen und formatierten Werten (keine `undefined`-Werte).
+- Vollständige Kontobuchungstabelle mit sauber lokalisierten Buchungstypen (inkl. `CORRECTION`-Gutschriften bei stornierten Ferien) und formatierten Werten (keine `undefined`-Werte).
 
 ### 2.5 Status (Anwesenheitsseite)
 
@@ -96,6 +98,7 @@ chronivaro-web/src/main/webapp/
 
 - Übersicht offener Abwesenheitsanträge zur Genehmigung/Ablehnung mit Begründung.
 - Eingereichte Monatsabschlüsse mit vollständiger Inspektionsansicht des Monatsreports (`GET /approvals/periods/{id}`).
+- **Administrator-Selbstgenehmigung:** Inhaber von Administratorrollen (`Admin`, `Administrator`, `StrolchAdmin`, `PrivilegeAdmin`) können in der Genehmigungsansicht auch eigene Abwesenheitsanträge und Monatsabschlüsse direkt freigeben. Für reguläre Mitarbeitende und nicht-administrative Vorgesetzte sind Selbstgenehmigungs-Aktionen gesperrt.
 
 ### 2.7 Reports & Export
 

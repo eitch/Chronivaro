@@ -101,8 +101,8 @@ Do not continue with the next numbered task automatically.
 
 ## Specification Clarifications & Ambiguities
 
-### A. Working Location Half-Day Split Boundary (Sections 6.4 & 6.4.1)
-- **Clarification:** The specification requires that a workday may have at most one working location in the morning (`MORNING`) and one in the afternoon (`AFTERNOON`). The boundary between morning and afternoon is defined as 12:30 (or the midpoint of scheduled daily hours if explicitly calculated). Bookings spanning across morning and afternoon must be split into separate entries if the working location changes.
+### A. Flexible Workplace Switching (Sections 2.5, 6.4 & 6.4.1)
+- **Clarification:** The legacy morning/afternoon (12:30) half-day boundary for working locations is abolished. Users can freely start, stop, and switch working locations (`HOME_OFFICE`, `REMOTE`, `OFFICE`, `FIELD`) across multiple work entries on the same day without validation errors. Overlapping entries remain prohibited.
 
 ### B. REST Content Negotiation for Reports (Sections 13.2 & 13.8)
 - **Clarification:** Standard endpoints under `/rest/chronivaro/v1/reports/{type}` support format selection via `?format=json`, `?format=csv`, and `?format=pdf` query parameters, as well as HTTP `Accept` header content negotiation (`application/json`, `text/csv`, `application/pdf`). URL extensions (e.g. `/reports/month.pdf`) are supported as route aliases where required.
@@ -125,6 +125,12 @@ Do not continue with the next numbered task automatically.
 ### H. Work Entry Modifications, Highlighting, and Creator Attribution (Sections 3.1–3.3, 6.4, 9.3, 11, 12.1 #2, 13.2, 20)
 - **Clarification:** Employees can modify their own work entries (start time, end time, working location, comment) within open/unlocked periods. Supervisors (for assigned team members) and HR / Administrators (organization-wide) must be able to view, manually create (`POST`), fully edit (`PUT` start, end, location, comment), and delete (`DELETE`) work entries for employees within open/unlocked periods. All supervisor/HR and employee modifications generate structured, immutable audit log events recording old/new values, reasons, and the acting user.
 - **Highlighting & Creator Attribution:** All modified (subsequently edited) and manually created work entries (`source = MANUAL` or modified status) must be visually highlighted in the UI (e.g. badges or distinct styling in Day, Week, and Month views, as well as Approvals inspection and Reports). If an entry was not created by the employee (e.g. manually added by a supervisor or HR/Administrator), the UI and reports must explicitly display by whom (`createdBy`) it was created.
+
+### I. Approved Holiday Cancellation & Calendar Exclusion (Sections 2.8, 6.6)
+- **Clarification:** Users can cancel their approved holidays and absences in open periods. The absence transitions to `CANCELLED`, any deducted vacation days/hours are credited back via an automated `CORRECTION` entry in `VacationAccountEntry`, and the absence is excluded from rendering in `AbsenceCalendarView`.
+
+### J. Administrator Self-Approval (Sections 2.8, 2.11, 6.7, 7, 9)
+- **Clarification:** Users with administrator roles (`Admin`, `Administrator`, `StrolchAdmin`, `PrivilegeAdmin`) can self-approve their own absence requests (including direct approval on creation) and monthly time periods. Standard employees and non-admin supervisors remain strictly prohibited from self-approval under four-eyes rules.
 
 ---
 
@@ -184,7 +190,25 @@ The following foundational areas are verified as fully implemented in the reposi
 
 ## Prioritized Implementation Backlog
 
-*(All active backlog items completed. See IMPLEMENTATION_STATUS.md for summary.)*
+### Backlog Task 10: Flexible Workplace Switching (Sections 2.5, 6.4)
+- **Goal:** Remove the legacy 12:30 half-day boundary constraint and allow employees to record an arbitrary number of work entries with different working locations (`HOME_OFFICE`, `REMOTE`, `OFFICE`, `FIELD`) on the same workday without validation errors.
+- **Affected Components:**
+  - `chronivaro-core`: `WorkEntryHelper.validateWorkingLocation`
+  - Tests: `WorkEntryServiceTest`
+
+### Backlog Task 11: Approved Holiday Cancellation & Calendar Exclusion (Sections 2.8, 6.6)
+- **Goal:** Ensure cancelled holidays/absences are excluded from `AbsenceCalendarView` (matrix timeline and month grid) and reporting while preserving the existing automated `CORRECTION` refund in `VacationAccountEntry`.
+- **Affected Components:**
+  - `chronivaro-web`: `AbsenceCalendarView.js`
+  - `chronivaro-core`: `AbsenceReportService.java`
+  - Tests: `WebAbsenceCalendarUiTest.java`, `CancelAbsenceServiceTest.java`
+
+### Backlog Task 12: Administrator Self-Approval for Absences and Periods (Sections 2.8, 2.11, 6.7, 7, 9)
+- **Goal:** Update the authorization and validation model to allow users with administrator privileges (`Admin`, `Administrator`, `StrolchAdmin`, `PrivilegeAdmin`) to self-approve their own absence requests (including direct approval upon creation) and monthly time periods, while strictly maintaining self-approval prevention for standard employees and non-admin supervisors.
+- **Affected Components:**
+  - `chronivaro-core`: `ChronivaroModelHelper.assertCanManageEmployee`, `RequestAbsenceService`, `ApproveAbsenceService`, `ApprovePeriodService`
+  - `chronivaro-rest`: `ApprovalsResource`, `AbsenceResource`
+  - Tests: `AbsenceServiceTest`, `PeriodServiceTest`, `ApprovalsResourceTest`
 
 ---
 

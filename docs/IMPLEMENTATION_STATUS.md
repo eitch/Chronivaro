@@ -57,7 +57,9 @@ Audit date: 2026-08-28. `IMPLEMENTATION_SPECIFICATION.md` is authoritative; the 
 
 ## Incomplete Requirements / Active Backlog Tasks
 
-*(All active backlog items completed. See IMPLEMENTATION_BACKLOG.md for details.)*
+1. **Flexible Workplace Switching (Backlog Task 10, Sections 2.5, 6.4):** Remove the 12:30 noon boundary constraint in `WorkEntryHelper.validateWorkingLocation` allowing arbitrary working location changes across multiple work entries per workday.
+2. **Approved Holiday Cancellation & Calendar Exclusion (Backlog Task 11, Sections 2.8, 6.6):** Ensure cancelled holidays and absences are excluded from rendering in `AbsenceCalendarView` (matrix timeline and month grid) and reporting while preserving automated `CORRECTION` refund in `VacationAccountEntry`.
+3. **Administrator Self-Approval for Absences and Periods (Backlog Task 12, Sections 2.8, 2.11, 6.7, 7, 9):** Update `ChronivaroModelHelper.assertCanManageEmployee`, `RequestAbsenceService`, `ApproveAbsenceService`, `ApprovePeriodService`, and `ApprovalsResource` to allow users with administrator roles to self-approve absence requests and period closing.
 
 ---
 
@@ -70,7 +72,7 @@ Audit date: 2026-08-28. `IMPLEMENTATION_SPECIFICATION.md` is authoritative; the 
 
 ## Specification Ambiguities Clarified
 
-1. **Working Location Half-Day Split Boundary (Sections 6.4 & 6.4.1):** Cutoff between `MORNING` and `AFTERNOON` defined as 12:30 (or schedule midpoint).
+1. **Flexible Workplace Switching (Sections 2.5, 6.4 & 6.4.1):** The legacy 12:30 half-day boundary is abolished. Users can freely change working location (`HOME_OFFICE`, `REMOTE`, `OFFICE`, `FIELD`) across work entries throughout the day.
 2. **REST Route Naming Discrepancies (Sections 13.2 & 13.8):** Query parameters (`?format=pdf`), `Accept` headers, and route aliases are supported.
 3. **Negative Vacation Balances (Section 6.7.1 Rule 13):** Strictly prohibited; approvals exceeding available entitlement are blocked.
 4. **Mid-Month Employee Starts & Target Hours (Sections 6.2, 7.1):** Target minutes for days prior to `entryDate` are 0; calendar renders pre-entry days as inactive without missing booking warnings.
@@ -78,6 +80,8 @@ Audit date: 2026-08-28. `IMPLEMENTATION_SPECIFICATION.md` is authoritative; the 
 6. **REST Administrative Endpoints URI Structure (Sections 13.1 & 13.2):** Administrative endpoints are grouped under `/rest/chronivaro/v1/admin/*`.
 7. **Employee Inactivation vs Physical Deletion (Sections 6.1, 9.8, 10.5, 13.2):** Employee records are never physically deleted; user deletion performs soft employee deactivation.
 8. **Work Entry Modifications, Highlighting, and Creator Attribution (Sections 3.1–3.3, 6.4, 9.3, 11, 12.1 #2, 13.2, 20):** Employees can modify their own work entries (start time, end time, location, comment) and supervisors/HR/Administrators can view, create, edit, and delete entries within open periods with full audit logging. All modified and manually created entries must be highlighted, and entries created by someone other than the employee must display by whom it was created.
+9. **Approved Holiday Cancellation & Calendar Exclusion (Sections 2.8, 6.6):** Approved holidays and absences can be cancelled in open periods (`status = CANCELLED`), refunding deducted vacation time via an automated `CORRECTION` entry and excluding the absence from calendar views.
+10. **Administrator Self-Approval (Sections 2.8, 2.11, 6.7, 7, 9):** Users with administrator roles (`Admin`, `Administrator`, `StrolchAdmin`, `PrivilegeAdmin`) can self-approve their own absence requests and monthly time periods, whereas regular employees and non-admin supervisors remain subject to four-eyes rules.
 
 ---
 
