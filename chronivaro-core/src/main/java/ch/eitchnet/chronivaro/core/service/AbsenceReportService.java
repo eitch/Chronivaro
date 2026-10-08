@@ -64,6 +64,9 @@ public class AbsenceReportService extends AbstractService<AbsenceReportService.A
 			}
 
 			List<Resource> absences = search.search(tx).toList();
+			if (arg.state == null || arg.state.isEmpty()) {
+				absences = absences.stream().filter(a -> !STATE_CANCELLED.equals(a.getString(PARAM_STATE))).toList();
+			}
 
 			List<AbsenceReportItem> items = new ArrayList<>();
 			for (Resource absence : absences) {

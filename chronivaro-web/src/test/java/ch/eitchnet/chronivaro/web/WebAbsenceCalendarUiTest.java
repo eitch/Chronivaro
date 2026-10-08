@@ -69,6 +69,10 @@ public class WebAbsenceCalendarUiTest {
 		assertTrue("Must scope effective employees for non-managers", js.contains("!this.isManager && this.currentUserPrimaryTeamId"));
 		assertTrue("Must handle masked ABSENT type in getAbsenceShortLabel", js.contains("typeCode === 'ABSENT'"));
 		assertTrue("Must handle masked ABSENT type in openAbsenceDetailsModal", js.contains("displayType = (typeCode === 'ABSENT')"));
+
+		// Verify cancelled absence filtering
+		assertTrue("Must filter out CANCELLED absences in loadCalendarData",
+				js.contains("(a.state || a.status) !== 'CANCELLED'"));
 	}
 
 	@Test

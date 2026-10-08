@@ -534,7 +534,8 @@ export default class AbsenceCalendarView {
 
             const [absences, onCallList] = await Promise.all([absencePromise, onCallPromise]);
 
-            this.absences = Array.isArray(absences) ? absences : (absences.items || []);
+            const rawAbsences = Array.isArray(absences) ? absences : (absences.items || []);
+            this.absences = rawAbsences.filter(a => (a.state || a.status) !== 'CANCELLED');
             this.onCallPeriods = Array.isArray(onCallList) ? onCallList : (onCallList.data || []);
 
             this.renderCalendarContent(container);
@@ -638,6 +639,9 @@ export default class AbsenceCalendarView {
         }
 
         for (const abs of this.absences) {
+            if ((abs.state || abs.status) === 'CANCELLED') {
+                continue;
+            }
             const empId = abs.employeeId;
             let empDays = absenceMap.get(empId);
             if (!empDays) {
@@ -845,6 +849,9 @@ export default class AbsenceCalendarView {
         // Map absences: dayNumber -> list of absences
         const dayMap = new Map();
         for (const abs of this.absences) {
+            if ((abs.state || abs.status) === 'CANCELLED') {
+                continue;
+            }
             for (let d = 1; d <= daysInMonth; d++) {
                 const curStr = `${this.currentYear}-${String(this.currentMonth).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
                 if (curStr >= abs.start && curStr <= abs.end) {
