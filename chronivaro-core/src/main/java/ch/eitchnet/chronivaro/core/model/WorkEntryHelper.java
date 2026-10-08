@@ -14,8 +14,6 @@ import static java.util.Comparator.comparing;
 
 public class WorkEntryHelper {
 
-	public static final LocalTime NOON_BOUNDARY = LocalTime.of(12, 30);
-
 	public static Optional<Resource> findActiveWorkEntry(StrolchTransaction tx, String employeeId) {
 		Resource employee = tx.getResourceBy(TYPE_EMPLOYEE, employeeId, true);
 		String workDayId = employee.getRelationId(PARAM_CURRENT_WORK_DAY);
@@ -111,62 +109,6 @@ public class WorkEntryHelper {
 
 		if (!existing.isEmpty()) {
 			throw new IllegalArgumentException("Work entry overlaps with existing entries!");
-		}
-	}
-
-	public static void validateWorkingLocation(StrolchTransaction tx, String employeeId, ZonedDateTime start,
-			ZonedDateTime end, String workingLocation, String excludeId) {
-
-		if (workingLocation == null || workingLocation.isBlank())
-			return;
-
-		LocalDate date = start.toLocalDate();
-		LocalTime startTime = start.toLocalTime();
-		ZonedDateTime effectiveEnd = (end == null || end.getYear() == 1970) ? ZonedDateTime.now(start.getZone()) : end;
-		LocalTime endTime = effectiveEnd.toLocalTime();
-
-		boolean isMidnightEnd = effectiveEnd.equals(start.toLocalDate().plusDays(1).atStartOfDay(start.getZone()));
-
-		boolean touchesMorning = startTime.isBefore(NOON_BOUNDARY);
-		boolean touchesAfternoon = endTime.isAfter(NOON_BOUNDARY) || isMidnightEnd || startTime.isAfter(NOON_BOUNDARY) || startTime.equals(NOON_BOUNDARY);
-
-		List<Resource> workDays = tx
-				.streamResources(TYPE_WORK_DAY)
-				.filter(wd -> wd.getRelationId(PARAM_EMPLOYEE).equals(employeeId))
-				.filter(wd -> wd.getDate(PARAM_DATE).toLocalDate().equals(date))
-				.toList();
-
-		List<Resource> existingEntries = workDays
-				.stream()
-				.flatMap(wd -> tx.getResourcesByRelation(wd, PARAM_WORK_ENTRIES, true).stream())
-				.distinct()
-				.filter(e -> !e.getId().equals(excludeId))
-				.filter(e -> e.hasParameter(PARAM_WORKING_LOCATION) && !e.getString(PARAM_WORKING_LOCATION).isBlank())
-				.toList();
-
-		for (Resource existing : existingEntries) {
-			String existingLoc = existing.getString(PARAM_WORKING_LOCATION);
-			ZonedDateTime exStart = existing.getDate(PARAM_START);
-			ZonedDateTime exEnd = existing.getDate(PARAM_END);
-			ZonedDateTime exEffectiveEnd =
-					(exEnd == null || exEnd.getYear() == 1970) ? ZonedDateTime.now(exStart.getZone()) : exEnd;
-
-			boolean exIsMidnightEnd = exEffectiveEnd.equals(exStart.toLocalDate().plusDays(1).atStartOfDay(exStart.getZone()));
-
-			boolean exTouchesMorning = exStart.toLocalTime().isBefore(NOON_BOUNDARY);
-			boolean exTouchesAfternoon = exEffectiveEnd.toLocalTime().isAfter(NOON_BOUNDARY) || exIsMidnightEnd || exStart.toLocalTime().isAfter(NOON_BOUNDARY) || exStart.toLocalTime().equals(NOON_BOUNDARY);
-
-			if (touchesMorning && exTouchesMorning && !workingLocation.equals(existingLoc)) {
-				throw new IllegalArgumentException(
-						"A workday may have at most one working location in the morning: existing=" + existingLoc
-								+ ", requested=" + workingLocation);
-			}
-
-			if (touchesAfternoon && exTouchesAfternoon && !workingLocation.equals(existingLoc)) {
-				throw new IllegalArgumentException(
-						"A workday may have at most one working location in the afternoon: existing=" + existingLoc
-								+ ", requested=" + workingLocation);
-			}
 		}
 	}
 }

@@ -53,12 +53,8 @@ public class AddWorkEntryService extends AbstractService<AddWorkEntryService.Add
 				ZonedDateTime midnight = arg.start.toLocalDate().plusDays(1).atStartOfDay(arg.start.getZone());
 
 				WorkEntryHelper.validateNoOverlap(tx, arg.employeeId, arg.start, midnight, null);
-				WorkEntryHelper.validateWorkingLocation(tx, arg.employeeId, arg.start, midnight,
-						arg.workingLocation == null ? null : arg.workingLocation.name(), null);
 
 				WorkEntryHelper.validateNoOverlap(tx, arg.employeeId, midnight, arg.end, null);
-				WorkEntryHelper.validateWorkingLocation(tx, arg.employeeId, midnight, arg.end,
-						arg.workingLocation == null ? null : arg.workingLocation.name(), null);
 
 				// Entry 1 on start day
 				Resource workDay1 = WorkDayHelper.getOrCreateWorkDay(tx, employee, arg.start);
@@ -129,8 +125,6 @@ public class AddWorkEntryService extends AbstractService<AddWorkEntryService.Add
 
 			} else {
 				WorkEntryHelper.validateNoOverlap(tx, arg.employeeId, arg.start, arg.end, null);
-				WorkEntryHelper.validateWorkingLocation(tx, arg.employeeId, arg.start, arg.end,
-						arg.workingLocation == null ? null : arg.workingLocation.name(), null);
 
 				Resource workDay = WorkDayHelper.getOrCreateWorkDay(tx, employee, arg.start);
 

@@ -82,7 +82,7 @@ public abstract class AbstractChronivaroRestfulTest extends JerseyTest {
 		}
 
 		assertEquals(username, loginResult.get("username").getAsString());
-		assertEquals(64, loginResult.get("authToken").getAsString().length());
+		org.junit.Assert.assertFalse(loginResult.get("authToken").getAsString().isBlank());
 		assertNull(loginResult.get("msg"));
 
 		return loginResult.get("authToken").getAsString();

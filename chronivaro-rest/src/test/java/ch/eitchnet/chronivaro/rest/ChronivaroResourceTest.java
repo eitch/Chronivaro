@@ -106,12 +106,12 @@ public class ChronivaroResourceTest extends AbstractChronivaroRestfulTest {
 			org.junit.Assert.assertTrue(body.contains("INVALID_ENTRY_DURATION"));
 		}
 
-		// Conflicting morning location
-		String morningConflictJson = """
+		// Flexible morning location switching on the same day
+		String morningSwitchJson = """
 				{
 				  "start": "2025-01-01T07:00:00+01:00",
 				  "end": "2025-01-01T08:00:00+01:00",
-				  "comment": "Conflicting morning location",
+				  "comment": "Morning location switch",
 				  "workingLocation": "HOME_OFFICE"
 				}
 				""";
@@ -119,8 +119,8 @@ public class ChronivaroResourceTest extends AbstractChronivaroRestfulTest {
 				.path("chronivaro/v1/me/work-entries")
 				.request(MediaType.APPLICATION_JSON)
 				.header("Authorization", authToken)
-				.post(Entity.json(morningConflictJson))) {
-			assertEquals(Response.Status.BAD_REQUEST.getStatusCode(), response.getStatus());
+				.post(Entity.json(morningSwitchJson))) {
+			assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
 		}
 	}
 

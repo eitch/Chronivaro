@@ -81,8 +81,6 @@ public class CorrectWorkEntryService
 
 			if (arg.end == null) {
 				WorkEntryHelper.validateNoOverlap(tx, employeeId, arg.start, null, workEntry.getId());
-				WorkEntryHelper.validateWorkingLocation(tx, employeeId, arg.start, null,
-						arg.workingLocation == null ? null : arg.workingLocation.name(), workEntry.getId());
 
 				workEntry.setDate(PARAM_START, arg.start);
 				workEntry.setString(PARAM_COMMENT, arg.comment != null ? arg.comment.trim() : "");
@@ -129,12 +127,8 @@ public class CorrectWorkEntryService
 					ZonedDateTime midnight = arg.start.toLocalDate().plusDays(1).atStartOfDay(arg.start.getZone());
 
 					WorkEntryHelper.validateNoOverlap(tx, employeeId, arg.start, midnight, workEntry.getId());
-					WorkEntryHelper.validateWorkingLocation(tx, employeeId, arg.start, midnight,
-							arg.workingLocation == null ? null : arg.workingLocation.name(), workEntry.getId());
 
 					WorkEntryHelper.validateNoOverlap(tx, employeeId, midnight, arg.end, null);
-					WorkEntryHelper.validateWorkingLocation(tx, employeeId, midnight, arg.end,
-							arg.workingLocation == null ? null : arg.workingLocation.name(), null);
 
 					// 1. Update first entry up to midnight
 					workEntry.setDate(PARAM_START, arg.start);
@@ -205,8 +199,6 @@ public class CorrectWorkEntryService
 									employee.getString(PARAM_PERSONAL_NUMBER), midnight, arg.end, workEntry.getId()));
 				} else {
 					WorkEntryHelper.validateNoOverlap(tx, employeeId, arg.start, arg.end, workEntry.getId());
-					WorkEntryHelper.validateWorkingLocation(tx, employeeId, arg.start, arg.end,
-							arg.workingLocation == null ? null : arg.workingLocation.name(), workEntry.getId());
 
 					workEntry.setDate(PARAM_START, arg.start);
 					workEntry.setDate(PARAM_END, arg.end);

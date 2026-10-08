@@ -30,6 +30,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.List;
@@ -1033,5 +1034,87 @@ public class WorkEntryServiceTest {
 
 		ServiceResult correctRes = serviceHandler.doService(empCert, new CorrectWorkEntryService(), correctArg);
 		assertFalse("Moving start time to overlap with existing entry must fail", correctRes.isOk());
+	}
+
+	@Test
+	public void shouldAllowArbitraryWorkplaceSwitchingOnSameDay() {
+		String employeeId = "emp-flex-workplace";
+		String username = "emp_flex_workplace_user";
+
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
+			Resource employee = createEmployee(tx, employeeId, "Flexible Workplace Employee");
+			UserRep userRep = new UserRep(null, username, "Flex", "Employee", UserState.ENABLED, emptySet(),
+					Set.of(ROLE_EMPLOYEE, ROLE_MODEL_ACCESSOR), Locale.of("de", "CH"), emptyMap(), null);
+			UserRep addedUser = runtimeMock.getPrivilegeHandler().getPrivilegeHandler().addUser(certificate, userRep, username.toCharArray());
+
+			employee.setString(PARAM_USERNAME, addedUser.getUsername());
+			employee.setString(PARAM_USER_ID, addedUser.getUserId());
+			tx.update(employee);
+			tx.commitOnClose();
+		}
+
+		Certificate empCert = runtimeMock.login(username, username);
+		ServiceHandler serviceHandler = runtimeMock.getServiceHandler();
+
+		// Add entries with HOME_OFFICE, REMOTE, OFFICE, FIELD on the same workday
+		LocalDate testDate = LocalDate.parse("2026-06-15");
+		WorkingLocation[] locations = {
+				WorkingLocation.HOME_OFFICE,
+				WorkingLocation.REMOTE,
+				WorkingLocation.OFFICE,
+				WorkingLocation.FIELD
+		};
+		LocalTime[] startTimes = {
+				LocalTime.of(8, 0),
+				LocalTime.of(10, 0),
+				LocalTime.of(12, 0),
+				LocalTime.of(14, 0)
+		};
+		LocalTime[] endTimes = {
+				LocalTime.of(9, 30),
+				LocalTime.of(11, 30),
+				LocalTime.of(13, 30),
+				LocalTime.of(16, 0)
+		};
+
+		for (int i = 0; i < locations.length; i++) {
+			AddWorkEntryService.AddWorkEntryArgument arg = new AddWorkEntryService.AddWorkEntryArgument();
+			arg.employeeId = employeeId;
+			arg.start = testDate.atTime(startTimes[i]).atZone(ZoneId.of("Europe/Zurich"));
+			arg.end = testDate.atTime(endTimes[i]).atZone(ZoneId.of("Europe/Zurich"));
+			arg.workingLocation = locations[i];
+			ServiceResult res = serviceHandler.doService(certificate, new AddWorkEntryService(), arg);
+			assertTrue("Adding work entry with location " + locations[i] + " should succeed: " + res.getMessage(), res.isOk());
+		}
+
+		// Verify all 4 entries exist on the work day
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
+			List<Resource> entries = tx.streamResources(TYPE_WORK_ENTRY)
+					.filter(e -> employeeId.equals(e.getRelationId(PARAM_EMPLOYEE)))
+					.sorted(java.util.Comparator.comparing(e -> e.getDate(PARAM_START)))
+					.toList();
+			assertEquals(4, entries.size());
+			for (int i = 0; i < locations.length; i++) {
+				assertEquals(locations[i].name(), entries.get(i).getString(PARAM_WORKING_LOCATION));
+			}
+
+			// Correct one of the entries to change its location without restriction
+			String secondEntryId = entries.get(1).getId();
+			CorrectWorkEntryService.CorrectWorkEntryArgument correctArg = new CorrectWorkEntryService.CorrectWorkEntryArgument();
+			correctArg.workEntryId = secondEntryId;
+			correctArg.start = entries.get(1).getDate(PARAM_START);
+			correctArg.end = entries.get(1).getDate(PARAM_END);
+			correctArg.workingLocation = WorkingLocation.OFFICE;
+			ServiceResult correctRes = serviceHandler.doService(certificate, new CorrectWorkEntryService(), correctArg);
+			assertTrue("Correcting entry to another location should succeed: " + correctRes.getMessage(), correctRes.isOk());
+		}
+
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
+			List<Resource> entries = tx.streamResources(TYPE_WORK_ENTRY)
+					.filter(e -> employeeId.equals(e.getRelationId(PARAM_EMPLOYEE)))
+					.sorted(java.util.Comparator.comparing(e -> e.getDate(PARAM_START)))
+					.toList();
+			assertEquals(WorkingLocation.OFFICE.name(), entries.get(1).getString(PARAM_WORKING_LOCATION));
+		}
 	}
 }

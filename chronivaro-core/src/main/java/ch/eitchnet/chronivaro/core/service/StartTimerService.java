@@ -56,8 +56,6 @@ public class StartTimerService extends AbstractService<StartTimerService.Argumen
 			initVersion(workEntry, tx);
 
 			WorkEntryHelper.validateNoOverlap(tx, employee.getId(), now, null, null);
-			WorkEntryHelper.validateWorkingLocation(tx, employee.getId(), now, null,
-					arg.workingLocation == null ? null : arg.workingLocation.name(), null);
 
 			tx.add(workEntry);
 			workDay.addRelation(PARAM_WORK_ENTRIES, workEntry);

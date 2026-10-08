@@ -210,11 +210,11 @@ public class AddWorkEntryServiceTest {
 	}
 
 	@Test
-	public void shouldEnforceWorkingLocationConstraints() {
-		String employeeId = "emp-loc-constraints";
+	public void shouldAllowFlexibleWorkplaceSwitchingOnSameDay() {
+		String employeeId = "emp-loc-flexible";
 
 		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
-			createEmployee(tx, employeeId, "Location Constraint Emp");
+			createEmployee(tx, employeeId, "Location Flexible Emp");
 			tx.commitOnClose();
 		}
 
@@ -228,22 +228,21 @@ public class AddWorkEntryServiceTest {
 		m1.workingLocation = WorkingLocation.HOME_OFFICE;
 		assertTrue(serviceHandler.doService(certificate, new AddWorkEntryService(), m1).isOk());
 
-		// 2. Another morning entry with SAME location HOME_OFFICE (10:30 - 12:00) -> Allowed
+		// 2. Another morning entry with REMOTE (10:30 - 12:00) -> Allowed (flexible switching)
 		AddWorkEntryService.AddWorkEntryArgument m2 = new AddWorkEntryService.AddWorkEntryArgument();
 		m2.employeeId = employeeId;
 		m2.start = ZonedDateTime.parse("2026-05-10T10:30:00+02:00[Europe/Zurich]");
 		m2.end = ZonedDateTime.parse("2026-05-10T12:00:00+02:00[Europe/Zurich]");
-		m2.workingLocation = WorkingLocation.HOME_OFFICE;
+		m2.workingLocation = WorkingLocation.REMOTE;
 		assertTrue(serviceHandler.doService(certificate, new AddWorkEntryService(), m2).isOk());
 
-		// 3. Morning entry with CONFLICTING location OFFICE (12:00 - 12:30) -> Rejected
-		AddWorkEntryService.AddWorkEntryArgument mConflict = new AddWorkEntryService.AddWorkEntryArgument();
-		mConflict.employeeId = employeeId;
-		mConflict.start = ZonedDateTime.parse("2026-05-10T12:00:00+02:00[Europe/Zurich]");
-		mConflict.end = ZonedDateTime.parse("2026-05-10T12:30:00+02:00[Europe/Zurich]");
-		mConflict.workingLocation = WorkingLocation.OFFICE;
-		assertTrue("Conflicting morning location should be rejected",
-				serviceHandler.doService(certificate, new AddWorkEntryService(), mConflict).isNok());
+		// 3. Morning entry with OFFICE (12:00 - 12:30) -> Allowed (no 12:30 boundary constraint)
+		AddWorkEntryService.AddWorkEntryArgument m3 = new AddWorkEntryService.AddWorkEntryArgument();
+		m3.employeeId = employeeId;
+		m3.start = ZonedDateTime.parse("2026-05-10T12:00:00+02:00[Europe/Zurich]");
+		m3.end = ZonedDateTime.parse("2026-05-10T12:30:00+02:00[Europe/Zurich]");
+		m3.workingLocation = WorkingLocation.OFFICE;
+		assertTrue(serviceHandler.doService(certificate, new AddWorkEntryService(), m3).isOk());
 
 		// 4. Afternoon entry with FIELD (13:00 - 15:00) -> Allowed
 		AddWorkEntryService.AddWorkEntryArgument a1 = new AddWorkEntryService.AddWorkEntryArgument();
@@ -253,13 +252,19 @@ public class AddWorkEntryServiceTest {
 		a1.workingLocation = WorkingLocation.FIELD;
 		assertTrue(serviceHandler.doService(certificate, new AddWorkEntryService(), a1).isOk());
 
-		// 5. Afternoon entry with CONFLICTING location OFFICE (15:30 - 17:00) -> Rejected
-		AddWorkEntryService.AddWorkEntryArgument aConflict = new AddWorkEntryService.AddWorkEntryArgument();
-		aConflict.employeeId = employeeId;
-		aConflict.start = ZonedDateTime.parse("2026-05-10T15:30:00+02:00[Europe/Zurich]");
-		aConflict.end = ZonedDateTime.parse("2026-05-10T17:00:00+02:00[Europe/Zurich]");
-		aConflict.workingLocation = WorkingLocation.OFFICE;
-		assertTrue("Conflicting afternoon location should be rejected",
-				serviceHandler.doService(certificate, new AddWorkEntryService(), aConflict).isNok());
+		// 5. Afternoon entry with OFFICE (15:30 - 17:00) -> Allowed (different location in afternoon)
+		AddWorkEntryService.AddWorkEntryArgument a2 = new AddWorkEntryService.AddWorkEntryArgument();
+		a2.employeeId = employeeId;
+		a2.start = ZonedDateTime.parse("2026-05-10T15:30:00+02:00[Europe/Zurich]");
+		a2.end = ZonedDateTime.parse("2026-05-10T17:00:00+02:00[Europe/Zurich]");
+		a2.workingLocation = WorkingLocation.OFFICE;
+		assertTrue(serviceHandler.doService(certificate, new AddWorkEntryService(), a2).isOk());
+
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
+			List<Resource> workEntries = tx.streamResources(TYPE_WORK_ENTRY)
+					.filter(we -> employeeId.equals(we.getRelationId(PARAM_EMPLOYEE)))
+					.toList();
+			assertEquals(5, workEntries.size());
+		}
 	}
 }
