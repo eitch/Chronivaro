@@ -187,17 +187,13 @@ The following foundational areas are verified as fully implemented in the reposi
 - **Personal Access Tokens (PAT) Web UI & Management (Backlog Task 9, Section 2.9 in UI Spec, Section 4.6 Localization):** Implemented API client `TokenApi.js` in `chronivaro-web`; added `TokensView.js` (`#tokens`) accessible from user dropdown and profile view; built tokens table displaying names, presets, valid ranges, last used timestamps, status badges, and revocation actions; implemented token creation modal supporting presets (`DESKTOP_TIMER`, `READ_ONLY_TIMES`, `FULL_PERSONAL`), 1-year default expiry, and no-expiration checkbox; implemented secure one-time secret display modal with copy-to-clipboard functionality and security warning; integrated admin user token inspection and revocation modal into `UsersView.js`; added full i18n translation key coverage across `de.json` and `en.json`; verified with comprehensive unit and UI test suites in `WebTokensUiTest`, `WebNavigationUiTest`, and `I18nKeyParityTest`.
 - **Flexible Workplace Switching (Backlog Task 10, Sections 2.5, 6.4):** Removed the legacy 12:30 half-day boundary constraint and `validateWorkingLocation` checks across `WorkEntryHelper`, `AddWorkEntryService`, `CorrectWorkEntryService`, and `StartTimerService`, allowing employees to record an arbitrary number of work entries with different working locations (`HOME_OFFICE`, `REMOTE`, `OFFICE`, `FIELD`) on the same workday without validation errors; verified with comprehensive unit and REST integration tests.
 - **Approved Holiday Cancellation & Calendar Exclusion (Backlog Task 11, Sections 2.8, 6.6):** Ensured cancelled absences and holidays are excluded from `AbsenceCalendarView` (matrix timeline and month grid) and default absence reporting (`AbsenceReportService`), while preserving automated `CORRECTION` refund in `VacationAccountEntry` upon cancelling approved vacation absences; verified with unit tests in `CancelAbsenceServiceTest` and UI tests in `WebAbsenceCalendarUiTest`.
+- **Administrator Self-Approval for Absences and Periods (Backlog Task 12, Sections 2.8, 2.11, 6.7, 7, 9):** Updated authorization helper `ChronivaroModelHelper.assertCanManageEmployee` and `RequestAbsenceService` to allow users with administrator privileges (`Admin`, `Administrator`, `StrolchAdmin`, `PrivilegeAdmin`) to self-approve their own absence requests (including direct approval upon creation via `RequestAbsenceService` / `ChronivaroResource`) and approve their own submitted monthly time periods via `ApprovePeriodService` / `ApprovalsResource` / `PeriodResource`, while strictly maintaining self-approval prevention for regular employees, non-admin supervisors, and non-admin HR users; updated `MyAbsencesView.js` to enable direct approval controls for administrators when requesting absences for themselves; covered by comprehensive unit and REST integration tests in `AbsenceServiceTest` and `ApprovalsQueueTest`.
 
 ---
 
 ## Prioritized Implementation Backlog
 
-### Backlog Task 12: Administrator Self-Approval for Absences and Periods (Sections 2.8, 2.11, 6.7, 7, 9)
-- **Goal:** Update the authorization and validation model to allow users with administrator privileges (`Admin`, `Administrator`, `StrolchAdmin`, `PrivilegeAdmin`) to self-approve their own absence requests (including direct approval upon creation) and monthly time periods, while strictly maintaining self-approval prevention for standard employees and non-admin supervisors.
-- **Affected Components:**
-  - `chronivaro-core`: `ChronivaroModelHelper.assertCanManageEmployee`, `RequestAbsenceService`, `ApproveAbsenceService`, `ApprovePeriodService`
-  - `chronivaro-rest`: `ApprovalsResource`, `AbsenceResource`
-  - Tests: `AbsenceServiceTest`, `PeriodServiceTest`, `ApprovalsResourceTest`
+*All prioritized backlog tasks have been completed and verified against the specification and repository baseline.*
 
 ---
 
