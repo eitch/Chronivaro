@@ -52,7 +52,7 @@ public class RequestAbsenceService extends AbstractService<RequestAbsenceService
 				ChronivaroModelHelper.assertCanManageEmployee(tx, arg.employeeId);
 
 			boolean isApproved = arg.directApprove || STATE_APPROVED.equalsIgnoreCase(arg.state);
-			if (isApproved && isSelf) {
+			if (isApproved && isSelf && !ChronivaroModelHelper.isAdmin(tx)) {
 				// Employees cannot directly self-approve absences
 				throw new IllegalArgumentException("Employees cannot self-approve absence requests.");
 			}

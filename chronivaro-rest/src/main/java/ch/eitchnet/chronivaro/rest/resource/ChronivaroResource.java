@@ -692,6 +692,7 @@ public class ChronivaroResource {
 		arg.minutes = dto.minutes() == null ? 0 : dto.minutes();
 		arg.comment = dto.comment();
 		arg.state = dto.state();
+		arg.directApprove = STATE_APPROVED.equalsIgnoreCase(dto.state());
 
 		StringResult result = serviceHandler.doService(cert, new RequestAbsenceService(), arg);
 		if (result.isOk()) {

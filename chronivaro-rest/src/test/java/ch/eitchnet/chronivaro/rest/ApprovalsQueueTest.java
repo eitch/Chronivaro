@@ -189,10 +189,42 @@ public class ApprovalsQueueTest extends AbstractChronivaroRestfulTest {
 			emp2.setRelation(PARAM_CURRENT_SCHEDULE, sched2);
 			tx.add(emp2);
 
+			// Admin Employee
+			Resource empAdmin = tx.getResourceTemplate(TYPE_EMPLOYEE, true);
+			empAdmin.setId("admin_emp");
+			empAdmin.setName("Admin User");
+			empAdmin.setString(PARAM_FIRSTNAME, "Admin");
+			empAdmin.setString(PARAM_LASTNAME, "User");
+			empAdmin.setString(PARAM_TIMEZONE, ZONE);
+			empAdmin.setDate(PARAM_JOIN_DATE, LocalDate.of(2025, 1, 1).atStartOfDay(ZoneId.of(ZONE)));
+			empAdmin.setBoolean(PARAM_ACTIVE, true);
+			empAdmin.setString(PARAM_USERNAME, "admin");
+			empAdmin.setString(PARAM_USER_ID, "admin");
+			empAdmin.setRelation(PARAM_LOCATION, loc);
+			empAdmin.setRelation(PARAM_PRIMARY_TEAM, team1);
+
+			Resource schedAdmin = tx.getResourceTemplate(TYPE_EMPLOYMENT_SCHEDULE, true);
+			schedAdmin.setId("sched-emp-admin");
+			schedAdmin.setName("Schedule Admin");
+			schedAdmin.setRelation(PARAM_EMPLOYEE, empAdmin);
+			schedAdmin.setDate(PARAM_VALID_FROM, LocalDate.of(2025, 1, 1).atStartOfDay(ZoneId.of(ZONE)));
+			schedAdmin.setDouble(PARAM_EMPLOYMENT_RATE, 1.0);
+			schedAdmin.setInteger(PARAM_DAILY_TARGET_MINUTES_MONDAY, 480);
+			schedAdmin.setInteger(PARAM_DAILY_TARGET_MINUTES_TUESDAY, 480);
+			schedAdmin.setInteger(PARAM_DAILY_TARGET_MINUTES_WEDNESDAY, 480);
+			schedAdmin.setInteger(PARAM_DAILY_TARGET_MINUTES_THURSDAY, 480);
+			schedAdmin.setInteger(PARAM_DAILY_TARGET_MINUTES_FRIDAY, 480);
+			schedAdmin.setInteger(PARAM_DAILY_TARGET_MINUTES_SATURDAY, 0);
+			schedAdmin.setInteger(PARAM_DAILY_TARGET_MINUTES_SUNDAY, 0);
+			schedAdmin.setInteger(PARAM_WEEKLY_TARGET_MINUTES, 2400);
+			tx.add(schedAdmin);
+			empAdmin.setRelation(PARAM_CURRENT_SCHEDULE, schedAdmin);
+			tx.add(empAdmin);
+
 			tx.commitOnClose();
 		}
 
-		// Credit vacation entitlement for 2026 for all three test employees
+		// Credit vacation entitlement for 2026 for all test employees
 		CreditVacationEntitlementService.CreditVacationEntitlementArgument creditArg =
 				new CreditVacationEntitlementService.CreditVacationEntitlementArgument();
 		creditArg.year = 2026;
@@ -203,6 +235,9 @@ public class ApprovalsQueueTest extends AbstractChronivaroRestfulTest {
 		runtimeMock.getServiceHandler().doService(runtimeMock.loginAdmin(), new CreditVacationEntitlementService(), creditArg);
 
 		creditArg.employeeId = "marketing_emp";
+		runtimeMock.getServiceHandler().doService(runtimeMock.loginAdmin(), new CreditVacationEntitlementService(), creditArg);
+
+		creditArg.employeeId = "admin_emp";
 		runtimeMock.getServiceHandler().doService(runtimeMock.loginAdmin(), new CreditVacationEntitlementService(), creditArg);
 	}
 
@@ -379,6 +414,46 @@ public class ApprovalsQueueTest extends AbstractChronivaroRestfulTest {
 				.post(Entity.json(""))) {
 			assertEquals(200, response.getStatus());
 		}
+
+		// 12. Admin can create directly-approved absence for self -> SUCCESS
+		String adminReq = """
+				{
+				  "absenceTypeCode": "VACATION",
+				  "start": "2026-06-15T08:00:00+02:00",
+				  "end": "2026-06-15T17:00:00+02:00",
+				  "durationType": "full_day",
+				  "comment": "Admin self vacation",
+				  "state": "APPROVED"
+				}
+				""";
+		try (Response response = target()
+				.path("chronivaro/v1/me/absences")
+				.request(MediaType.APPLICATION_JSON)
+				.header(HttpHeaders.AUTHORIZATION, adminToken)
+				.post(Entity.json(adminReq))) {
+			assertEquals(200, response.getStatus());
+			AbsenceDto dto = ChronivaroRestHelper.createGson().fromJson(response.readEntity(String.class), AbsenceDto.class);
+			assertEquals("APPROVED", dto.state());
+		}
+
+		// 13. Supervisor attempts to create directly-approved absence for self -> 400 BAD REQUEST
+		String supDirectReq = """
+				{
+				  "absenceTypeCode": "VACATION",
+				  "start": "2026-06-16T08:00:00+02:00",
+				  "end": "2026-06-16T17:00:00+02:00",
+				  "durationType": "full_day",
+				  "comment": "Supervisor direct self",
+				  "state": "APPROVED"
+				}
+				""";
+		try (Response response = target()
+				.path("chronivaro/v1/me/absences")
+				.request(MediaType.APPLICATION_JSON)
+				.header(HttpHeaders.AUTHORIZATION, supervisorToken)
+				.post(Entity.json(supDirectReq))) {
+			assertEquals(400, response.getStatus());
+		}
 	}
 
 	@Test
@@ -531,6 +606,30 @@ public class ApprovalsQueueTest extends AbstractChronivaroRestfulTest {
 				.header(HttpHeaders.AUTHORIZATION, hrToken)
 				.post(Entity.json(approveReq.toString()))) {
 			assertEquals(200, response.getStatus());
+		}
+
+		// 9. Admin submits own period and approves own period -> SUCCESS
+		JsonObject adminSubmitReq = new JsonObject();
+		adminSubmitReq.addProperty("comment", "Admin March Submit");
+		try (Response response = target()
+				.path("chronivaro/v1/me/periods/2026-03/submit")
+				.request(MediaType.APPLICATION_JSON)
+				.header(HttpHeaders.AUTHORIZATION, adminToken)
+				.post(Entity.json(adminSubmitReq.toString()))) {
+			assertEquals(200, response.getStatus());
+		}
+
+		String adminPeriodId = PeriodHelper.getPeriodId("admin_emp", YearMonth.of(2026, 3));
+		JsonObject adminApproveReq = new JsonObject();
+		adminApproveReq.addProperty("comment", "Admin self approved");
+		try (Response response = target()
+				.path("chronivaro/v1/approvals/periods/" + adminPeriodId + "/approve")
+				.request(MediaType.APPLICATION_JSON)
+				.header(HttpHeaders.AUTHORIZATION, adminToken)
+				.post(Entity.json(adminApproveReq.toString()))) {
+			assertEquals(200, response.getStatus());
+			PeriodStatusDto dto = ChronivaroRestHelper.createGson().fromJson(response.readEntity(String.class), PeriodStatusDto.class);
+			assertEquals("APPROVED", dto.status());
 		}
 	}
 

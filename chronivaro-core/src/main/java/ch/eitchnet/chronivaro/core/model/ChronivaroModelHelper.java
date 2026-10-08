@@ -55,12 +55,16 @@ public class ChronivaroModelHelper {
 				.toList();
 	}
 
+	public static boolean isAdmin(StrolchTransaction tx) {
+		return tx.getPrivilegeContext().hasRole("Admin")
+				|| tx.getPrivilegeContext().hasRole(ROLE_ADMIN)
+				|| tx.getPrivilegeContext().hasRole(ROLE_ADMINISTRATOR)
+				|| tx.getPrivilegeContext().hasRole(ROLE_STROLCH_ADMIN)
+				|| tx.getPrivilegeContext().hasRole(ROLE_PRIVILEGE_ADMIN);
+	}
+
 	public static List<String> getSupervisedEmployeeIds(StrolchTransaction tx, Certificate cert) {
-		if (tx.getPrivilegeContext().hasRole(ROLE_HR) || tx.getPrivilegeContext().hasRole(ROLE_ADMIN) || tx
-				.getPrivilegeContext()
-				.hasRole(ROLE_ADMINISTRATOR) || tx.getPrivilegeContext().hasRole(ROLE_STROLCH_ADMIN) || tx
-				.getPrivilegeContext()
-				.hasRole(ROLE_PRIVILEGE_ADMIN)) {
+		if (isAdmin(tx) || tx.getPrivilegeContext().hasRole(ROLE_HR)) {
 			return tx.streamResources(TYPE_EMPLOYEE).map(Resource::getId).toList();
 		}
 
@@ -107,11 +111,18 @@ public class ChronivaroModelHelper {
 	}
 
 	public static void assertCanManageEmployee(StrolchTransaction tx, String targetEmployeeId) {
-		if (tx.getPrivilegeContext().hasRole(ROLE_HR) || tx.getPrivilegeContext().hasRole(ROLE_ADMIN) || tx
-				.getPrivilegeContext()
-				.hasRole(ROLE_ADMINISTRATOR) || tx.getPrivilegeContext().hasRole(ROLE_STROLCH_ADMIN) || tx
-				.getPrivilegeContext()
-				.hasRole(ROLE_PRIVILEGE_ADMIN)) {
+		if (isAdmin(tx)) {
+			return;
+		}
+
+		Optional<Resource> currentEmp = findEmployeeByUser(tx, tx.getCertificate().getUserId());
+		boolean isSelf = currentEmp.isPresent() && currentEmp.get().getId().equals(targetEmployeeId);
+
+		if (tx.getPrivilegeContext().hasRole(ROLE_HR)) {
+			if (isSelf) {
+				throw new AccessDeniedException(
+						"Access denied: HR users without administrator role cannot approve or reject their own requests.");
+			}
 			return;
 		}
 
@@ -123,8 +134,7 @@ public class ChronivaroModelHelper {
 			}
 
 			// Self-approval restriction
-			Optional<Resource> currentEmp = findEmployeeByUser(tx, tx.getCertificate().getUserId());
-			if (currentEmp.isPresent() && currentEmp.get().getId().equals(targetEmployeeId)) {
+			if (isSelf) {
 				throw new AccessDeniedException(
 						"Access denied: Supervisors cannot approve or reject their own requests.");
 			}

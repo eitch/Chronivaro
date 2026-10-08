@@ -578,6 +578,100 @@ public class AbsenceServiceTest {
 
 		li.strolch.service.StringResult selfResult = serviceHandler.doService(supervisorCert, new RequestAbsenceService(), selfArg);
 		assertTrue("Supervisor cannot direct self-approve", selfResult.isNok());
+
+		// 3. Supervisor cannot self-approve own submitted absence via ApproveAbsenceService
+		selfArg.directApprove = false;
+		li.strolch.service.StringResult submitResult = serviceHandler.doService(supervisorCert, new RequestAbsenceService(), selfArg);
+		assertTrue(submitResult.getMessage(), submitResult.isOk());
+		String supervisorAbsenceId = submitResult.getValue();
+
+		ServiceResult approveSelfResult = serviceHandler.doService(supervisorCert, new ApproveAbsenceService(),
+				new StringArgument(supervisorAbsenceId));
+		assertTrue("Supervisor cannot self-approve own absence via ApproveAbsenceService", approveSelfResult.isNok());
+
+		// 4. Admin CAN direct self-approve own absence
+		String adminEmpId = "emp-admin-direct-test";
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
+			Resource adminEmp = createEmployee(tx, adminEmpId, "Admin Direct Test");
+			adminEmp.setString(PARAM_USER_ID, "admin");
+			adminEmp.setString(PARAM_USERNAME, "admin");
+			tx.update(adminEmp);
+
+			Resource schedule = tx.getResourceByRelation(adminEmp, PARAM_CURRENT_SCHEDULE, true);
+			schedule.setInteger(PARAM_DAILY_TARGET_MINUTES + "Thursday", 480);
+			tx.update(schedule);
+
+			Resource entry = tx.getResourceTemplate(TYPE_VACATION_ACCOUNT_ENTRY, true);
+			entry.setName("Initial Entitlement");
+			entry.setRelation(PARAM_EMPLOYEE, adminEmp);
+			entry.setDate(PARAM_DATE, ZonedDateTime.parse("2026-01-01T00:00:00Z"));
+			entry.setString(PARAM_VACATION_TYPE, VACATION_ENTITLEMENT);
+			entry.setInteger(PARAM_VALUE, 10 * 480);
+			tx.add(entry);
+
+			tx.commitOnClose();
+		}
+
+		RequestAbsenceService.RequestAbsenceArgument adminDirectArg = new RequestAbsenceService.RequestAbsenceArgument();
+		adminDirectArg.employeeId = adminEmpId;
+		adminDirectArg.absenceTypeCode = "VACATION";
+		adminDirectArg.start = ZonedDateTime.parse("2026-07-16T00:00:00+02:00[Europe/Zurich]");
+		adminDirectArg.end = ZonedDateTime.parse("2026-07-16T23:59:59+02:00[Europe/Zurich]");
+		adminDirectArg.durationType = DURATION_FULL_DAY;
+		adminDirectArg.directApprove = true;
+
+		li.strolch.service.StringResult adminDirectRes = serviceHandler.doService(certificate, new RequestAbsenceService(), adminDirectArg);
+		assertTrue(adminDirectRes.getMessage(), adminDirectRes.isOk());
+
+		// 5. HR user without admin role cannot self-approve own absence
+		String hrEmpId = "hr-self-emp-test";
+		String hrUserId = "hr-user-self-test";
+		Certificate hrCert;
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
+			Resource hrEmp = createEmployee(tx, hrEmpId, "HR Self Test");
+			hrEmp.setString(PARAM_USER_ID, hrUserId);
+			hrEmp.setString(PARAM_USERNAME, hrUserId);
+			hrEmp.setRelation(PARAM_PRIMARY_TEAM, tx.getResourceBy(TYPE_TEAM, "team-abs-mgmt", true));
+			tx.update(hrEmp);
+
+			Resource schedule = tx.getResourceByRelation(hrEmp, PARAM_CURRENT_SCHEDULE, true);
+			schedule.setInteger(PARAM_DAILY_TARGET_MINUTES + "Thursday", 480);
+			tx.update(schedule);
+
+			Resource entry = tx.getResourceTemplate(TYPE_VACATION_ACCOUNT_ENTRY, true);
+			entry.setName("Initial Entitlement");
+			entry.setRelation(PARAM_EMPLOYEE, hrEmp);
+			entry.setDate(PARAM_DATE, ZonedDateTime.parse("2026-01-01T00:00:00Z"));
+			entry.setString(PARAM_VACATION_TYPE, VACATION_ENTITLEMENT);
+			entry.setInteger(PARAM_VALUE, 10 * 480);
+			tx.add(entry);
+
+			tx.commitOnClose();
+
+			UserRep userRep = new UserRep(null, hrUserId, "HR", "User", UserState.ENABLED, emptySet(),
+					Set.of(ROLE_HR, ROLE_EMPLOYEE, ROLE_MODEL_ACCESSOR), Locale.of("de", "CH"), emptyMap(), null);
+			runtimeMock.getPrivilegeHandler().getPrivilegeHandler().addUser(certificate, userRep, hrUserId.toCharArray());
+			hrCert = runtimeMock.login(hrUserId, hrUserId);
+		}
+
+		RequestAbsenceService.RequestAbsenceArgument hrDirectArg = new RequestAbsenceService.RequestAbsenceArgument();
+		hrDirectArg.employeeId = hrEmpId;
+		hrDirectArg.absenceTypeCode = "VACATION";
+		hrDirectArg.start = ZonedDateTime.parse("2026-07-23T00:00:00+02:00[Europe/Zurich]");
+		hrDirectArg.end = ZonedDateTime.parse("2026-07-23T23:59:59+02:00[Europe/Zurich]");
+		hrDirectArg.durationType = DURATION_FULL_DAY;
+		hrDirectArg.directApprove = true;
+
+		li.strolch.service.StringResult hrDirectRes = serviceHandler.doService(hrCert, new RequestAbsenceService(), hrDirectArg);
+		assertTrue("HR without admin role cannot direct self-approve", hrDirectRes.isNok());
+
+		hrDirectArg.directApprove = false;
+		li.strolch.service.StringResult hrSubmitRes = serviceHandler.doService(hrCert, new RequestAbsenceService(), hrDirectArg);
+		assertTrue(hrSubmitRes.getMessage(), hrSubmitRes.isOk());
+
+		ServiceResult hrApproveSelfRes = serviceHandler.doService(hrCert, new ApproveAbsenceService(),
+				new StringArgument(hrSubmitRes.getValue()));
+		assertTrue("HR without admin role cannot approve own absence", hrApproveSelfRes.isNok());
 	}
 
 	@Test

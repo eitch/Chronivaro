@@ -17,8 +17,9 @@ export default class MyAbsencesView {
         this.selectedTeamId = '';
         this.selectedEmployeeId = '';
         this.currentUserEmployeeId = null;
-        this.canManage = AuthApi.hasRole('Supervisor') || AuthApi.hasRole('HR')
-                || AuthApi.hasRole('Administrator') || AuthApi.hasRole('StrolchAdmin');
+        this.isAdmin = AuthApi.hasRole('Admin') || AuthApi.hasRole('Administrator')
+                || AuthApi.hasRole('StrolchAdmin') || AuthApi.hasRole('PrivilegeAdmin');
+        this.canManage = AuthApi.hasRole('Supervisor') || AuthApi.hasRole('HR') || this.isAdmin;
     }
 
     async render() {
@@ -695,6 +696,7 @@ export default class MyAbsencesView {
         requestAbsenceBtn.addEventListener('click', () => {
             currentEditingAbsence = null;
             const managingOther = isManagingOther();
+            const canDirectApprove = managingOther || this.isAdmin;
 
             if (modalTitle) {
                 modalTitle.textContent = managingOther 
@@ -713,8 +715,8 @@ export default class MyAbsencesView {
             }
 
             if (modalApprovalModeGroup) {
-                modalApprovalModeGroup.style.display = managingOther ? 'block' : 'none';
-                if (modalDirectApprove) modalDirectApprove.checked = true;
+                modalApprovalModeGroup.style.display = canDirectApprove ? 'block' : 'none';
+                if (modalDirectApprove) modalDirectApprove.checked = canDirectApprove;
             }
 
             if (saveDraftBtn) {
@@ -722,7 +724,9 @@ export default class MyAbsencesView {
             }
 
             if (modalSubmitBtn) {
-                modalSubmitBtn.textContent = managingOther ? I18n.t('common.save') : I18n.t('absences.submitDraft');
+                modalSubmitBtn.textContent = (managingOther || (this.isAdmin && modalDirectApprove && modalDirectApprove.checked))
+                    ? I18n.t('common.save')
+                    : I18n.t('absences.submitDraft');
             }
 
             const todayStr = Format.date(new Date());
@@ -814,7 +818,7 @@ export default class MyAbsencesView {
             }
 
             const managingOther = isManagingOther();
-            const directApprove = managingOther && modalDirectApprove && modalDirectApprove.checked;
+            const directApprove = (managingOther || this.isAdmin) && modalDirectApprove && modalDirectApprove.checked;
 
             const payload = {
                 absenceTypeCode,
@@ -855,7 +859,10 @@ export default class MyAbsencesView {
                     await NotificationDialog.info(msg);
                 } else {
                     await AbsenceApi.requestAbsence(payload);
-                    await NotificationDialog.info(I18n.t('absences.requestSubmitted'));
+                    const msg = directApprove 
+                        ? I18n.t('absences.absenceCreatedDirectlyApproved')
+                        : I18n.t('absences.requestSubmitted');
+                    await NotificationDialog.info(msg);
                 }
                 modal.style.display = 'none';
                 currentEditingAbsence = null;
