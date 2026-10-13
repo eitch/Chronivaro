@@ -4,12 +4,14 @@ import ch.eitchnet.chronivaro.core.service.CreateLocationService;
 import ch.eitchnet.chronivaro.core.service.RemoveLocationService;
 import ch.eitchnet.chronivaro.core.service.UpdateLocationService;
 import ch.eitchnet.chronivaro.rest.dto.LocationDto;
+import com.google.gson.JsonObject;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import li.strolch.model.Resource;
+import li.strolch.model.Tags;
 import li.strolch.persistence.api.StrolchTransaction;
 import li.strolch.privilege.model.Certificate;
 import li.strolch.rest.StrolchRestfulConstants;
@@ -18,6 +20,8 @@ import li.strolch.service.api.ServiceHandler;
 import li.strolch.service.api.ServiceResult;
 
 import java.util.List;
+
+import static ch.eitchnet.chronivaro.core.model.ChronivaroConstants.PARAM_NAME;
 
 import static ch.eitchnet.chronivaro.core.model.ChronivaroConstants.TYPE_LOCATION;
 import static ch.eitchnet.chronivaro.rest.dto.ChronivaroMapper.locationToDto;
@@ -60,7 +64,21 @@ public class LocationResource {
 		arg.timezone = dto.timezone();
 		arg.holidayCalendarId = dto.holidayCalendarId();
 
-		ServiceResult result = serviceHandler.doService(cert, new CreateLocationService(), arg);
+ 		ServiceResult result = serviceHandler.doService(cert, new CreateLocationService(), arg);
+		if (result.isOk()) {
+			try (StrolchTransaction tx = ChronivaroRestHelper.openTx(cert)) {
+				Resource location = tx
+						.streamResources(TYPE_LOCATION)
+						.filter(r -> r.getString(PARAM_NAME).equals(arg.name))
+						.findFirst()
+						.orElse(null);
+				if (location != null) {
+					JsonObject json = new JsonObject();
+					json.addProperty(Tags.Json.VALUE, location.getId());
+					return ConcurrencyHelper.toResponseWithETag(location, json);
+				}
+			}
+		}
 		return ChronivaroRestHelper.toResponse(result);
 	}
 

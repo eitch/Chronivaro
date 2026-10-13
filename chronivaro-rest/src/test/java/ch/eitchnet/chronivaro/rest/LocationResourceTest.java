@@ -2,6 +2,8 @@ package ch.eitchnet.chronivaro.rest;
 
 import ch.eitchnet.chronivaro.rest.dto.LocationDto;
 import ch.eitchnet.chronivaro.rest.resource.ChronivaroRestHelper;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
 import jakarta.ws.rs.client.Entity;
 import jakarta.ws.rs.core.MediaType;
@@ -23,32 +25,15 @@ public class LocationResourceTest extends AbstractChronivaroRestfulTest {
 		LocationDto newLocation = new LocationDto(null, "Test Location", "Europe/Zurich", "calendar-1", "calendar-1");
 		String json = ChronivaroRestHelper.createGson().toJson(newLocation);
 
+		String locationId;
 		try (Response response = target()
 				.path("chronivaro/v1/admin/locations")
 				.request(MediaType.APPLICATION_JSON)
 				.header("Authorization", authToken)
 				.post(Entity.json(json))) {
 			assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
-		}
-
-		String locationId;
-		// Get all
-		try (Response response = target()
-				.path("chronivaro/v1/admin/locations")
-				.request(MediaType.APPLICATION_JSON)
-				.header("Authorization", authToken)
-				.get()) {
-			assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
-			List<LocationDto> locations = ChronivaroRestHelper
-					.createGson()
-					.fromJson(response.readEntity(String.class), new TypeToken<List<LocationDto>>() {
-					}.getType());
-			locationId = locations
-					.stream()
-					.filter(l -> l.name().equals("Test Location"))
-					.findFirst()
-					.orElseThrow()
-					.id();
+			JsonObject result = JsonParser.parseString(response.readEntity(String.class)).getAsJsonObject();
+			locationId = result.get("value").getAsString();
 		}
 
 		// Update
