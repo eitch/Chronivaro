@@ -538,8 +538,8 @@ export default class MyAbsencesView {
                             }
                             updateModalFields();
 
-                            const startStr = (absence.start || absence.startDate || '').substring(0, 10);
-                            const endStr = (absence.end || absence.endDate || '').substring(0, 10);
+                            const startStr = Format.toIsoDate(absence.start || absence.startDate);
+                            const endStr = Format.toIsoDate(absence.end || absence.endDate);
                             modalStartDate.value = Format.date(startStr) || Format.date(new Date());
                             modalEndDate.value = Format.date(endStr) || modalStartDate.value;
 
@@ -765,8 +765,8 @@ export default class MyAbsencesView {
 
             const payload = {
                 absenceTypeCode,
-                start: startDate + 'T00:00:00.000+01:00',
-                end: endDate + 'T23:59:59.999+01:00',
+                start: Format.formatLocalIsoDateTime(startDate, '00:00:00.000'),
+                end: Format.formatLocalIsoDateTime(endDate, '23:59:59.999'),
                 durationType: modalDurationType.value,
                 dayPart: modalDurationType.value === 'HALF_DAY' ? modalHalfDayPart.value : undefined,
                 halfDayPart: modalDurationType.value === 'HALF_DAY' ? modalHalfDayPart.value : undefined,
@@ -822,8 +822,8 @@ export default class MyAbsencesView {
 
             const payload = {
                 absenceTypeCode,
-                start: startDate + 'T00:00:00.000+01:00',
-                end: endDate + 'T23:59:59.999+01:00',
+                start: Format.formatLocalIsoDateTime(startDate, '00:00:00.000'),
+                end: Format.formatLocalIsoDateTime(endDate, '23:59:59.999'),
                 durationType: modalDurationType.value,
                 dayPart: modalDurationType.value === 'HALF_DAY' ? modalHalfDayPart.value : undefined,
                 halfDayPart: modalDurationType.value === 'HALF_DAY' ? modalHalfDayPart.value : undefined,

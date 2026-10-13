@@ -10,6 +10,7 @@ import li.strolch.service.api.ServiceResult;
 import li.strolch.utils.dbc.DBC;
 
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -47,6 +48,7 @@ public class UpdateAbsenceService extends AbstractService<UpdateAbsenceService.U
 			}
 
 			Resource employee = tx.getResourceByRelation(absence, PARAM_EMPLOYEE, true);
+			ZoneId tz = ChronivaroModelHelper.getEmployeeTimezone(employee);
 
 			PeriodHelper.assertPeriodOpen(tx, employee.getId(), absence.getDate(PARAM_START).toLocalDate());
 			if (arg.start != null) {
@@ -85,9 +87,9 @@ public class UpdateAbsenceService extends AbstractService<UpdateAbsenceService.U
 			}
 
 			if (arg.start != null)
-				absence.setDate(PARAM_START, arg.start);
+				absence.setDate(PARAM_START, arg.start.toLocalDate().atStartOfDay(tz));
 			if (arg.end != null)
-				absence.setDate(PARAM_END, arg.end);
+				absence.setDate(PARAM_END, arg.end.toLocalDate().atTime(23, 59, 59, 999_000_000).atZone(tz));
 			if (arg.durationType != null)
 				absence.setString(PARAM_DURATION_TYPE, arg.durationType);
 			if (arg.dayPart != null)

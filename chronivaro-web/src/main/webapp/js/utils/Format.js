@@ -69,6 +69,20 @@ export default class Format {
         return '';
     }
 
+    static formatLocalIsoDateTime(dateStr, timeStr = '00:00:00.000') {
+        const isoDate = Format.toIsoDate(dateStr);
+        if (!isoDate) return '';
+        const [y, m, d] = isoDate.split('-').map(Number);
+        const dt = new Date(y, m - 1, d);
+        const offsetMinutes = -dt.getTimezoneOffset();
+        const sign = offsetMinutes >= 0 ? '+' : '-';
+        const absOffset = Math.abs(offsetMinutes);
+        const offsetH = String(Math.floor(absOffset / 60)).padStart(2, '0');
+        const offsetM = String(absOffset % 60).padStart(2, '0');
+        const offsetStr = `${sign}${offsetH}:${offsetM}`;
+        return `${isoDate}T${timeStr}${offsetStr}`;
+    }
+
     static normalizeDate(dateStr) {
         if (!dateStr) return '';
         const iso = Format.toIsoDate(dateStr);

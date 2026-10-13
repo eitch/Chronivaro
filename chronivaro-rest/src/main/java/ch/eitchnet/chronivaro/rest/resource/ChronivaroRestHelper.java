@@ -11,7 +11,6 @@ import li.strolch.exception.StrolchElementNotFoundException;
 import li.strolch.exception.StrolchModelException;
 import li.strolch.exception.StrolchUserMessageException;
 import li.strolch.persistence.api.StrolchTransaction;
-import li.strolch.privilege.base.AccessDeniedException;
 import li.strolch.privilege.base.PrivilegeException;
 import li.strolch.privilege.model.Certificate;
 import li.strolch.rest.RestfulStrolchComponent;
@@ -23,9 +22,11 @@ import li.strolch.utils.helper.ExceptionHelper;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 
+import static java.time.LocalDateTime.parse;
+import static java.time.ZoneId.systemDefault;
+import static java.time.format.DateTimeFormatter.*;
 import static li.strolch.utils.helper.StringHelper.isEmpty;
 
 public class ChronivaroRestHelper {
@@ -34,10 +35,10 @@ public class ChronivaroRestHelper {
 		return new GsonBuilder()
 				.registerTypeAdapter(LocalDate.class,
 						(JsonSerializer<LocalDate>) (src, typeOfSrc, context) -> new JsonPrimitive(
-								src.format(DateTimeFormatter.ISO_LOCAL_DATE)))
+								src.format(ISO_LOCAL_DATE)))
 				.registerTypeAdapter(LocalDate.class, (JsonDeserializer<LocalDate>) (json, typeOfT, context) -> {
 					String s = json.getAsString();
-					return isEmpty(s) ? null : LocalDate.parse(s, DateTimeFormatter.ISO_LOCAL_DATE);
+					return isEmpty(s) ? null : LocalDate.parse(s, ISO_LOCAL_DATE);
 				})
 				.registerTypeAdapter(YearMonth.class,
 						(JsonSerializer<YearMonth>) (src, typeOfSrc, context) -> new JsonPrimitive(src.toString()))
@@ -45,20 +46,25 @@ public class ChronivaroRestHelper {
 						(JsonDeserializer<YearMonth>) (json, typeOfT, context) -> YearMonth.parse(json.getAsString()))
 				.registerTypeAdapter(ZonedDateTime.class,
 						(JsonSerializer<ZonedDateTime>) (src, typeOfSrc, context) -> new JsonPrimitive(
-								src.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)))
-				.registerTypeAdapter(ZonedDateTime.class, (JsonDeserializer<ZonedDateTime>) (json, typeOfT, context) -> {
-					String s = json.getAsString();
-					if (isEmpty(s))
-						return null;
-					try {
-						return ZonedDateTime.parse(s, DateTimeFormatter.ISO_OFFSET_DATE_TIME);
-					} catch (Exception e) {
-						if (s.length() == 10 && s.charAt(4) == '-' && s.charAt(7) == '-') {
-							return LocalDate.parse(s, DateTimeFormatter.ISO_LOCAL_DATE).atStartOfDay(java.time.ZoneId.systemDefault());
-						}
-						return ZonedDateTime.parse(s, DateTimeFormatter.ISO_DATE_TIME);
-					}
-				})
+								src.format(ISO_OFFSET_DATE_TIME)))
+				.registerTypeAdapter(ZonedDateTime.class,
+						(JsonDeserializer<ZonedDateTime>) (json, typeOfT, context) -> {
+							String s = json.getAsString();
+							if (isEmpty(s))
+								return null;
+							try {
+								return ZonedDateTime.parse(s, ISO_OFFSET_DATE_TIME);
+							} catch (Exception e) {
+								if (s.length() == 10 && s.charAt(4) == '-' && s.charAt(7) == '-') {
+									return LocalDate.parse(s, ISO_LOCAL_DATE).atStartOfDay(systemDefault());
+								}
+								try {
+									return ZonedDateTime.parse(s, ISO_DATE_TIME);
+								} catch (Exception e2) {
+									return parse(s, ISO_LOCAL_DATE_TIME).atZone(systemDefault());
+								}
+							}
+						})
 				.create();
 	}
 
@@ -80,24 +86,19 @@ public class ChronivaroRestHelper {
 		Response.Status status = Response.Status.BAD_REQUEST;
 		String errorCode = "SERVICE_FAILED";
 		Throwable rootCause = result.getRootCause();
-		if (rootCause instanceof StrolchAccessDeniedException || rootCause instanceof AccessDeniedException
-				|| rootCause instanceof PrivilegeException) {
+		if (rootCause instanceof StrolchAccessDeniedException || rootCause instanceof PrivilegeException) {
 			status = Response.Status.FORBIDDEN;
 			errorCode = "ACCESS_DENIED";
 		} else if (rootCause instanceof StrolchElementNotFoundException) {
 			status = Response.Status.NOT_FOUND;
 			errorCode = "NOT_FOUND";
 		} else if (rootCause instanceof StrolchUserMessageException) {
-			status = Response.Status.BAD_REQUEST;
 			errorCode = "USER_ERROR";
 		} else if (rootCause instanceof StrolchModelException) {
-			status = Response.Status.BAD_REQUEST;
 			errorCode = "MODEL_ERROR";
 		} else if (rootCause instanceof IllegalArgumentException) {
-			status = Response.Status.BAD_REQUEST;
 			errorCode = "INVALID_ARGUMENT";
 		} else if (rootCause instanceof IllegalStateException) {
-			status = Response.Status.BAD_REQUEST;
 			errorCode = "ILLEGAL_STATE";
 		} else if (result.getState() == ServiceResultState.EXCEPTION) {
 			status = Response.Status.INTERNAL_SERVER_ERROR;
@@ -114,7 +115,8 @@ public class ChronivaroRestHelper {
 	}
 
 	public static Response toErrorResponse(Response.Status status, String errorCode, String message) {
-		return toErrorResponse(status, new ErrorDto(errorCode, message, CorrelationIdFilter.getOrCreateCorrelationId()));
+		return toErrorResponse(status,
+				new ErrorDto(errorCode, message, CorrelationIdFilter.getOrCreateCorrelationId()));
 	}
 
 	public static Response toErrorResponse(Response.Status status, String errorCode, String message,
@@ -128,7 +130,8 @@ public class ChronivaroRestHelper {
 		if (isEmpty(correlationId))
 			correlationId = CorrelationIdFilter.getOrCreateCorrelationId();
 
-		return Response.status(status)
+		return Response
+				.status(status)
 				.type(MediaType.APPLICATION_JSON)
 				.header(CorrelationIdFilter.HEADER_CORRELATION_ID, correlationId)
 				.entity(createGson().toJson(errorDto))

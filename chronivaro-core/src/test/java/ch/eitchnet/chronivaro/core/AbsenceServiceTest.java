@@ -847,4 +847,55 @@ public class AbsenceServiceTest {
 			assertEquals(8 * 480, balance);
 		}
 	}
+
+	@Test
+	public void shouldHandleSingleDayAbsenceDuringDaylightSavingTime() {
+		String employeeId = "emp-dst-test";
+
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
+			Resource emp = createEmployee(tx, employeeId, "DST Tester");
+			Resource schedule = tx.getResourceByRelation(emp, PARAM_CURRENT_SCHEDULE, true);
+			schedule.setInteger(PARAM_DAILY_TARGET_MINUTES + "Wednesday", 480);
+			schedule.setInteger(PARAM_DAILY_TARGET_MINUTES + "Thursday", 480);
+			tx.update(schedule);
+
+			Resource entry = tx.getResourceTemplate(TYPE_VACATION_ACCOUNT_ENTRY, true);
+			entry.setName("Entitlement");
+			entry.setRelation(PARAM_EMPLOYEE, emp);
+			entry.setDate(PARAM_DATE, ZonedDateTime.parse("2026-01-01T00:00:00Z"));
+			entry.setString(PARAM_VACATION_TYPE, VACATION_ENTITLEMENT);
+			entry.setInteger(PARAM_VALUE, 10 * 480);
+			tx.add(entry);
+
+			tx.commitOnClose();
+		}
+
+		ServiceHandler serviceHandler = runtimeMock.getServiceHandler();
+
+		// Request a single day absence in July (DST = UTC+2 in Europe/Zurich) with +01:00 offset payload
+		RequestAbsenceService.RequestAbsenceArgument reqArg = new RequestAbsenceService.RequestAbsenceArgument();
+		reqArg.employeeId = employeeId;
+		reqArg.absenceTypeCode = "VACATION";
+		reqArg.start = ZonedDateTime.parse("2026-07-15T00:00:00+01:00"); // July 15 (Wednesday)
+		reqArg.end = ZonedDateTime.parse("2026-07-15T23:59:59.999+01:00");
+		reqArg.durationType = DURATION_FULL_DAY;
+		reqArg.directApprove = true;
+
+		li.strolch.service.StringResult result = serviceHandler.doService(certificate, new RequestAbsenceService(), reqArg);
+		assertTrue(result.getMessage(), result.isOk());
+		String absenceId = result.getValue();
+
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
+			Resource absence = tx.getResourceBy(TYPE_ABSENCE, absenceId, true);
+			assertEquals(STATE_APPROVED, absence.getString(PARAM_STATE));
+
+			// Verify start and end dates in local date representation are both exactly 2026-07-15
+			assertEquals(java.time.LocalDate.of(2026, 7, 15), absence.getDate(PARAM_START).toLocalDate());
+			assertEquals(java.time.LocalDate.of(2026, 7, 15), absence.getDate(PARAM_END).toLocalDate());
+
+			// Verify vacation balance is deducted for exactly 1 day (480 minutes), leaving 9 days
+			int balance = VacationHelper.getVacationBalance(tx, employeeId, ZonedDateTime.now());
+			assertEquals(9 * 480, balance);
+		}
+	}
 }

@@ -649,9 +649,11 @@ export default class AbsenceCalendarView {
                 absenceMap.set(empId, empDays);
             }
 
+            const absStart = Format.toIsoDate(abs.start || abs.startDate);
+            const absEnd = Format.toIsoDate(abs.end || abs.endDate);
             for (let d = 1; d <= daysInMonth; d++) {
                 const curStr = `${this.currentYear}-${String(this.currentMonth).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-                if (curStr >= abs.start && curStr <= abs.end) {
+                if (curStr >= absStart && curStr <= absEnd) {
                     if (!empDays.has(d)) {
                         empDays.set(d, []);
                     }
@@ -852,9 +854,11 @@ export default class AbsenceCalendarView {
             if ((abs.state || abs.status) === 'CANCELLED') {
                 continue;
             }
+            const absStart = Format.toIsoDate(abs.start || abs.startDate);
+            const absEnd = Format.toIsoDate(abs.end || abs.endDate);
             for (let d = 1; d <= daysInMonth; d++) {
                 const curStr = `${this.currentYear}-${String(this.currentMonth).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-                if (curStr >= abs.start && curStr <= abs.end) {
+                if (curStr >= absStart && curStr <= absEnd) {
                     if (!dayMap.has(d)) dayMap.set(d, []);
                     dayMap.get(d).push(abs);
                 }
@@ -1078,11 +1082,11 @@ export default class AbsenceCalendarView {
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 0.75rem;">
                         <div>
                             <span style="font-weight: 600; color: var(--text-muted); display: block; font-size: 0.75rem;">${I18n.t('common.from')}:</span>
-                            <span>${Format.date(abs.start)}</span>
+                            <span>${Format.date(abs.start || abs.startDate)}</span>
                         </div>
                         <div>
                             <span style="font-weight: 600; color: var(--text-muted); display: block; font-size: 0.75rem;">${I18n.t('common.to')}:</span>
-                            <span>${Format.date(abs.end)}</span>
+                            <span>${Format.date(abs.end || abs.endDate)}</span>
                         </div>
                     </div>
                     <div style="margin-bottom: 0.75rem;">
@@ -1499,8 +1503,8 @@ export default class AbsenceCalendarView {
             lastname: ''
         }];
 
-        const defaultStart = existingAbs ? (existingAbs.start || existingAbs.startDate || '') : (initialData.startDate || `${this.currentYear}-${String(this.currentMonth).padStart(2, '0')}-01`);
-        const defaultEnd = existingAbs ? (existingAbs.end || existingAbs.endDate || defaultStart) : (initialData.endDate || defaultStart);
+        const defaultStart = existingAbs ? (Format.toIsoDate(existingAbs.start || existingAbs.startDate) || '') : (initialData.startDate || `${this.currentYear}-${String(this.currentMonth).padStart(2, '0')}-01`);
+        const defaultEnd = existingAbs ? (Format.toIsoDate(existingAbs.end || existingAbs.endDate) || defaultStart) : (initialData.endDate || defaultStart);
         const selectedEmpId = existingAbs ? existingAbs.employeeId : (initialData.employeeId || this.currentUserEmployeeId || employees[0].id);
         const selectedTypeCode = existingAbs ? (existingAbs.absenceTypeCode || existingAbs.absenceTypeId || existingAbs.type || '') : '';
         const defaultComment = existingAbs ? (existingAbs.comment || '') : '';
@@ -1724,8 +1728,8 @@ export default class AbsenceCalendarView {
 
             const payload = {
                 absenceTypeCode,
-                start: start + 'T00:00:00.000+01:00',
-                end: end + 'T23:59:59.999+01:00',
+                start: Format.formatLocalIsoDateTime(start, '00:00:00.000'),
+                end: Format.formatLocalIsoDateTime(end, '23:59:59.999'),
                 durationType,
                 dayPart: durationType === 'HALF_DAY' ? dayPart : undefined,
                 halfDayPart: durationType === 'HALF_DAY' ? dayPart : undefined,

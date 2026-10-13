@@ -10,6 +10,7 @@ import li.strolch.service.api.ServiceResultState;
 import li.strolch.utils.dbc.DBC;
 
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.Optional;
 
@@ -57,27 +58,36 @@ public class RequestAbsenceService extends AbstractService<RequestAbsenceService
 				throw new IllegalArgumentException("Employees cannot self-approve absence requests.");
 			}
 
-			PeriodHelper.assertPeriodOpen(tx, arg.employeeId, arg.start.toLocalDate());
-			if (!arg.start.toLocalDate().equals(arg.end.toLocalDate())) {
-				PeriodHelper.assertPeriodOpen(tx, arg.employeeId, arg.end.toLocalDate());
+			Resource employee = tx.getResourceBy(TYPE_EMPLOYEE, arg.employeeId, true);
+			ZoneId tz = ChronivaroModelHelper.getEmployeeTimezone(employee);
+
+			LocalDate startDate = arg.start.toLocalDate();
+			LocalDate endDate = arg.end.toLocalDate();
+
+			PeriodHelper.assertPeriodOpen(tx, arg.employeeId, startDate);
+			if (!startDate.equals(endDate)) {
+				PeriodHelper.assertPeriodOpen(tx, arg.employeeId, endDate);
 			}
 
 			Resource absenceType = AbsenceHelper.getAbsenceType(tx, arg.absenceTypeCode);
 			AbsenceHelper.validateDurationType(absenceType, arg.durationType);
 
+			ZonedDateTime startZdt = startDate.atStartOfDay(tz);
+			ZonedDateTime endZdt = endDate.atTime(23, 59, 59, 999_000_000).atZone(tz);
+
 			boolean isDraft = !isApproved && (arg.asDraft || STATE_DRAFT.equalsIgnoreCase(arg.state));
 			if (!isDraft) {
 				AbsenceHelper.validateCommentRequired(absenceType, arg.comment);
-				AbsenceHelper.validateNoOverlap(tx, arg.employeeId, arg.start, arg.end, null);
+				AbsenceHelper.validateNoOverlap(tx, arg.employeeId, startZdt, endZdt, null);
 			}
 
 			Resource absence = tx.getResourceTemplate(TYPE_ABSENCE, true);
-			absence.setName("Absence " + arg.start);
+			absence.setName("Absence " + startDate);
 
-			absence.setRelation(PARAM_EMPLOYEE, tx.getResourceBy(TYPE_EMPLOYEE, arg.employeeId, true));
+			absence.setRelation(PARAM_EMPLOYEE, employee);
 			absence.setRelation(PARAM_ABSENCE_TYPE, absenceType);
-			absence.setDate(PARAM_START, arg.start);
-			absence.setDate(PARAM_END, arg.end);
+			absence.setDate(PARAM_START, startZdt);
+			absence.setDate(PARAM_END, endZdt);
 			absence.setString(PARAM_DURATION_TYPE, arg.durationType);
 			if (arg.dayPart != null)
 				absence.setString(PARAM_DAY_PART, arg.dayPart);
