@@ -2,8 +2,6 @@
 <Privilege>
     <Container>
         <Parameters>
-            <Parameter name="secretKey" value="secretKey"/>
-            <Parameter name="secretSalt" value="secretSalt"/>
             <Parameter name="persistSessions" value="true"/>
             <Parameter name="autoPersistOnUserChangesData" value="true"/>
             <Parameter name="allowSessionRefresh" value="true"/>

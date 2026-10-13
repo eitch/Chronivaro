@@ -104,7 +104,7 @@ When Docker launches the container, it mounts `./runtime` from the host to `/chr
 
 ##### Why Chronivaro Requires an External Runtime:
 1. **Separation of Binary and Configuration**: The container image remains generic, immutable, and stateless across all deployments while environment configurations (e.g., logging levels, realm providers, thread pools) are configured per deployment.
-2. **Security & Secret Isolation**: Cryptographic parameters (`secretKey` and `secretSalt` in `PrivilegeConfig.xml`) and administrative credentials in `PrivilegeUsers.xml` are not baked into public image layers.
+2. **Security & Secret Isolation**: Administrative credentials in `PrivilegeUsers.xml` are not baked into public image layers.
 3. **Data Persistence Across Container Restarts**: In file-based persistence mode, Strolch loads and commits domain elements into `runtime/data/Model.xml`. Mounting the runtime directory ensures all work entries, employee profiles, vacation accounts, and session tokens (`runtime/temp/sessions.dat`) persist across container updates and restarts.
 
 ##### Required Strolch Runtime Directory Layout:
@@ -115,7 +115,7 @@ chronivaro/
 ├── logs/                              # Mounted to /chronivaro-logs for log files
 └── runtime/
     ├── config/
-    │   ├── PrivilegeConfig.xml        # Secret key/salt and hashing parameters
+    │   ├── PrivilegeConfig.xml        # Privilege configuration and hashing parameters
     │   ├── PrivilegeRoles.xml         # Role-to-privilege mappings
     │   ├── PrivilegeUsers.xml         # User accounts and credentials
     │   ├── StrolchConfiguration.xml   # Core agent & realm configuration
@@ -149,13 +149,8 @@ Before running `docker compose up -d`, prepare the runtime directory on the host
    - Copy `runtime/config/*` to `./runtime/config/`
    - Copy `runtime/data/*` to `./runtime/data/`
 
-3. **Configure Authentication Secrets & User Challenge Handler**:
-   Edit `./runtime/config/PrivilegeConfig.xml` to generate and assign unique cryptographic keys:
-   ```xml
-   <Parameter name="secretKey" value="<GENERATE_RANDOM_SECRET_KEY>"/>
-   <Parameter name="secretSalt" value="<GENERATE_RANDOM_SECRET_SALT>"/>
-   ```
-   By default, Chronivaro is configured to use Strolch's `MailUserChallengeHandler` for delivering user registration challenges and password reset codes:
+3. **Configure Authentication & User Challenge Handler**:
+   By default, Chronivaro is configured to use Strolch's `MailUserChallengeHandler` in `./runtime/config/PrivilegeConfig.xml` for delivering user registration challenges and password reset codes:
    ```xml
    <UserChallengeHandler class="li.strolch.privilege.handler.MailUserChallengeHandler"/>
    ```

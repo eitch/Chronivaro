@@ -237,11 +237,10 @@ Configuration can be provided via flags, environment variables (`GITHUB_TOKEN`, 
    mkdir -p logs runtime/{config,data,temp}
    ```
 2. Copy configuration files from `runtime/` into `runtime/` (`config/`, `data/`, `temp/`).
-3. Set secure values for `secretKey` and `secretSalt` in `runtime/config/PrivilegeConfig.xml`.
-4. Configure mail delivery in `runtime/config/StrolchConfiguration.xml` (see [Email Delivery & MailHandler Configuration](#-email-delivery--user-challenge-configuration-mailhandler) below).
-5. Optional: Configure file logging in `runtime/config/logback.xml` to persist logs to `/chronivaro-logs` (mounted to `./logs`).
-6. Copy `docker-compose.yml` to the directory.
-7. Launch the container:
+3. Configure mail delivery in `runtime/config/StrolchConfiguration.xml` (see [Email Delivery & MailHandler Configuration](#-email-delivery--user-challenge-configuration-mailhandler) below).
+4. Optional: Configure file logging in `runtime/config/logback.xml` to persist logs to `/chronivaro-logs` (mounted to `./logs`).
+5. Copy `docker-compose.yml` to the directory.
+6. Launch the container:
    ```bash
    docker compose up -d
    docker compose logs -f
