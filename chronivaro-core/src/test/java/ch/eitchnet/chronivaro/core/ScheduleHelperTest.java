@@ -66,9 +66,10 @@ public class ScheduleHelperTest {
 			schedule.setName("Schedule V1");
 			schedule.setRelation(PARAM_EMPLOYEE, employee);
 			schedule.setDate(PARAM_VALID_FROM, ZonedDateTime.parse("2026-01-01T00:00:00Z"));
+			schedule.setInteger(PARAM_DAILY_TARGET_MINUTES, 480);
 			schedule.setInteger(PARAM_DAILY_TARGET_MINUTES + "Monday", 480);
 			schedule.setInteger(PARAM_DAILY_TARGET_MINUTES + "Tuesday", 480);
-			schedule.setInteger(PARAM_DAILY_TARGET_MINUTES + "Wednesday", 480);
+			schedule.setInteger(PARAM_DAILY_TARGET_MINUTES + "Wednesday", 0);
 			schedule.setInteger(PARAM_DAILY_TARGET_MINUTES + "Thursday", 480);
 			schedule.setInteger(PARAM_DAILY_TARGET_MINUTES + "Friday", 480);
 			schedule.setInteger(PARAM_DAILY_TARGET_MINUTES + "Saturday", 0);
@@ -98,6 +99,7 @@ public class ScheduleHelperTest {
 			LocalDate normalDate = LocalDate.of(2026, 1, 2);
 			assertEquals(480, ScheduleHelper.getTargetMinutes(tx, "emp1", normalDate));
 			assertEquals(0, HolidayHelper.getHolidayMinutes(tx, "emp1", normalDate));
+			assertEquals(0, ScheduleHelper.getTargetMinutes(tx, "emp1", LocalDate.of(2026, 1, 7)));
 
 			// 2026-01-03 was a Saturday
 			LocalDate weekendDate = LocalDate.of(2026, 1, 3);

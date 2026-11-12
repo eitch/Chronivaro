@@ -19,7 +19,8 @@ public class ScheduleHelper {
 	}
 
 	public static Optional<Resource> findScheduleVersion(StrolchTransaction tx, String employeeId, LocalDate date) {
-		Optional<Resource> version = tx.streamResources(TYPE_EMPLOYMENT_SCHEDULE)
+		Optional<Resource> version = tx
+				.streamResources(TYPE_EMPLOYMENT_SCHEDULE)
 				.filter(r -> r.getRelationId(PARAM_EMPLOYEE).equals(employeeId))
 				.filter(r -> {
 					LocalDate from = r.getDate(PARAM_VALID_FROM).toLocalDate();
@@ -42,7 +43,8 @@ public class ScheduleHelper {
 				if (current != null) {
 					LocalDate from = current.getDate(PARAM_VALID_FROM).toLocalDate();
 					if (!date.isBefore(from)) {
-						if (!current.hasParameter(PARAM_VALID_TO) || !date.isAfter(current.getDate(PARAM_VALID_TO).toLocalDate())) {
+						if (!current.hasParameter(PARAM_VALID_TO) || !date.isAfter(
+								current.getDate(PARAM_VALID_TO).toLocalDate())) {
 							return Optional.of(current);
 						}
 					}
@@ -74,9 +76,7 @@ public class ScheduleHelper {
 		// But for now let's assume parameters are named like dailyTargetMinutesMonday, etc.
 		// Or we use a bag for daily values
 		if (scheduleVersion.hasParameter(paramName)) {
-			int targetMinutes = scheduleVersion.getInteger(paramName);
-			if (targetMinutes > 0)
-				return targetMinutes;
+			return Math.max(0, scheduleVersion.getInteger(paramName));
 		}
 
 		// Fallback to general dailyTargetMinutes

@@ -36,20 +36,30 @@ public class AbsenceHelper {
 				.toList();
 
 		for (Resource a : absences) {
+			Resource absenceType = tx.getResourceByRelation(a, PARAM_ABSENCE_TYPE, false);
+			String typeCode = absenceType == null ? null :
+					absenceType.hasParameter(PARAM_CODE) ? absenceType.getString(PARAM_CODE) : absenceType.getId();
+			if (isHolidayAbsenceType(tx, absenceType, typeCode)) {
+				vacation += getVacationMinutesForDay(tx, employeeId, a, date);
+				continue;
+			}
+
 			int min = calculateMinutesForDay(tx, employeeId, a, date);
 			if (min <= 0)
 				continue;
-			Resource absenceType = tx.getResourceByRelation(a, PARAM_ABSENCE_TYPE, false);
-			if (absenceType != null && absenceType.hasParameter(PARAM_REDUCE_VACATION_CREDIT)
-					&& absenceType.getBoolean(PARAM_REDUCE_VACATION_CREDIT)) {
+
+			if (absenceType != null && absenceType.hasParameter(PARAM_REDUCE_VACATION_CREDIT) && absenceType.getBoolean(
+					PARAM_REDUCE_VACATION_CREDIT)) {
 				vacation += min;
-			} else if (absenceType != null && ((absenceType.hasParameter(PARAM_PAID) && absenceType.getBoolean(PARAM_PAID))
-					|| (absenceType.hasParameter(PARAM_COUNT_AS_TARGET_TIME)
-							&& absenceType.getBoolean(PARAM_COUNT_AS_TARGET_TIME)))) {
+			} else if (absenceType != null && (
+					(absenceType.hasParameter(PARAM_PAID) && absenceType.getBoolean(PARAM_PAID)) || (
+							absenceType.hasParameter(PARAM_COUNT_AS_TARGET_TIME) && absenceType.getBoolean(
+									PARAM_COUNT_AS_TARGET_TIME)))) {
 				paid += min;
-			} else if (absenceType != null && (!absenceType.hasParameter(PARAM_PAID) || !absenceType.getBoolean(PARAM_PAID))
-					&& (!absenceType.hasParameter(PARAM_COUNT_AS_TARGET_TIME)
-							|| !absenceType.getBoolean(PARAM_COUNT_AS_TARGET_TIME))) {
+			} else if (absenceType != null && (
+					!absenceType.hasParameter(PARAM_PAID) || !absenceType.getBoolean(PARAM_PAID)) && (
+					!absenceType.hasParameter(PARAM_COUNT_AS_TARGET_TIME) || !absenceType.getBoolean(
+							PARAM_COUNT_AS_TARGET_TIME))) {
 				unpaid += min;
 			} else {
 				paid += min;
@@ -61,6 +71,27 @@ public class AbsenceHelper {
 
 	public static int getAbsenceMinutes(StrolchTransaction tx, String employeeId, LocalDate date) {
 		return getDayAbsenceBreakdown(tx, employeeId, date).totalCreditedMinutes();
+	}
+
+	public static int getVacationMinutes(StrolchTransaction tx, String employeeId, Resource absence) {
+		LocalDate start = absence.getDate(PARAM_START).toLocalDate();
+		LocalDate end = absence.getDate(PARAM_END).toLocalDate();
+		int totalMinutes = 0;
+		for (LocalDate date = start; !date.isAfter(end); date = date.plusDays(1)) {
+			totalMinutes += getVacationMinutesForDay(tx, employeeId, absence, date);
+		}
+		return totalMinutes;
+	}
+
+	public static int getVacationMinutesForDay(StrolchTransaction tx, String employeeId, Resource absence,
+			LocalDate date) {
+		int targetMinutes = ScheduleHelper.getTargetMinutes(tx, employeeId, date);
+		if (targetMinutes <= 0)
+			return 0;
+
+		int requestedMinutes = calculateMinutesForDay(tx, employeeId, absence, date);
+		int availableMinutes = Math.max(0, targetMinutes - HolidayHelper.getHolidayMinutes(tx, employeeId, date));
+		return Math.max(0, Math.min(requestedMinutes, availableMinutes));
 	}
 
 	private static int calculateMinutesForDay(StrolchTransaction tx, String employeeId, Resource absence,
@@ -102,8 +133,10 @@ public class AbsenceHelper {
 			if (allowed != null && !allowed.isEmpty()) {
 				boolean match = allowed.stream().anyMatch(a -> a.equalsIgnoreCase(durationType));
 				if (!match) {
-					throw new IllegalArgumentException("Duration type " + durationType
-							+ " is not allowed for absence type " + absenceType.getString(PARAM_CODE));
+					throw new IllegalArgumentException("Duration type "
+							+ durationType
+							+ " is not allowed for absence type "
+							+ absenceType.getString(PARAM_CODE));
 				}
 			}
 		}
@@ -130,11 +163,11 @@ public class AbsenceHelper {
 				.toList();
 
 		if (!overlapping.isEmpty()) {
-			String details = overlapping.stream()
+			String details = overlapping
+					.stream()
 					.map(a -> formatAbsence(tx, a))
 					.collect(java.util.stream.Collectors.joining(", "));
-			throw new IllegalArgumentException(
-					"Absence overlaps with an existing active absence: " + details);
+			throw new IllegalArgumentException("Absence overlaps with an existing active absence: " + details);
 		}
 	}
 
@@ -171,13 +204,20 @@ public class AbsenceHelper {
 
 		String state = absence.hasParameter(PARAM_STATE) ? absence.getString(PARAM_STATE) : "";
 
-		return typeName + " (" + dateStr + durationDetail + (state.isEmpty() ? "" : ", " + state) + ", id: "
-				+ absence.getId() + ")";
+		return typeName
+				+ " ("
+				+ dateStr
+				+ durationDetail
+				+ (state.isEmpty() ? "" : ", " + state)
+				+ ", id: "
+				+ absence.getId()
+				+ ")";
 	}
 
 	public static boolean isHolidayAbsenceType(StrolchTransaction tx, Resource absType, String typeCode) {
 		if (absType != null) {
-			if (absType.hasParameter(PARAM_REDUCE_VACATION_CREDIT) && absType.getBoolean(PARAM_REDUCE_VACATION_CREDIT)) {
+			if (absType.hasParameter(PARAM_REDUCE_VACATION_CREDIT) && absType.getBoolean(
+					PARAM_REDUCE_VACATION_CREDIT)) {
 				return true;
 			}
 			String code = absType.hasParameter(PARAM_CODE) ? absType.getString(PARAM_CODE) : absType.getId();
@@ -197,8 +237,9 @@ public class AbsenceHelper {
 		Resource config = tx.getResourceBy(TYPE_GLOBAL_CONFIGURATION, "configuration", false);
 		if (config != null && config.hasParameter(PARAM_VACATION_ABSENCE_TYPE_CODE)) {
 			String vacationCode = config.getString(PARAM_VACATION_ABSENCE_TYPE_CODE);
-			if (vacationCode != null && (vacationCode.equalsIgnoreCase(typeCode)
-					|| (absType != null && vacationCode.equalsIgnoreCase(absType.getId())))) {
+			if (vacationCode != null && (
+					vacationCode.equalsIgnoreCase(typeCode) || (
+							absType != null && vacationCode.equalsIgnoreCase(absType.getId())))) {
 				return true;
 			}
 		}

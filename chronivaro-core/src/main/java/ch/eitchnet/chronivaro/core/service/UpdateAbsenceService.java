@@ -9,7 +9,6 @@ import li.strolch.service.api.ServiceArgument;
 import li.strolch.service.api.ServiceResult;
 import li.strolch.utils.dbc.DBC;
 
-import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.List;
@@ -134,13 +133,7 @@ public class UpdateAbsenceService extends AbstractService<UpdateAbsenceService.U
 
 				// If the absence is a vacation absence, create new vacation usage entry
 				if (VacationHelper.isVacationAbsence(tx, absence)) {
-					LocalDate start = absence.getDate(PARAM_START).toLocalDate();
-					LocalDate end = absence.getDate(PARAM_END).toLocalDate();
-
-					int totalMinutes = 0;
-					for (LocalDate date = start; !date.isAfter(end); date = date.plusDays(1)) {
-						totalMinutes += calculateMinutesForDay(tx, employee.getId(), absence, date);
-					}
+					int totalMinutes = AbsenceHelper.getVacationMinutes(tx, employee.getId(), absence);
 
 					if (totalMinutes > 0) {
 						VacationHelper.assertSufficientVacationBalance(tx, employee.getId(), totalMinutes,
@@ -171,21 +164,6 @@ public class UpdateAbsenceService extends AbstractService<UpdateAbsenceService.U
 		}
 
 		return ServiceResult.success();
-	}
-
-	private int calculateMinutesForDay(StrolchTransaction tx, String employeeId, Resource absence, LocalDate date) {
-		String durationType = absence.getString(PARAM_DURATION_TYPE);
-		int targetMinutes = ScheduleHelper.getTargetMinutes(tx, employeeId, date);
-
-		if (targetMinutes == 0)
-			return 0;
-
-		return switch (durationType) {
-			case DURATION_FULL_DAY -> targetMinutes;
-			case DURATION_HALF_DAY -> (int) Math.round(targetMinutes / 2.0);
-			case DURATION_HOURS -> absence.getInteger(PARAM_MINUTES);
-			default -> 0;
-		};
 	}
 
 	@Override

@@ -105,13 +105,7 @@ public class RequestAbsenceService extends AbstractService<RequestAbsenceService
 			if (isApproved) {
 				// Handle vacation usage if applicable
 				if (VacationHelper.isVacationAbsence(tx, absence)) {
-					LocalDate start = absence.getDate(PARAM_START).toLocalDate();
-					LocalDate end = absence.getDate(PARAM_END).toLocalDate();
-
-					int totalMinutes = 0;
-					for (LocalDate date = start; !date.isAfter(end); date = date.plusDays(1)) {
-						totalMinutes += calculateMinutesForDay(tx, arg.employeeId, absence, date);
-					}
+					int totalMinutes = AbsenceHelper.getVacationMinutes(tx, arg.employeeId, absence);
 
 					if (totalMinutes > 0) {
 						VacationHelper.assertSufficientVacationBalance(tx, arg.employeeId, totalMinutes,
@@ -155,21 +149,6 @@ public class RequestAbsenceService extends AbstractService<RequestAbsenceService
 		}
 
 		return new StringResult(absenceId);
-	}
-
-	private int calculateMinutesForDay(StrolchTransaction tx, String employeeId, Resource absence, LocalDate date) {
-		String durationType = absence.getString(PARAM_DURATION_TYPE);
-		int targetMinutes = ScheduleHelper.getTargetMinutes(tx, employeeId, date);
-
-		if (targetMinutes == 0)
-			return 0;
-
-		return switch (durationType) {
-			case DURATION_FULL_DAY -> targetMinutes;
-			case DURATION_HALF_DAY -> (int) Math.round(targetMinutes / 2.0);
-			case DURATION_HOURS -> absence.getInteger(PARAM_MINUTES);
-			default -> 0;
-		};
 	}
 
 	@Override

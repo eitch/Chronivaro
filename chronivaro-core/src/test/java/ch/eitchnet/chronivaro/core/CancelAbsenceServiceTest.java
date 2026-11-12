@@ -25,7 +25,8 @@ import static ch.eitchnet.chronivaro.core.ChronivaroTestHelper.createEmployee;
 import static ch.eitchnet.chronivaro.core.model.ChronivaroConstants.*;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.emptySet;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class CancelAbsenceServiceTest {
 
@@ -71,7 +72,10 @@ public class CancelAbsenceServiceTest {
 
 			UserRep userRep = new UserRep(null, userId, "Alice", "Cancel", UserState.ENABLED, emptySet(),
 					Set.of(ROLE_EMPLOYEE, ROLE_MODEL_ACCESSOR), Locale.of("de", "CH"), emptyMap(), null);
-			runtimeMock.getPrivilegeHandler().getPrivilegeHandler().addUser(adminCertificate, userRep, userId.toCharArray());
+			runtimeMock
+					.getPrivilegeHandler()
+					.getPrivilegeHandler()
+					.addUser(adminCertificate, userRep, userId.toCharArray());
 			userCert = runtimeMock.login(userId, userId);
 		}
 
@@ -89,7 +93,8 @@ public class CancelAbsenceServiceTest {
 
 		String absenceId;
 		try (StrolchTransaction tx = runtimeMock.openUserTx(adminCertificate, true)) {
-			Resource absence = tx.streamResources(TYPE_ABSENCE)
+			Resource absence = tx
+					.streamResources(TYPE_ABSENCE)
 					.filter(a -> a.getRelationId(PARAM_EMPLOYEE).equals(employeeId))
 					.findFirst()
 					.orElseThrow();
@@ -161,7 +166,10 @@ public class CancelAbsenceServiceTest {
 
 			UserRep userRep = new UserRep(null, userId, "Bob", "Vac", UserState.ENABLED, emptySet(),
 					Set.of(ROLE_EMPLOYEE, ROLE_MODEL_ACCESSOR), Locale.of("de", "CH"), emptyMap(), null);
-			runtimeMock.getPrivilegeHandler().getPrivilegeHandler().addUser(adminCertificate, userRep, userId.toCharArray());
+			runtimeMock
+					.getPrivilegeHandler()
+					.getPrivilegeHandler()
+					.addUser(adminCertificate, userRep, userId.toCharArray());
 			userCert = runtimeMock.login(userId, userId);
 		}
 
@@ -179,7 +187,8 @@ public class CancelAbsenceServiceTest {
 
 		String absenceId;
 		try (StrolchTransaction tx = runtimeMock.openUserTx(adminCertificate, true)) {
-			Resource absence = tx.streamResources(TYPE_ABSENCE)
+			Resource absence = tx
+					.streamResources(TYPE_ABSENCE)
 					.filter(a -> a.getRelationId(PARAM_EMPLOYEE).equals(employeeId))
 					.findFirst()
 					.orElseThrow();
@@ -193,8 +202,18 @@ public class CancelAbsenceServiceTest {
 
 		// Verify Balance is reduced by 2 days (960 min)
 		try (StrolchTransaction tx = runtimeMock.openUserTx(adminCertificate, true)) {
-			int balance = VacationHelper.getVacationBalance(tx, employeeId, ZonedDateTime.parse("2026-07-08T00:00:00Z"));
+			int balance = VacationHelper.getVacationBalance(tx, employeeId,
+					ZonedDateTime.parse("2026-07-08T00:00:00Z"));
 			assertEquals(8 * 480, balance);
+		}
+
+		try (StrolchTransaction tx = runtimeMock.openUserTx(adminCertificate, false)) {
+			Resource employee = tx.getResourceBy(TYPE_EMPLOYEE, employeeId, true);
+			Resource schedule = tx.getResourceByRelation(employee, PARAM_CURRENT_SCHEDULE, true);
+			schedule.setInteger(PARAM_DAILY_TARGET_MINUTES_MONDAY, 240);
+			schedule.setInteger(PARAM_DAILY_TARGET_MINUTES_TUESDAY, 240);
+			tx.update(schedule);
+			tx.commitOnClose();
 		}
 
 		// Cancel Absence
@@ -207,7 +226,8 @@ public class CancelAbsenceServiceTest {
 			Resource absence = tx.getResourceBy(TYPE_ABSENCE, absenceId, true);
 			assertEquals(STATE_CANCELLED, absence.getString(PARAM_STATE));
 
-			List<Resource> entries = tx.streamResources(TYPE_VACATION_ACCOUNT_ENTRY)
+			List<Resource> entries = tx
+					.streamResources(TYPE_VACATION_ACCOUNT_ENTRY)
 					.filter(e -> e.getRelationId(PARAM_EMPLOYEE).equals(employeeId))
 					.filter(e -> VACATION_CORRECTION.equals(e.getString(PARAM_VACATION_TYPE)))
 					.toList();
@@ -216,7 +236,8 @@ public class CancelAbsenceServiceTest {
 			assertEquals(960, correctionEntry.getInteger(PARAM_VALUE));
 			assertEquals(absenceId, correctionEntry.getRelationId(PARAM_ABSENCE));
 
-			int balance = VacationHelper.getVacationBalance(tx, employeeId, ZonedDateTime.parse("2026-07-08T00:00:00Z"));
+			int balance = VacationHelper.getVacationBalance(tx, employeeId,
+					ZonedDateTime.parse("2026-07-08T00:00:00Z"));
 			assertEquals(10 * 480, balance);
 		}
 	}
@@ -241,7 +262,10 @@ public class CancelAbsenceServiceTest {
 
 			UserRep userRep = new UserRep(null, userId, "Charlie", "Locked", UserState.ENABLED, emptySet(),
 					Set.of(ROLE_EMPLOYEE, ROLE_MODEL_ACCESSOR), Locale.of("de", "CH"), emptyMap(), null);
-			runtimeMock.getPrivilegeHandler().getPrivilegeHandler().addUser(adminCertificate, userRep, userId.toCharArray());
+			runtimeMock
+					.getPrivilegeHandler()
+					.getPrivilegeHandler()
+					.addUser(adminCertificate, userRep, userId.toCharArray());
 			userCert = runtimeMock.login(userId, userId);
 		}
 
@@ -259,7 +283,8 @@ public class CancelAbsenceServiceTest {
 
 		String absenceId;
 		try (StrolchTransaction tx = runtimeMock.openUserTx(adminCertificate, true)) {
-			Resource absence = tx.streamResources(TYPE_ABSENCE)
+			Resource absence = tx
+					.streamResources(TYPE_ABSENCE)
 					.filter(a -> a.getRelationId(PARAM_EMPLOYEE).equals(employeeId))
 					.findFirst()
 					.orElseThrow();
@@ -269,8 +294,10 @@ public class CancelAbsenceServiceTest {
 		// Submit, Approve, and Lock period for May 2026
 		YearMonth ym = YearMonth.of(2026, 5);
 		serviceHandler.doService(adminCertificate, new SubmitPeriodService(), new PeriodActionArgument(employeeId, ym));
-		serviceHandler.doService(adminCertificate, new ApprovePeriodService(), new PeriodActionArgument(employeeId, ym));
-		ServiceResult lockResult = serviceHandler.doService(adminCertificate, new LockPeriodService(), new PeriodActionArgument(employeeId, ym));
+		serviceHandler.doService(adminCertificate, new ApprovePeriodService(),
+				new PeriodActionArgument(employeeId, ym));
+		ServiceResult lockResult = serviceHandler.doService(adminCertificate, new LockPeriodService(),
+				new PeriodActionArgument(employeeId, ym));
 		assertTrue(lockResult.getMessage(), lockResult.isOk());
 
 		// Attempt to cancel absence in locked period -> should fail

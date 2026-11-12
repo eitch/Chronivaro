@@ -1,8 +1,8 @@
 package ch.eitchnet.chronivaro.core.service;
 
+import ch.eitchnet.chronivaro.core.model.AbsenceHelper;
 import ch.eitchnet.chronivaro.core.model.ChronivaroAuditHelper;
 import ch.eitchnet.chronivaro.core.model.ChronivaroModelHelper;
-import ch.eitchnet.chronivaro.core.model.ScheduleHelper;
 import ch.eitchnet.chronivaro.core.model.VacationHelper;
 import li.strolch.model.Resource;
 import li.strolch.persistence.api.StrolchTransaction;
@@ -10,8 +10,6 @@ import li.strolch.service.StringArgument;
 import li.strolch.service.api.AbstractService;
 import li.strolch.service.api.ServiceResult;
 import li.strolch.utils.dbc.DBC;
-
-import java.time.LocalDate;
 
 import static ch.eitchnet.chronivaro.core.model.ChronivaroConstants.*;
 import static ch.eitchnet.chronivaro.core.model.ChronivaroVersionHelper.bumpVersion;
@@ -43,13 +41,7 @@ public class ApproveAbsenceService extends AbstractService<StringArgument, Servi
 
 			// If it's a vacation absence, check balance and create a vacation account entry
 			if (VacationHelper.isVacationAbsence(tx, absence)) {
-				LocalDate start = absence.getDate(PARAM_START).toLocalDate();
-				LocalDate end = absence.getDate(PARAM_END).toLocalDate();
-
-				int totalMinutes = 0;
-				for (LocalDate date = start; !date.isAfter(end); date = date.plusDays(1)) {
-					totalMinutes += calculateMinutesForDay(tx, employeeId, absence, date);
-				}
+				int totalMinutes = AbsenceHelper.getVacationMinutes(tx, employeeId, absence);
 
 				if (totalMinutes > 0) {
 					VacationHelper.assertSufficientVacationBalance(tx, employeeId, totalMinutes,
@@ -79,21 +71,6 @@ public class ApproveAbsenceService extends AbstractService<StringArgument, Servi
 		}
 
 		return ServiceResult.success();
-	}
-
-	private int calculateMinutesForDay(StrolchTransaction tx, String employeeId, Resource absence, LocalDate date) {
-		String durationType = absence.getString(PARAM_DURATION_TYPE);
-		int targetMinutes = ScheduleHelper.getTargetMinutes(tx, employeeId, date);
-
-		if (targetMinutes == 0)
-			return 0;
-
-		return switch (durationType) {
-			case DURATION_FULL_DAY -> targetMinutes;
-			case DURATION_HALF_DAY -> (int) Math.round(targetMinutes / 2.0);
-			case DURATION_HOURS -> absence.getInteger(PARAM_MINUTES);
-			default -> 0;
-		};
 	}
 
 	@Override

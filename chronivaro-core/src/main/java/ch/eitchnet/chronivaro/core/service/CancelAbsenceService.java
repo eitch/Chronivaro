@@ -3,7 +3,7 @@ package ch.eitchnet.chronivaro.core.service;
 import ch.eitchnet.chronivaro.core.model.ChronivaroAuditHelper;
 import ch.eitchnet.chronivaro.core.model.ChronivaroModelHelper;
 import ch.eitchnet.chronivaro.core.model.PeriodHelper;
-import ch.eitchnet.chronivaro.core.model.ScheduleHelper;
+import ch.eitchnet.chronivaro.core.model.VacationHelper;
 import li.strolch.model.Resource;
 import li.strolch.persistence.api.Operation;
 import li.strolch.persistence.api.StrolchTransaction;
@@ -12,7 +12,6 @@ import li.strolch.service.api.AbstractService;
 import li.strolch.service.api.ServiceResult;
 import li.strolch.utils.dbc.DBC;
 
-import java.time.LocalDate;
 import java.util.Optional;
 
 import static ch.eitchnet.chronivaro.core.model.ChronivaroConstants.*;
@@ -75,16 +74,15 @@ public class CancelAbsenceService extends AbstractService<StringArgument, Servic
 
 			// If it was APPROVED and reduced vacation, we need to add back the vacation minutes
 			if (oldState.equals(STATE_APPROVED)) {
-				Resource absenceType = tx.getResourceByRelation(absence, PARAM_ABSENCE_TYPE, true);
-				if (absenceType.getBoolean(PARAM_REDUCE_VACATION_CREDIT)) {
-					String employeeId = employee.getId();
-					LocalDate start = absence.getDate(PARAM_START).toLocalDate();
-					LocalDate end = absence.getDate(PARAM_END).toLocalDate();
-
-					int totalMinutes = 0;
-					for (LocalDate date = start; !date.isAfter(end); date = date.plusDays(1)) {
-						totalMinutes += calculateMinutesForDay(tx, employeeId, absence, date);
-					}
+				if (VacationHelper.isVacationAbsence(tx, absence)) {
+					String absenceId = absence.getId();
+					int totalMinutes = tx
+							.streamResources(TYPE_VACATION_ACCOUNT_ENTRY)
+							.filter(entry -> entry.hasRelation(PARAM_ABSENCE) && absenceId.equals(
+									entry.getRelationId(PARAM_ABSENCE)))
+							.filter(entry -> VACATION_USAGE.equals(entry.getString(PARAM_VACATION_TYPE)))
+							.mapToInt(entry -> entry.getInteger(PARAM_VALUE) < 0 ? -entry.getInteger(PARAM_VALUE) : 0)
+							.sum();
 
 					if (totalMinutes > 0) {
 						Resource entry = tx.getResourceTemplate(TYPE_VACATION_ACCOUNT_ENTRY, true);
@@ -112,21 +110,6 @@ public class CancelAbsenceService extends AbstractService<StringArgument, Servic
 		}
 
 		return ServiceResult.success();
-	}
-
-	private int calculateMinutesForDay(StrolchTransaction tx, String employeeId, Resource absence, LocalDate date) {
-		String durationType = absence.getString(PARAM_DURATION_TYPE);
-		int targetMinutes = ScheduleHelper.getTargetMinutes(tx, employeeId, date);
-
-		if (targetMinutes == 0)
-			return 0;
-
-		return switch (durationType) {
-			case DURATION_FULL_DAY -> targetMinutes;
-			case DURATION_HALF_DAY -> (int) Math.round(targetMinutes / 2.0);
-			case DURATION_HOURS -> absence.getInteger(PARAM_MINUTES);
-			default -> 0;
-		};
 	}
 
 	@Override
