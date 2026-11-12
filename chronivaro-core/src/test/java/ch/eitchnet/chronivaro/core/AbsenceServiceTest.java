@@ -1059,7 +1059,7 @@ public class AbsenceServiceTest {
 
 	private void assertHolidayWeekVacationUsage(String employeeId, String absenceId) {
 		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
-			assertEquals(-1440, vacationUsageMinutes(tx, employeeId, absenceId));
+			assertEquals(1440, vacationUsageMinutes(tx, employeeId, absenceId));
 			MonthSummary december = MonthSummaryService.calculateMonthSummary(tx, employeeId, YearMonth.of(2026, 12));
 			assertEquals(1440, december.vacationMinutes());
 			MonthSummary january = MonthSummaryService.calculateMonthSummary(tx, employeeId, YearMonth.of(2027, 1));

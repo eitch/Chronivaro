@@ -4,24 +4,28 @@ import ch.eitchnet.chronivaro.core.model.AbsenceHelper;
 import ch.eitchnet.chronivaro.core.model.ChronivaroAuditHelper;
 import ch.eitchnet.chronivaro.core.model.ChronivaroModelHelper;
 import ch.eitchnet.chronivaro.core.model.VacationHelper;
+import ch.eitchnet.chronivaro.core.notification.ChronivaroNotificationHelper;
+import ch.eitchnet.chronivaro.core.notification.Notification;
 import li.strolch.model.Resource;
 import li.strolch.persistence.api.StrolchTransaction;
 import li.strolch.service.StringArgument;
-import li.strolch.service.api.AbstractService;
 import li.strolch.service.api.ServiceResult;
 import li.strolch.utils.dbc.DBC;
+
+import java.util.List;
 
 import static ch.eitchnet.chronivaro.core.model.ChronivaroConstants.*;
 import static ch.eitchnet.chronivaro.core.model.ChronivaroVersionHelper.bumpVersion;
 import static ch.eitchnet.chronivaro.core.model.ChronivaroVersionHelper.initVersion;
 import static java.text.MessageFormat.format;
 
-public class ApproveAbsenceService extends AbstractService<StringArgument, ServiceResult> {
+public class ApproveAbsenceService extends AbstractChronivaroService<StringArgument, ServiceResult> {
 
 	@Override
 	protected ServiceResult internalDoService(StringArgument arg) throws Exception {
 		DBC.PRE.assertNotEmpty("absenceId must be set", arg.value);
 
+		List<Notification> notifications;
 		try (StrolchTransaction tx = openArgOrUserTx(arg)) {
 			Resource absence = tx.getResourceBy(TYPE_ABSENCE, arg.value, true).getClone();
 
@@ -67,9 +71,13 @@ public class ApproveAbsenceService extends AbstractService<StringArgument, Servi
 				}
 			}
 
+			notifications = ChronivaroNotificationHelper.absenceDecision(tx, getAgent(), employeeId,
+					absence.getDate(PARAM_START), absence.getDate(PARAM_END), "approved", tx.getCertificate().getUserId(),
+					tx.getCertificate().getUsername());
 			tx.commitOnClose();
 		}
 
+		dispatchNotifications(notifications);
 		return ServiceResult.success();
 	}
 

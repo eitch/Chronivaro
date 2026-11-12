@@ -3,25 +3,28 @@ package ch.eitchnet.chronivaro.core.service;
 import ch.eitchnet.chronivaro.core.model.ChronivaroAuditHelper;
 import ch.eitchnet.chronivaro.core.model.ChronivaroModelHelper;
 import ch.eitchnet.chronivaro.core.model.PeriodHelper;
+import ch.eitchnet.chronivaro.core.notification.ChronivaroNotificationHelper;
+import ch.eitchnet.chronivaro.core.notification.Notification;
 import li.strolch.model.Resource;
 import li.strolch.persistence.api.StrolchTransaction;
-import li.strolch.service.api.AbstractService;
 import li.strolch.service.api.ServiceResult;
 import li.strolch.utils.dbc.DBC;
 
 import java.time.YearMonth;
+import java.util.List;
 
 import static ch.eitchnet.chronivaro.core.model.ChronivaroConstants.*;
 import static ch.eitchnet.chronivaro.core.model.ChronivaroVersionHelper.bumpVersion;
 import static li.strolch.utils.helper.StringHelper.isNotEmpty;
 
-public class ReopenPeriodService extends AbstractService<PeriodActionArgument, ServiceResult> {
+public class ReopenPeriodService extends AbstractChronivaroService<PeriodActionArgument, ServiceResult> {
 
 	@Override
 	protected ServiceResult internalDoService(PeriodActionArgument arg) throws Exception {
 		DBC.PRE.assertNotNull("Argument must be set", arg);
 		DBC.PRE.assertNotEmpty("Reopening reason must be provided in comment", arg.comment);
 
+		List<Notification> notifications;
 		try (StrolchTransaction tx = openArgOrUserTx(arg)) {
 			Resource period;
 			if (isNotEmpty(arg.periodId)) {
@@ -53,10 +56,13 @@ public class ReopenPeriodService extends AbstractService<PeriodActionArgument, S
 			ChronivaroAuditHelper.audit(tx, TYPE_TIME_PERIOD, period.getId(), AUDIT_ACTION_REOPEN, arg.comment,
 					"Reopened time period " + period.getName() + " for employee " + employee.getString(
 							PARAM_PERSONAL_NUMBER));
+			notifications = ChronivaroNotificationHelper.periodDecision(tx, getAgent(), employeeId, ym, "reopened",
+					tx.getCertificate().getUserId(), tx.getCertificate().getUsername());
 
 			tx.commitOnClose();
 		}
 
+		dispatchNotifications(notifications);
 		return ServiceResult.success();
 	}
 

@@ -35,15 +35,21 @@
 
 ## 📖 Overview
 
-**Chronivaro** is a lightweight, high-performance working time and absence management platform built on the [Strolch](https://strolch.li) framework. It delivers precise multi-block daily time tracking with automatic break derivation, comprehensive vacation journal accounting, monthly period closing workflows with calculation snapshots, role-based supervisor approval queues, and tenant-wide administration.
+**Chronivaro** is a lightweight, high-performance working time and absence management platform built on
+the [Strolch](https://strolch.li) framework. It delivers precise multi-block daily time tracking with automatic break
+derivation, comprehensive vacation journal accounting, monthly period closing workflows with calculation snapshots,
+role-based supervisor approval queues, and tenant-wide administration.
 
-The system is packaged as a standalone application distribution with an embedded Eclipse Jetty 12 runtime and a `lib/` directory containing all dependencies, serving both modern Web Component frontend assets and REST API endpoints without requiring an external servlet container.
+The system is packaged as a standalone application distribution with an embedded Eclipse Jetty 12 runtime and a `lib/`
+directory containing all dependencies, serving both modern Web Component frontend assets and REST API endpoints without
+requiring an external servlet container.
 
 ---
 
 ## 📸 User Interface & Screenshots
 
-Chronivaro offers a responsive single-page web interface tailored for employees, supervisors, HR managers, and administrators.
+Chronivaro offers a responsive single-page web interface tailored for employees, supervisors, HR managers, and
+administrators.
 
 <p align="center">
   <img src="docs/screenshots/02_dashboard.png" alt="Chronivaro Personal Dashboard" width="850">
@@ -54,60 +60,72 @@ Chronivaro offers a responsive single-page web interface tailored for employees,
 
 <br>
 
-| Live Team Presence ("Who is Working?") | Multi-Block Daily Time Recording |
-|:---:|:---:|
+|                    Live Team Presence ("Who is Working?")                    |                         Multi-Block Daily Time Recording                         |
+|:----------------------------------------------------------------------------:|:--------------------------------------------------------------------------------:|
 | <img src="docs/screenshots/03_presense.png" width="400" alt="Team Presence"> | <img src="docs/screenshots/04_myTimes-view.png" width="400" alt="My Times View"> |
 
-| Absence Requests & Vacation Balances | Supervisor Approvals Inbox |
-|:---:|:---:|
+|                              Absence Requests & Vacation Balances                               |                                 Supervisor Approvals Inbox                                 |
+|:-----------------------------------------------------------------------------------------------:|:------------------------------------------------------------------------------------------:|
 | <img src="docs/screenshots/05_absences_vacations.png" width="400" alt="Absences and Vacations"> | <img src="docs/screenshots/09_admin_approvals.png" width="400" alt="Supervisor Approvals"> |
 
-| Monthly Period Closing & Calculation Snapshot | Master Data & Employee Administration |
-|:---:|:---:|
+|                       Monthly Period Closing & Calculation Snapshot                       |                             Master Data & Employee Administration                             |
+|:-----------------------------------------------------------------------------------------:|:---------------------------------------------------------------------------------------------:|
 | <img src="docs/screenshots/06_month_period.png" width="400" alt="Monthly Period Closing"> | <img src="docs/screenshots/13_admin_employees.png" width="400" alt="Employee Administration"> |
 
 </details>
 
-> 📚 **Explore the complete visual walkthrough**: See the **[Full UI Screenshots Gallery](docs/SCREENSHOTS.md)** for all 21 application screens, including reporting views, work schedule definitions, holiday calendars, and audit logs.
+> 📚 **Explore the complete visual walkthrough**: See the **[Full UI Screenshots Gallery](docs/SCREENSHOTS.md)** for all
+> 21 application screens, including reporting views, work schedule definitions, holiday calendars, and audit logs.
 
 ---
 
 ## ✨ Key Features
 
-- ⏱️ **Time Tracking & Live Timer**: Real-time start/stop timer, manual work entry creation/editing, multi-interval daily tracking, automatic break calculation from time gaps, and overnight shift handling.
-- 🌴 **Absence & Vacation Management**: Multi-type absence requests (Vacation, Sickness, Military/Civil Defense, Special Leave) with flexible units (Full-Day, Half-Day, Hours), quota accounting, and balance progression.
-- ✅ **Supervisor Approval Queues**: Dedicated approval inbox for team supervisors and HR managers with optimistic concurrency validation, team/type filters, and mandatory rejection feedback.
-- 📅 **Monthly Period Closing Workflow**: Employee period submission, calculation snapshot generation (actual vs. target hours, overtime/undertime), supervisor approval, and HR/Admin period locking.
-- 📊 **Reporting & RFC 4180 CSV Export**: Personal summaries, monthly balance histories, vacation account journals, team performance overviews, and filtered absence reports with UTF-8 BOM encoding for Excel.
-- 👥 **Tenant Administration & Self-Service**: Comprehensive master data management for employees, employment schedules, teams, locations, holiday calendars (including extensible CSV holiday import for formats like "fcal.ch DE"), absence types, global tenant parameters, and user self-service password management.
-- 🔒 **Security & Audit Logging**: Role-based access control (Employee, Supervisor, HR, Administrator), immutable append-only audit trail logging all state transitions, approvals, and configuration changes.
-- 🚀 **Standalone Embedded Jetty Execution**: Executable standalone JAR (`chronivaro.jar`) with manifest classpath loading from `lib/` (and packaged distribution archive `chronivaro.tar.gz`) delivering frontend assets and REST API endpoints out-of-the-box.
+- ⏱️ **Time Tracking & Live Timer**: Real-time start/stop timer, manual work entry creation/editing, multi-interval
+  daily tracking, automatic break calculation from time gaps, and overnight shift handling.
+- 🌴 **Absence & Vacation Management**: Multi-type absence requests (Vacation, Sickness, Military/Civil Defense, Special
+  Leave) with flexible units (Full-Day, Half-Day, Hours), quota accounting, and balance progression.
+- ✅ **Supervisor Approval Queues**: Dedicated approval inbox for team supervisors and HR managers with optimistic
+  concurrency validation, team/type filters, and mandatory rejection feedback.
+- 📅 **Monthly Period Closing Workflow**: Employee period submission, calculation snapshot generation (actual vs. target
+  hours, overtime/undertime), supervisor approval, and HR/Admin period locking.
+- 📊 **Reporting & RFC 4180 CSV Export**: Personal summaries, monthly balance histories, vacation account journals, team
+  performance overviews, and filtered absence reports with UTF-8 BOM encoding for Excel.
+- 👥 **Tenant Administration & Self-Service**: Comprehensive master data management for employees, employment schedules,
+  teams, locations, holiday calendars (including extensible CSV holiday import for formats like "fcal.ch DE"), absence
+  types, global tenant parameters, and user self-service password management.
+- 🔒 **Security & Audit Logging**: Role-based access control (Employee, Supervisor, HR, Administrator), immutable
+  append-only audit trail logging all state transitions, approvals, and configuration changes.
+- 🚀 **Standalone Embedded Jetty Execution**: Executable standalone JAR (`chronivaro.jar`) with manifest classpath
+  loading from `lib/` (and packaged distribution archive `chronivaro.tar.gz`) delivering frontend assets and REST API
+  endpoints out-of-the-box.
 
 ---
 
 ## 🏗️ Architecture & Module Structure
 
-Chronivaro is structured as a modular Maven project separating core domain logic, REST APIs, frontend web components, and standalone packaging:
+Chronivaro is structured as a modular Maven project separating core domain logic, REST APIs, frontend web components,
+and standalone packaging:
 
 ```mermaid
 graph LR
     Client[Web Browser / API Clients] -->|HTTP / JSON| Jetty[Embedded Jetty 12 Server]
     Jetty -->|Static Routing| WebUI[chronivaro-web / Frontend SPA]
-    Jetty -->|JAX-RS Jersey| REST[chronivaro-rest / REST API]
+    Jetty -->|JAX - RS Jersey| REST[chronivaro-rest / REST API]
     REST -->|Services & Commands| Core[chronivaro-core / Strolch Domain Model]
-    Core -->|In-Memory TX| Strolch[Strolch Runtime & Data Persistence]
+    Core -->|In - Memory TX| Strolch[Strolch Runtime & Data Persistence]
 ```
 
 ### Module Breakdown
 
-| Module | Description |
-|---|---|
-| `chronivaro-core` | Domain model, Strolch services, commands, searches, and calculation policies |
-| `chronivaro-rest` | Jakarta REST (Jersey) endpoints, DTO mappers, authentication filters, and error mappers |
-| `chronivaro-web` | Single Page Application (Web Components, JavaScript modules, CSS, icons) |
-| `chronivaro-app` | Standalone launcher with embedded Eclipse Jetty HTTP server, `lib/` dependency staging, and distribution packaging |
-| `docs/` | Architecture specifications, REST API OpenAPI definition, screenshots gallery, and operations guides |
-| `runtime/` | Strolch runtime directory (configuration XMLs, templates, and model persistence) |
+| Module            | Description                                                                                                        |
+|-------------------|--------------------------------------------------------------------------------------------------------------------|
+| `chronivaro-core` | Domain model, Strolch services, commands, searches, and calculation policies                                       |
+| `chronivaro-rest` | Jakarta REST (Jersey) endpoints, DTO mappers, authentication filters, and error mappers                            |
+| `chronivaro-web`  | Single Page Application (Web Components, JavaScript modules, CSS, icons)                                           |
+| `chronivaro-app`  | Standalone launcher with embedded Eclipse Jetty HTTP server, `lib/` dependency staging, and distribution packaging |
+| `docs/`           | Architecture specifications, REST API OpenAPI definition, screenshots gallery, and operations guides               |
+| `runtime/`        | Strolch runtime directory (configuration XMLs, templates, and model persistence)                                   |
 
 ---
 
@@ -134,6 +152,7 @@ mvn test
 ```
 
 The resulting executable JAR, dependency `lib/` folder, and distribution tarball are located at:
+
 ```text
 chronivaro-app/target/chronivaro.jar
 chronivaro-app/target/lib/
@@ -154,15 +173,15 @@ The application will be accessible at `http://localhost:8080`.
 
 ### CLI Arguments & Environment Variables
 
-| Argument | Environment Variable | Default Value | Description |
-|---|---|---|---|
-| `--port <int>` | `PORT` / `CHRONIVARO_PORT` | `8080` | HTTP port to listen on (`0` binds to dynamic available port) |
-| `--bind <address>` | `BIND_ADDRESS` / `CHRONIVARO_BIND` | `0.0.0.0` | IP address to bind HTTP listener |
-| `--context-path <path>` | `CONTEXT_PATH` | `/` | Base HTTP context path for Web UI and REST endpoints |
-| `--no-http` | `NO_HTTP` | `false` | Disable HTTP server and run Strolch core runtime only |
-| `--runtime <path>` | `STROLCH_PATH` | `./runtime` | Path to Strolch runtime directory containing `config/` and `data/` |
-| `--env <name>` | `STROLCH_ENV` / `STROLCH_ENVIRONMENT` | `dev` | Environment configuration profile (e.g. `dev`, `prod`, `test`) |
-| `--web-resources <path>`| `WEB_RESOURCES_PATH` | `null` (auto) | Custom filesystem path to override static frontend assets |
+| Argument                 | Environment Variable                  | Default Value | Description                                                        |
+|--------------------------|---------------------------------------|---------------|--------------------------------------------------------------------|
+| `--port <int>`           | `PORT` / `CHRONIVARO_PORT`            | `8080`        | HTTP port to listen on (`0` binds to dynamic available port)       |
+| `--bind <address>`       | `BIND_ADDRESS` / `CHRONIVARO_BIND`    | `0.0.0.0`     | IP address to bind HTTP listener                                   |
+| `--context-path <path>`  | `CONTEXT_PATH`                        | `/`           | Base HTTP context path for Web UI and REST endpoints               |
+| `--no-http`              | `NO_HTTP`                             | `false`       | Disable HTTP server and run Strolch core runtime only              |
+| `--runtime <path>`       | `STROLCH_PATH`                        | `./runtime`   | Path to Strolch runtime directory containing `config/` and `data/` |
+| `--env <name>`           | `STROLCH_ENV` / `STROLCH_ENVIRONMENT` | `dev`         | Environment configuration profile (e.g. `dev`, `prod`, `test`)     |
+| `--web-resources <path>` | `WEB_RESOURCES_PATH`                  | `null` (auto) | Custom filesystem path to override static frontend assets          |
 
 ---
 
@@ -183,11 +202,13 @@ The application will be accessible at `http://localhost:8080`.
 ### Building & Pushing Docker Images
 
 Build and tag the local Docker image:
+
 ```bash
 ./build-docker-image.sh
 ```
 
 Build, tag, and push to the remote registry (`repo.strolch.li`):
+
 ```bash
 ./build-and-push-docker.sh
 ```
@@ -205,13 +226,19 @@ java -cp "chronivaro-app/target/*" ch.eitchnet.chronivaro.app.RuntimeArchiveGene
 ```
 
 The packaging process automatically:
+
 - Copies all necessary configuration and model files from `runtime/`.
 - Excludes temporary/session files (`runtime/temp/`) and dbStore directories (`runtime/data/dbStore/`).
-- Sanitizes `PrivilegeUsers.xml` to remove personal user accounts while preserving system accounts (`State=SYSTEM`) and the `admin` user.
+- Sanitizes `PrivilegeUsers.xml` to remove personal user accounts while preserving system accounts (`State=SYSTEM`) and
+  the `admin` user.
 
 ### Creating and Publishing Releases (GitHub & Mastodon)
 
-Chronivaro includes an automated release script (`release.sh`) to update Maven POM versions to the release version, sign and annotate git tags, build artifacts (standalone application distribution tarball, sanitized runtime tarball, SHA-256 checksums), sign all release assets with GPG (`.asc` detached signatures), generate release notes, publish GitHub Releases, announce releases on Mastodon, and automatically increment the POM version to the next minor snapshot (e.g. `0.2.0-SNAPSHOT`):
+Chronivaro includes an automated release script (`release.sh`) to update Maven POM versions to the release version, sign
+and annotate git tags, build artifacts (standalone application distribution tarball, sanitized runtime tarball, SHA-256
+checksums), sign all release assets with GPG (`.asc` detached signatures), generate release notes, publish GitHub
+Releases, announce releases on Mastodon, and automatically increment the POM version to the next minor snapshot (e.g.
+`0.2.0-SNAPSHOT`):
 
 ```bash
 # Dry-run / Simulation mode (inspect release notes, assets, and version updates preview):
@@ -227,7 +254,9 @@ Chronivaro includes an automated release script (`release.sh`) to update Maven P
 ./release.sh -v 0.1.0 -b -m --mastodon-instance mastodon.social --mastodon-token $MASTODON_TOKEN
 ```
 
-Configuration can be provided via flags, environment variables (`GITHUB_TOKEN`, `MASTODON_INSTANCE`, `MASTODON_ACCESS_TOKEN`, `MASTODON_VISIBILITY`), or loaded automatically from the release environment file `${HOME}/.config/chronivaro/release.env`.
+Configuration can be provided via flags, environment variables (`GITHUB_TOKEN`, `MASTODON_INSTANCE`,
+`MASTODON_ACCESS_TOKEN`, `MASTODON_VISIBILITY`), or loaded automatically from the release environment file
+`${HOME}/.config/chronivaro/release.env`.
 
 ### Production Deployment with Docker Compose
 
@@ -237,8 +266,10 @@ Configuration can be provided via flags, environment variables (`GITHUB_TOKEN`, 
    mkdir -p logs runtime/{config,data,temp}
    ```
 2. Copy configuration files from `runtime/` into `runtime/` (`config/`, `data/`, `temp/`).
-3. Configure mail delivery in `runtime/config/StrolchConfiguration.xml` (see [Email Delivery & MailHandler Configuration](#-email-delivery--user-challenge-configuration-mailhandler) below).
-4. Optional: Configure file logging in `runtime/config/logback.xml` to persist logs to `/chronivaro-logs` (mounted to `./logs`).
+3. Configure mail delivery in `runtime/config/StrolchConfiguration.xml`
+   (see [Email Delivery & MailHandler Configuration](#-email-delivery--user-challenge-configuration-mailhandler) below).
+4. Optional: Configure file logging in `runtime/config/logback.xml` to persist logs to `/chronivaro-logs` (mounted to
+   `./logs`).
 5. Copy `docker-compose.yml` to the directory.
 6. Launch the container:
    ```bash
@@ -250,10 +281,14 @@ Configuration can be provided via flags, environment variables (`GITHUB_TOKEN`, 
 
 ## 🔄 Upgrading & Runtime Migration Guide
 
-When upgrading Chronivaro to a newer version, new features may introduce updated templates (`runtime/data/Templates.xml`), new service or search privileges (`runtime/config/PrivilegeRoles.xml`), or new configuration parameters (`runtime/data/Model.xml`).
+When upgrading Chronivaro to a newer version, new features may introduce updated templates
+(`runtime/data/Templates.xml`), new service or search privileges (`runtime/config/PrivilegeRoles.xml`), or new
+configuration parameters (`runtime/data/Model.xml`).
 
 Every GitHub release includes:
-- **`runtime-upgrade-<prev_tag>-to-<new_tag>.patch`**: A unified diff patch file that can be applied directly to an existing deployment's `runtime/` directory.
+
+- **`runtime-upgrade-<prev_tag>-to-<new_tag>.patch`**: A unified diff patch file that can be applied directly to an
+  existing deployment's `runtime/` directory.
 - **`RELEASE_NOTES.md`**: Markdown release notes with detailed explanations of changed runtime files and diff snippets.
 
 ### Step-by-Step Upgrade Procedure
@@ -265,7 +300,8 @@ Every GitHub release includes:
    ```
 
 2. **Download Release Assets & Patch**:
-   Download the new application distribution archive (`chronivaro-<version>.tar.gz`), the patch file (`runtime-upgrade-<from>-to-<to>.patch`), and checksums (`SHA256SUMS.txt`). Verify integrity:
+   Download the new application distribution archive (`chronivaro-<version>.tar.gz`), the patch file
+   (`runtime-upgrade-<from>-to-<to>.patch`), and checksums (`SHA256SUMS.txt`). Verify integrity:
    ```bash
    sha256sum --check SHA256SUMS.txt
    ```
@@ -290,23 +326,25 @@ Every GitHub release includes:
    ```
 
 5. **Review Custom Configurations**:
-   If your deployment has customized users (`PrivilegeUsers.xml`) or custom tenant data (`Model.xml`), review any modified sections to ensure your settings are preserved.
+   If your deployment has customized users (`PrivilegeUsers.xml`) or custom tenant data (`Model.xml`), review any
+   modified sections to ensure your settings are preserved.
 
 6. **Update Application Binaries & Restart**:
-   - **Standalone Deployments**: Extract the new `chronivaro.jar` and `lib/` directory, then restart the service:
-     ```bash
-     tar -xzf chronivaro-<version>.tar.gz
-     sudo systemctl restart chronivaro
-     ```
-   - **Docker Deployments**: Update the image tag in `docker-compose.yml` and restart the container:
-     ```bash
-     docker compose pull
-     docker compose up -d
-     ```
+    - **Standalone Deployments**: Extract the new `chronivaro.jar` and `lib/` directory, then restart the service:
+      ```bash
+      tar -xzf chronivaro-<version>.tar.gz
+      sudo systemctl restart chronivaro
+      ```
+    - **Docker Deployments**: Update the image tag in `docker-compose.yml` and restart the container:
+      ```bash
+      docker compose pull
+      docker compose up -d
+      ```
 
 ### Generating Custom Upgrade Instructions & Diffs
 
-You can also use the bundled CLI tool to generate markdown upgrade instructions or unified diffs between any two git tags/revisions:
+You can also use the bundled CLI tool to generate markdown upgrade instructions or unified diffs between any two git
+tags/revisions:
 
 ```bash
 # Print markdown upgrade instructions to stdout
@@ -320,12 +358,15 @@ You can also use the bundled CLI tool to generate markdown upgrade instructions 
 
 ## ✉️ Email Delivery & User Challenge Configuration (MailHandler)
 
-Chronivaro uses Strolch's `li.strolch.privilege.handler.MailUserChallengeHandler` in `runtime/config/PrivilegeConfig.xml` to deliver user registration challenges and password reset tokens.
+Chronivaro uses Strolch's `li.strolch.privilege.handler.MailUserChallengeHandler` in
+`runtime/config/PrivilegeConfig.xml` to deliver user registration challenges and password reset tokens.
 
 Challenge delivery is handled by the `MailHandler` component configured in `runtime/config/StrolchConfiguration.xml`:
 
-- **Development (`SimulatedMailHandler`)**: By default in local/dev environments, `SimulatedMailHandler` intercepts outgoing emails and logs challenge links to the standard log output, allowing local testing without an SMTP server.
-- **Production (`SmtpMailHandler`)**: For production deployments, switch the implementation to `SmtpMailHandler` and configure your SMTP server connection parameters. **No modifications to `PrivilegeConfig.xml` are needed.**
+- **Development (`SimulatedMailHandler`)**: By default in local/dev environments, `SimulatedMailHandler` intercepts
+  outgoing emails and logs challenge links to the standard log output, allowing local testing without an SMTP server.
+- **Production (`SmtpMailHandler`)**: For production deployments, switch the implementation to `SmtpMailHandler` and
+  configure your SMTP server connection parameters. **No modifications to `PrivilegeConfig.xml` are needed.**
 
 ```xml
 <Component>
@@ -360,34 +401,42 @@ See [docs/OPERATIONS.md](docs/OPERATIONS.md) for detailed descriptions of all `M
 
 ### Generating Sample Data
 
-For testing, demonstration, or initial development environments, Chronivaro includes a `GenerateSampleDataJob` that creates a rich dataset (holiday calendars, locations, teams, employees with working schedules, defaults, time entries, absences, on-call periods, and period approvals).
+For testing, demonstration, or initial development environments, Chronivaro includes a `GenerateSampleDataJob` that
+creates a rich dataset (holiday calendars, locations, teams, employees with working schedules, defaults, time entries,
+absences, on-call periods, and period approvals).
 
 The job is configured as a `StrolchJob` resource in `runtime/data/Model.xml`:
 
 ```xml
 <Resource Id="GenerateSampleDataJob" Name="GenerateSampleDataJob" Type="StrolchJob">
     <ParameterBag Id="parameters" Name="Parameters" Type="Parameters">
-        <Parameter Id="className" Name="Class Name" Type="String" Value="ch.eitchnet.chronivaro.core.jobs.GenerateSampleDataJob"/>
+        <Parameter Id="className" Name="Class Name" Type="String"
+                   Value="ch.eitchnet.chronivaro.core.jobs.GenerateSampleDataJob"/>
         <Parameter Id="mode" Name="Job Mode" Type="String" Interpretation="Enumeration" Uom="JobMode" Value="Manual"/>
     </ParameterBag>
 </Resource>
 ```
 
-When set to `JobMode.Manual`, it can be triggered on demand via the Strolch Jobs API or during first startup. StrolchJob definitions are automatically excluded from production runtime distribution tarballs generated by `build-runtime-tarball.sh`.
+When set to `JobMode.Manual`, it can be triggered on demand via the Strolch Jobs API or during first startup. StrolchJob
+definitions are automatically excluded from production runtime distribution tarballs generated by
+`build-runtime-tarball.sh`.
 
 ---
 
 ## 🔑 Initial Administrator Login & Employee Setup
 
 1. **Initial Login**: Navigate to `http://localhost:8080` and log in with default credentials:
-   - **Username**: `admin`
-   - **Password**: `admin`
-2. **Mandatory Password Change**: Immediately change the default admin password via the user profile dropdown in the top header.
+    - **Username**: `admin`
+    - **Password**: `admin`
+2. **Mandatory Password Change**: Immediately change the default admin password via the user profile dropdown in the top
+   header.
 3. **First Employee Onboarding**:
-   - Verify/configure Locations, Teams, and Work Schedule Templates under **Administration**.
-   - Create the employee profile in **Administration -> Employees**, assigning Team, Location, and Schedule Template. Saving the employee automatically provisions the linked user account.
-   - Initiate registration by selecting **Actions -> Register** on the employee row.
-   - The employee completes the registration form with their challenge code to set their password, logs in, and can start tracking time immediately.
+    - Verify/configure Locations, Teams, and Work Schedule Templates under **Administration**.
+    - Create the employee profile in **Administration -> Employees**, assigning Team, Location, and Schedule Template.
+      Saving the employee automatically provisions the linked user account.
+    - Initiate registration by selecting **Actions -> Register** on the employee row.
+    - The employee completes the registration form with their challenge code to set their password, logs in, and can
+      start tracking time immediately.
 
 ---
 
@@ -395,31 +444,38 @@ When set to `JobMode.Manual`, it can be triggered on demand via the Strolch Jobs
 
 Chronivaro provides unauthenticated standard endpoints for container orchestration, load balancers, and health checks:
 
-| Endpoint | Method | Description |
-|---|---|---|
-| `/rest/chronivaro/v1/system/health` | `GET` | **Liveness Probe**: Returns HTTP 200 `{"status": "UP", "agentState": "RUNNING", "uptimeMs": ...}` |
-| `/rest/chronivaro/v1/system/readiness`| `GET` | **Readiness Probe**: Returns HTTP 200 `{"status": "READY", "activeRealms": [...]}` when ready for traffic |
-| `/rest/chronivaro/v1/system/version` | `GET` | **Version Metadata**: Returns application version, build timestamp, environment, and Strolch version |
-| `/rest/chronivaro/v1/system/metrics` | `GET` | **JVM Telemetry**: Returns heap/non-heap memory, active threads, system load average, and uptime |
+| Endpoint                               | Method | Description                                                                                               |
+|----------------------------------------|--------|-----------------------------------------------------------------------------------------------------------|
+| `/rest/chronivaro/v1/system/health`    | `GET`  | **Liveness Probe**: Returns HTTP 200 `{"status": "UP", "agentState": "RUNNING", "uptimeMs": ...}`         |
+| `/rest/chronivaro/v1/system/readiness` | `GET`  | **Readiness Probe**: Returns HTTP 200 `{"status": "READY", "activeRealms": [...]}` when ready for traffic |
+| `/rest/chronivaro/v1/system/version`   | `GET`  | **Version Metadata**: Returns application version, build timestamp, environment, and Strolch version      |
+| `/rest/chronivaro/v1/system/metrics`   | `GET`  | **JVM Telemetry**: Returns heap/non-heap memory, active threads, system load average, and uptime          |
 
 ---
 
 ## 📝 Observability & Structured Logging
 
-Chronivaro uses SLF4J with Logback for structured logging. Every HTTP request carries an `X-Correlation-Id` header mapped to the logging MDC context:
+Chronivaro uses SLF4J with Logback for structured logging. Every HTTP request carries an `X-Correlation-Id` header
+mapped to the logging MDC context:
 
 ```text
 2026-08-19 13:30:00.123 [qtp1234567-24] [corrId=e4a1b2c3-4d5e-6f7a-8b9c-0d1e2f3a4b5c] INFO  ch.eitchnet.chronivaro.rest.resource.ChronivaroResource - Processed presence query
 ```
 
-Clients can supply custom correlation IDs via the `X-Correlation-Id` request header; otherwise, the server automatically generates and returns a UUID correlation ID in the response headers.
+Clients can supply custom correlation IDs via the `X-Correlation-Id` request header; otherwise, the server automatically
+generates and returns a UUID correlation ID in the response headers.
 
 ### File Logging & Docker Mount Point
 
-Logging configuration can be customized dynamically by placing `logback.xml` in `runtime/config/`. When the Strolch agent starts, `LoggingLoader.reloadLogging(this.configPathF)` reloads Logback configuration from `runtime/config/logback.xml`.
+Logging configuration can be customized dynamically by placing `logback.xml` in `runtime/config/`. When the Strolch
+agent starts, `LoggingLoader.reloadLogging(this.configPathF)` reloads Logback configuration from
+`runtime/config/logback.xml`.
 
-By default, the standard Docker container provides `/chronivaro-logs` as a mount point for persistent log files. To persist logs:
-1. Ensure `runtime/config/logback.xml` contains a `RollingFileAppender` pointing to `/chronivaro-logs/chronivaro.log` (or `${LOG_DIR:-/chronivaro-logs}/chronivaro.log`).
+By default, the standard Docker container provides `/chronivaro-logs` as a mount point for persistent log files. To
+persist logs:
+
+1. Ensure `runtime/config/logback.xml` contains a `RollingFileAppender` pointing to `/chronivaro-logs/chronivaro.log`
+   (or `${LOG_DIR:-/chronivaro-logs}/chronivaro.log`).
 2. Mount the log directory in Docker Compose:
    ```yaml
    volumes:
@@ -431,37 +487,60 @@ By default, the standard Docker container provides `/chronivaro-logs` as a mount
 
 ## 🛡️ Role-Based Access & Security
 
-| Role | Responsibilities & Capabilities |
-|---|---|
-| **Employee** | Record work entries, start/stop timers, view team presence ("Who is working?"), view personal balances, submit absence requests, submit monthly closing periods |
-| **Supervisor** | View team presence, review and approve/reject team absence requests, review submitted monthly periods for supervised teams with calculation snapshots |
-| **HR** | Manage employee profiles, administer vacation entitlements and adjustments, unlock/lock periods across the tenant, view all absence reports |
-| **Administrator** | Manage global configuration parameters, holiday calendars, teams, locations, schedule templates, and inspect tenant audit logs |
-| **StrolchAdmin** | Full framework administration and privilege user/role management |
+| Role              | Responsibilities & Capabilities                                                                                                                                 |
+|-------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Employee**      | Record work entries, start/stop timers, view team presence ("Who is working?"), view personal balances, submit absence requests, submit monthly closing periods |
+| **Supervisor**    | View team presence, review and approve/reject team absence requests, review submitted monthly periods for supervised teams with calculation snapshots           |
+| **HR**            | Manage employee profiles, administer vacation entitlements and adjustments, unlock/lock periods across the tenant, view all absence reports                     |
+| **Administrator** | Manage global configuration parameters, holiday calendars, teams, locations, schedule templates, and inspect tenant audit logs                                  |
+| **StrolchAdmin**  | Full framework administration and privilege user/role management                                                                                                |
+
+### Workflow Notifications
+
+Chronivaro sends notices for submitted absence requests and time periods, absence approval/rejection, and period
+approval/rejection/reopening. Directly approved absences notify the employee; drafts do not generate notices. Recipients
+are enabled supervised-team approvers and HR/administrators for submissions, and the linked employee for decisions.
+Acting users are suppressed; email skips invalid addresses and deduplicates shared addresses.
+
+Email is the default channel and uses the configured Strolch `MailHandler`; account challenge emails use the same
+channel while retaining their localized content. Notification channels are independent of email and may address
+recipients by user ID even when no email is available. Additional implementations can be registered through Java
+`ServiceLoader` at `META-INF/services/ch.eitchnet.chronivaro.core.notification.NotificationChannel`.
+
+Emails include only the employee name and relevant dates or period. They exclude absence types, comments, and rejection
+reasons. Notifications are best-effort after the workflow transaction commits, and email delivery is asynchronous; there
+is no durable queue or retry, and delivery failures do not roll back completed workflows. See
+the [operations guide](docs/OPERATIONS.md#74-workflow-notifications) for configuration and limitations.
 
 ---
 
 ## 🔑 Personal Access Tokens (PAT) & API Integration
 
-Chronivaro supports Personal Access Tokens (PAT) for third-party integrations (e.g. desktop widgets, CLI scripts, mobile timers):
+Chronivaro supports Personal Access Tokens (PAT) for third-party integrations (e.g. desktop widgets, CLI scripts, mobile
+timers):
 
-- **Generation & Management**: Users can generate and revoke tokens in the Web UI under **Profile -> Personal Access Tokens** (`#tokens`).
-- **Validity & Expiration**: Tokens can be created with custom validity periods (specified in days, months, or years; defaulting to 1 year) or configured with no expiration.
+- **Generation & Management**: Users can generate and revoke tokens in the Web UI under **Profile -> Personal Access
+  Tokens** (`#tokens`).
+- **Validity & Expiration**: Tokens can be created with custom validity periods (specified in days, months, or years;
+  defaulting to 1 year) or configured with no expiration.
 - **Preset Scopes**:
-  - `DESKTOP_TIMER`: Permissions to start/stop timers, fetch status/summaries, and read personal entries.
-  - `READ_ONLY_TIMES`: Read-only access to `/me/*` entries, summaries, and presence.
-  - `FULL_PERSONAL`: Full scope of the user's personal `/me/*` permissions.
+    - `DESKTOP_TIMER`: Permissions to start/stop timers, fetch status/summaries, and read personal entries.
+    - `READ_ONLY_TIMES`: Read-only access to `/me/*` entries, summaries, and presence.
+    - `FULL_PERSONAL`: Full scope of the user's personal `/me/*` permissions.
 - **Authentication**: Pass the token via the `Authorization` header:
   ```http
   Authorization: Bearer <tokenId>:<tokenSecret>
   ```
-  *(Or `Authorization: <tokenId>:<tokenSecret>` or HTTP Basic Auth with username `<tokenId>` and password `<tokenSecret>`)*
+  *(Or `Authorization: <tokenId>:<tokenSecret>` or HTTP Basic Auth with username `<tokenId>` and password
+  `<tokenSecret>`)*
 
 ### Testing PAT with cURL
 
-Users can test their PAT against the REST API with standard `curl` commands (assuming the server is hosted at `http://localhost:8080`):
+Users can test their PAT against the REST API with standard `curl` commands (assuming the server is hosted at
+`http://localhost:8080`):
 
 #### 1. Check Current Timer & Summary Status
+
 ```bash
 curl -X GET "http://localhost:8080/rest/chronivaro/v1/me/timer/status" \
   -H "Authorization: Bearer <tokenId>:<tokenSecret>" \
@@ -469,6 +548,7 @@ curl -X GET "http://localhost:8080/rest/chronivaro/v1/me/timer/status" \
 ```
 
 #### 2. Start Timer
+
 ```bash
 curl -X POST "http://localhost:8080/rest/chronivaro/v1/me/timer/start" \
   -H "Authorization: Bearer <tokenId>:<tokenSecret>" \
@@ -481,6 +561,7 @@ curl -X POST "http://localhost:8080/rest/chronivaro/v1/me/timer/start" \
 ```
 
 #### 3. Stop Timer
+
 ```bash
 curl -X POST "http://localhost:8080/rest/chronivaro/v1/me/timer/stop" \
   -H "Authorization: Bearer <tokenId>:<tokenSecret>" \
@@ -494,11 +575,15 @@ curl -X POST "http://localhost:8080/rest/chronivaro/v1/me/timer/stop" \
 
 ## 📚 Documentation
 
-- 🖼️ **[Screenshots Gallery](docs/SCREENSHOTS.md)**: Comprehensive visual tour of all application views and administration screens.
-- ⚙️ **[Operations & Deployment Guide](docs/OPERATIONS.md)**: Production deployment, container setup, systemd integration, and disaster recovery.
-- 📡 **[OpenAPI Specification](docs/openapi.yaml)**: Comprehensive REST API contract with request/response schemas and examples.
+- 🖼️ **[Screenshots Gallery](docs/SCREENSHOTS.md)**: Comprehensive visual tour of all application views and
+  administration screens.
+- ⚙️ **[Operations & Deployment Guide](docs/OPERATIONS.md)**: Production deployment, container setup, systemd
+  integration, and disaster recovery.
+- 📡 **[OpenAPI Specification](docs/openapi.yaml)**: Comprehensive REST API contract with request/response schemas and
+  examples.
 - 📋 **[Implementation Backlog](docs/IMPLEMENTATION_BACKLOG.md)**: Granular task breakdown and implementation history.
-- 📊 **[Implementation Status](docs/IMPLEMENTATION_STATUS.md)**: Architectural decisions, delivered milestones, and verification summary.
+- 📊 **[Implementation Status](docs/IMPLEMENTATION_STATUS.md)**: Architectural decisions, delivered milestones, and
+  verification summary.
 
 ---
 

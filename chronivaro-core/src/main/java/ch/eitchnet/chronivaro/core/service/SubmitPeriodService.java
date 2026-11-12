@@ -3,25 +3,28 @@ package ch.eitchnet.chronivaro.core.service;
 import ch.eitchnet.chronivaro.core.model.ChronivaroAuditHelper;
 import ch.eitchnet.chronivaro.core.model.ChronivaroModelHelper;
 import ch.eitchnet.chronivaro.core.model.PeriodHelper;
+import ch.eitchnet.chronivaro.core.notification.ChronivaroNotificationHelper;
+import ch.eitchnet.chronivaro.core.notification.Notification;
 import li.strolch.model.Resource;
 import li.strolch.persistence.api.StrolchTransaction;
-import li.strolch.service.api.AbstractService;
 import li.strolch.service.api.ServiceResult;
 import li.strolch.utils.dbc.DBC;
 
 import java.time.YearMonth;
 import java.time.ZonedDateTime;
+import java.util.List;
 
 import static ch.eitchnet.chronivaro.core.model.ChronivaroConstants.*;
 import static ch.eitchnet.chronivaro.core.model.ChronivaroVersionHelper.bumpVersion;
 import static li.strolch.utils.helper.StringHelper.isNotEmpty;
 
-public class SubmitPeriodService extends AbstractService<PeriodActionArgument, ServiceResult> {
+public class SubmitPeriodService extends AbstractChronivaroService<PeriodActionArgument, ServiceResult> {
 
 	@Override
 	protected ServiceResult internalDoService(PeriodActionArgument arg) throws Exception {
 		DBC.PRE.assertNotNull("Argument must be set", arg);
 
+		List<Notification> notifications;
 		try (StrolchTransaction tx = openArgOrUserTx(arg)) {
 			Resource period;
 			if (isNotEmpty(arg.periodId)) {
@@ -56,10 +59,13 @@ public class SubmitPeriodService extends AbstractService<PeriodActionArgument, S
 			ChronivaroAuditHelper.audit(tx, TYPE_TIME_PERIOD, period.getId(), AUDIT_ACTION_SUBMIT, arg.comment,
 					"Submitted time period " + period.getName() + " for employee " + employee.getString(
 							PARAM_PERSONAL_NUMBER));
+			notifications = ChronivaroNotificationHelper.periodSubmitted(tx, getAgent(), employeeId, ym,
+					tx.getCertificate().getUserId(), tx.getCertificate().getUsername());
 
 			tx.commitOnClose();
 		}
 
+		dispatchNotifications(notifications);
 		return ServiceResult.success();
 	}
 

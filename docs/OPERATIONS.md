@@ -150,16 +150,16 @@ Before running `docker compose up -d`, prepare the runtime directory on the host
    - Copy `runtime/data/*` to `./runtime/data/`
 
 3. **Configure Authentication & User Challenge Handler**:
-   By default, Chronivaro is configured to use Strolch's `MailUserChallengeHandler` in `./runtime/config/PrivilegeConfig.xml` for delivering user registration challenges and password reset codes:
-   ```xml
-   <UserChallengeHandler class="li.strolch.privilege.handler.MailUserChallengeHandler"/>
-   ```
+   Chronivaro configures `ch.eitchnet.chronivaro.core.ChronivaroUserChallengeHandler` in `./runtime/config/PrivilegeConfig.xml` for registration challenges and password reset codes. It routes the localized challenge message through the notification email channel:
+    ```xml
+    <UserChallengeHandler class="ch.eitchnet.chronivaro.core.ChronivaroUserChallengeHandler"/>
+    ```
 
 4. **Configure Mail Delivery (Strolch MailHandler)**:
-   Chronivaro's `MailUserChallengeHandler` delegates email dispatching to the `MailHandler` component defined in `runtime/config/StrolchConfiguration.xml`.
+   The notification email channel and account challenge handler use the configured `MailHandler` component defined in `runtime/config/StrolchConfiguration.xml`.
    
    - **Development & Testing (`SimulatedMailHandler`)**:
-     In the development environment profile (`dev`), Chronivaro uses `SimulatedMailHandler`. Outgoing emails (such as registration and password reset challenge links) are printed directly to the system logs, allowing quick local testing without an external mail server.
+     In the development environment profile (`dev`), Chronivaro uses `SimulatedMailHandler`. Outgoing emails (including workflow notices, registration links, and password reset challenges) are printed directly to the system logs, allowing quick local testing without an external mail server.
    
    - **Production Deployment (`SmtpMailHandler`)**:
      For production environments, configure real SMTP delivery by switching the implementation class to `SmtpMailHandler` and updating the mail server credentials in `runtime/config/StrolchConfiguration.xml`. **No changes are required in `PrivilegeConfig.xml`**.
@@ -680,6 +680,14 @@ Server-side pagination (`offset` and `limit`) prevents unbounded memory allocati
 ### 7.3 Audit Log Immutability
 
 - Every lifecycle change (timer start/stop, work entry edit, absence approval/rejection, period submission, config update) produces an append-only audit trail accessible under `/rest/chronivaro/v1/admin/audit-logs`.
+
+### 7.4 Workflow Notifications
+
+- Absence and time-period submission notices go only to enabled HR/administrator users and supervisors whose team scope covers the employee. Approval, rejection, and period-reopening notices go to the linked employee account; drafts do not produce notifications, and directly approved absences notify only the employee.
+- The email content is intentionally limited to the employee name and relevant dates or period. Absence types, comments, and rejection reasons are never included. Disabled users and the acting user are omitted; the email channel skips invalid or missing addresses and deduplicates shared addresses.
+- The bundled `agent` role includes read access to privilege groups so role-based recipients can be resolved. If you replace `PrivilegeRoles.xml` with a custom role set, retain `PrivilegeGetGroup` for the system `agent` user; direct user roles remain usable if group lookup is denied.
+- The email channel calls the configured Strolch `MailHandler`, so `SimulatedMailHandler` remains suitable for development and `SmtpMailHandler` configuration applies in production. Additional `NotificationChannel` implementations can be discovered with Java `ServiceLoader`; package the provider class names in `META-INF/services/ch.eitchnet.chronivaro.core.notification.NotificationChannel`. Channels can address users by recipient ID and override `recipientKey` to filter or deduplicate their own destinations. Account challenge notifications contain registration or password-reset tokens, so custom channels must protect them or decline the `account.challenge` type.
+- Notifications are dispatched only after the workflow transaction closes successfully. Mail delivery is asynchronous and best-effort: a channel failure does not roll back the committed workflow, and there is no durable queue or automatic retry after process shutdown or mail-server failure.
 
 ---
 

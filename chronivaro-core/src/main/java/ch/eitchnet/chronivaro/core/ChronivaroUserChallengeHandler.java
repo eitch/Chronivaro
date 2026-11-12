@@ -2,6 +2,9 @@ package ch.eitchnet.chronivaro.core;
 
 import jakarta.mail.internet.AddressException;
 import jakarta.mail.internet.InternetAddress;
+import ch.eitchnet.chronivaro.core.notification.Notification;
+import ch.eitchnet.chronivaro.core.notification.NotificationDispatcher;
+import ch.eitchnet.chronivaro.core.notification.NotificationRecipient;
 import li.strolch.agent.api.StrolchAgent;
 import li.strolch.model.Resource;
 import li.strolch.persistence.api.StrolchTransaction;
@@ -9,7 +12,6 @@ import li.strolch.privilege.handler.UserChallengeHandler;
 import li.strolch.privilege.model.Usage;
 import li.strolch.privilege.model.internal.User;
 import li.strolch.privilege.model.internal.UserChallenge;
-import li.strolch.utils.SmtpMailer;
 import li.strolch.utils.helper.StringHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,7 +20,6 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
 
 import static ch.eitchnet.chronivaro.core.model.ChronivaroConstants.*;
 
@@ -158,15 +159,15 @@ public class ChronivaroUserChallengeHandler extends UserChallengeHandler {
 		String subject = buildSubject(user, usage, companyName);
 		String body = buildBody(user, usage, challenge, companyName, registrationUrl);
 
-		CompletableFuture.runAsync(() -> {
-			SmtpMailer.getInstance().sendMailSignedIfAvailable(email, subject, body);
-		}).whenComplete((v, t) -> {
-			if (t == null) {
-				logger.info("Sent challenge email (usage={}) for user {} to {}", usage, user.getUsername(), email);
-			} else {
-				logger.error("Failed to send challenge email for user {} to {}: {}", user.getUsername(), email, t.getMessage(), t);
-			}
-		});
+		String recipientId = StringHelper.trimOrEmpty(user.getUserId());
+		if (StringHelper.isEmpty(recipientId))
+			recipientId = user.getUsername();
+		dispatchNotification(new Notification(Notification.ACCOUNT_CHALLENGE,
+				new NotificationRecipient(recipientId, Map.of(NotificationRecipient.EMAIL, email)), subject, body));
+	}
+
+	protected void dispatchNotification(Notification notification) {
+		NotificationDispatcher.createDefault(getAgent()).dispatch(notification);
 	}
 
 	protected String buildSubject(User user, Usage usage, String companyName) {

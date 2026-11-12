@@ -1,6 +1,8 @@
 package ch.eitchnet.chronivaro.core;
 
+import ch.eitchnet.chronivaro.core.notification.Notification;
 import li.strolch.privilege.model.Usage;
+import li.strolch.privilege.model.UserState;
 import li.strolch.privilege.model.internal.User;
 import li.strolch.privilege.model.internal.UserHistory;
 import org.junit.Test;
@@ -10,7 +12,9 @@ import java.util.Map;
 import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static li.strolch.privilege.base.PrivilegeConstants.EMAIL;
 
 public class ChronivaroUserChallengeHandlerTest {
 
@@ -63,5 +67,30 @@ public class ChronivaroUserChallengeHandlerTest {
 		assertTrue(body.contains("https://app.chronivaro.com/#complete-registration?user=alice&token=XYZ_789"));
 		assertTrue(body.contains("XYZ_789"));
 		assertTrue(body.contains("Your Chronivaro Corp Team"));
+	}
+
+	@Test
+	public void shouldRouteLocalizedChallengeThroughGenericNotification() {
+		CapturingChallengeHandler handler = new CapturingChallengeHandler();
+		handler.initialize(Map.of("serverBaseUrl", "https://app.chronivaro.ch", "companyName", "Eitchnet"));
+		User user = new User("3", "anna", null, "Anna", "Schmidt", UserState.REMOTE, Set.of("Employee"), Set.of(),
+				Locale.GERMAN, Map.of(EMAIL, "anna@example.ch"), false, UserHistory.EMPTY);
+
+		handler.sendChallengeToUser(user, "CHALLENGE_CODE_456");
+
+		assertNotNull(handler.notification);
+		assertEquals("account.challenge", handler.notification.type());
+		assertEquals("anna@example.ch", handler.notification.recipient().destination("email"));
+		assertEquals("Willkommen bei Eitchnet - Ihre Registrierung", handler.notification.title());
+		assertTrue(handler.notification.message().contains("CHALLENGE_CODE_456"));
+	}
+
+	private static class CapturingChallengeHandler extends ChronivaroUserChallengeHandler {
+		private Notification notification;
+
+		@Override
+		protected void dispatchNotification(Notification notification) {
+			this.notification = notification;
+		}
 	}
 }

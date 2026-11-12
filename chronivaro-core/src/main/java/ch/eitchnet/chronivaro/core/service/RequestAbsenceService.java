@@ -1,10 +1,11 @@
 package ch.eitchnet.chronivaro.core.service;
 
 import ch.eitchnet.chronivaro.core.model.*;
+import ch.eitchnet.chronivaro.core.notification.ChronivaroNotificationHelper;
+import ch.eitchnet.chronivaro.core.notification.Notification;
 import li.strolch.model.Resource;
 import li.strolch.persistence.api.StrolchTransaction;
 import li.strolch.service.StringResult;
-import li.strolch.service.api.AbstractService;
 import li.strolch.service.api.ServiceArgument;
 import li.strolch.service.api.ServiceResultState;
 import li.strolch.utils.dbc.DBC;
@@ -12,13 +13,15 @@ import li.strolch.utils.dbc.DBC;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import static ch.eitchnet.chronivaro.core.model.ChronivaroConstants.*;
 import static ch.eitchnet.chronivaro.core.model.ChronivaroVersionHelper.initVersion;
 import static java.text.MessageFormat.format;
 
-public class RequestAbsenceService extends AbstractService<RequestAbsenceService.RequestAbsenceArgument, StringResult> {
+public class RequestAbsenceService extends AbstractChronivaroService<RequestAbsenceService.RequestAbsenceArgument,
+		StringResult> {
 
 	public static class RequestAbsenceArgument extends ServiceArgument {
 		public String employeeId;
@@ -43,6 +46,7 @@ public class RequestAbsenceService extends AbstractService<RequestAbsenceService
 		DBC.PRE.assertNotEmpty("durationType must be set", arg.durationType);
 
 		String absenceId;
+		List<Notification> notifications = List.of();
 		try (StrolchTransaction tx = openArgOrUserTx(arg)) {
 			// Check if actor is acting on behalf of another employee
 			Optional<Resource> userEmployeeO = ChronivaroModelHelper.findEmployeeByUser(tx,
@@ -145,9 +149,18 @@ public class RequestAbsenceService extends AbstractService<RequestAbsenceService
 								arg.absenceTypeCode, arg.start, arg.end, tx.getCertificate().getUsername()));
 			}
 
+			if (isApproved) {
+				notifications = ChronivaroNotificationHelper.absenceDecision(tx, getAgent(), arg.employeeId, startZdt,
+						endZdt, "approved", tx.getCertificate().getUserId(), tx.getCertificate().getUsername());
+			} else if (!isDraft) {
+				notifications = ChronivaroNotificationHelper.absenceSubmitted(tx, getAgent(), arg.employeeId, startZdt,
+						endZdt, tx.getCertificate().getUserId(), tx.getCertificate().getUsername());
+			}
+
 			tx.commitOnClose();
 		}
 
+		dispatchNotifications(notifications);
 		return new StringResult(absenceId);
 	}
 

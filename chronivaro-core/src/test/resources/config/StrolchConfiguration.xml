@@ -32,6 +32,24 @@
             <depends>RealmHandler</depends>
             <depends>PrivilegeHandler</depends>
         </Component>
+
+        <Component>
+            <name>MailHandler</name>
+            <api>li.strolch.handler.mail.MailHandler</api>
+            <impl>ch.eitchnet.chronivaro.core.notification.NotificationDispatcherTest$RecordingMailHandler</impl>
+            <depends>RealmHandler</depends>
+            <Properties>
+                <fromAddr>Chronivaro &lt;sender@example.ch&gt;</fromAddr>
+                <username>sender@example.ch</username>
+                <password>unused</password>
+                <auth>false</auth>
+                <startTls>false</startTls>
+                <host>localhost</host>
+                <port>25</port>
+                <sign>false</sign>
+                <encrypt>false</encrypt>
+            </Properties>
+        </Component>
         
         <Component>
             <name>SessionHandler</name>
