@@ -153,13 +153,6 @@
             <Parameter Id="validTo" Name="Valid To" Type="Date" Value="9999-12-31T23:59:59.999+01:00"/>
             <Parameter Id="weeklyScheduleId" Name="Weekly Schedule ID" Type="String" Value=""/>
             <Parameter Id="dailyTargetMinutes" Name="Daily Target Minutes" Type="Integer" Value="0"/>
-            <Parameter Id="dailyTargetMinutesMonday" Name="Daily Target Minutes Monday" Type="Integer" Value="0"/>
-            <Parameter Id="dailyTargetMinutesTuesday" Name="Daily Target Minutes Tuesday" Type="Integer" Value="0"/>
-            <Parameter Id="dailyTargetMinutesWednesday" Name="Daily Target Minutes Wednesday" Type="Integer" Value="0"/>
-            <Parameter Id="dailyTargetMinutesThursday" Name="Daily Target Minutes Thursday" Type="Integer" Value="0"/>
-            <Parameter Id="dailyTargetMinutesFriday" Name="Daily Target Minutes Friday" Type="Integer" Value="0"/>
-            <Parameter Id="dailyTargetMinutesSaturday" Name="Daily Target Minutes Saturday" Type="Integer" Value="0"/>
-            <Parameter Id="dailyTargetMinutesSunday" Name="Daily Target Minutes Sunday" Type="Integer" Value="0"/>
         </ParameterBag>
         <ParameterBag Id="relations" Name="Relations" Type="Relations">
             <Parameter Id="employee" Name="Employee" Type="String" Interpretation="Resource-Ref" Uom="Employee" Value=""/>

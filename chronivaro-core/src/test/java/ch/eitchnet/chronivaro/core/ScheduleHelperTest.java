@@ -36,6 +36,40 @@ public class ScheduleHelperTest {
 	}
 
 	@Test
+	public void shouldUseGeneralTargetWhenWeekdayTargetIsMissingAndPreserveZeroOverride() {
+		String employeeId = "emp-fallback";
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
+			Resource employee = ChronivaroTestHelper.createEmployee(tx, employeeId, "Fallback Schedule");
+			Resource schedule = tx.getResourceByRelation(employee, PARAM_CURRENT_SCHEDULE, true);
+			schedule.setInteger(PARAM_DAILY_TARGET_MINUTES, 480);
+			schedule.setInteger(PARAM_DAILY_TARGET_MINUTES + "Monday", 0);
+			tx.update(schedule);
+			tx.commitOnClose();
+		}
+
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
+			assertEquals(0, ScheduleHelper.getTargetMinutes(tx, employeeId, LocalDate.of(2026, 1, 5)));
+			assertEquals(480, ScheduleHelper.getTargetMinutes(tx, employeeId, LocalDate.of(2026, 1, 6)));
+		}
+	}
+
+	@Test
+	public void shouldClampNegativeGeneralTargetToZero() {
+		String employeeId = "emp-negative-fallback";
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
+			Resource employee = ChronivaroTestHelper.createEmployee(tx, employeeId, "Negative Fallback Schedule");
+			Resource schedule = tx.getResourceByRelation(employee, PARAM_CURRENT_SCHEDULE, true);
+			schedule.setInteger(PARAM_DAILY_TARGET_MINUTES, -480);
+			tx.update(schedule);
+			tx.commitOnClose();
+		}
+
+		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
+			assertEquals(0, ScheduleHelper.getTargetMinutes(tx, employeeId, LocalDate.of(2026, 1, 5)));
+		}
+	}
+
+	@Test
 	public void shouldCalculateTargetMinutes() {
 		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, false)) {
 			// Create Holiday Calendar

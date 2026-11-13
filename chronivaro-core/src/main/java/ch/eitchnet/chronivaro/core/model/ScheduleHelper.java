@@ -81,7 +81,7 @@ public class ScheduleHelper {
 
 		// Fallback to general dailyTargetMinutes
 		if (scheduleVersion.hasParameter(PARAM_DAILY_TARGET_MINUTES)) {
-			return scheduleVersion.getInteger(PARAM_DAILY_TARGET_MINUTES);
+			return Math.max(0, scheduleVersion.getInteger(PARAM_DAILY_TARGET_MINUTES));
 		}
 
 		return 0;

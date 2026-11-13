@@ -76,16 +76,17 @@ public class HistoricalScheduleHelperTest {
 		}
 
 		try (StrolchTransaction tx = runtimeMock.openUserTx(certificate, true)) {
+			assertEquals(0, ScheduleHelper.getTargetMinutes(tx, employeeId, LocalDate.of(2024, 12, 31)));
+
 			// Test historical date (should be v1)
 			LocalDate pastDate = LocalDate.of(2025, 3, 1);
-			// Currently findScheduleVersion only takes employeeId, so it returns current (v2)
-			// This test should fail once we update the signature or if we expect it to be historical
-			// But for now, let's see what it does.
 			assertEquals(480, ScheduleHelper.getTargetMinutes(tx, employeeId, pastDate));
+			assertEquals(480, ScheduleHelper.getTargetMinutes(tx, employeeId, LocalDate.of(2025, 6, 30)));
 
 			// Test recent date (should be v2)
 			LocalDate recentDate = LocalDate.of(2025, 8, 1);
 			assertEquals(384, ScheduleHelper.getTargetMinutes(tx, employeeId, recentDate));
+			assertEquals(384, ScheduleHelper.getTargetMinutes(tx, employeeId, LocalDate.of(2025, 7, 1)));
 		}
 	}
 
