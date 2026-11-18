@@ -32,10 +32,7 @@ public class EmailNotificationChannel implements NotificationChannel {
 		if (email == null || email.isBlank())
 			return;
 
-		if (Notification.ACCOUNT_CHALLENGE.equals(notification.type()))
-			this.mailHandler.sendUnencryptedMailAsync(email, notification.title(), notification.message());
-		else
-			this.mailHandler.sendMailAsync(email, notification.title(), notification.message());
+		this.mailHandler.sendUnencryptedMailAsync(email, notification.title(), notification.message());
 		logger.debug("Dispatched notification (type={}) for user {}", notification.type(), notification.recipient().id());
 	}
 }
