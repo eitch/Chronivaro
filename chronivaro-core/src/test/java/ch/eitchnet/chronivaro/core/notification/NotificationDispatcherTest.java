@@ -59,7 +59,7 @@ public class NotificationDispatcherTest {
 	}
 
 	@Test
-	public void shouldDelegateMailAndPreserveUnencryptedChallengeDelivery() {
+	public void shouldDelegateUnencryptedMailForAllNotifications() {
 		RuntimeMock runtimeMock = new RuntimeMock().mockRuntime(
 				"target/" + getClass().getSimpleName() + "-" + System.nanoTime(), "src/test/resources");
 		try {
@@ -73,8 +73,8 @@ public class NotificationDispatcherTest {
 			channel.send(new Notification("period.approved", recipient, "Period", "Approved"));
 			channel.send(new Notification(Notification.ACCOUNT_CHALLENGE, recipient, "Challenge", "Token"));
 
-			assertEquals(List.of("mail:user@example.ch:Period:Approved", "unencrypted:user@example.ch:Challenge:Token"),
-					mailHandler.deliveries);
+			assertEquals(List.of("unencrypted:user@example.ch:Period:Approved",
+					"unencrypted:user@example.ch:Challenge:Token"), mailHandler.deliveries);
 		} finally {
 			runtimeMock.destroyRuntime();
 		}
