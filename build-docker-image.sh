@@ -41,10 +41,7 @@ function info() {
 }
 
 function is_semver_snapshot() {
-  version=$1
-  snapshot=${version##*-SNAPSHOT}
-  test "$snapshot" != "${version}"
-  return $?
+  [[ "$1" == *-SNAPSHOT ]]
 }
 
 ############################################################
@@ -88,16 +85,35 @@ if ! [[ -f pom.xml ]]; then
   fail "pom.xml does not exist in $(pwd)"
 fi
 
-declare BRANCH
 declare VERSION
 declare DOCKER_TAG
+declare MAJOR
+declare MINOR
+declare PATCH
+declare VERSION_SUFFIX
+declare -a VERSION_TAGS
+declare -a TAG_PATHS
 
-BRANCH="$(git branch 2>/dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/\1/')"
-if [[ "${BRANCH}" == "develop" ]]; then
-  VERSION="develop"
+VERSION="$(xmlstarlet sel -t -m _:project -v _:version -n pom.xml)"
+if [[ "${VERSION}" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)(-SNAPSHOT)?$ ]]; then
+  MAJOR="${BASH_REMATCH[1]}"
+  MINOR="${BASH_REMATCH[2]}"
+  PATCH="${BASH_REMATCH[3]}"
 else
-  VERSION="$(xmlstarlet sel -t -m _:project -v _:version -n pom.xml)"
+  fail "Unsupported project version '${VERSION}'. Expected MAJOR.MINOR.PATCH with an optional -SNAPSHOT suffix."
 fi
+
+VERSION_SUFFIX=""
+if is_semver_snapshot "${VERSION}"; then
+  VERSION_SUFFIX="-SNAPSHOT"
+fi
+
+VERSION_TAGS=(
+  "${MAJOR}${VERSION_SUFFIX}"
+  "${MAJOR}.${MINOR}${VERSION_SUFFIX}"
+  "${MAJOR}.${MINOR}.${PATCH}${VERSION_SUFFIX}"
+)
+
 DOCKER_TAG="${APP_TAG}:${VERSION}"
 DOCKER_LATEST_TAG="${APP_TAG}:latest"
 
@@ -112,7 +128,10 @@ info "Building image..."
 docker image build --no-cache --pull -f Dockerfile --tag "${DOCKER_TAG}" . || fail "Could not build docker image"
 info
 
-TAG_PATH="${REGISTRY}/docker/${DOCKER_TAG}"
+for version_tag in "${VERSION_TAGS[@]}"; do
+  TAG_PATHS+=("${REGISTRY}/docker/${APP_TAG}:${version_tag}")
+done
+
 TAG_LATEST_PATH="${REGISTRY}/docker/${DOCKER_LATEST_TAG}"
 
 if [[ "${PUSH_TO_REGISTRY}" == "true" ]]; then
@@ -120,10 +139,12 @@ if [[ "${PUSH_TO_REGISTRY}" == "true" ]]; then
 
   info "Docker image ${DOCKER_TAG} ready, now tagging and pushing to registry ${REGISTRY}..."
 
-  info "Tagging ${DOCKER_TAG} for remote tag ${TAG_PATH}"
-  docker tag "${DOCKER_TAG}" "${TAG_PATH}" || fail "Could not tag image"
-  docker push "${TAG_PATH}" || fail "Could not push image"
-  info "Pushed ${DOCKER_TAG}"
+  for tag_path in "${TAG_PATHS[@]}"; do
+    info "Tagging ${DOCKER_TAG} for remote tag ${tag_path}"
+    docker tag "${DOCKER_TAG}" "${tag_path}" || fail "Could not tag image"
+    docker push "${tag_path}" || fail "Could not push image"
+    info "Pushed ${tag_path}"
+  done
 
   if ! is_semver_snapshot "${VERSION}"; then
     info "Tagging ${DOCKER_TAG} for latest remote tag ${TAG_LATEST_PATH}"
@@ -140,9 +161,13 @@ if [[ "${CLEAN_AFTER_PUSH}" == "true" ]]; then
   info
   info "Cleaning up..."
   docker image remove "${DOCKER_TAG}" || fail "Could not remove image"
-  docker image remove "${TAG_PATH}" || fail "Could not remove image"
-  if ! is_semver_snapshot "${VERSION}"; then
-    docker image remove "${TAG_LATEST_PATH}" || fail "Could not remove image"
+  if [[ "${PUSH_TO_REGISTRY}" == "true" ]]; then
+    for tag_path in "${TAG_PATHS[@]}"; do
+      docker image remove "${tag_path}" || fail "Could not remove image"
+    done
+    if ! is_semver_snapshot "${VERSION}"; then
+      docker image remove "${TAG_LATEST_PATH}" || fail "Could not remove image"
+    fi
   fi
   info
 fi

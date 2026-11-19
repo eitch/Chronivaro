@@ -213,6 +213,11 @@ Build, tag, and push to the remote registry (`repo.strolch.li`):
 ./build-and-push-docker.sh
 ```
 
+Docker image tags are derived from the Maven project version, which must use `MAJOR.MINOR.PATCH` with an optional
+`-SNAPSHOT` suffix. Each pushed build publishes the major, minor, and full version tags. For example, `1.2.3` publishes
+`1`, `1.2`, and `1.2.3`, while `1.2.3-SNAPSHOT` publishes `1-SNAPSHOT`, `1.2-SNAPSHOT`, and `1.2.3-SNAPSHOT`.
+Release versions are also published as `latest`; snapshot versions are never tagged as `latest`.
+
 ### Packaging Runtime Distribution Archive (`runtime.tar.gz`)
 
 To package a clean, ready-to-use runtime environment tarball for deployment:

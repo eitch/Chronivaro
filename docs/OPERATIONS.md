@@ -88,6 +88,11 @@ Or manually using custom options:
 - `-c`: Clean up local tags after successful push
 - `-r <registry>`: Target registry host (default: `repo.strolch.li`)
 
+The Maven project version must be numeric `MAJOR.MINOR.PATCH`, optionally followed by `-SNAPSHOT`. Every push includes
+three version tags: major, minor, and full patch version. For example, `1.2.3` is pushed as `1`, `1.2`, and `1.2.3`;
+`1.2.3-SNAPSHOT` is pushed as `1-SNAPSHOT`, `1.2-SNAPSHOT`, and `1.2.3-SNAPSHOT`. Only release versions are pushed
+as `latest`.
+
 #### 2.2.2 Pulling the Docker Image
 
 Users and operators can pull the prebuilt image from the registry:
